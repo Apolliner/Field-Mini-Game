@@ -2,6 +2,7 @@ import os
 import copy
 import random
 import string
+import keyboard
 
 
 
@@ -20,7 +21,7 @@ def create_game_field_fluctuations(game_field_size):
     """
     game_field = []
     for i in range(game_field_size):
-        game_field.append([random.choice([',', '.', ';', ':', '&']) for x in range(game_field_size)])
+        game_field.append([random.choice(['█', '.', '.', '.', '.', '.', '.']) for x in range(game_field_size)])
     return game_field
 
 
@@ -31,7 +32,7 @@ def print_game_field(game_field_used:list, position:list):
     draw_person(game_field_used, position)
     for line in game_field_used:
         for tile in line:
-            print(tile, end='|')
+            print(tile, end=' ')
         print('')
 
 def draw_person(game_field_and_person, position):
@@ -46,27 +47,28 @@ def calculation_move_person(position:list, game_field_size:int, game_field_used:
 
         position = [y, x]
     """
-    move = input('"W" - Вперёд, "A" - Влево, "S" - Назад, "D" - Вправо ')
+    print('"w" - Вперёд, "a" - Влево, "s" - Назад, "d" - Вправо ')
+    move = keyboard.read_key()
     if move == 'w':
-        if position[0] == 0 or game_field_used[position[0] - 1][position[1]] == '&':
+        if position[0] == 0 or game_field_used[position[0] - 1][position[1]] == '█':
             return position
         else:
             position[0] -= 1
             return position
     elif move == 'a':
-        if position[1] == 0 or game_field_used[position[0]][position[1] - 1] == '&':
+        if position[1] == 0 or game_field_used[position[0]][position[1] - 1] == '█':
             return position
         else:
             position[1] -= 1
             return position
     elif move == 's':
-        if position[0] == (game_field_size - 1) or game_field_used[position[0] + 1][position[1]] == '&':
+        if position[0] == (game_field_size - 1) or game_field_used[position[0] + 1][position[1]] == '█':
             return position
         else:
             position[0] += 1
             return position
     elif move == 'd':
-         if position[1] == (game_field_size - 1) or game_field_used[position[0]][position[1] + 1] == '&':
+         if position[1] == (game_field_size - 1) or game_field_used[position[0]][position[1] + 1] == '█':
             return position
          else:
             position[1] += 1
