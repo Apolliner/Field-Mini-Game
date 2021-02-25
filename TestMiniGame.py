@@ -2,6 +2,7 @@ import os
 import copy
 
 
+
 def draw_person(game_field_and_person, position):
     """
         Рисует персонажа на карте
