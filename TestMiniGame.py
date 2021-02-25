@@ -21,8 +21,26 @@ def create_game_field_fluctuations(game_field_size):
     """
     game_field = []
     for i in range(game_field_size):
-        game_field.append([random.choice(['█', '.', '.', '.', '.', '.', '.']) for x in range(game_field_size)])
+        game_field.append([random.choice(['█', ',', ' ', '.', '.', '.', '.']) for x in range(game_field_size)])
     return game_field
+
+def ground_description(game_field_used:list, position:list):
+    """
+        Рассказывает о том, что находится под ногами персонажа
+    """
+    ground_dict = {
+        '.': 'Под ногами горячий песок',
+        '█': 'Под ногами верхушка скалы',
+        ' ': 'Осторожно! Под ногами нет ничего!',
+        ',': 'Под ногами жухлая трава',
+        }
+
+    ground = game_field_used[position[0]][position[1]]
+    if ground in ground_dict:
+        return ground_dict[ground]
+    return 'Под ногами нечто непонятное'
+        
+
 
 def live_one_small_bird(bird:list, game_field_used:list):
     """
@@ -55,18 +73,22 @@ def print_game_field(game_field_used:list, position:list, bird_quantity_and_posi
     """
         Выводит изображение игрового поля на экран
     """
-
-    draw_person(game_field_used, position)
+    ground_description = []
+    draw_person(game_field_used, position, ground_description)
     draw_birds(game_field_used, bird_quantity_and_position)
     for line in game_field_used:
         for tile in line:
             print(tile, end=' ')
         print('')
+    print(ground_description[0])
 
-def draw_person(game_field_and_person, position):
+def draw_person(game_field_and_person:list, position:list, ground_description_write:list):
     """
         Рисует персонажа на карте
     """
+
+    ground_description_write.append(ground_description(game_field_and_person, position))
+        
     game_field_and_person[position[0]][position[1]] = '@'
 
 
