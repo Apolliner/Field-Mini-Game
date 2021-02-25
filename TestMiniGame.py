@@ -4,7 +4,7 @@ import random
 import string
 import keyboard
 
-
+garbage = ['░', '▒', '▓', '█', '☺']
 
 def create_game_field_empty(game_field_size):
     """
@@ -21,7 +21,7 @@ def create_game_field_fluctuations(game_field_size):
     """
     game_field = []
     for i in range(game_field_size):
-        game_field.append([random.choice(['█', ',', ' ', '.', '.', '.', '.']) for x in range(game_field_size)])
+        game_field.append([random.choice(['▲', ',', ' ', '.', '.', '.', '.']) for x in range(game_field_size)])
     return game_field
 
 def ground_description(game_field_used:list, position:list):
@@ -30,7 +30,7 @@ def ground_description(game_field_used:list, position:list):
     """
     ground_dict = {
         '.': 'Под ногами горячий песок',
-        '█': 'Под ногами верхушка скалы',
+        '▲': 'Под ногами верхушка скалы',
         ' ': 'Осторожно! Под ногами нет ничего!',
         ',': 'Под ногами жухлая трава',
         }
@@ -39,6 +39,20 @@ def ground_description(game_field_used:list, position:list):
     if ground in ground_dict:
         return ground_dict[ground]
     return 'Под ногами нечто непонятное'
+
+def sky_description(game_field_used:list, position:list):
+    """
+        Рассказывает о том, что находится в небе над персонажем
+    """
+    sky_dict = {
+        'v': 'На голове тень от маленькой птички',
+        'O': 'На голове тень от облака',
+        }
+
+    sky = game_field_used[position[0]][position[1]]
+    if sky in sky_dict:
+        return sky_dict[sky]
+    return 'Над головой палящее солнце'
         
 
 
@@ -47,13 +61,13 @@ def live_one_small_bird(bird:list, game_field_used:list):
         обрабатывает жизнь одной маленькой птички
     """
 
-    bird[0] += random.randrange(1, -2, -1)
+    bird[0] += random.randrange(-1, 2)
     if bird[0] == -1:
         bird[0] +=1
     elif bird[0] == (len(game_field_used) - 1):
         bird[0] -=1
 
-    bird[1] += random.randrange(1, -2, -1)
+    bird[1] += random.randrange(-1, 2)
     if bird[1] == -1:
         bird[1] +=1
     elif bird[1] == (len(game_field_used) - 1):
@@ -68,28 +82,31 @@ def draw_birds(game_field_used:list, bird_quantity_and_position:list):
         live_one_small_bird(bird, game_field_used)
         game_field_used[bird[0]][bird[1]] = 'v'
         
+        
 
 def print_game_field(game_field_used:list, position:list, bird_quantity_and_position:list):
     """
         Выводит изображение игрового поля на экран
     """
-    ground_description = []
-    draw_person(game_field_used, position, ground_description)
+    ground_descr = []
+    draw_person(game_field_used, position, ground_descr)
     draw_birds(game_field_used, bird_quantity_and_position)
+    sky_descr = sky_description(game_field_used, position)
     for line in game_field_used:
         for tile in line:
             print(tile, end=' ')
         print('')
-    print(ground_description[0])
+    print(ground_descr[0])
+    print(sky_descr)
 
-def draw_person(game_field_and_person:list, position:list, ground_description_write:list):
+def draw_person(game_field_and_person:list, position:list, ground_descr:list):
     """
-        Рисует персонажа на карте
+        Рисует персонажа на карте и определяет описание земли под ногами
     """
 
-    ground_description_write.append(ground_description(game_field_and_person, position))
+    ground_descr.append(ground_description(game_field_and_person, position))
         
-    game_field_and_person[position[0]][position[1]] = '@'
+    game_field_and_person[position[0]][position[1]] = '☺'
 
 
 def calculation_move_person(position:list, game_field_used:list):
@@ -100,26 +117,26 @@ def calculation_move_person(position:list, game_field_used:list):
     """
     print('"w" - Вперёд, "a" - Влево, "s" - Назад, "d" - Вправо ')
     move = keyboard.read_key()
-    if move == 'w' or move == 'up':
-        if position[0] == 0 or game_field_used[position[0] - 1][position[1]] == '█':
+    if move == 'w' or move == 'up' or move == 'ц':
+        if position[0] == 0 or game_field_used[position[0] - 1][position[1]] == '▲':
             return position
         else:
             position[0] -= 1
             return position
-    elif move == 'a' or move == 'left':
-        if position[1] == 0 or game_field_used[position[0]][position[1] - 1] == '█':
+    elif move == 'a' or move == 'left' or move == 'ф':
+        if position[1] == 0 or game_field_used[position[0]][position[1] - 1] == '▲':
             return position
         else:
             position[1] -= 1
             return position
-    elif move == 's' or move == 'down':
-        if position[0] == (len(game_field_used[0]) - 1) or game_field_used[position[0] + 1][position[1]] == '█':
+    elif move == 's' or move == 'down' or move == 'ы':
+        if position[0] == (len(game_field_used[0]) - 1) or game_field_used[position[0] + 1][position[1]] == '▲':
             return position
         else:
             position[0] += 1
             return position
-    elif move == 'd' or move == 'right':
-         if position[1] == (len(game_field_used[0]) - 1) or game_field_used[position[0]][position[1] + 1] == '█':
+    elif move == 'd' or move == 'right' or move == 'в':
+         if position[1] == (len(game_field_used[0]) - 1) or game_field_used[position[0]][position[1] + 1] == '▲':
             return position
          else:
             position[1] += 1
