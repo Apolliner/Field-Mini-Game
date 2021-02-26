@@ -31,7 +31,9 @@ def create_game_field_empty(game_field_size):
     game_field = []
     for i in range(game_field_size):
         game_field.append(['.']*game_field_size)
-    return game_field
+    game_field_and_temperature = [30.0]
+    game_field_and_temperature.append(game_field)
+    return game_field_and_temperature
 
 def create_game_field_fluctuations(game_field_size):
     """
@@ -40,7 +42,30 @@ def create_game_field_fluctuations(game_field_size):
     game_field = []
     for i in range(game_field_size):
         game_field.append([random.choice(['▲', ',', ' ', '.', '.', '.', '.']) for x in range(game_field_size)])
-    return game_field
+    game_field_and_temperature = [random.randrange(20.0, 45.0)]
+    game_field_and_temperature.append(game_field)
+    return game_field_and_temperature
+
+
+def global_temperature_change(global_temperature:float, local_temperature:float):
+    """
+        Cо случайным шансом изменяет глобальную температуру, постепенно приравнивая её к температуре региона.
+    """
+    if random.randrange(20)//10 >= 1:
+        if global_temperature <= local_temperature:
+            global_temperature += ( -0.3 + random.random())
+        else:
+            global_temperature -= ( -0.3 + random.random())
+    return global_temperature
+    
+
+def person_temperature_change(global_temperature:float, person_temperature:float):
+    """
+        Изменяет температуру персонажа в зависимости от глобальной температуры и нахождении на/под тайлами.
+    """
+    pass
+
+
 
 def beget_cloud(game_field_used:list, clouds_position:list):
     """
@@ -126,9 +151,11 @@ def draw_birds_and_clouds(game_field_used:list, bird_quantity_and_position:list,
         game_field_used[cloud[0]][cloud[1]] = 'O'
         
 
-def print_game_field(game_field_used:list, position:list, bird_quantity_and_position:list, clouds_position:list):
+def print_game_field(game_field_used:list, position:list, bird_quantity_and_position:list,
+                     clouds_position:list, global_temperature:float):
     """
-        Выводит изображение игрового поля на экран, прописывает описание неба и земли.
+        Выводит изображение игрового поля на экран, прописывает описание неба и земли,
+        температуру среды и температуру персонажа.
     """
     ground_descr = []
     draw_person(game_field_used, position, ground_descr)
@@ -140,6 +167,7 @@ def print_game_field(game_field_used:list, position:list, bird_quantity_and_posi
         print('')
     print(ground_descr[0])
     print(sky_descr)
+    print('Температура', '%.1f' % global_temperature, 'градусов')
 
 def draw_person(game_field_and_person:list, position:list, ground_descr:list):
     """
@@ -187,20 +215,23 @@ def calculation_move_person(position:list, game_field_used:list):
         return position
     
 
-def game_loop(game_field:list, start_position:list, bird_quantity_and_position:list):
+def game_loop(game_field_and_temperature:list, start_position:list, bird_quantity_and_position:list):
     """
         Здесь происходят все игровые события
     """
     position = list(start_position)
     clouds_position = []
+    global_temperature = 35.0
+    local_temperature = (game_field_and_temperature[0])
     while game_loop :
-        game_field_used = copy.deepcopy(game_field)
+        game_field_used = copy.deepcopy(game_field_and_temperature[1])
         position = calculation_move_person(position, game_field_used)
         os.system('cls' if os.name == 'nt' else 'clear')
         move_clouds(clouds_position, game_field_used)
-        if (random.randrange(11)+ (len(game_field[0]) - 1)//10)//10 >= 1:
+        global_temperature = global_temperature_change(global_temperature, local_temperature)
+        if (random.randrange(11)+ (len(game_field_used[0]) - 1)//10)//10 >= 1:
             beget_cloud(game_field_used, clouds_position)
-        print_game_field(game_field_used, position, bird_quantity_and_position, clouds_position)
+        print_game_field(game_field_used, position, bird_quantity_and_position, clouds_position, global_temperature)
         
 
         
@@ -213,15 +244,15 @@ def main():
         start_position = [y, x]
         
     """
-    game_field_size = 30 #Определяет размер игрового поля
+    game_field_size = 20 #Определяет размер игрового поля
 
     print('Выберите тип поля: 0 - пустой, 1 - случайный')
     type_game_field = keyboard.read_key()
     
     if type_game_field == '0':
-        game_field = create_game_field_empty(game_field_size)
+        game_field_and_temperature = create_game_field_empty(game_field_size)
     else:
-        game_field = create_game_field_fluctuations(game_field_size)
+        game_field_and_temperature = create_game_field_fluctuations(game_field_size)
     
     bird_quantity_and_position = []
     for bird in range(random.randrange(1, game_field_size//2)): #Количество птиц
@@ -229,7 +260,7 @@ def main():
     
     start_position = [game_field_size//2, game_field_size//2]
     
-    game_loop(game_field, start_position, bird_quantity_and_position)
+    game_loop(game_field_and_temperature, start_position, bird_quantity_and_position)
     print('Игра окончена!')
 
 main()
