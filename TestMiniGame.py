@@ -11,8 +11,8 @@ garbage = ['░', '▒', '▓', '█', '☺']
     1) Птицы иногда рождаются за пределами карты и крашат игру при запуске; #ИСПРАВЛЕНО
 
     РЕАЛИЗОВАТЬ:
-    1) Температуру на карте;
-    2) Температуру и её изменение у персонажа;
+    1) Температуру на карте; #РЕАЛИЗОВАНО
+    2) Температуру и её изменение у персонажа; #РЕАЛИЗОВАНО
     3) Генерацию глобальной карты;
     4) Переход между локациями;
     5) Генерацию разных локаций;
@@ -22,7 +22,29 @@ garbage = ['░', '▒', '▓', '█', '☺']
     2) Жара;
 """
 
+def region_generation(value_region_box):
+    """
+        Генерирует карту регионов
+    """
+    region_map = []
+    for i in range(value_region_box):
+        region_map.append([random.randrange(10) for x in range(value_region_box)])
+    print(region_map)
+    return region_map
 
+
+def global_map_generation(game_field_size:int, value_region_box:int):
+    """
+        Основываясь на карте регионов, генерирует все области слева->направо, сверху->вниз
+    """
+    
+    #region_map = region_generation(value_region_box)
+
+    global_map = []
+    for i in range((value_region_box * 3)):
+        global_map.append([create_game_field_fluctuations(game_field_size) for x in range((value_region_box * 3))])
+    return global_map
+    
 
 def create_game_field_empty(game_field_size):
     """
@@ -208,57 +230,72 @@ def calculation_move_person(position:list, game_field_used:list):
     """
         Спрашивает ввод и рассчитывает местоположение персонажа
 
-        position = [y, x]
+        position = [global_position[y, x], field_position[y, x]]
     """
+    print('Ваша позиция в мире: ', position[0])
     print('"w" - Вперёд, "a" - Влево, "s" - Назад, "d" - Вправо ')
     move = keyboard.read_key()
     if move == 'w' or move == 'up' or move == 'ц':
-        if position[0] == 0 or game_field_used[position[0] - 1][position[1]] == '▲':
-            return position
+        if position[1][0] == 0:
+            position[1][0] = (len(game_field_used[0]) - 1)
+            position[0][0] -= 1
         else:
-            position[0] -= 1
-            return position
+            position[1][0] -= 1
     elif move == 'a' or move == 'left' or move == 'ф':
-        if position[1] == 0 or game_field_used[position[0]][position[1] - 1] == '▲':
-            return position
+        if position[1][1] == 0:
+            position[1][1] = (len(game_field_used[0]) - 1)
+            position[0][1] -= 1
         else:
-            position[1] -= 1
-            return position
+            position[1][1] -= 1
     elif move == 's' or move == 'down' or move == 'ы':
-        if position[0] == (len(game_field_used[0]) - 1) or game_field_used[position[0] + 1][position[1]] == '▲':
-            return position
+        if position[1][0] == (len(game_field_used[0]) - 1):
+            position[1][0] = 0
+            position[0][0] += 1
         else:
-            position[0] += 1
-            return position
+            position[1][0] += 1
     elif move == 'd' or move == 'right' or move == 'в':
-         if position[1] == (len(game_field_used[0]) - 1) or game_field_used[position[0]][position[1] + 1] == '▲':
-            return position
-         else:
-            position[1] += 1
-            return position
-    else:
-        return position
-    
+        if position[1][1] == (len(game_field_used[0]) - 1):
+            position[1][1] = 0
+            position[0][1] += 1
+        else:
+            position[1][1] += 1
+    else: pass
 
-def game_loop(game_field_and_temperature:list, start_position:list, bird_quantity_and_position:list):
+def calculate_draw_position(global_map:list, position:list):
+    """
+        Рассчитывает какую локацию использовать для отображения
+    """
+    return global_map[position[0][0]][position[0][1]][1]
+
+def game_loop(global_map:list, start_position:list, bird_quantity_and_position:list):
     """
         Здесь происходят все игровые события
 
         all_temperature[global_temperature, person_temperature]
+        
+        position = [global_position[y, x], field_position[y, x]]
+
+        global_map[line_map[dot_map[temperature_field, game_field[...]]...]...]
+        
     """
-    position = list(start_position)
+
+
+    position = [[1, 1]]
+    position.append(list(start_position))
     clouds_position = []
-    all_temperature = [35.0, 36.6]
-    local_temperature = (game_field_and_temperature[0])
+    start_temperature = [35.0, 36.6]
+    game_field_used = copy.deepcopy(calculate_draw_position(global_map, position))
+    
     while game_loop :
-        game_field_used = copy.deepcopy(game_field_and_temperature[1])
-        position = calculation_move_person(position, game_field_used)
+        local_temperature = (global_map[position[0][0]][position[0][1]][0])
+        calculation_move_person(position, game_field_used)
+        game_field_used = copy.deepcopy(calculate_draw_position(global_map, position))
         os.system('cls' if os.name == 'nt' else 'clear')
         move_clouds(clouds_position, game_field_used)
-        all_temperature[0] = global_temperature_change(all_temperature[0], local_temperature)
+        start_temperature[0] = global_temperature_change(start_temperature[0], local_temperature)
         if (random.randrange(11)+ (len(game_field_used[0]) - 1)//10)//10 >= 1:
             beget_cloud(game_field_used, clouds_position)
-        print_game_field(game_field_used, position, bird_quantity_and_position, clouds_position, all_temperature)
+        print_game_field(game_field_used, position[1], bird_quantity_and_position, clouds_position, start_temperature)
         
 
         
@@ -269,17 +306,14 @@ def main():
         Запускает игру
 
         start_position = [y, x]
+
+        global_map[line_map[dot_map[temperature_field, game_field[...]]...]...]
         
     """
     game_field_size = 20 #Определяет размер игрового поля
+    value_region_box = 3 #Количество регионов в квадрате
 
-    print('Выберите тип поля: 0 - пустой, 1 - случайный')
-    type_game_field = keyboard.read_key()
-    
-    if type_game_field == '0':
-        game_field_and_temperature = create_game_field_empty(game_field_size)
-    else:
-        game_field_and_temperature = create_game_field_fluctuations(game_field_size)
+    global_map = global_map_generation(game_field_size, value_region_box)
     
     bird_quantity_and_position = []
     for bird in range(random.randrange(1, game_field_size//2)): #Количество птиц
@@ -287,7 +321,7 @@ def main():
     
     start_position = [game_field_size//2, game_field_size//2]
     
-    game_loop(game_field_and_temperature, start_position, bird_quantity_and_position)
+    game_loop(global_map, start_position, bird_quantity_and_position)
     print('Игра окончена!')
 
 main()
