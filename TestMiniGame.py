@@ -59,11 +59,30 @@ def global_temperature_change(global_temperature:float, local_temperature:float)
     return global_temperature
     
 
-def person_temperature_change(global_temperature:float, person_temperature:float):
+def person_temperature_change(all_temperature:list[float, float],  ground_descr:str, sky_descr:str):
     """
         Изменяет температуру персонажа в зависимости от глобальной температуры и нахождении на/под тайлами.
+
+        all_temperature[global_temperature, person_temperature]
     """
-    pass
+    change_temperarure_dict = {
+        'Под ногами горячий песок': 0.1,
+        'Под ногами верхушка скалы': 0.05,
+        'Осторожно! Под ногами нет ничего!': -0.1,
+        'Под ногами жухлая трава': 0.01,
+        'Под ногами нечто непонятное': 0,
+        'Над головой палящее солнце': 0.1,
+        'На голове тень от маленькой птички': -0.3,
+        'На голове тень от облака': -0.7,
+        }
+    
+    if all_temperature[1] <= all_temperature[0]:
+        all_temperature[1] += float(random.randrange(0, 3)) / 10
+    else:
+        all_temperature[1] -= float(random.randrange(0, 3)) / 10
+    all_temperature[1] += change_temperarure_dict[ground_descr] #Считаем от описания земли
+    all_temperature[1] += change_temperarure_dict[sky_descr] #Считаем от описания неба
+    return all_temperature[1]
 
 
 
@@ -152,30 +171,36 @@ def draw_birds_and_clouds(game_field_used:list, bird_quantity_and_position:list,
         
 
 def print_game_field(game_field_used:list, position:list, bird_quantity_and_position:list,
-                     clouds_position:list, global_temperature:float):
+                     clouds_position:list, all_temperature:list):
     """
         Выводит изображение игрового поля на экран, прописывает описание неба и земли,
         температуру среды и температуру персонажа.
+
+        all_temperature[global_temperature, person_temperature]
     """
-    ground_descr = []
+    ground_descr = ground_description(game_field_used, position)
     draw_person(game_field_used, position, ground_descr)
     draw_birds_and_clouds(game_field_used, bird_quantity_and_position, clouds_position)
     sky_descr = sky_description(game_field_used, position)
+    person_temperature = person_temperature_change(all_temperature, ground_descr, sky_descr)
     for line in game_field_used:
         for tile in line:
             print(tile, end=' ')
         print('')
-    print(ground_descr[0])
+    print(ground_descr)
     print(sky_descr)
-    print('Температура', '%.1f' % global_temperature, 'градусов')
+    print('Температура', '%.1f' % all_temperature[0], 'градусов')
+    if person_temperature > 15 and person_temperature < 40:
+        print('Температура персонажа', '%.1f' % person_temperature, 'градусов. Всё в порядке!')
+    elif person_temperature < 15.0:
+        print('Температура персонажа', '%.1f' % person_temperature, 'градусов. Холодно!')
+    else:
+        print('Температура персонажа', '%.1f' % person_temperature, 'градусов. Слишком жарко!')
 
 def draw_person(game_field_and_person:list, position:list, ground_descr:list):
     """
         Рисует персонажа на карте и определяет описание земли под ногами
     """
-
-    ground_descr.append(ground_description(game_field_and_person, position))
-        
     game_field_and_person[position[0]][position[1]] = '☺'
 
 
@@ -218,20 +243,22 @@ def calculation_move_person(position:list, game_field_used:list):
 def game_loop(game_field_and_temperature:list, start_position:list, bird_quantity_and_position:list):
     """
         Здесь происходят все игровые события
+
+        all_temperature[global_temperature, person_temperature]
     """
     position = list(start_position)
     clouds_position = []
-    global_temperature = 35.0
+    all_temperature = [35.0, 36.6]
     local_temperature = (game_field_and_temperature[0])
     while game_loop :
         game_field_used = copy.deepcopy(game_field_and_temperature[1])
         position = calculation_move_person(position, game_field_used)
         os.system('cls' if os.name == 'nt' else 'clear')
         move_clouds(clouds_position, game_field_used)
-        global_temperature = global_temperature_change(global_temperature, local_temperature)
+        all_temperature[0] = global_temperature_change(all_temperature[0], local_temperature)
         if (random.randrange(11)+ (len(game_field_used[0]) - 1)//10)//10 >= 1:
             beget_cloud(game_field_used, clouds_position)
-        print_game_field(game_field_used, position, bird_quantity_and_position, clouds_position, global_temperature)
+        print_game_field(game_field_used, position, bird_quantity_and_position, clouds_position, all_temperature)
         
 
         
