@@ -6,6 +6,14 @@ import keyboard
 
 garbage = ['░', '▒', '▓', '█', '☺']
 
+"""
+    ИЗВЕСТНЫЕ ПРОБЛЕМЫ:
+    1) Птицы иногда рождаются за пределами карты и крашат игру при запуске #ИСПРАВЛЕНО
+
+"""
+
+
+
 def create_game_field_empty(game_field_size):
     """
         Создаёт пустое игровое поле
@@ -23,6 +31,29 @@ def create_game_field_fluctuations(game_field_size):
     for i in range(game_field_size):
         game_field.append([random.choice(['▲', ',', ' ', '.', '.', '.', '.']) for x in range(game_field_size)])
     return game_field
+
+def beget_cloud(game_field_used:list, clouds_position:list):
+    """
+        Рожает облако
+    """
+    clouds_position.append([random.randrange(len(game_field_used[0])), 0])
+
+
+def move_clouds(clouds_position:list, game_field_used:list):
+    """
+        Двигает все облака
+    """
+    departing_clouds = []
+
+    for number_cloud in range(len(clouds_position)):
+        if clouds_position[number_cloud][1] == (len(game_field_used[0]) - 1):
+            departing_clouds.insert(0, number_cloud)
+        else:
+            clouds_position[number_cloud][1] += 1
+
+    for depart in departing_clouds:
+        del clouds_position[depart]
+
 
 def ground_description(game_field_used:list, position:list):
     """
@@ -55,7 +86,6 @@ def sky_description(game_field_used:list, position:list):
     return 'Над головой палящее солнце'
         
 
-
 def live_one_small_bird(bird:list, game_field_used:list):
     """
         обрабатывает жизнь одной маленькой птички
@@ -74,23 +104,25 @@ def live_one_small_bird(bird:list, game_field_used:list):
         bird[1] -=1
     
 
-def draw_birds(game_field_used:list, bird_quantity_and_position:list):
+def draw_birds_and_clouds(game_field_used:list, bird_quantity_and_position:list, clouds_position:list):
     """
-        Рисует всех птиц
+        Рисует всех птиц и все облака. Облака летят выше птиц.
     """
     for bird in bird_quantity_and_position:
         live_one_small_bird(bird, game_field_used)
         game_field_used[bird[0]][bird[1]] = 'v'
-        
+
+    for cloud in clouds_position:
+        game_field_used[cloud[0]][cloud[1]] = 'O'
         
 
-def print_game_field(game_field_used:list, position:list, bird_quantity_and_position:list):
+def print_game_field(game_field_used:list, position:list, bird_quantity_and_position:list, clouds_position:list):
     """
-        Выводит изображение игрового поля на экран
+        Выводит изображение игрового поля на экран, прописывает описание неба и земли.
     """
     ground_descr = []
     draw_person(game_field_used, position, ground_descr)
-    draw_birds(game_field_used, bird_quantity_and_position)
+    draw_birds_and_clouds(game_field_used, bird_quantity_and_position, clouds_position)
     sky_descr = sky_description(game_field_used, position)
     for line in game_field_used:
         for tile in line:
@@ -150,11 +182,16 @@ def game_loop(game_field:list, start_position:list, bird_quantity_and_position:l
         Здесь происходят все игровые события
     """
     position = list(start_position)
+    clouds_position = []
     while game_loop :
         game_field_used = copy.deepcopy(game_field)
         position = calculation_move_person(position, game_field_used)
         os.system('cls' if os.name == 'nt' else 'clear')
-        print_game_field(game_field_used, position, bird_quantity_and_position)
+        move_clouds(clouds_position, game_field_used)
+        if (random.randrange(11)+ (len(game_field[0]) - 1)//10)//10 >= 1:
+            beget_cloud(game_field_used, clouds_position)
+        print_game_field(game_field_used, position, bird_quantity_and_position, clouds_position)
+        
 
         
 
@@ -178,7 +215,7 @@ def main():
     
     bird_quantity_and_position = []
     for bird in range(random.randrange(1, game_field_size//2)): #Количество птиц
-        bird_quantity_and_position.append([random.randrange(game_field_size) for x in range(2)])
+        bird_quantity_and_position.append([random.randrange(game_field_size - 1) for x in range(2)])
     
     start_position = [game_field_size//2, game_field_size//2]
     
