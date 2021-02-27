@@ -9,12 +9,16 @@ garbage = ['░', '▒', '▓', '█', '☺']
 """
     ИЗВЕСТНЫЕ ПРОБЛЕМЫ:
     1) Птицы иногда рождаются за пределами карты и крашат игру при запуске; #ИСПРАВЛЕНО
+    2) Краш при выходе за границы карты;
+    3) Птицы и облака при переходе между локациями остаются на месте;
+    4) Карта генерируется не только с положительными, но и с отрицательными координатами;
+    5) Персонаж проскакивает через на тайл при переходе, но не всегда; #ИСПРАВЛЕНО
 
     РЕАЛИЗОВАТЬ:
     1) Температуру на карте; #РЕАЛИЗОВАНО
     2) Температуру и её изменение у персонажа; #РЕАЛИЗОВАНО
     3) Генерацию глобальной карты;
-    4) Переход между локациями;
+    4) Переход между локациями; #РЕАЛИЗОВАНО
     5) Генерацию разных локаций;
 
     ТЕМАТИКА:
@@ -43,6 +47,7 @@ def global_map_generation(game_field_size:int, value_region_box:int):
     global_map = []
     for i in range((value_region_box * 3)):
         global_map.append([create_game_field_fluctuations(game_field_size) for x in range((value_region_box * 3))])
+    print(len(global_map))
     return global_map
     
 
@@ -226,40 +231,59 @@ def draw_person(game_field_and_person:list, position:list, ground_descr:list):
     game_field_and_person[position[0]][position[1]] = '☺'
 
 
-def calculation_move_person(position:list, game_field_used:list):
+def calculation_move_person(position:list, game_field_used:list, bird_quantity_and_position:list, clouds_position:list):
     """
         Спрашивает ввод и рассчитывает местоположение персонажа
 
         position = [global_position[y, x], field_position[y, x]]
     """
-    print('Ваша позиция в мире: ', position[0])
+    displacement_occurred = False
+    print('Ваша позиция в мире и вообще: ', position)
     print('"w" - Вперёд, "a" - Влево, "s" - Назад, "d" - Вправо ')
     move = keyboard.read_key()
     if move == 'w' or move == 'up' or move == 'ц':
         if position[1][0] == 0:
             position[1][0] = (len(game_field_used[0]) - 1)
             position[0][0] -= 1
+            displacement_occurred = True
+        elif game_field_used[position[1][0] - 1][position[1][1]] == '▲':
+            pass
         else:
             position[1][0] -= 1
     elif move == 'a' or move == 'left' or move == 'ф':
         if position[1][1] == 0:
             position[1][1] = (len(game_field_used[0]) - 1)
             position[0][1] -= 1
+            displacement_occurred = True
+        elif game_field_used[position[1][0]][position[1][1] - 1] == '▲':
+            pass
         else:
             position[1][1] -= 1
     elif move == 's' or move == 'down' or move == 'ы':
         if position[1][0] == (len(game_field_used[0]) - 1):
             position[1][0] = 0
             position[0][0] += 1
+            displacement_occurred = True
+        elif game_field_used[position[1][0] + 1][position[1][1]] == '▲':
+            pass
         else:
             position[1][0] += 1
     elif move == 'd' or move == 'right' or move == 'в':
         if position[1][1] == (len(game_field_used[0]) - 1):
             position[1][1] = 0
             position[0][1] += 1
+            displacement_occurred = True
+        elif game_field_used[position[1][0]][position[1][1] + 1] == '▲':
+            pass
         else:
             position[1][1] += 1
     else: pass
+    if displacement_occurred:
+        print('смещение произошло!')
+        bird_quantity_and_position = []
+        for bird in range(random.randrange(1, (len(game_field_used[0])//2))): #Количество птиц
+            bird_quantity_and_position.append([random.randrange(len(game_field_used[0]) - 1) for x in range(2)])
+        clouds_position = []
 
 def calculate_draw_position(global_map:list, position:list):
     """
@@ -280,7 +304,7 @@ def game_loop(global_map:list, start_position:list, bird_quantity_and_position:l
     """
 
 
-    position = [[1, 1]]
+    position = [[0, 0]]
     position.append(list(start_position))
     clouds_position = []
     start_temperature = [35.0, 36.6]
@@ -288,7 +312,8 @@ def game_loop(global_map:list, start_position:list, bird_quantity_and_position:l
     
     while game_loop :
         local_temperature = (global_map[position[0][0]][position[0][1]][0])
-        calculation_move_person(position, game_field_used)
+        print(local_temperature, '- local_temperature')
+        calculation_move_person(position, game_field_used, bird_quantity_and_position, clouds_position)
         game_field_used = copy.deepcopy(calculate_draw_position(global_map, position))
         os.system('cls' if os.name == 'nt' else 'clear')
         move_clouds(clouds_position, game_field_used)
