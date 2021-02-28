@@ -3,11 +3,16 @@ import copy
 import random
 import string
 import keyboard
+import sys
 
 garbage = ['░', '▒', '▓', '█', '☺']
 
 """
     ВЕРСИЯ СО СВОБОДНОЙ КАМЕРОЙ
+
+    РЕАЛИЗОВАТЬ:
+    1)Генерацию с чанками
+    2)Отображение минимального набора чанков и их выгрузку при удалении камеры
 """
 
 def create_game_field_fluctuations(game_field_size):
@@ -71,17 +76,25 @@ def calculation_move_person(game_field_used:list, position:list):
     else: pass
 
 
-
 def print_game_field(game_field_used:list, position:list, views_field_size:int):
     """
         Выводит изображение игрового поля на экран
     """
     draw_person(game_field_used, position)
     draw_field = draw_field_calculations(game_field_used, position, views_field_size)
+    draw_box = ''
     for line in draw_field:
+        print_line = ''
         for tile in line:
-            print(tile, end=' ')
-        print('')
+            print_line += tile + ' '
+            #print(tile, end=' ')
+        #print('')
+        #print(print_line)
+        draw_box += print_line + '\n'
+    os.system('cls' if os.name == 'nt' else 'clear')
+    #os.system('cls||clear')
+    #print(draw_box)
+    print(draw_box)
 
 
 
@@ -98,7 +111,7 @@ def game_loop(game_field:list, start_position:list, views_field_size:int):
         game_field_used = copy.deepcopy(game_field)
         print_game_field(game_field_used, position, views_field_size)
         calculation_move_person(game_field_used, position)
-        os.system('cls' if os.name == 'nt' else 'clear')
+        
         
         
 
@@ -113,7 +126,7 @@ def main():
         
     """
     game_field_size = 100 #Определяет размер игрового поля
-    views_field_size = 20 #Определяет размер окна просмотра
+    views_field_size = 30 #Определяет размер окна просмотра
 
     game_field = create_game_field_fluctuations(game_field_size)
     
