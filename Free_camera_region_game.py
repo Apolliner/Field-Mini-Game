@@ -16,6 +16,8 @@ garbage = ['░', '▒', '▓', '█', '☺']
     с регионами в готовую единую карту #РЕАЛИЗОВАНО
     3)Объединить версию со свободной камерой и версию с регионами #РЕАЛИЗОВАНО
     4)"подружить" друг с другом края локаций
+    5)Реализовать повторный пост-генератор карты минирегионов, который копирует значение боковых значений мини регионов
+    в прилегающие края следующих мини регионов. Слева ==> направо, сверху ==> вниз #РЕАЛИЗОВАНО
 """
 
 
@@ -43,6 +45,17 @@ class Location:
         self.chank = chank
         self.icon = icon
 
+"""
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+    БЛОК КОДА, ОТВЕЧАЮЩИЙ ЗА ГЕНЕРАЦИЮ ИГРОВОЙ КАРТЫ ПРИ ЗАПУСКЕ ИГРЫ
+    
+    На выходе выдаёт класс Location
+    
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+"""       
+
 def mini_region_tile_merge(one_icon:str, two_icon:str):
     """
         случайно выбирает одну иконку тайла из двух
@@ -58,8 +71,26 @@ def mini_region_generate(description, grid):
     """
     mini_region_map = []
     for i in range(grid):
-        mini_region_map.append([random.choice(description[2]) for x in range(grid)])                    
+        mini_region_map.append([random.choice(description.main_tileset) for x in range(grid)])                    
     return mini_region_map
+
+def post_mini_region_generate(global_mini_region_map):
+    """
+        Копирует значение боковых значений мини регионов в прилегающие края следующих мини регионов. Слева ==> направо, сверху ==> вниз
+
+        Не заполняет нижнюю клетку по оси y
+    """
+    for axis_y in range(len(global_mini_region_map)):
+        for axis_x in range(len(global_mini_region_map)):
+            for number_line in range(len(global_mini_region_map[axis_y][axis_x][0])):
+                for number_region in range(len(global_mini_region_map[axis_y][axis_x][0])):
+                    if number_line == len(global_mini_region_map[axis_y][axis_x][0]) - 1:
+                        if random.randrange(10)//3 and axis_y != len(global_mini_region_map) - 1:                           
+                            global_mini_region_map[axis_y + 1][axis_x][0][0][number_region] = global_mini_region_map[axis_y][axis_x][0][number_line][number_region]
+                    elif number_region == len(global_mini_region_map[axis_y][axis_x][0]) - 1:
+                        if random.randrange(10)//3 and axis_x != len(global_mini_region_map) - 1:
+                            global_mini_region_map[axis_y][axis_x + 1][0][number_line][0] = global_mini_region_map[axis_y][axis_x][0][number_line][number_region]
+
 
 def random_location_post_generate(location:list, description:list):
     """
@@ -68,27 +99,23 @@ def random_location_post_generate(location:list, description:list):
     for line in range(len(location)):
         for tile in range(len(location)):
             if random.randrange(10)//9:
-                location[line][tile] = random.choice(description[3])
+                location[line][tile] = random.choice(description.random_tileset)
     return location
 
-def master_location_generate(description, game_field_size, grid):
+def master_location_generate(mini_region, game_field_size, grid):
     """
         Генерирует карту локации из минирегионов по такому же алгоритму, что и генератор глобальной карты из регионов.
     """
-              
-    if grid != 1:
-        return advanced_location_generate(description, grid, game_field_size) #генератор по мини регионам
-    else:
-        return location_generate(description, game_field_size) #обычный случайный генератор
+    return advanced_location_generate(mini_region, grid, game_field_size) #генератор по мини регионам
 
-def advanced_location_generate(description, grid, game_field_size):
+
+def advanced_location_generate(mini_region_map, grid, game_field_size):
     """
         Генерирует локацию по карте мини регионов
     """
     x = 0
     raw_location = []
     count_block = game_field_size // grid
-    mini_region_map = mini_region_generate(description, grid)
     for number_line in range(grid): #Определям место в линии сидов
         region_location_line = []
         for number_seed in range(grid): #Определяем номер сида
@@ -100,18 +127,18 @@ def advanced_location_generate(description, grid, game_field_size):
                     left_right_tile = ''                  
                     if number_tile_line <= 1: #Обрабатываем верхний край мини региона
                         if number_line != 0:
-                            top_down_tile = mini_region_map[number_line - 1][number_seed]
+                            top_down_tile = mini_region_map[0][number_line - 1][number_seed]
                     elif number_tile_line >= (count_block - 1): #Обрабатываем нижний край мини региона
                         if number_tile != (count_block - 1):
-                            top_down_tile = mini_region_map[number_line][number_seed]
+                            top_down_tile = mini_region_map[0][number_line][number_seed]
                     if number_tile <= 1: #Обрабатываем левый край мини региона
                         if number_seed != 0:
-                            left_right_tile = mini_region_map[number_line][number_seed - 1]
+                            left_right_tile = mini_region_map[0][number_line][number_seed - 1]
                     elif number_tile != (count_block - 1): #Обрабатываем правый край мини региона
                         if number_seed != (count_block - 1):
-                            left_right_tile = mini_region_map[number_line][number_seed]
-                            
-                    main_tile = mini_region_map[number_line][number_seed]
+                            left_right_tile = mini_region_map[0][number_line][number_seed]
+     
+                    main_tile = mini_region_map[0][number_line][number_seed]
                     main_tile = mini_region_tile_merge(main_tile, top_down_tile)
                     main_tile = mini_region_tile_merge(main_tile, left_right_tile)
                     tile_line.append(main_tile)
@@ -119,47 +146,13 @@ def advanced_location_generate(description, grid, game_field_size):
             region_location_line.append(region_location)
         raw_location.append(region_location_line)
         
-    ready_location = Location(description[0], 35, [], '')
-    ready_location.chank = random_location_post_generate(gluing_location(raw_location, grid, count_block), description)
-    ready_location.temperature = [random.randrange(description[1][0], description[1][1])]
-    ready_location.icon = description[4]
+    ready_location = Location(mini_region_map[1].name, 35, [], '')
+    ready_location.chank = random_location_post_generate(gluing_location(raw_location, grid, count_block), mini_region_map[1])
+    temperature = mini_region_map[1].temperature
+    ready_location.temperature = [random.randrange(temperature[0], temperature[1])]
+    ready_location.icon = mini_region_map[1].icon
     return ready_location
 
-def test_print_global_map_biome(global_map, position):
-    """
-        Печатает упрощенную схему глобальной карты по биомам
-
-        position = [global_position[y, x], field_position[y, x]]
-    """
-    use_global_map = copy.deepcopy(global_map)
-    use_global_map[position[0][0]][position[0][1]] = Location('', [], [], '☺')
-    
-    print( )
-    for number_line in range(len(use_global_map)):
-        for biom in use_global_map[number_line]:
-            print(biom.icon, end=' ')
-        print('')
-    print(' ')
-
-def ground_dict():
-
-    ground_dict =   {
-                    'j': 'бархан',
-                    '.': 'горячий песок',
-                    ',': 'жухлая трава',
-                    'o': 'валун',
-                    'A': 'холм',
-                    '▲': 'скала',
-                    'i': 'кактус',
-                    ':': 'солончак',
-                    ';': 'солончак',
-                    '„': 'трава',
-                    'u': 'высокая трава',
-                    'ü': 'колючая трава',
-                    'F': 'сухое дерево',
-                    'P': 'живое дерево',
-                    '~': 'солёная вода',                 
-                    }
 
 def selecting_generator(seed):
     """
@@ -179,6 +172,7 @@ def selecting_generator(seed):
                 }
     return seed_dict[seed]
 
+
 def description_seed_merge(one_description, two_description):
     """
         Принимает два описания локаций, склеивает их, сохраняя значение в первое.
@@ -194,11 +188,11 @@ def description_seed_merge(one_description, two_description):
 
 def master_generate(value_region_box:int, game_field_size:int, grid):
     """
-        Генерирует глобальную карту, ориентируясь на карту регионов.
+        Генерирует глобальную карту минирегионов, ориентируясь на карту регионов.
     """
     region_map = region_generate(value_region_box)
     
-    raw_global_map = []
+    raw_global_region_map = []
     
      #Сначала создаются регионы
 
@@ -224,36 +218,29 @@ def master_generate(value_region_box:int, game_field_size:int, grid):
                         if number_seed != (len(region_map) - 1):
                             left_right_description = (selecting_generator(region_map[number_line][number_seed + 1]))
                             
-                    description_for_generator = selecting_generator(region_map[number_line][number_seed])
-                    description_seed_merge(description_for_generator, top_down_description)
-                    description_seed_merge(description_for_generator, left_right_description)
-                    location_line.append(master_location_generate(description_for_generator, game_field_size, grid))
+                    for_generator = selecting_generator(region_map[number_line][number_seed])
+                    description_seed_merge(for_generator, top_down_description)
+                    description_seed_merge(for_generator, left_right_description)
+                    description_for_generator = Description_location(for_generator)
+                    location_line.append([mini_region_generate(description_for_generator, grid), description_for_generator])
                 region.append(location_line)
             region_line.append(region)
-        raw_global_map.append(region_line)
+        raw_global_region_map.append(region_line)
 
-    global_map = gluing_location(raw_global_map, value_region_box, value_region_box)
+    global_mini_region_map = gluing_location(raw_global_region_map, value_region_box, value_region_box)
+    post_mini_region_generate(global_mini_region_map)
+    global_map = []
 
+    for number_line in range(len(global_mini_region_map)):
+        location_line = []
+        for number_seed in range(len(global_mini_region_map[number_line])): #Определяем номер региона в линии регионов
+            
+            location_line.append(master_location_generate(global_mini_region_map[number_line][number_seed], game_field_size, grid))
+        global_map.append(location_line)
+    
     return global_map
 
-def gluing_location(raw_gluing_map, grid, count_block):
-    """
-        Склеивает чанки и локации в единое поле из "сырых" карт
-    """
-    value_region_box = grid * count_block
-    gluing_map = []
-    for empry_line in range(grid * count_block):
-        gluing_map.append([])
-    
-    count_location = 0
-    for number_region_line in range(grid):
-        for number_region in range(grid):
-            for number_location_line in range(count_block):
-                for number_location in range(count_block):
-                    gluing_index = (number_region_line + number_location_line) + (count_location//(grid*(count_block**2))*(count_block-1)) #определяет индекс
-                    gluing_map[gluing_index].append(raw_gluing_map[number_region_line][number_region][number_location_line][number_location])
-                    count_location += 1
-    return gluing_map  
+
 
 def location_generate(description, game_field_size):
     """
@@ -276,6 +263,60 @@ def region_generate(size_region_box):
     for i in range(size_region_box):
         region_map.append([random.randrange(10) for x in range(size_region_box)])
     return region_map
+
+
+def gluing_location(raw_gluing_map, grid, count_block):
+    """
+        Склеивает чанки и локации в единое поле из "сырых" карт
+    """
+    value_region_box = grid * count_block
+    gluing_map = []
+    for empry_line in range(grid * count_block):
+        gluing_map.append([])
+    
+    count_location = 0
+    for number_region_line in range(grid):
+        for number_region in range(grid):
+            for number_location_line in range(count_block):
+                for number_location in range(count_block):
+                    gluing_index = (number_region_line + number_location_line) + (count_location//(grid*(count_block**2))*(count_block-1)) #определяет индекс
+                    gluing_map[gluing_index].append(raw_gluing_map[number_region_line][number_region][number_location_line][number_location])
+                    count_location += 1
+    return gluing_map
+
+
+"""
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+    БЛОК КОДА, ОТВЕЧАЮЩИЙ ЗА МЕСТОПОЛОЖЕНИЕ ПЕРСОНАЖА, ЗАГРУЗКУ ИГРОВОЙ КАРТЫ И ВЫВОД НА ЭКРАН
+        
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+"""
+
+def ground_dict(tile):
+
+    ground_dict =   {
+                    'j': 'бархан',
+                    '.': 'горячий песок',
+                    ',': 'жухлая трава',
+                    'o': 'валун',
+                    'A': 'холм',
+                    '▲': 'скала',
+                    'i': 'кактус',
+                    ':': 'солончак',
+                    ';': 'солончак',
+                    '„': 'трава',
+                    'u': 'высокая трава',
+                    'ü': 'колючая трава',
+                    'F': 'сухое дерево',
+                    'P': 'живое дерево',
+                    '~': 'солёная вода',                 
+                    }
+    if tile in  ground_dict:
+        return ground_dict[tile]
+    else:
+        return 'нечто непонятное'
 
 def draw_field_calculations(position:list, views_field_size:int):
     """
@@ -324,11 +365,11 @@ def calculation_assemblage_point(global_map:list, position, chank_size:int, chan
         for line in line_slice:
             line = line[position.assemblage_point[1]:(position.assemblage_point[1] + 2)]
             assemblage_chank.append(line)
-
         for number_line in range(len(assemblage_chank)):
             for chank in range(len(assemblage_chank)):
                 assemblage_chank[number_line][chank] = assemblage_chank[number_line][chank].chank
         position.chanks_use_map = gluing_location(assemblage_chank, 2, chank_size)
+        
 
 def request_move_person(global_map:list, position, chank_size:int):
     """
@@ -383,6 +424,24 @@ def test_print_chank(position):
 
     print(draw_box)
 
+def test_print_global_map_biome(global_map, position):
+    """
+        Печатает упрощенную схему глобальной карты по биомам
+
+    """
+    use_global_map = copy.deepcopy(global_map)
+    use_global_map[position.assemblage_point[0]][position.assemblage_point[1]] = Location('', [], [], '☺')
+    
+    print( )
+    minimap = ''
+    for number_line in range(len(use_global_map)):
+        print_line = ''
+        for biom in use_global_map[number_line]:
+            print_line += biom.icon + ' '
+        minimap += (print_line) + '\n'
+    print(minimap)
+
+
 def print_game_field(position, views_field_size:int):
     """
         Выводит изображение игрового поля на экран
@@ -394,13 +453,14 @@ def print_game_field(position, views_field_size:int):
         print_line = ''
         for tile in range(len(draw_field)):
             if line == views_field_size//2 and tile == views_field_size//2:
+                ground = draw_field[line][tile]
                 print_line += '☺' + ' '
             else:
                 print_line += draw_field[line][tile] + ' '
         draw_box += print_line + '\n'
     os.system('cls' if os.name == 'nt' else 'clear')
     print(draw_box)
-    print(position.assemblage_point, ' - Позиция точки сборки | ', position.dynamic, ' - динамическая позиция ')
+    print(position.assemblage_point, ' - Позиция точки сборки | ', position.dynamic, ' - динамическая позиция | под ногами:', ground_dict(ground) )
 
 
 def game_loop(global_map:list, position:list, chank_size:int):
@@ -412,6 +472,7 @@ def game_loop(global_map:list, position:list, chank_size:int):
     while game_loop :
         request_move_person(global_map, position, chank_size)
         print_game_field(position, chank_size)
+        #test_print_global_map_biome(global_map, position) #Включение/отключение карты
         
 
 def main():
@@ -419,7 +480,7 @@ def main():
         Запускает игру
         
     """
-    chank_size = 30         #Определяет размер одного игрового поля и окна просмотра
+    chank_size = 25         #Определяет размер одного игрового поля и окна просмотра
     value_region_box = 4    #Количество регионов в квадрате
     grid = 5                #Можно любое, но лучше кратное размеру игрового экрана. Иначе обрежет область видимости.
 
@@ -427,6 +488,7 @@ def main():
 
     
     position = Position([value_region_box//2, value_region_box//2], [chank_size//2, chank_size//2], [])
+    test_print_global_map_biome(global_map, position)
     calculation_assemblage_point(global_map, position, chank_size, 3)
     
     game_loop(global_map, position, chank_size)
