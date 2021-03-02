@@ -15,11 +15,20 @@ garbage = ['░', '▒', '▓', '█', '☺']
     2)Отображение минимального набора чанков и их выгрузку при удалении камеры - сделать это через срезы и готовый алгоритм распаковки сырой карты
     с регионами в готовую единую карту #РЕАЛИЗОВАНО
     3)Объединить версию со свободной камерой и версию с регионами #РЕАЛИЗОВАНО
-    4)"подружить" друг с другом края локаций
+    4)"подружить" друг с другом края локаций #РЕАЛИЗОВАНО
     5)Реализовать повторный пост-генератор карты минирегионов, который копирует значение боковых значений мини регионов
     в прилегающие края следующих мини регионов. Слева ==> направо, сверху ==> вниз #РЕАЛИЗОВАНО
+    6)Подготовить код к вменяемому добавлению элементов геймплея. Отдельно генерация мира, отдельно управление и рассчёт положения, отдельно печать на экран
+    7)Добавить элементы геймплея
+    8)Реализовать вывод всего изображения за один проход в струкрурированный интерфейс
 """
 
+
+class Temperature:
+    """ Содержит температуру среды и температуру персонажа """
+    def __init__(self, temperature_environment, temperature_person):
+        self.environment = temperature_environment
+        self.person = temperature_person
 
 class Position:
     """ Содержит в себе глобальное местоположение персонажа, расположение в пределах загруженного участка карты и координаты используемых чанков """
@@ -27,6 +36,14 @@ class Position:
         self.assemblage_point = assemblage_point
         self.dynamic = dynamic
         self.chank = chanks_use_map
+
+class Location:
+    """ Содержит описание локации """
+    def __init__(self, name:str, temperature:float, chank:list, icon:str):
+        self.name = name
+        self.temperature = temperature
+        self.chank = chank
+        self.icon = icon
 
 class Description_location:
     """ Содержит информацию для генератора локаций """
@@ -37,18 +54,27 @@ class Description_location:
         self.random_tileset = description[3]
         self.icon = description[4]
 
-class Location:
-    """ Содержит описание локации """
-    def __init__(self, name:str, temperature:float, chank:list, icon:str):
-        self.name = name
-        self.temperature = temperature
-        self.chank = chank
-        self.icon = icon
+class Interfase:
+    """ Содержит элементы для последующего вывода на экран """
+    def __init__(self, game_field, biom_map, minimap_on, text1, text2, text3, text4, text5, text6, text7, text8, text9, text10):
+        self.game_field = game_field
+        self.biom_map = biom_map
+        self.minimap_on = minimap_on
+        self.text1 = text1
+        self.text2 = text2
+        self.text3 = text3
+        self.text4 = text4
+        self.text5 = text5
+        self.text6 = text6
+        self.text7 = text7
+        self.text8 = text8
+        self.text9 = text9
+        self.text10 = text10
 
 """
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-    БЛОК КОДА, ОТВЕЧАЮЩИЙ ЗА ГЕНЕРАЦИЮ ИГРОВОЙ КАРТЫ ПРИ ЗАПУСКЕ ИГРЫ
+    ГЕНЕРАЦИЯ ИГРОВОЙ КАРТЫ ПРИ ЗАПУСКЕ ИГРЫ
     
     На выходе выдаёт класс Location
     
@@ -191,10 +217,10 @@ def master_generate(value_region_box:int, game_field_size:int, grid):
         Генерирует глобальную карту минирегионов, ориентируясь на карту регионов.
     """
     region_map = region_generate(value_region_box)
+
+    progress_bar(20, 'Регионы сгенерированы')
     
     raw_global_region_map = []
-    
-     #Сначала создаются регионы
 
     for number_line in range(len(region_map)):
         region_line = []
@@ -217,7 +243,6 @@ def master_generate(value_region_box:int, game_field_size:int, grid):
                     elif number_location != (len(region_map) - 1): #Обрабатываем правый край региона
                         if number_seed != (len(region_map) - 1):
                             left_right_description = (selecting_generator(region_map[number_line][number_seed + 1]))
-                            
                     for_generator = selecting_generator(region_map[number_line][number_seed])
                     description_seed_merge(for_generator, top_down_description)
                     description_seed_merge(for_generator, left_right_description)
@@ -226,21 +251,19 @@ def master_generate(value_region_box:int, game_field_size:int, grid):
                 region.append(location_line)
             region_line.append(region)
         raw_global_region_map.append(region_line)
-
+    progress_bar(40, 'Глобальная карта мини регионов построена')
     global_mini_region_map = gluing_location(raw_global_region_map, value_region_box, value_region_box)
+    progress_bar(60, 'Постобработка мини регионов')
     post_mini_region_generate(global_mini_region_map)
     global_map = []
-
+    progress_bar(80, 'Глобальные регионы отданы на генерацию локаций')
     for number_line in range(len(global_mini_region_map)):
         location_line = []
         for number_seed in range(len(global_mini_region_map[number_line])): #Определяем номер региона в линии регионов
-            
             location_line.append(master_location_generate(global_mini_region_map[number_line][number_seed], game_field_size, grid))
         global_map.append(location_line)
-    
+    progress_bar(100, 'Игровая карта готова')
     return global_map
-
-
 
 def location_generate(description, game_field_size):
     """
@@ -288,49 +311,13 @@ def gluing_location(raw_gluing_map, grid, count_block):
 """
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-    БЛОК КОДА, ОТВЕЧАЮЩИЙ ЗА МЕСТОПОЛОЖЕНИЕ ПЕРСОНАЖА, ЗАГРУЗКУ ИГРОВОЙ КАРТЫ И ВЫВОД НА ЭКРАН
+    МЕСТОПОЛОЖЕНИЕ ПЕРСОНАЖА И ЗАГРУЗКА ДИНАМИЧЕСКОЙ КАРТЫ
         
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 """
 
-def ground_dict(tile):
 
-    ground_dict =   {
-                    'j': 'бархан',
-                    '.': 'горячий песок',
-                    ',': 'жухлая трава',
-                    'o': 'валун',
-                    'A': 'холм',
-                    '▲': 'скала',
-                    'i': 'кактус',
-                    ':': 'солончак',
-                    ';': 'солончак',
-                    '„': 'трава',
-                    'u': 'высокая трава',
-                    'ü': 'колючая трава',
-                    'F': 'сухое дерево',
-                    'P': 'живое дерево',
-                    '~': 'солёная вода',                 
-                    }
-    if tile in  ground_dict:
-        return ground_dict[tile]
-    else:
-        return 'нечто непонятное'
-
-def draw_field_calculations(position:list, views_field_size:int):
-    """
-        Формирует итоговое изображение на печать
-    """
-    half_views = (views_field_size//2)
-    start_stop = [(position.dynamic[0] - half_views), (position.dynamic[1] - half_views), (position.dynamic[0] + half_views + 1),(position.dynamic[1] + half_views + 1)]
-    line_views = position.chanks_use_map[start_stop[0]:start_stop[2]]
-    
-    draw_field = []
-    for line in line_views:
-        line = line[start_stop[1]:start_stop[3]]
-        draw_field.append(line)
-    return draw_field 
 
 def calculation_assemblage_point(global_map:list, position, chank_size:int, change):
     """
@@ -369,9 +356,30 @@ def calculation_assemblage_point(global_map:list, position, chank_size:int, chan
             for chank in range(len(assemblage_chank)):
                 assemblage_chank[number_line][chank] = assemblage_chank[number_line][chank].chank
         position.chanks_use_map = gluing_location(assemblage_chank, 2, chank_size)
-        
 
-def request_move_person(global_map:list, position, chank_size:int):
+"""
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+    ОБРАБОТКА ИГРОВЫХ СОБЫТИЙ
+        
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+"""
+
+def game_events():
+    pass
+
+
+"""
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+    ВВОД ИГРОКА
+        
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+"""        
+
+def request_move_person(global_map:list, position, chank_size:int, go_to_print):
     """
         Спрашивает ввод, меняет динамическое местоположение персонажа
 
@@ -412,9 +420,42 @@ def request_move_person(global_map:list, position, chank_size:int):
                 keyboard_loop = False
         elif move == 'space':
             keyboard_loop = False
+        elif move == 'm' or move == 'ь':
+            go_to_print.minimap_on = (go_to_print.minimap_on == False)
+            keyboard_loop = False
         else: pass
 
+
+"""
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+    ФОРМИРОВАНИЕ БЛОКОВ ДЛЯ ВЫВОДА НА ЭКРАН
+
+    Работает с классом Interfase, содержащимся в go_to_print
+        
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+"""      
+
+def progress_bar(percent, description):
+    """
+        Отображает вывод на экран прогресс бара
+    """
+    os.system('cls' if os.name == 'nt' else 'clear')
+    progress = description + '\n['
+    for five_percent in range(percent//2):
+        progress += '█'
+    for empty_percent in range((50 - percent//2)):
+        progress += '░'
+    progress += ']'
+
+    print(progress)
+
 def test_print_chank(position):
+    """
+        Печатает загруженный кусок карты
+
+    """
     draw_box = ''
     for line in position.chanks_use_map:
         print_line = ''
@@ -424,31 +465,72 @@ def test_print_chank(position):
 
     print(draw_box)
 
-def test_print_global_map_biome(global_map, position):
+def test_print_global_map_biome(global_map, position, go_to_print):
     """
         Печатает упрощенную схему глобальной карты по биомам
 
     """
-    use_global_map = copy.deepcopy(global_map)
-    use_global_map[position.assemblage_point[0]][position.assemblage_point[1]] = Location('', [], [], '☺')
-    
-    print( )
-    minimap = ''
-    for number_line in range(len(use_global_map)):
+
+    minimap = []
+    for number_line in range(len(global_map)):
         print_line = ''
-        for biom in use_global_map[number_line]:
-            print_line += biom.icon + ' '
-        minimap += (print_line) + '\n'
-    print(minimap)
+        for biom in range(len(global_map[number_line])):
+            if number_line == position.assemblage_point[0] and biom == position.assemblage_point[1]:
+                go_to_print.text2 = global_map[number_line][biom].name
+                go_to_print.text3 = [global_map[number_line][biom].temperature, 36.6]
+                print_line += '☺ '
+                
+            else:
+                print_line += global_map[number_line][biom].icon + ' '
+        minimap.append((print_line))
+    go_to_print.biom_map = minimap
 
 
-def print_game_field(position, views_field_size:int):
+def ground_dict(tile):
+
+    ground_dict =   {
+                    'j': 'бархан',
+                    '.': 'горячий песок',
+                    ',': 'жухлая трава',
+                    'o': 'валун',
+                    'A': 'холм',
+                    '▲': 'скала',
+                    'i': 'кактус',
+                    ':': 'солончак',
+                    ';': 'солончак',
+                    '„': 'трава',
+                    'u': 'высокая трава',
+                    'ü': 'колючая трава',
+                    'F': 'чахлое дерево',
+                    'P': 'раскидистое дерево',
+                    '~': 'солёная вода',                 
+                    }
+    if tile in  ground_dict:
+        return ground_dict[tile]
+    else:
+        return 'нечто непонятное'
+
+def draw_field_calculations(position:list, views_field_size:int):
+    """
+        Формирует итоговое изображение игрового поля на печать
+    """
+    half_views = (views_field_size//2)
+    start_stop = [(position.dynamic[0] - half_views), (position.dynamic[1] - half_views), (position.dynamic[0] + half_views + 1),(position.dynamic[1] + half_views + 1)]
+    line_views = position.chanks_use_map[start_stop[0]:start_stop[2]]
+    
+    draw_field = []
+    for line in line_views:
+        line = line[start_stop[1]:start_stop[3]]
+        draw_field.append(line)
+    return draw_field 
+
+def draw_game_field(position, views_field_size:int, go_to_print):
     """
         Выводит изображение игрового поля на экран
     """
 
     draw_field = draw_field_calculations(position, views_field_size)
-    draw_box = ''
+    draw_box = []
     for line in range(len(draw_field)):
         print_line = ''
         for tile in range(len(draw_field)):
@@ -457,22 +539,85 @@ def print_game_field(position, views_field_size:int):
                 print_line += '☺' + ' '
             else:
                 print_line += draw_field[line][tile] + ' '
-        draw_box += print_line + '\n'
+        draw_box.append(print_line)
+    go_to_print.game_field = draw_box
+    go_to_print.text1 = (position.assemblage_point, ' - Позиция точки сборки | ', position.dynamic, ' - динамическая позиция | под ногами:', ground_dict(ground) )
+
+    
+"""
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+    ИНТЕРФЕЙС И ВЫВОД ИТОГОВОГО ИЗОБРАЖЕНИЯ НА ЭКРАН
+        
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+"""
+
+def print_interfase(go_to_print, frame_size):
+    """
+        Отвечает за итоговый вывод содержимого на экран
+    """
+    
+
+    raw_frame = []
+    
+    for line in range(frame_size[0]):
+        if line < 3:
+            raw_frame.append('')
+        else:
+            raw_frame.append('')
+    #print game_field
+    for line in range(len(go_to_print.game_field)):
+        raw_frame[(line + 3)] += '      ' + go_to_print.game_field[line]
+
+    if go_to_print.minimap_on: #print biom_map
+        for line in range(len(go_to_print.biom_map)):
+            raw_frame[(line + 3)] += '      ' + go_to_print.biom_map[line]
+
+    raw_frame[4+len(go_to_print.game_field)] += '   ' + str(go_to_print.text1)
+
+    raw_frame[5+len(go_to_print.game_field)] += '   Вы находитесь в ' + str(go_to_print.text2)
+
+    if go_to_print.minimap_on:
+        raw_frame[6+len(go_to_print.game_field)] += '   Температура среды: ' + str(go_to_print.text3[0][0]) + ' градусов. Температура персонажа: ' + str(go_to_print.text3[1]) + ' градусов.'
+
+    frame = ''
+    for line in raw_frame:
+        frame += line + '\n'
+
+
+
+        
     os.system('cls' if os.name == 'nt' else 'clear')
-    print(draw_box)
-    print(position.assemblage_point, ' - Позиция точки сборки | ', position.dynamic, ' - динамическая позиция | под ногами:', ground_dict(ground) )
+    print(frame)
 
 
-def game_loop(global_map:list, position:list, chank_size:int):
+
+"""
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+    УПРАВЛЯЮЩИЙ БЛОК
+        
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+"""
+
+
+def game_loop(global_map:list, position:list, chank_size, frame_size):
     """
         Здесь происходят все игровые события
         
     """
+    go_to_print = Interfase([], [], False, '', '', '', '', '', '', '', '', '', '')
+
     
     while game_loop :
-        request_move_person(global_map, position, chank_size)
-        print_game_field(position, chank_size)
-        #test_print_global_map_biome(global_map, position) #Включение/отключение карты
+        request_move_person(global_map, position, chank_size, go_to_print)
+        draw_game_field(position, chank_size, go_to_print)
+        if go_to_print.minimap_on:
+            test_print_global_map_biome(global_map, position, go_to_print)
+        print_interfase(go_to_print, frame_size)
+        
         
 
 def main():
@@ -480,18 +625,21 @@ def main():
         Запускает игру
         
     """
-    chank_size = 25         #Определяет размер одного игрового поля и окна просмотра
-    value_region_box = 4    #Количество регионов в квадрате
+    chank_size = 35         #Определяет размер одного игрового поля и окна просмотра. Рекоммендуемое значение 25.
+    value_region_box = 5    #Количество регионов в квадрате.
     grid = 5                #Можно любое, но лучше кратное размеру игрового экрана. Иначе обрежет область видимости.
+    frame_size = [44, 40]   #Размер одного кадра [высота, ширина].
 
+
+    progress_bar(5, 'Запуск игры') 
     global_map = master_generate(value_region_box, chank_size, grid)
 
     
     position = Position([value_region_box//2, value_region_box//2], [chank_size//2, chank_size//2], [])
-    test_print_global_map_biome(global_map, position)
+    #test_print_global_map_biome(global_map, position)
     calculation_assemblage_point(global_map, position, chank_size, 3)
     
-    game_loop(global_map, position, chank_size)
+    game_loop(global_map, position, chank_size, frame_size)
     
     print('Игра окончена!')
 
