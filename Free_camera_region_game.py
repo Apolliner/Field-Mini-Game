@@ -21,11 +21,11 @@ garbage = ['░', '▒', '▓', '█', '☺']
     6)Подготовить код к вменяемому добавлению элементов геймплея. Отдельно генерация мира, отдельно управление и рассчёт положения, отдельно печать на экран
     7)Добавить элементы геймплея
     8)Реализовать вывод всего изображения за один проход в струкрурированный интерфейс
-    9)Отдельная карта мира для закадровой симуляции NPC
+    9)Отдельная карта мира для закадровой симуляции NPC #ПОДОШЛА ОБЫЧНАЯ
 
     ЗАПЛАНИРОВАНО:
     1)Стрельба
-    2)Свободный просмотр клеток вокруг
+    2)Свободный просмотр клеток вокруг #РЕАЛИЗОВАНО
     3)Противники и NPC
     4)Возможность спрятаться
     5)Возможность посмотреть на небо
@@ -334,9 +334,146 @@ def gluing_location(raw_gluing_map, grid, count_block):
 
 """
 
-def game_events():
+
+def person_dict():
+
+    person_dict = {
+                    '☺ ': 'person',
+                    '☺r': 'revolver',
+                    '☺-': 'riffle',
+                    '☺—': 'long riffle',
+                    '☺=': 'double-barreled shotgun',
+                    '☺/': 'spear',
+                    '☺h': 'horseman',
+                    '☺‰': 'dart',
+                    '☺Ð': 'archer',
+                    '☻ ': 'enemy'
+                    }
+
+class Enemy:
+    """ Отвечает за всех NPC """
+    def __init__(self, enemy, position, action_points):
+        self.enemy = enemy
+        self.position = position
+        self.action_points = action_points
+        self.dynamic_chank = False
+
+class Horseman(Enemy):
+    """ Отвечает за всадников """
+    def __init__(self):
+        self.name = 'horseman'
+        self.precedence_biom = [',', '„', 'P']
+        self.icon = '☻h'
+
+        
+
+class Riffleman(Enemy):
+    """ Отвечает за стрелков """
+    def __init__(self):
+        self.name = 'riffleman'
+        self.precedence_biom = ['.', 'A', '▲']
+        self.icon = '☻r'
+
+
+class Horse(Enemy):
+    """ Отвечает за коней """
+    def __init__(self):
+        self.name = 'horse'
+        self.precedence_biom = [',', '„', 'P']
+        self.icon = 'ho'
+        
+
+
+class Coyot(Enemy):
+    """ Отвечает за койотов """
+    def __init__(self):
+        self.name = 'coyot'
+        self.precedence_biom = ['.', ',', '„', 'P', 'A']
+        self.icon = 'co'
+        
+
+
+
+def master_game_events(global_map, enemy_list, position):
+    """
+        Здесь происходят все события, не связанные с пользовательским вводом
+    """
+    enemy_dynamic_chank_check(global_map, enemy_list, position)
+
+    for enemy in enemy_list:
+        if enemy.dynamic_chank:
+            enemy_in_dynamic_chank(global_map, enemy, position)
+        else:
+            enemy_emulation_life(global_map, enemy)
+    
+def enemy_dynamic_chank_check(global_map, enemy_list, position):
+    """
+        Проверяет нахождение NPC на динамическом чанке игрока
+    """
     pass
 
+def enemy_emulation_life(global_map, enemy):
+    """
+        Обрабатывает жизнь NPC за кадром, на глобальной карте
+    """
+    enemy.action_points += 1
+    if enemy.action_points >= 2:
+        move_biom_enemy(global_map, enemy)
+        enemy.action_points -= 2
+
+def move_biom_enemy(global_map, enemy):
+    """
+        Обрабатывает перемещение NPC за кадром между биомами
+    """
+
+    if global_map[enemy.position[0]][enemy.position[1]].icon in enemy.enemy.precedence_biom:
+        print('Сработало условие нахождения на подходящем тайле')
+        direction_moved = []
+
+        
+        if global_map[enemy.position[0] - 1][enemy.position[1]].icon in enemy.enemy.precedence_biom and enemy.position[0] - 1 > 0:
+            direction_moved.append([enemy.position[0] - 1, enemy.position[1]])
+        if global_map[enemy.position[0] + 1][enemy.position[1]].icon in enemy.enemy.precedence_biom and enemy.position[0] + 1 < len(global_map) - 1:
+            direction_moved.append([enemy.position[0] + 1, enemy.position[1]]) 
+        if global_map[enemy.position[0]][enemy.position[1] - 1].icon in enemy.enemy.precedence_biom and enemy.position[1] - 1 > 0:
+            direction_moved.append([enemy.position[0], enemy.position[1] - 1])
+        if global_map[enemy.position[0]][enemy.position[1] + 1].icon in enemy.enemy.precedence_biom and enemy.position[1] + 1 < len(global_map) - 1:
+            direction_moved.append([enemy.position[0], enemy.position[1] + 1])
+        if len(direction_moved) != 0:
+            enemy.position = random.choice(direction_moved)
+        if len(direction_moved) == 0:
+            print('Сработало условие исключения подходящих тайлов при нахождении на подходящем тайле')
+            if random.randrange(10)//8 == 1:
+                direction_moved = []
+                if enemy.position[0] - 1 > 0:
+                    direction_moved.append([enemy.position[0] - 1, enemy.position[1]])
+                elif enemy.position[0] + 1 < len(global_map) - 1:
+                    direction_moved.append([enemy.position[0] + 1, enemy.position[1]])
+                elif enemy.position[1] - 1 > 0:
+                    direction_moved.append([enemy.position[0], enemy.position[1] - 1])
+                elif enemy.position[1] + 1 < len(global_map) - 1:
+                    direction_moved.append([enemy.position[0], enemy.position[1] + 1])
+                enemy.position = random.choice(direction_moved)
+    else:
+        print('Нахождение на неподходящем тайле')
+        if random.randrange(10)//8 == 1:
+            direction_moved = []
+            if enemy.position[0] - 1 > 0:
+                direction_moved.append([enemy.position[0] - 1, enemy.position[1]])
+            if enemy.position[0] + 1 < len(global_map) - 1:
+                direction_moved.append([enemy.position[0] + 1, enemy.position[1]])
+            if enemy.position[1] - 1 > 0:
+                direction_moved.append([enemy.position[0], enemy.position[1] - 1])
+            if enemy.position[1] + 1 < len(global_map) - 1:
+                direction_moved.append([enemy.position[0], enemy.position[1] + 1])
+            enemy.position = random.choice(direction_moved)
+        
+
+def enemy_in_dynamic_chank(global_map, enemy, position):
+    """
+        Обрабатывает поведение NPC на динамическом чанке игрока
+    """
+    pass
 
 """
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -540,7 +677,7 @@ def progress_bar(percent, description):
     print(progress)
 
 
-def test_print_global_map_biome(global_map, position, go_to_print):
+def print_minimap(global_map, position, go_to_print, enemy_list):
     """
         Печатает упрощенную схему глобальной карты по биомам
     """
@@ -549,11 +686,16 @@ def test_print_global_map_biome(global_map, position, go_to_print):
     for number_line in range(len(global_map)):
         print_line = ''
         for biom in range(len(global_map[number_line])):
+            enemy_here = '--'
+            for enemy in range(len(enemy_list)):
+                if number_line == enemy_list[enemy].position[0] and biom == enemy_list[enemy].position[1]:
+                    enemy_here = enemy_list[enemy].enemy.icon
             if number_line == position.assemblage_point[0] and biom == position.assemblage_point[1]:
                 go_to_print.text2 = global_map[number_line][biom].name
                 go_to_print.text3 = [global_map[number_line][biom].temperature, 36.6]
-                print_line += '☺ '
-                
+                print_line += global_map[number_line][biom].icon + '☺'
+            elif enemy_here != '--':
+                print_line += enemy_here
             else:
                 print_line += global_map[number_line][biom].icon + ' '
         minimap.append((print_line))
@@ -582,23 +724,7 @@ def ground_dict(tile):
     if tile in  ground_dict:
         return ground_dict[tile]
     else:
-        return 'нечто'
-
-def person_dict():
-
-    person_dict = {
-                    '☺ ': 'person',
-                    '☺r': 'revolver',
-                    '☺-': 'riffle',
-                    '☺—': 'long riffle',
-                    '☺=': 'double-barreled shotgun',
-                    '☺/': 'spear',
-                    '☺p': 'horseman',
-                    '☺‰': 'dart',
-                    '☺Ð': 'archer',
-                    '☻ ': 'enemy'
-                    }
-                    
+        return 'нечто'                 
 
 def draw_field_calculations(position:list, views_field_size:int):
     """
@@ -614,12 +740,12 @@ def draw_field_calculations(position:list, views_field_size:int):
         draw_field.append(line)
     return draw_field 
 
-def master_draw(position, chank_size:int, go_to_print, global_map, mode_action):
+def master_draw(position, chank_size:int, go_to_print, global_map, mode_action, enemy_list):
     """
         Формирует итоговое изображение игрового поля для вывода на экран
     """
     if go_to_print.minimap_on:
-        test_print_global_map_biome(global_map, position, go_to_print)
+        print_minimap(global_map, position, go_to_print, enemy_list)
 
     draw_field = draw_field_calculations(position, chank_size)
     draw_box = []
@@ -703,7 +829,7 @@ def print_frame(go_to_print, frame_size):
 
 """
 
-def game_loop(global_map:list, position:list, chank_size, frame_size):
+def game_loop(global_map:list, position:list, chank_size:int, frame_size:list, enemy_list:list):
     """
         Здесь происходят все игровые события
         
@@ -720,9 +846,9 @@ def game_loop(global_map:list, position:list, chank_size, frame_size):
         if not_intercept_step[0]:
             mode_action = master_player_action(global_map, position, chank_size, go_to_print, changing_step, mode_action)
         if changing_step:
-            game_events()
+            master_game_events(global_map, enemy_list, position)
             step += 1
-        master_draw(position, chank_size, go_to_print, global_map, mode_action)        
+        master_draw(position, chank_size, go_to_print, global_map, mode_action, enemy_list)        
         print_frame(go_to_print, frame_size)
         print('step = ', step)
              
@@ -742,8 +868,9 @@ def main():
     global_map = master_generate(value_region_box, chank_size, grid)
     position = Position([value_region_box//2, value_region_box//2], [chank_size//2, chank_size//2], [], [chank_size//2, chank_size//2], [chank_size//2, chank_size//2])
     calculation_assemblage_point(global_map, position, chank_size, 3)
-    
-    game_loop(global_map, position, chank_size, frame_size)
+    enemy_list = [Enemy(Horseman(),[len(global_map)//2, len(global_map)//2] , 5), Enemy(Horseman(),[len(global_map)//3, len(global_map)//3] , 5),
+                  Enemy(Riffleman(),[len(global_map)//4, len(global_map)//4] , 2), Enemy(Coyot(),[len(global_map)//5, len(global_map)//5] , 0)]
+    game_loop(global_map, position, chank_size, frame_size, enemy_list)
     
     print('Игра окончена!')
 
