@@ -21,6 +21,21 @@ garbage = ['░', '▒', '▓', '█', '☺']
     6)Подготовить код к вменяемому добавлению элементов геймплея. Отдельно генерация мира, отдельно управление и рассчёт положения, отдельно печать на экран
     7)Добавить элементы геймплея
     8)Реализовать вывод всего изображения за один проход в струкрурированный интерфейс
+    9)Отдельная карта мира для закадровой симуляции NPC
+
+    ЗАПЛАНИРОВАНО:
+    1)Стрельба
+    2)Свободный просмотр клеток вокруг
+    3)Противники и NPC
+    4)Возможность спрятаться
+    5)Возможность посмотреть на небо
+    6)Перехват шага у игрока
+
+    ТЕМАТИКА:
+    Игра о человеке, который сбежал от погони в пустынную область, имея только флягу с водой и револьвер с 5ю патронами.
+    Он не может покинуть область "потому что его ищут" и поэтому должен выживать здесь.
+    Он может сталкиваться со зверьми и с людьми. В горных областях с золотоискателями, а в зелёных областях со всадниками, которые были отправлены его убить.
+    
 """
 
 
@@ -32,10 +47,12 @@ class Temperature:
 
 class Position:
     """ Содержит в себе глобальное местоположение персонажа, расположение в пределах загруженного участка карты и координаты используемых чанков """
-    def __init__(self, assemblage_point:list, dynamic:list, chanks_use_map:list):
+    def __init__(self, assemblage_point:list, dynamic:list, chanks_use_map:list, pointer:list, gun:list):
         self.assemblage_point = assemblage_point
         self.dynamic = dynamic
         self.chank = chanks_use_map
+        self.pointer = pointer
+        self.gun = gun
 
 class Location:
     """ Содержит описание локации """
@@ -185,16 +202,16 @@ def selecting_generator(seed):
         Содержит и выдаёт значения семян генерации.
     """
     seed_dict = {
-                    0: ['desert',             [40.0,60.0], ['.'],                   ['j'],              'j'],
-                    1: ['semidesert',         [35.0,50.0], ['.', ','],              ['▲', 'o', 'i'],    '.'],
-                    2: ['cliff semidesert',   [35.0,50.0], ['▲', 'A', '.', ','],    ['o', 'i'],         'A'],
-                    3: ['saline land',        [40.0,50.0], [';'],                   [':'],              ';'],
-                    4: ['dried field',        [30.0,40.0], ['„', ','],              ['o', 'u'],         ','],
-                    5: ['field',              [20.0,35.0], ['u', '„', ','],         ['ü', 'o'],         '„'],
-                    6: ['hills',              [20.0,35.0], ['▲', 'o'],              ['„', ','],         '▲'],
-                    7: ['oasis',              [15.0,30.0], ['F', '„', '~'],         ['P', ','],         'P'],
-                    8: ['salty lake',         [25.0,40.0], ['~', ','],              ['„', '.'],         '~'],
-                    9: ['swamp',              [15.0,30.0], ['ü', 'u', '~'],         ['„', ','],         'ü'],
+                    0: ['desert',             [40.0,60.0], ['.'],                 ['j'],                 'j'],
+                    1: ['semidesert',         [35.0,50.0], ['.', ','],            ['▲', 'o', 'i'],       '.'],
+                    2: ['cliff semidesert',   [35.0,50.0], ['▲', 'A', '.', ','],  ['o', 'i'],            'A'],
+                    3: ['saline land',        [40.0,50.0], [';'],                 [':'],                 ';'],
+                    4: ['dried field',        [30.0,40.0], ['„', ','],            ['o', 'u'],            ','],
+                    5: ['field',              [20.0,35.0], ['u', '„', ','],       ['ü', 'o'],            '„'],
+                    6: ['hills',              [20.0,35.0], ['▲', 'o'],            ['„', ','],            '▲'],
+                    7: ['oasis',              [15.0,30.0], ['F', '„', '~'],       ['P', ','],            'P'],
+                    8: ['salty lake',         [25.0,40.0], ['~', ','],            ['„', '.'],            '~'],
+                    9: ['swamp',              [15.0,30.0], ['ü', 'u', '~'],       ['„', ','],            'ü'],
                 }
     return seed_dict[seed]
 
@@ -218,7 +235,7 @@ def master_generate(value_region_box:int, game_field_size:int, grid):
     """
     region_map = region_generate(value_region_box)
 
-    progress_bar(20, 'Регионы сгенерированы')
+    #progress_bar(20, 'Регионы сгенерированы')
     
     raw_global_region_map = []
 
@@ -251,18 +268,18 @@ def master_generate(value_region_box:int, game_field_size:int, grid):
                 region.append(location_line)
             region_line.append(region)
         raw_global_region_map.append(region_line)
-    progress_bar(40, 'Глобальная карта мини регионов построена')
+    #progress_bar(40, 'Глобальная карта мини регионов построена')
     global_mini_region_map = gluing_location(raw_global_region_map, value_region_box, value_region_box)
-    progress_bar(60, 'Постобработка мини регионов')
+    #progress_bar(60, 'Постобработка мини регионов')
     post_mini_region_generate(global_mini_region_map)
     global_map = []
-    progress_bar(80, 'Глобальные регионы отданы на генерацию локаций')
+    #progress_bar(80, 'Глобальные регионы отданы на генерацию локаций')
     for number_line in range(len(global_mini_region_map)):
         location_line = []
         for number_seed in range(len(global_mini_region_map[number_line])): #Определяем номер региона в линии регионов
             location_line.append(master_location_generate(global_mini_region_map[number_line][number_seed], game_field_size, grid))
         global_map.append(location_line)
-    progress_bar(100, 'Игровая карта готова')
+    #progress_bar(100, 'Игровая карта готова')
     return global_map
 
 def location_generate(description, game_field_size):
@@ -311,13 +328,147 @@ def gluing_location(raw_gluing_map, grid, count_block):
 """
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-    МЕСТОПОЛОЖЕНИЕ ПЕРСОНАЖА И ЗАГРУЗКА ДИНАМИЧЕСКОЙ КАРТЫ
+    ОБРАБОТКА ИГРОВЫХ СОБЫТИЙ
         
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 """
 
+def game_events():
+    pass
 
+
+"""
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+    ПОЛЬЗОВАТЕЛЬСКИЙ ВВОД И ЕГО ОБРАБОТКА
+        
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+"""
+
+def master_player_action(global_map, position, chank_size, go_to_print, changing_step, mode_action):
+
+
+    pressed_button = ''
+    mode_action, pressed_button = request_press_button(global_map, position, chank_size, go_to_print, changing_step, mode_action)
+
+    if mode_action == 'move':
+        request_move(global_map, position, chank_size, go_to_print, pressed_button, changing_step)
+    elif mode_action == 'pointer':    
+        request_pointer(position, chank_size, go_to_print, pressed_button, changing_step)
+    elif mode_action == 'gun':
+        request_gun(global_map, position, chank_size, go_to_print, pressed_button, changing_step)
+    if pressed_button == 'button_map':
+        go_to_print.minimap_on = (go_to_print.minimap_on == False)
+    request_processing(pressed_button)
+
+    return mode_action
+
+
+
+def request_press_button(global_map, position, chank_size, go_to_print, changing_step, mode_action):
+    """
+        Спрашивает ввод, возвращает тип активности и нажимаемую кнопку
+
+    """
+    key = keyboard.read_key()
+    
+    if key == 'w' or key == 'up' or key == 'ц':
+        return (mode_action, 'up')
+    elif key == 'a' or key == 'left' or key == 'ф':
+        return (mode_action, 'left')
+    elif key == 's' or key == 'down' or key == 'ы':
+        return (mode_action, 'down')
+    elif key == 'd' or key == 'right' or key == 'в':
+        return (mode_action, 'right')
+    elif key == 'space':
+        return (mode_action, 'space')
+    elif key == 'k' or key == 'л':
+        if mode_action == 'move':
+            position.pointer = [chank_size//2, chank_size//2]
+            return ('pointer', 'button_pointer')
+        elif mode_action == 'pointer':
+            position.pointer = [chank_size//2, chank_size//2]
+            return ('move', 'button_pointer')
+        else:
+            position.pointer = [chank_size//2, chank_size//2]
+            position.gun = [chank_size//2, chank_size//2]
+            return ('move', 'button_pointer')
+    elif key == 'g' or key == 'п':
+        if mode_action == 'move':
+            position.gun = [chank_size//2, chank_size//2]
+            return ('gun', 'button_gun')
+        elif mode_action == 'gun':
+            position.gun = [chank_size//2, chank_size//2]
+            return ('move', 'button_gun')
+        else:
+            position.pointer = [chank_size//2, chank_size//2]
+            position.gun = [chank_size//2, chank_size//2]
+            return ('move', 'button_gun')
+    elif key == 'm' or key == 'ь':
+        return (mode_action, 'button_map')
+    else:
+        return (mode_action, 'none')
+
+
+def request_move(global_map:list, position, chank_size:int, go_to_print, pressed_button, changing_step):
+    """
+        Меняет динамическое местоположение персонажа
+    """
+    
+    if pressed_button == 'up':
+        
+        if position.chanks_use_map[position.dynamic[0] - 1][position.dynamic[1]] != '▲':
+            position.dynamic[0] -= 1
+            calculation_assemblage_point(global_map, position, chank_size, 2)
+            
+    elif pressed_button == 'left':
+        
+        if position.chanks_use_map[position.dynamic[0]][position.dynamic[1] - 1] != '▲':
+            position.dynamic[1] -= 1
+            calculation_assemblage_point(global_map, position, chank_size, 2)
+            
+    elif pressed_button == 'down':
+        
+        if position.chanks_use_map[position.dynamic[0] + 1][position.dynamic[1]] != '▲':
+            position.dynamic[0] += 1
+            calculation_assemblage_point(global_map, position, chank_size, 2)
+            
+    elif pressed_button == 'right':
+        
+        if position.chanks_use_map[position.dynamic[0]][position.dynamic[1] + 1] != '▲':
+            position.dynamic[1] += 1
+            calculation_assemblage_point(global_map, position, chank_size, 2)
+
+def request_pointer(position, chank_size:int, go_to_print, pressed_button, changing_step):
+    """
+        Меняет местоположение указателя
+    """
+    if pressed_button == 'up' and position.pointer[0] > 0:
+        position.pointer[0] -= 1
+    elif pressed_button == 'left' and position.pointer[1] > 0:
+        position.pointer[1] -= 1 
+    elif pressed_button == 'down' and position.pointer[0] < chank_size - 1:
+        position.pointer[0] += 1
+    elif pressed_button == 'right' and position.pointer[1] < chank_size - 1:
+        position.pointer[1] += 1
+
+def request_gun(global_map:list, position, chank_size:int, go_to_print, pressed_button, changing_step):
+    """
+        Меняет местоположение указателя оружия
+    """
+    if pressed_button == 'up' and position.gun[0] > chank_size//2 - 5:
+        position.gun[0] -= 1
+            
+    elif pressed_button == 'left' and position.gun[1] > chank_size//2 - 5:
+        position.gun[1] -= 1
+            
+    elif pressed_button == 'down' and position.gun[0] < chank_size//2 + 5:
+        position.gun[0] += 1
+            
+    elif pressed_button == 'right' and position.gun[1] < chank_size//2 + 5:
+        position.gun[1] += 1
 
 def calculation_assemblage_point(global_map:list, position, chank_size:int, change):
     """
@@ -357,74 +508,11 @@ def calculation_assemblage_point(global_map:list, position, chank_size:int, chan
                 assemblage_chank[number_line][chank] = assemblage_chank[number_line][chank].chank
         position.chanks_use_map = gluing_location(assemblage_chank, 2, chank_size)
 
-"""
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-    ОБРАБОТКА ИГРОВЫХ СОБЫТИЙ
-        
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-"""
-
-def game_events():
+def request_processing(pressed_button):
+    """
+        Обрабатывает пользовательский запрос
+    """
     pass
-
-
-"""
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-    ВВОД ИГРОКА
-        
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-"""        
-
-def request_move_person(global_map:list, position, chank_size:int, go_to_print):
-    """
-        Спрашивает ввод, меняет динамическое местоположение персонажа
-
-    """
-    keyboard_loop = True
-    while keyboard_loop:
-        move = keyboard.read_key()
-        if move == 'w' or move == 'up' or move == 'ц':
-            if position.chanks_use_map[position.dynamic[0] - 1][position.dynamic[1]] == '▲':
-                pass
-            else:
-                position.dynamic[0] -= 1
-                calculation_assemblage_point(global_map, position, chank_size, 2)
-                keyboard_loop = False
-            
-        elif move == 'a' or move == 'left' or move == 'ф':
-            if position.chanks_use_map[position.dynamic[0]][position.dynamic[1] - 1] == '▲':
-                pass
-            else:
-                position.dynamic[1] -= 1
-                calculation_assemblage_point(global_map, position, chank_size, 2)
-                keyboard_loop = False
-            
-        elif move == 's' or move == 'down' or move == 'ы':
-            if position.chanks_use_map[position.dynamic[0] + 1][position.dynamic[1]] == '▲':
-                pass
-            else:
-                position.dynamic[0] += 1
-                calculation_assemblage_point(global_map, position, chank_size, 2)
-                keyboard_loop = False
-            
-        elif move == 'd' or move == 'right' or move == 'в':
-            if position.chanks_use_map[position.dynamic[0]][position.dynamic[1] + 1] == '▲':
-                pass
-            else:
-                position.dynamic[1] += 1
-                calculation_assemblage_point(global_map, position, chank_size, 2)
-                keyboard_loop = False
-        elif move == 'space':
-            keyboard_loop = False
-        elif move == 'm' or move == 'ь':
-            go_to_print.minimap_on = (go_to_print.minimap_on == False)
-            keyboard_loop = False
-        else: pass
-
 
 """
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -451,24 +539,10 @@ def progress_bar(percent, description):
 
     print(progress)
 
-def test_print_chank(position):
-    """
-        Печатает загруженный кусок карты
-
-    """
-    draw_box = ''
-    for line in position.chanks_use_map:
-        print_line = ''
-        for tile in line:
-            print_line += tile + ' '
-        draw_box += print_line + '\n'
-
-    print(draw_box)
 
 def test_print_global_map_biome(global_map, position, go_to_print):
     """
         Печатает упрощенную схему глобальной карты по биомам
-
     """
 
     minimap = []
@@ -508,11 +582,27 @@ def ground_dict(tile):
     if tile in  ground_dict:
         return ground_dict[tile]
     else:
-        return 'нечто непонятное'
+        return 'нечто'
+
+def person_dict():
+
+    person_dict = {
+                    '☺ ': 'person',
+                    '☺r': 'revolver',
+                    '☺-': 'riffle',
+                    '☺—': 'long riffle',
+                    '☺=': 'double-barreled shotgun',
+                    '☺/': 'spear',
+                    '☺p': 'horseman',
+                    '☺‰': 'dart',
+                    '☺Ð': 'archer',
+                    '☻ ': 'enemy'
+                    }
+                    
 
 def draw_field_calculations(position:list, views_field_size:int):
     """
-        Формирует итоговое изображение игрового поля на печать
+        Формирует изображение игрового поля на печать
     """
     half_views = (views_field_size//2)
     start_stop = [(position.dynamic[0] - half_views), (position.dynamic[1] - half_views), (position.dynamic[0] + half_views + 1),(position.dynamic[1] + half_views + 1)]
@@ -524,25 +614,40 @@ def draw_field_calculations(position:list, views_field_size:int):
         draw_field.append(line)
     return draw_field 
 
-def draw_game_field(position, views_field_size:int, go_to_print):
+def master_draw(position, chank_size:int, go_to_print, global_map, mode_action):
     """
-        Выводит изображение игрового поля на экран
+        Формирует итоговое изображение игрового поля для вывода на экран
     """
+    if go_to_print.minimap_on:
+        test_print_global_map_biome(global_map, position, go_to_print)
 
-    draw_field = draw_field_calculations(position, views_field_size)
+    draw_field = draw_field_calculations(position, chank_size)
     draw_box = []
+    pointer_vision = ' '
     for line in range(len(draw_field)):
         print_line = ''
         for tile in range(len(draw_field)):
-            if line == views_field_size//2 and tile == views_field_size//2:
+            if line == chank_size//2 and tile == chank_size//2:
                 ground = draw_field[line][tile]
-                print_line += '☺' + ' '
+                print_line += '☺'
+                if mode_action == 'pointer' and position.pointer == [chank_size//2, chank_size//2]:
+                    print_line += '<'
+                    pointer_vision = draw_field[line][tile]
+                elif mode_action == 'gun' and position.gun == [chank_size//2, chank_size//2]:
+                    print_line += '+'    
+                else:
+                    print_line += ' '
+            elif line == position.pointer[0] and tile == position.pointer[1]:
+                print_line += draw_field[line][tile] + '<'
+                pointer_vision = draw_field[line][tile]
+            elif line == position.gun[0] and tile == position.gun[1]:
+                print_line += draw_field[line][tile] + '+'
             else:
                 print_line += draw_field[line][tile] + ' '
         draw_box.append(print_line)
     go_to_print.game_field = draw_box
     go_to_print.text1 = (position.assemblage_point, ' - Позиция точки сборки | ', position.dynamic, ' - динамическая позиция | под ногами:', ground_dict(ground) )
-
+    go_to_print.text4 = ground_dict(pointer_vision)
     
 """
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -553,7 +658,7 @@ def draw_game_field(position, views_field_size:int, go_to_print):
 
 """
 
-def print_interfase(go_to_print, frame_size):
+def print_frame(go_to_print, frame_size):
     """
         Отвечает за итоговый вывод содержимого на экран
     """
@@ -562,31 +667,27 @@ def print_interfase(go_to_print, frame_size):
     raw_frame = []
     
     for line in range(frame_size[0]):
-        if line < 3:
-            raw_frame.append('')
-        else:
-            raw_frame.append('')
-    #print game_field
-    for line in range(len(go_to_print.game_field)):
+        raw_frame.append('')
+    
+    for line in range(len(go_to_print.game_field)): #Добавление изображения с основного экрана
         raw_frame[(line + 3)] += '      ' + go_to_print.game_field[line]
 
-    if go_to_print.minimap_on: #print biom_map
+    if go_to_print.minimap_on: #Добавление изображения миникарты
         for line in range(len(go_to_print.biom_map)):
             raw_frame[(line + 3)] += '      ' + go_to_print.biom_map[line]
 
     raw_frame[4+len(go_to_print.game_field)] += '   ' + str(go_to_print.text1)
 
-    raw_frame[5+len(go_to_print.game_field)] += '   Вы находитесь в ' + str(go_to_print.text2)
+    raw_frame[5+len(go_to_print.game_field)] += '   Вы видите ' + str(go_to_print.text4)
+
+    raw_frame[6+len(go_to_print.game_field)] += '   Вы находитесь в ' + str(go_to_print.text2)
 
     if go_to_print.minimap_on:
-        raw_frame[6+len(go_to_print.game_field)] += '   Температура среды: ' + str(go_to_print.text3[0][0]) + ' градусов. Температура персонажа: ' + str(go_to_print.text3[1]) + ' градусов.'
+        raw_frame[7+len(go_to_print.game_field)] += '   Температура среды: ' + str(go_to_print.text3[0][0]) + ' градусов. Температура персонажа: ' + str(go_to_print.text3[1]) + ' градусов.'
 
     frame = ''
     for line in raw_frame:
         frame += line + '\n'
-
-
-
         
     os.system('cls' if os.name == 'nt' else 'clear')
     print(frame)
@@ -602,41 +703,44 @@ def print_interfase(go_to_print, frame_size):
 
 """
 
-
 def game_loop(global_map:list, position:list, chank_size, frame_size):
     """
         Здесь происходят все игровые события
         
     """
     go_to_print = Interfase([], [], False, '', '', '', '', '', '', '', '', '', '')
-
     
-    while game_loop :
-        request_move_person(global_map, position, chank_size, go_to_print)
-        draw_game_field(position, chank_size, go_to_print)
-        if go_to_print.minimap_on:
-            test_print_global_map_biome(global_map, position, go_to_print)
-        print_interfase(go_to_print, frame_size)
-        
-        
+    not_intercept_step = [True]
+    step = 0
+    print('game_loop запущен')
+    global changing_step
+    mode_action = 'move'
+    while game_loop:
+        changing_step = True
+        if not_intercept_step[0]:
+            mode_action = master_player_action(global_map, position, chank_size, go_to_print, changing_step, mode_action)
+        if changing_step:
+            game_events()
+            step += 1
+        master_draw(position, chank_size, go_to_print, global_map, mode_action)        
+        print_frame(go_to_print, frame_size)
+        print('step = ', step)
+             
 
 def main():
     """
         Запускает игру
         
     """
-    chank_size = 35         #Определяет размер одного игрового поля и окна просмотра. Рекоммендуемое значение 25.
-    value_region_box = 5    #Количество регионов в квадрате.
+    chank_size = 25         #Определяет размер одного игрового поля и окна просмотра. Рекоммендуемое значение 25.
+    value_region_box = 4    #Количество регионов в квадрате.
     grid = 5                #Можно любое, но лучше кратное размеру игрового экрана. Иначе обрежет область видимости.
-    frame_size = [44, 40]   #Размер одного кадра [высота, ширина].
+    frame_size = [35, 40]   #Размер одного кадра [высота, ширина].
 
 
-    progress_bar(5, 'Запуск игры') 
+    #progress_bar(5, 'Запуск игры') 
     global_map = master_generate(value_region_box, chank_size, grid)
-
-    
-    position = Position([value_region_box//2, value_region_box//2], [chank_size//2, chank_size//2], [])
-    #test_print_global_map_biome(global_map, position)
+    position = Position([value_region_box//2, value_region_box//2], [chank_size//2, chank_size//2], [], [chank_size//2, chank_size//2], [chank_size//2, chank_size//2])
     calculation_assemblage_point(global_map, position, chank_size, 3)
     
     game_loop(global_map, position, chank_size, frame_size)
