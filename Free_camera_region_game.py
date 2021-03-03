@@ -362,49 +362,71 @@ class Horseman(Enemy):
     """ Отвечает за всадников """
     def __init__(self):
         self.name = 'horseman'
+        self.name_npc = random.choice(['Малыш Билли', 'Буффало Билл', 'Маленькая Верная Рука Энни Окли', 'Дикий Билл Хикок'])
         self.precedence_biom = [',', '„', 'P']
         self.icon = '☻h'
-
-        
+        self.activity = [['кормит лошадь', 'action_points', -2], ['чистит оружие', 'action_points',  -2], ['пьёт', 'thirst', 20],
+                         ['готовит еду', 'hunger', 20], ['отдыхает', 'fatigue', 10], ['разбил лагерь', 'fatigue', 20]]
+        self.hunger = 100
+        self.thirst = 100
+        self.fatigue = 100
+        self.reserves = 10
 
 class Riffleman(Enemy):
     """ Отвечает за стрелков """
     def __init__(self):
         self.name = 'riffleman'
+        self.name_npc = random.choice(['Бедовая Джейн', 'Бутч Кэссиди', 'Сандэнс Кид', 'Черный Барт'])
         self.precedence_biom = ['.', 'A', '▲']
         self.icon = '☻r'
-
+        self.activity = [['чистит оружие', 'action_points', -2], ['пьёт', 'thirst', 20], ['готовит еду', 'hunger', 20],
+                         ['отдыхает', 'fatigue', 10], ['разбил лагерь', 'fatigue', 20]]
+        self.hunger = 100
+        self.thirst = 100
+        self.fatigue = 100
+        self.reserves = 5
 
 class Horse(Enemy):
     """ Отвечает за коней """
     def __init__(self):
         self.name = 'horse'
+        self.name_npc = random.choice(['Стреноженая белая лошадь', 'Стреноженая гнедая лошадь', 'Стреноженая черная лошадь'])
         self.precedence_biom = [',', '„', 'P']
         self.icon = 'ho'
-        
-
+        self.activity = [['пугатся и убегает', 'fatigue', -10], ['пьёт', 'thirst', 20], ['ест траву', 'hunger', 20],
+                         ['отдыхает', 'fatigue', 20]]
+        self.hunger = 100
+        self.thirst = 100
+        self.fatigue = 100
+        self.reserves = 0
 
 class Coyot(Enemy):
     """ Отвечает за койотов """
     def __init__(self):
         self.name = 'coyot'
+        self.name_npc = random.choice(['Плешивый койот', 'Молодой койот', 'Подраный койот'])
         self.precedence_biom = ['.', ',', '„', 'P', 'A']
         self.icon = 'co'
-        
+        self.activity = [['охотится', 'action_points', -2], ['пьёт', 'thirst', 20], ['ест', 'hunger', 20],
+                         ['чешется', 'action_points', -2], ['отдыхает', 'fatigue', 20]]
+        self.hunger = 200
+        self.thirst = 200
+        self.fatigue = 200
+        self.reserves = 0
 
-
-
-def master_game_events(global_map, enemy_list, position):
+def master_game_events(global_map, enemy_list, position, go_to_print):
     """
         Здесь происходят все события, не связанные с пользовательским вводом
     """
     enemy_dynamic_chank_check(global_map, enemy_list, position)
 
+    go_to_print.text5 = ''
+    
     for enemy in enemy_list:
         if enemy.dynamic_chank:
             enemy_in_dynamic_chank(global_map, enemy, position)
         else:
-            enemy_emulation_life(global_map, enemy)
+            enemy_emulation_life(global_map, enemy, go_to_print)
     
 def enemy_dynamic_chank_check(global_map, enemy_list, position):
     """
@@ -412,14 +434,46 @@ def enemy_dynamic_chank_check(global_map, enemy_list, position):
     """
     pass
 
-def enemy_emulation_life(global_map, enemy):
+def enemy_emulation_life(global_map, enemy, go_to_print):
     """
         Обрабатывает жизнь NPC за кадром, на глобальной карте
     """
     enemy.action_points += 1
-    if enemy.action_points >= 2:
-        move_biom_enemy(global_map, enemy)
-        enemy.action_points -= 2
+    
+    enemy.enemy.hunger -= 1
+    enemy.enemy.thirst -= 1
+    enemy.enemy.fatigue -= 1
+    
+    if enemy.action_points >= 5:
+        if random.randrange(10)//6 == 1 or (global_map[enemy.position[0]][enemy.position[1]].icon in enemy.enemy.precedence_biom and random.randrange(10)//8 == 1):
+            move_biom_enemy(global_map, enemy)
+            enemy.action_points -= 5
+            go_to_print.text5 += str(enemy.enemy.name_npc) + ' передвигается' + '\n'
+      
+        elif(enemy.enemy.thirst < 10 or enemy.enemy.hunger < 10) and enemy.enemy.reserves > 0:
+            enemy.enemy.reserves -= 1
+            enemy.enemy.hunger = 100
+            enemy.enemy.thirst = 100
+            enemy.action_points -= 3
+            go_to_print.text5 += str(enemy.enemy.name_npc)+ ' достаёт припасы \n'
+        elif enemy.enemy.fatigue < 10:
+            enemy.enemy.fatigue = 50
+            enemy.action_points -= 20
+            go_to_print.text5 += str(enemy.enemy.name_npc)+ ' уснул от усталости \n'
+        else:
+            activity = random.choice(enemy.enemy.activity)
+            if activity[1] == 'action_points':
+                enemy.action_points += activity[2]
+            elif activity[1] == 'thirst':
+                enemy.enemy.thirst += activity[2]
+            elif activity[1] == 'hunger':
+                enemy.enemy.hunger += activity[2]
+            elif activity[1] == 'fatigue':
+                enemy.action_points -= 5
+                enemy.enemy.fatigue += activity[2]    
+            go_to_print.text5 += str(enemy.enemy.name_npc)+ ' ' + str(activity[0]) + ' его голод: ' + str(enemy.enemy.hunger) + ' его жажда: ' + str(enemy.enemy.thirst) + ' его усталость: ' + str(enemy.enemy.fatigue) + '\n'
+            enemy.action_points -= 3
+    
 
 def move_biom_enemy(global_map, enemy):
     """
@@ -427,10 +481,7 @@ def move_biom_enemy(global_map, enemy):
     """
 
     if global_map[enemy.position[0]][enemy.position[1]].icon in enemy.enemy.precedence_biom:
-        print('Сработало условие нахождения на подходящем тайле')
         direction_moved = []
-
-        
         if global_map[enemy.position[0] - 1][enemy.position[1]].icon in enemy.enemy.precedence_biom and enemy.position[0] - 1 > 0:
             direction_moved.append([enemy.position[0] - 1, enemy.position[1]])
         if global_map[enemy.position[0] + 1][enemy.position[1]].icon in enemy.enemy.precedence_biom and enemy.position[0] + 1 < len(global_map) - 1:
@@ -442,7 +493,6 @@ def move_biom_enemy(global_map, enemy):
         if len(direction_moved) != 0:
             enemy.position = random.choice(direction_moved)
         if len(direction_moved) == 0:
-            print('Сработало условие исключения подходящих тайлов при нахождении на подходящем тайле')
             if random.randrange(10)//8 == 1:
                 direction_moved = []
                 if enemy.position[0] - 1 > 0:
@@ -455,7 +505,6 @@ def move_biom_enemy(global_map, enemy):
                     direction_moved.append([enemy.position[0], enemy.position[1] + 1])
                 enemy.position = random.choice(direction_moved)
     else:
-        print('Нахождение на неподходящем тайле')
         if random.randrange(10)//8 == 1:
             direction_moved = []
             if enemy.position[0] - 1 > 0:
@@ -810,7 +859,9 @@ def print_frame(go_to_print, frame_size):
 
     if go_to_print.minimap_on:
         raw_frame[7+len(go_to_print.game_field)] += '   Температура среды: ' + str(go_to_print.text3[0][0]) + ' градусов. Температура персонажа: ' + str(go_to_print.text3[1]) + ' градусов.'
+    raw_frame[8+len(go_to_print.game_field)] += str(go_to_print.text5)
 
+    
     frame = ''
     for line in raw_frame:
         frame += line + '\n'
@@ -846,7 +897,7 @@ def game_loop(global_map:list, position:list, chank_size:int, frame_size:list, e
         if not_intercept_step[0]:
             mode_action = master_player_action(global_map, position, chank_size, go_to_print, changing_step, mode_action)
         if changing_step:
-            master_game_events(global_map, enemy_list, position)
+            master_game_events(global_map, enemy_list, position, go_to_print)
             step += 1
         master_draw(position, chank_size, go_to_print, global_map, mode_action, enemy_list)        
         print_frame(go_to_print, frame_size)
@@ -861,7 +912,7 @@ def main():
     chank_size = 25         #Определяет размер одного игрового поля и окна просмотра. Рекоммендуемое значение 25.
     value_region_box = 4    #Количество регионов в квадрате.
     grid = 5                #Можно любое, но лучше кратное размеру игрового экрана. Иначе обрежет область видимости.
-    frame_size = [35, 40]   #Размер одного кадра [высота, ширина].
+    frame_size = [37, 40]   #Размер одного кадра [высота, ширина].
 
 
     #progress_bar(5, 'Запуск игры') 
