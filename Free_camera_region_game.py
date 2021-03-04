@@ -22,14 +22,16 @@ garbage = ['░', '▒', '▓', '█', '☺']
     7)Добавить элементы геймплея
     8)Реализовать вывод всего изображения за один проход в струкрурированный интерфейс
     9)Отдельная карта мира для закадровой симуляции NPC #ПОДОШЛА ОБЫЧНАЯ
-
-    ЗАПЛАНИРОВАНО:
-    1)Стрельба
-    2)Свободный просмотр клеток вокруг #РЕАЛИЗОВАНО
-    3)Противники и NPC
-    4)Возможность спрятаться
-    5)Возможность посмотреть на небо
-    6)Перехват шага у игрока
+    10)При закадровой обработке, NPC персонажи оставляют следы своей деятельности. Эти следы помнят на каком шаге были прозведены
+    и исчезают по прошествии определённого количества шагов #РЕАЛИЗОВАНО
+    11)Встречи с NPC на динамическом чанке
+    12)Стрельба
+    13)Свободный просмотр клеток вокруг #РЕАЛИЗОВАНО
+    14)Противники и NPC
+    15)Возможность спрятаться
+    16)Возможность посмотреть на небо
+    17)Перехват шага у игрока
+    18)Золотоискатели, находясь в горах начинают искать золото
 
     ТЕМАТИКА:
     Игра о человеке, который сбежал от погони в пустынную область, имея только флягу с водой и револьвер с 5ю патронами.
@@ -53,6 +55,8 @@ class Position:
         self.chank = chanks_use_map
         self.pointer = pointer
         self.gun = gun
+        self.global_position = assemblage_point
+        self.number_chank = 1
 
 class Location:
     """ Содержит описание локации """
@@ -337,7 +341,7 @@ def gluing_location(raw_gluing_map, grid, count_block):
 
 def person_dict():
 
-    person_dict = {
+    person_dict =   {
                     '☺ ': 'person',
                     '☺r': 'revolver',
                     '☺-': 'riffle',
@@ -349,6 +353,39 @@ def person_dict():
                     '☺Ð': 'archer',
                     '☻ ': 'enemy'
                     }
+
+class Action_in_map:
+    """ Содержит в себе описание активности и срок её жизни """
+    def __init__(self, name, birth, position_npc, chank_size):
+        self.name = name
+        self.icon = action_dict(name, 0)
+        self.description = action_dict(name, 1)
+        self.lifetime = action_dict(name, 2)
+        self.birth = birth
+        self.global_position = position_npc
+        self.local_position = [random. randrange(chank_size), random. randrange(chank_size)]
+
+        
+def action_dict(action, number):
+    """ Принимает название активности, возвращает её иконку, описание и срок жизни"""
+
+    action_dict =   {
+                    'camp':             ['/', 'следы лагеря',               50],
+                    'bonfire':          ['+', 'следы костра',               50],
+                    'rest_stop':        ['№', 'следы остановки человека',   50],
+                    'horse_tracks':     ['%', 'следы лошади',               50],
+                    'animal_traces':    ['@', 'следы зверя',                50],
+                    'gnawed bones':     ['#', 'обглоданные зверем кости',   50],
+                    'defecate':         ['&', 'справленная нужда',          50],
+                    'animal_rest_stop': ['$', 'следы животной лежанки',     50],
+                    'dead_man':         ['D', 'мёртвый человек',            50],
+                    'unknown':          ['?', 'неизвестно',                 50]
+                    }
+
+    if action in action_dict:
+        return action_dict[action][number]
+    else:
+        return action_dict['unknown'][number]
 
 class Enemy:
     """ Отвечает за всех NPC """
@@ -365,8 +402,9 @@ class Horseman(Enemy):
         self.name_npc = random.choice(['Малыш Билли', 'Буффало Билл', 'Маленькая Верная Рука Энни Окли', 'Дикий Билл Хикок'])
         self.precedence_biom = [',', '„', 'P']
         self.icon = '☻h'
-        self.activity = [['кормит лошадь', 'action_points', -2], ['чистит оружие', 'action_points',  -2], ['пьёт', 'thirst', 20],
-                         ['готовит еду', 'hunger', 20], ['отдыхает', 'fatigue', 10], ['разбил лагерь', 'fatigue', 20]]
+        self.activity = [['кормит лошадь', 'action_points', -2, 'horse_tracks'], ['чистит оружие', 'action_points',  -2, 'rest_stop'],
+                         ['пьёт', 'thirst', 20, 'horse_tracks'], ['готовит еду', 'hunger', 20, 'bonfire'],
+                         ['отдыхает', 'fatigue', 10, 'rest_stop'], ['разбил лагерь', 'fatigue', 20, 'camp']]
         self.hunger = 100
         self.thirst = 100
         self.fatigue = 100
@@ -379,8 +417,8 @@ class Riffleman(Enemy):
         self.name_npc = random.choice(['Бедовая Джейн', 'Бутч Кэссиди', 'Сандэнс Кид', 'Черный Барт'])
         self.precedence_biom = ['.', 'A', '▲']
         self.icon = '☻r'
-        self.activity = [['чистит оружие', 'action_points', -2], ['пьёт', 'thirst', 20], ['готовит еду', 'hunger', 20],
-                         ['отдыхает', 'fatigue', 10], ['разбил лагерь', 'fatigue', 20]]
+        self.activity = [['чистит оружие', 'action_points', -2, 'action_points'], ['пьёт', 'thirst', 20, 'rest_stop'],
+                         ['готовит еду', 'hunger', 20, 'bonfire'], ['отдыхает', 'fatigue', 10, 'rest_stop'], ['разбил лагерь', 'fatigue', 20, 'camp']]
         self.hunger = 100
         self.thirst = 100
         self.fatigue = 100
@@ -393,8 +431,8 @@ class Horse(Enemy):
         self.name_npc = random.choice(['Стреноженая белая лошадь', 'Стреноженая гнедая лошадь', 'Стреноженая черная лошадь'])
         self.precedence_biom = [',', '„', 'P']
         self.icon = 'ho'
-        self.activity = [['пугатся и убегает', 'fatigue', -10], ['пьёт', 'thirst', 20], ['ест траву', 'hunger', 20],
-                         ['отдыхает', 'fatigue', 20]]
+        self.activity = [['пугатся и убегает', 'fatigue', -10, 'horse_tracks'], ['пьёт', 'thirst', 20, 'horse_tracks'],
+                         ['ест траву', 'hunger', 20, 'horse_tracks'], ['отдыхает', 'fatigue', 20, 'animal_rest_stop']]
         self.hunger = 100
         self.thirst = 100
         self.fatigue = 100
@@ -407,26 +445,27 @@ class Coyot(Enemy):
         self.name_npc = random.choice(['Плешивый койот', 'Молодой койот', 'Подраный койот'])
         self.precedence_biom = ['.', ',', '„', 'P', 'A']
         self.icon = 'co'
-        self.activity = [['охотится', 'action_points', -2], ['пьёт', 'thirst', 20], ['ест', 'hunger', 20],
-                         ['чешется', 'action_points', -2], ['отдыхает', 'fatigue', 20]]
+        self.activity = [['охотится', 'action_points', -2, 'gnawed bones'], ['пьёт', 'thirst', 20, 'animal_traces'],
+                         ['ест', 'hunger', 20, 'animal_traces'], ['чешется', 'action_points', -2, 'animal_traces'],
+                         ['отдыхает', 'fatigue', 20, 'animal_rest_stop']]
         self.hunger = 200
         self.thirst = 200
         self.fatigue = 200
         self.reserves = 0
 
-def master_game_events(global_map, enemy_list, position, go_to_print):
+def master_game_events(global_map, enemy_list, position, go_to_print, step, activity_list, chank_size):
     """
         Здесь происходят все события, не связанные с пользовательским вводом
     """
     enemy_dynamic_chank_check(global_map, enemy_list, position)
-
+    activity_list_check(activity_list, step)
     go_to_print.text5 = ''
     
     for enemy in enemy_list:
         if enemy.dynamic_chank:
             enemy_in_dynamic_chank(global_map, enemy, position)
         else:
-            enemy_emulation_life(global_map, enemy, go_to_print)
+            enemy_emulation_life(global_map, enemy, go_to_print, step, activity_list, chank_size)
     
 def enemy_dynamic_chank_check(global_map, enemy_list, position):
     """
@@ -434,12 +473,13 @@ def enemy_dynamic_chank_check(global_map, enemy_list, position):
     """
     pass
 
-def enemy_emulation_life(global_map, enemy, go_to_print):
+def enemy_emulation_life(global_map, enemy, go_to_print, step, activity_list, chank_size):
     """
         Обрабатывает жизнь NPC за кадром, на глобальной карте
+        step нужен для запоминания следами деятельности времени в которое появились
     """
+
     enemy.action_points += 1
-    
     enemy.enemy.hunger -= 1
     enemy.enemy.thirst -= 1
     enemy.enemy.fatigue -= 1
@@ -460,17 +500,22 @@ def enemy_emulation_life(global_map, enemy, go_to_print):
             enemy.enemy.fatigue = 50
             enemy.action_points -= 20
             go_to_print.text5 += str(enemy.enemy.name_npc)+ ' уснул от усталости \n'
+            activity_list.append(Action_in_map('rest_stop', step, enemy.position, chank_size))
         else:
             activity = random.choice(enemy.enemy.activity)
             if activity[1] == 'action_points':
                 enemy.action_points += activity[2]
+                activity_list.append(Action_in_map(activity[3], step, enemy.position, chank_size))
             elif activity[1] == 'thirst':
                 enemy.enemy.thirst += activity[2]
+                activity_list.append(Action_in_map(activity[3], step, enemy.position, chank_size))
             elif activity[1] == 'hunger':
                 enemy.enemy.hunger += activity[2]
+                activity_list.append(Action_in_map(activity[3], step, enemy.position, chank_size))
             elif activity[1] == 'fatigue':
                 enemy.action_points -= 5
-                enemy.enemy.fatigue += activity[2]    
+                enemy.enemy.fatigue += activity[2]
+                activity_list.append(Action_in_map(activity[3], step, enemy.position, chank_size))
             go_to_print.text5 += str(enemy.enemy.name_npc)+ ' ' + str(activity[0]) + ' его голод: ' + str(enemy.enemy.hunger) + ' его жажда: ' + str(enemy.enemy.thirst) + ' его усталость: ' + str(enemy.enemy.fatigue) + '\n'
             enemy.action_points -= 3
     
@@ -516,7 +561,15 @@ def move_biom_enemy(global_map, enemy):
             if enemy.position[1] + 1 < len(global_map) - 1:
                 direction_moved.append([enemy.position[0], enemy.position[1] + 1])
             enemy.position = random.choice(direction_moved)
-        
+
+
+def activity_list_check(activity_list, step):
+    """
+        Проверяет активности на истечение времени
+    """
+    for activity in activity_list:
+        if step - activity.lifetime > activity.birth:
+            activity_list.remove(activity)
 
 def enemy_in_dynamic_chank(global_map, enemy, position):
     """
@@ -550,7 +603,6 @@ def master_player_action(global_map, position, chank_size, go_to_print, changing
     request_processing(pressed_button)
 
     return mode_action
-
 
 
 def request_press_button(global_map, position, chank_size, go_to_print, changing_step, mode_action):
@@ -694,6 +746,30 @@ def calculation_assemblage_point(global_map:list, position, chank_size:int, chan
                 assemblage_chank[number_line][chank] = assemblage_chank[number_line][chank].chank
         position.chanks_use_map = gluing_location(assemblage_chank, 2, chank_size)
 
+    global_position_calculation(position, chank_size)
+
+def global_position_calculation(position, chank_size):
+    """
+        Рассчитывает глобальное положение по положению динамического чанка и положению внутри его
+        Выдаёт глобальные координаты и номер чанка, в котором сейчас находится игрок
+        Номера чанков выглядят так: 1 2
+                                    3 4
+        
+    """
+        
+    if position.dynamic[0] < chank_size > position.dynamic[1]:  
+        position.global_position = position.assemblage_point    
+        position.number_chank = 1
+    elif position.dynamic[0] > chank_size > position.dynamic[1]:
+        position.global_position = [position.assemblage_point[0] + 1, position.assemblage_point[1]]
+        position.number_chank = 3
+    elif position.dynamic[0] < chank_size < position.dynamic[1]:
+        position.global_position = [position.assemblage_point[0], position.assemblage_point[1] + 1]
+        position.number_chank = 2
+    elif position.dynamic[0] > chank_size < position.dynamic[1]:
+        position.global_position = [position.assemblage_point[0] + 1, position.assemblage_point[1] + 1]
+        position.number_chank = 4
+        
 def request_processing(pressed_button):
     """
         Обрабатывает пользовательский запрос
@@ -768,8 +844,21 @@ def ground_dict(tile):
                     'ü': 'колючая трава',
                     'F': 'чахлое дерево',
                     'P': 'раскидистое дерево',
-                    '~': 'солёная вода',                 
+                    '~': 'солёная вода',
+                    
+                    '/': 'следы лагеря',
+                    '+': 'следы костра',
+                    '%': 'следы лошади',
+                    '@': 'следы зверя',
+                    '#': 'обглоданные зверем кости',
+                    '№': 'следы остановки человека',
+                    '&': 'справленная нужда',
+                    '$': 'следы животной лежанки',
+                    'D': 'мёртвый человек',
+                    'd': 'мёртвое животное',
+                    '?': 'неизвестно что',
                     }
+
     if tile in  ground_dict:
         return ground_dict[tile]
     else:
@@ -787,15 +876,34 @@ def draw_field_calculations(position:list, views_field_size:int):
     for line in line_views:
         line = line[start_stop[1]:start_stop[3]]
         draw_field.append(line)
-    return draw_field 
+    return draw_field
 
-def master_draw(position, chank_size:int, go_to_print, global_map, mode_action, enemy_list):
+def draw_additional_entities(position, chank_size:int, go_to_print, enemy_list, activity_list):
+    """
+        Отрисовывает на динамическом чанке дополнительные сущности
+    """
+    
+    for activity in activity_list:
+        if position.global_position == activity.global_position:
+            if position.number_chank == 1:
+                position.chanks_use_map[activity.local_position[0]][activity.local_position[1]] = activity.icon
+            if position.number_chank == 2:
+                position.chanks_use_map[activity.local_position[0]][activity.local_position[1] + chank_size] = activity.icon
+            if position.number_chank == 3:
+                position.chanks_use_map[activity.local_position[0] + chank_size][activity.local_position[1]] = activity.icon
+            if position.number_chank == 4:
+                position.chanks_use_map[activity.local_position[0] + chank_size][activity.local_position[1] + chank_size] = activity.icon
+    
+
+def master_draw(position, chank_size:int, go_to_print, global_map, mode_action, enemy_list, activity_list):
     """
         Формирует итоговое изображение игрового поля для вывода на экран
     """
     if go_to_print.minimap_on:
         print_minimap(global_map, position, go_to_print, enemy_list)
 
+    draw_additional_entities(position, chank_size, go_to_print, enemy_list, activity_list)
+    
     draw_field = draw_field_calculations(position, chank_size)
     draw_box = []
     pointer_vision = ' '
@@ -833,7 +941,7 @@ def master_draw(position, chank_size:int, go_to_print, global_map, mode_action, 
 
 """
 
-def print_frame(go_to_print, frame_size):
+def print_frame(go_to_print, frame_size, activity_list):
     """
         Отвечает за итоговый вывод содержимого на экран
     """
@@ -860,7 +968,7 @@ def print_frame(go_to_print, frame_size):
     if go_to_print.minimap_on:
         raw_frame[7+len(go_to_print.game_field)] += '   Температура среды: ' + str(go_to_print.text3[0][0]) + ' градусов. Температура персонажа: ' + str(go_to_print.text3[1]) + ' градусов.'
     raw_frame[8+len(go_to_print.game_field)] += str(go_to_print.text5)
-
+    raw_frame[8+len(go_to_print.game_field)] += 'на карте: ' + str(len(activity_list)) + ' активностей'
     
     frame = ''
     for line in raw_frame:
@@ -886,7 +994,7 @@ def game_loop(global_map:list, position:list, chank_size:int, frame_size:list, e
         
     """
     go_to_print = Interfase([], [], False, '', '', '', '', '', '', '', '', '', '')
-    
+    activity_list = []
     not_intercept_step = [True]
     step = 0
     print('game_loop запущен')
@@ -897,10 +1005,10 @@ def game_loop(global_map:list, position:list, chank_size:int, frame_size:list, e
         if not_intercept_step[0]:
             mode_action = master_player_action(global_map, position, chank_size, go_to_print, changing_step, mode_action)
         if changing_step:
-            master_game_events(global_map, enemy_list, position, go_to_print)
+            master_game_events(global_map, enemy_list, position, go_to_print, step, activity_list, chank_size)
             step += 1
-        master_draw(position, chank_size, go_to_print, global_map, mode_action, enemy_list)        
-        print_frame(go_to_print, frame_size)
+        master_draw(position, chank_size, go_to_print, global_map, mode_action, enemy_list, activity_list)        
+        print_frame(go_to_print, frame_size, activity_list)
         print('step = ', step)
              
 
