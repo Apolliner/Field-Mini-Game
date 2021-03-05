@@ -34,7 +34,7 @@ garbage = ['░', '▒', '▓', '█', '☺']
     18)Золотоискатели, находясь в горах начинают искать золото
     19)Встречи NPC друг с другом на глобальной карте
     20)Остановку при достижении края карты #РЕАЛИЗОВАНО
-    21)Реализовать вывод во что то, что быстрее и адекватнее кансоли выводит картинку
+    21)Реализовать вывод во что то, что быстрее и адекватнее консоли выводит картинку
 
     ТЕМАТИКА:
     Игра о человеке, который сбежал от погони в пустынную область, имея только флягу с водой и револьвер с 5ю патронами.
@@ -60,7 +60,47 @@ class Position:
         self.gun = gun
         self.global_position = assemblage_point
         self.number_chank = 1
+        self.check_encounter_position = [[self.global_position[0] - 1, self.global_position[1] - 1], [self.global_position[0] - 1, self.global_position[1]],
+                                        [self.global_position[0] - 1, self.global_position[1] + 1], [self.global_position[0], self.global_position[1] - 1],
+                                        [self.global_position[0], self.global_position[1]], [self.global_position[0], self.global_position[1] + 1],
+                                        [self.global_position[0] + 1, self.global_position[1] - 1], [self.global_position[0] + 1, self.global_position[1]],
+                                        [self.global_position[0] + 1, self.global_position[1] + 1]]
+        
+    def check_encounter(self):
+        """
+            Рассчитывает координаты точек проверки. их расположение: 0 1 2
+                                                                     3 4 5
+                                                                     6 7 8
+        """
+        self.check_encounter_position = [[self.global_position[0] - 1, self.global_position[1] - 1], [self.global_position[0] - 1, self.global_position[1]],
+                                        [self.global_position[0] - 1, self.global_position[1] + 1], [self.global_position[0], self.global_position[1] - 1],
+                                        [self.global_position[0], self.global_position[1]], [self.global_position[0], self.global_position[1] + 1],
+                                        [self.global_position[0] + 1, self.global_position[1] - 1], [self.global_position[0] + 1, self.global_position[1]],
+                                        [self.global_position[0] + 1, self.global_position[1] + 1]]
+        
+        
+    def global_position_calculation(self, chank_size):
+        """
+            Рассчитывает глобальное положение по положению динамического чанка и положению внутри его
+            Выдаёт глобальные координаты и номер чанка, в котором сейчас находится игрок
+            Номера чанков выглядят так: 1 2
+                                    3 4
+        """
+        
+        if self.dynamic[0] < chank_size > self.dynamic[1]:  
+            self.global_position = self.assemblage_point    
+            self.number_chank = 1
+        elif self.dynamic[0] > chank_size > self.dynamic[1]:
+            self.global_position = [self.assemblage_point[0] + 1, self.assemblage_point[1]]
+            self.number_chank = 3
+        elif self.dynamic[0] < chank_size < self.dynamic[1]:
+            self.global_position = [self.assemblage_point[0], self.assemblage_point[1] + 1]
+            self.number_chank = 2
+        elif self.dynamic[0] > chank_size < self.dynamic[1]:
+            self.global_position = [self.assemblage_point[0] + 1, self.assemblage_point[1] + 1]
+            self.number_chank = 4
 
+        
 class Location:
     """ Содержит описание локации """
     def __init__(self, name:str, temperature:float, chank:list, icon:str):
@@ -398,7 +438,7 @@ class Enemy:
         self.action_points = action_points
         self.dynamic_chank = False
         self.dynamic_chank_position = [0, 0]
-        self.old_position_assemblage_point = []
+        self.old_position_assemblage_point = [1, 1]
         self.step_exit_from_assemblage_point = 0
 
 class Horseman(Enemy):
@@ -468,10 +508,9 @@ def master_game_events(global_map, enemy_list, position, go_to_print, step, acti
     go_to_print.text5 = ''
     
     for enemy in enemy_list:
-        print(enemy.enemy.name, enemy.dynamic_chank)
         if enemy.dynamic_chank:
-            print(enemy.enemy.name, ' - на динамическом чанке ', enemy.dynamic_chank_position)
             enemy_in_dynamic_chank(global_map, enemy, position, chank_size, step)
+            pass
         else:
             enemy_emulation_life(global_map, enemy, go_to_print, step, activity_list, chank_size)
 
@@ -479,7 +518,7 @@ def enemy_in_dynamic_chank(global_map, enemy, position, chank_size, step):
     """
         Обрабатывает поведение NPC на динамическом чанке игрока
     """
-    if not(enemy.old_position_assemblage_point == position.assemblage_point):
+    if enemy.old_position_assemblage_point != position.assemblage_point:
         if position.assemblage_point[0] == (enemy.old_position_assemblage_point[0] - 1):
            enemy.dynamic_chank_position[0] += chank_size
         elif position.assemblage_point[0] == (enemy.old_position_assemblage_point[0] + 1):
@@ -491,42 +530,51 @@ def enemy_in_dynamic_chank(global_map, enemy, position, chank_size, step):
 
     if (0 <= enemy.dynamic_chank_position[0] >= chank_size*2) and (0 <= enemy.dynamic_chank_position[1] >= chank_size*2):
         enemy.step_exit_from_assemblage_point = step
-        print(enemy.enemy.name, ' - за пределами чанка ', enemy.dynamic_chank_position)
-
-        
-    enemy.old_position_assemblage_point = position.assemblage_point
+    enemy.old_position_assemblage_point = copy.deepcopy(position.assemblage_point)
     
 def enemy_dynamic_chank_check(global_map, enemy_list, position, step, chank_size):
     """
         Проверяет нахождение NPC на динамическом чанке игрока
     """
     for enemy in enemy_list:
-        if enemy.position == position.global_position and not enemy.dynamic_chank:
+        number_encounter_chank_ok = 99
+        for number_encounter_chank in range(len(position.check_encounter_position)):
+            if position.check_encounter_position[number_encounter_chank] == enemy.position:
+                number_encounter_chank_ok = number_encounter_chank 
+        if enemy.dynamic_chank == False and number_encounter_chank_ok != 99:
+            enemy.old_position_assemblage_point = copy.deepcopy(position.assemblage_point)
             enemy.dynamic_chank = True
-            print(enemy.enemy.name, ' - появился на динамическом чанке ', enemy.dynamic_chank_position)
-            enemy.old_position_assemblage_point = position.assemblage_point
-            if position.number_chank == 1:
-                enemy.dynamic_chank_position = [chank_size + chank_size//2, chank_size + chank_size//2]
-            elif position.number_chank == 2:
-                enemy.dynamic_chank_position = [chank_size//2 + chank_size//2, chank_size]
-            elif position.number_chank == 3:
-                enemy.dynamic_chank_position = [chank_size//2, chank_size + chank_size//2]
-            elif position.number_chank == 4:
-                enemy.dynamic_chank_position = [chank_size//2, chank_size//2]
-            else:
-                enemy.dynamic_chank = False
-        elif enemy.position == position.global_position:
-            print(enemy.enemy.name, ' - стоит на динамическом чанке ', enemy.dynamic_chank_position)
-            enemy.dynamic_chank = True
+            if number_encounter_chank_ok == 0:
+                enemy.dynamic_chank_position = [position.dynamic[0] - chank_size, position.dynamic[1] - chank_size]
+            elif number_encounter_chank_ok == 1:
+                enemy.dynamic_chank_position = [position.dynamic[0] - chank_size, position.dynamic[1]]
+            elif number_encounter_chank_ok == 2:
+                enemy.dynamic_chank_position = [position.dynamic[0] - chank_size, position.dynamic[1] + chank_size]
+            elif number_encounter_chank_ok == 3:
+                enemy.dynamic_chank_position = [position.dynamic[0], position.dynamic[1] - chank_size]
+            elif number_encounter_chank_ok == 4:
+                enemy.dynamic_chank_position = [position.dynamic[0], position.dynamic[1]]
+            elif number_encounter_chank_ok == 5:
+                enemy.dynamic_chank_position = [position.dynamic[0], position.dynamic[1] + chank_size]
+            elif number_encounter_chank_ok == 6:
+                enemy.dynamic_chank_position = [position.dynamic[0] + chank_size, position.dynamic[1] - chank_size]
+            elif number_encounter_chank_ok == 7:
+                enemy.dynamic_chank_position = [position.dynamic[0] + chank_size, position.dynamic[1]]
+            elif number_encounter_chank_ok == 8:
+                enemy.dynamic_chank_position = [position.dynamic[0] + chank_size, position.dynamic[1] + chank_size]
+
+        elif enemy.dynamic_chank  and number_encounter_chank_ok != 99:
+            pass
+        
         elif (step - enemy.step_exit_from_assemblage_point) < 15 and enemy.step_exit_from_assemblage_point and step > 15:
-            print(enemy.enemy.name, ' - на динамическом чанке ', enemy.dynamic_chank_position)
-            
+            pass
+        
         elif (step - enemy.step_exit_from_assemblage_point) == 15 and step != 15:
-            print(enemy.enemy.name, ' - удалился с динамического чанка ', enemy.dynamic_chank_position)
             enemy.step_exit_from_assemblage_point = 0
             enemy.dynamic_chank = False
         else:
             enemy.dynamic_chank = False
+
 
 def enemy_emulation_life(global_map, enemy, go_to_print, step, activity_list, chank_size):
     """
@@ -801,29 +849,9 @@ def calculation_assemblage_point(global_map:list, position, chank_size:int, chan
                 assemblage_chank[number_line][chank] = assemblage_chank[number_line][chank].chank
         position.chanks_use_map = gluing_location(assemblage_chank, 2, chank_size)
 
-    global_position_calculation(position, chank_size)
+    position.global_position_calculation(chank_size) #Рассчитывает глобальное положение и номер чанка через метод
+    position.check_encounter() #Рассчитывает порядок и координаты точек проверки
 
-def global_position_calculation(position, chank_size):
-    """
-        Рассчитывает глобальное положение по положению динамического чанка и положению внутри его
-        Выдаёт глобальные координаты и номер чанка, в котором сейчас находится игрок
-        Номера чанков выглядят так: 1 2
-                                    3 4
-        
-    """
-        
-    if position.dynamic[0] < chank_size > position.dynamic[1]:  
-        position.global_position = position.assemblage_point    
-        position.number_chank = 1
-    elif position.dynamic[0] > chank_size > position.dynamic[1]:
-        position.global_position = [position.assemblage_point[0] + 1, position.assemblage_point[1]]
-        position.number_chank = 3
-    elif position.dynamic[0] < chank_size < position.dynamic[1]:
-        position.global_position = [position.assemblage_point[0], position.assemblage_point[1] + 1]
-        position.number_chank = 2
-    elif position.dynamic[0] > chank_size < position.dynamic[1]:
-        position.global_position = [position.assemblage_point[0] + 1, position.assemblage_point[1] + 1]
-        position.number_chank = 4
         
 def request_processing(pressed_button):
     """
@@ -1068,17 +1096,17 @@ def game_loop(global_map:list, position:list, chank_size:int, frame_size:list, e
         changing_step = True
         if not_intercept_step[0]:
             mode_action = master_player_action(global_map, position, chank_size, go_to_print, changing_step, mode_action)
-        start = time.time() #проверка времени выполнения
+        #start = time.time() #проверка времени выполнения
         if changing_step:
             master_game_events(global_map, enemy_list, position, go_to_print, step, activity_list, chank_size)
             step += 1
-        test1 = time.time() #проверка времени выполнения
+        #test1 = time.time() #проверка времени выполнения
         master_draw(position, chank_size, go_to_print, global_map, mode_action, enemy_list, activity_list)
-        test2 = time.time() #проверка времени выполнения
+        #test2 = time.time() #проверка времени выполнения
         print_frame(go_to_print, frame_size, activity_list)
         #print('step = ', step)
-        end = time.time() #проверка времени выполнения
-        print(test1 - start, ' - test1 ', test2 - start, ' - test2 ', end - start, ' - end ') #
+        #end = time.time() #проверка времени выполнения
+        #print(test1 - start, ' - test1 ', test2 - start, ' - test2 ', end - start, ' - end ') #
              
 
 def main():
@@ -1087,7 +1115,7 @@ def main():
         
     """
     chank_size = 25         #Определяет размер одного игрового поля и окна просмотра. Рекоммендуемое значение 25.
-    value_region_box = 3    #Количество регионов в квадрате.
+    value_region_box = 4    #Количество регионов в квадрате.
     grid = 5                #Можно любое, но лучше кратное размеру игрового экрана. Иначе обрежет область видимости.
     frame_size = [35, 40]   #Размер одного кадра [высота, ширина].
 
