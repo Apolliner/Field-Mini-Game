@@ -35,6 +35,9 @@ garbage = ['░', '▒', '▓', '█', '☺']
     19)Встречи NPC друг с другом на глобальной карте
     20)Остановку при достижении края карты #РЕАЛИЗОВАНО
     21)Реализовать вывод во что то, что быстрее и адекватнее консоли выводит картинку
+    22)Перерассчёт глобального положения противников при премещении по динамическому чанку
+    23)NPC не должны появляться и передвигаться по тайлам, передвижение по которым невозможно
+    24)Добавить необсчитываемых персонажей, являющихся мелкими зверьми. Например: змей и гремучих змей
 
     ТЕМАТИКА:
     Игра о человеке, который сбежал от погони в пустынную область, имея только флягу с водой и револьвер с 5ю патронами.
@@ -432,9 +435,9 @@ def action_dict(action, number):
 
 class Enemy:
     """ Отвечает за всех NPC """
-    def __init__(self, enemy, position, action_points):
+    def __init__(self, enemy, global_position, action_points):
         self.enemy = enemy
-        self.position = position
+        self.global_position = global_position
         self.action_points = action_points
         self.dynamic_chank = False
         self.dynamic_chank_position = [0, 0]
@@ -462,7 +465,7 @@ class Riffleman(Enemy):
         self.name = 'riffleman'
         self.name_npc = random.choice(['Бедовая Джейн', 'Бутч Кэссиди', 'Сандэнс Кид', 'Черный Барт'])
         self.precedence_biom = ['.', 'A', '▲']
-        self.icon = '☻r'
+        self.icon = '☻-'
         self.activity = [['чистит оружие', 'action_points', -2, 'rest_stop'], ['пьёт', 'thirst', 20, 'rest_stop'],
                          ['готовит еду', 'hunger', 20, 'bonfire'], ['отдыхает', 'fatigue', 10, 'rest_stop'], ['разбил лагерь', 'fatigue', 20, 'camp']]
         self.hunger = 100
@@ -518,6 +521,30 @@ def enemy_in_dynamic_chank(global_map, enemy, position, chank_size, step):
     """
         Обрабатывает поведение NPC на динамическом чанке игрока
     """
+    enemy_recalculation_dynamic_chank_position(global_map, enemy, position, chank_size, step)
+
+    #moved_chance = random.randrange(5)
+    #if moved_chance == 1:
+        #enemy.dynamic_chank_position[0] -= 1
+    #elif moved_chance == 2:
+        #enemy.dynamic_chank_position[0] += 1
+    #elif moved_chance == 3:
+        #enemy.dynamic_chank_position[1] += 1
+    #elif moved_chance == 4:
+        #enemy.dynamic_chank_position[1] -= 1
+
+    enemy_global_position_recalculation(global_map, enemy, position, chank_size)
+
+def enemy_global_position_recalculation(global_map, enemy, position, chank_size):
+    """
+        Перерассчитывает глобальную позицию NPC при их перемещении на динамическом чанке
+    """
+    pass
+
+def enemy_recalculation_dynamic_chank_position(global_map, enemy, position, chank_size, step):
+    """
+        Перерассчитывает позицию NPC при перерассчёте динамического чанка
+    """
     if enemy.old_position_assemblage_point != position.assemblage_point:
         if position.assemblage_point[0] == (enemy.old_position_assemblage_point[0] - 1):
            enemy.dynamic_chank_position[0] += chank_size
@@ -539,7 +566,7 @@ def enemy_dynamic_chank_check(global_map, enemy_list, position, step, chank_size
     for enemy in enemy_list:
         number_encounter_chank_ok = 99
         for number_encounter_chank in range(len(position.check_encounter_position)):
-            if position.check_encounter_position[number_encounter_chank] == enemy.position:
+            if position.check_encounter_position[number_encounter_chank] == enemy.global_position:
                 number_encounter_chank_ok = number_encounter_chank 
         if enemy.dynamic_chank == False and number_encounter_chank_ok != 99:
             enemy.old_position_assemblage_point = copy.deepcopy(position.assemblage_point)
@@ -588,7 +615,7 @@ def enemy_emulation_life(global_map, enemy, go_to_print, step, activity_list, ch
     enemy.enemy.fatigue -= 1
     
     if enemy.action_points >= 5:
-        if random.randrange(10)//6 == 1 or (global_map[enemy.position[0]][enemy.position[1]].icon in enemy.enemy.precedence_biom and random.randrange(10)//8 == 1):
+        if random.randrange(10)//6 == 1 or (global_map[enemy.global_position[0]][enemy.global_position[1]].icon in enemy.enemy.precedence_biom and random.randrange(10)//8 == 1):
             move_biom_enemy(global_map, enemy)
             enemy.action_points -= 5
             go_to_print.text5 += str(enemy.enemy.name_npc) + ' передвигается' + '\n'
@@ -603,22 +630,22 @@ def enemy_emulation_life(global_map, enemy, go_to_print, step, activity_list, ch
             enemy.enemy.fatigue = 50
             enemy.action_points -= 20
             go_to_print.text5 += str(enemy.enemy.name_npc)+ ' уснул от усталости \n'
-            activity_list.append(Action_in_map('rest_stop', step, enemy.position, chank_size))
+            activity_list.append(Action_in_map('rest_stop', step, enemy.global_position, chank_size))
         else:
             activity = random.choice(enemy.enemy.activity)
             if activity[1] == 'action_points':
                 enemy.action_points += activity[2]
-                activity_list.append(Action_in_map(activity[3], step, enemy.position, chank_size))
+                activity_list.append(Action_in_map(activity[3], step, enemy.global_position, chank_size))
             elif activity[1] == 'thirst':
                 enemy.enemy.thirst += activity[2]
-                activity_list.append(Action_in_map(activity[3], step, enemy.position, chank_size))
+                activity_list.append(Action_in_map(activity[3], step, enemy.global_position, chank_size))
             elif activity[1] == 'hunger':
                 enemy.enemy.hunger += activity[2]
-                activity_list.append(Action_in_map(activity[3], step, enemy.position, chank_size))
+                activity_list.append(Action_in_map(activity[3], step, enemy.global_position, chank_size))
             elif activity[1] == 'fatigue':
                 enemy.action_points -= 5
                 enemy.enemy.fatigue += activity[2]
-                activity_list.append(Action_in_map(activity[3], step, enemy.position, chank_size))
+                activity_list.append(Action_in_map(activity[3], step, enemy.global_position, chank_size))
             go_to_print.text5 += str(enemy.enemy.name_npc)+ ' ' + str(activity[0]) + ' его голод: ' + str(enemy.enemy.hunger) + ' его жажда: ' + str(enemy.enemy.thirst) + ' его усталость: ' + str(enemy.enemy.fatigue) + '\n'
             enemy.action_points -= 3
     
@@ -628,42 +655,42 @@ def move_biom_enemy(global_map, enemy):
         Обрабатывает перемещение NPC за кадром между биомами
     """
 
-    if global_map[enemy.position[0]][enemy.position[1]].icon in enemy.enemy.precedence_biom:
+    if global_map[enemy.global_position[0]][enemy.global_position[1]].icon in enemy.enemy.precedence_biom:
         direction_moved = []
-        if global_map[enemy.position[0] - 1][enemy.position[1]].icon in enemy.enemy.precedence_biom and enemy.position[0] - 1 > 0:
-            direction_moved.append([enemy.position[0] - 1, enemy.position[1]])
-        if global_map[enemy.position[0] + 1][enemy.position[1]].icon in enemy.enemy.precedence_biom and enemy.position[0] + 1 < len(global_map) - 1:
-            direction_moved.append([enemy.position[0] + 1, enemy.position[1]]) 
-        if global_map[enemy.position[0]][enemy.position[1] - 1].icon in enemy.enemy.precedence_biom and enemy.position[1] - 1 > 0:
-            direction_moved.append([enemy.position[0], enemy.position[1] - 1])
-        if global_map[enemy.position[0]][enemy.position[1] + 1].icon in enemy.enemy.precedence_biom and enemy.position[1] + 1 < len(global_map) - 1:
-            direction_moved.append([enemy.position[0], enemy.position[1] + 1])
+        if global_map[enemy.global_position[0] - 1][enemy.global_position[1]].icon in enemy.enemy.precedence_biom and enemy.global_position[0] - 1 > 0:
+            direction_moved.append([enemy.global_position[0] - 1, enemy.global_position[1]])
+        if global_map[enemy.global_position[0] + 1][enemy.global_position[1]].icon in enemy.enemy.precedence_biom and enemy.global_position[0] + 1 < len(global_map) - 1:
+            direction_moved.append([enemy.global_position[0] + 1, enemy.global_position[1]]) 
+        if global_map[enemy.global_position[0]][enemy.global_position[1] - 1].icon in enemy.enemy.precedence_biom and enemy.global_position[1] - 1 > 0:
+            direction_moved.append([enemy.global_position[0], enemy.global_position[1] - 1])
+        if global_map[enemy.global_position[0]][enemy.global_position[1] + 1].icon in enemy.enemy.precedence_biom and enemy.global_position[1] + 1 < len(global_map) - 1:
+            direction_moved.append([enemy.global_position[0], enemy.global_position[1] + 1])
         if len(direction_moved) != 0:
-            enemy.position = random.choice(direction_moved)
+            enemy.global_position = random.choice(direction_moved)
         if len(direction_moved) == 0:
             if random.randrange(10)//8 == 1:
                 direction_moved = []
-                if enemy.position[0] - 1 > 0:
-                    direction_moved.append([enemy.position[0] - 1, enemy.position[1]])
-                elif enemy.position[0] + 1 < len(global_map) - 1:
-                    direction_moved.append([enemy.position[0] + 1, enemy.position[1]])
-                elif enemy.position[1] - 1 > 0:
-                    direction_moved.append([enemy.position[0], enemy.position[1] - 1])
-                elif enemy.position[1] + 1 < len(global_map) - 1:
-                    direction_moved.append([enemy.position[0], enemy.position[1] + 1])
-                enemy.position = random.choice(direction_moved)
+                if enemy.global_position[0] - 1 > 0:
+                    direction_moved.append([enemy.global_position[0] - 1, enemy.global_position[1]])
+                elif enemy.global_position[0] + 1 < len(global_map) - 1:
+                    direction_moved.append([enemy.global_position[0] + 1, enemy.global_position[1]])
+                elif enemy.global_position[1] - 1 > 0:
+                    direction_moved.append([enemy.global_position[0], enemy.global_position[1] - 1])
+                elif enemy.global_position[1] + 1 < len(global_map) - 1:
+                    direction_moved.append([enemy.global_position[0], enemy.global_position[1] + 1])
+                enemy.global_position = random.choice(direction_moved)
     else:
         if random.randrange(10)//8 == 1:
             direction_moved = []
-            if enemy.position[0] - 1 > 0:
-                direction_moved.append([enemy.position[0] - 1, enemy.position[1]])
-            if enemy.position[0] + 1 < len(global_map) - 1:
-                direction_moved.append([enemy.position[0] + 1, enemy.position[1]])
-            if enemy.position[1] - 1 > 0:
-                direction_moved.append([enemy.position[0], enemy.position[1] - 1])
-            if enemy.position[1] + 1 < len(global_map) - 1:
-                direction_moved.append([enemy.position[0], enemy.position[1] + 1])
-            enemy.position = random.choice(direction_moved)
+            if enemy.global_position[0] - 1 > 0:
+                direction_moved.append([enemy.global_position[0] - 1, enemy.global_position[1]])
+            if enemy.global_position[0] + 1 < len(global_map) - 1:
+                direction_moved.append([enemy.global_position[0] + 1, enemy.global_position[1]])
+            if enemy.global_position[1] - 1 > 0:
+                direction_moved.append([enemy.global_position[0], enemy.global_position[1] - 1])
+            if enemy.global_position[1] + 1 < len(global_map) - 1:
+                direction_moved.append([enemy.global_position[0], enemy.global_position[1] + 1])
+            enemy.global_position = random.choice(direction_moved)
 
 
 def activity_list_check(activity_list, step):
@@ -896,7 +923,7 @@ def print_minimap(global_map, position, go_to_print, enemy_list):
         for biom in range(len(global_map[number_line])):
             enemy_here = '--'
             for enemy in range(len(enemy_list)):
-                if number_line == enemy_list[enemy].position[0] and biom == enemy_list[enemy].position[1]:
+                if number_line == enemy_list[enemy].global_position[0] and biom == enemy_list[enemy].global_position[1]:
                     enemy_here = enemy_list[enemy].enemy.icon
             if number_line == position.global_position[0] and biom == position.global_position[1]:
                 go_to_print.text2 = global_map[number_line][biom].name
@@ -961,9 +988,9 @@ def draw_field_calculations(position:list, views_field_size:int):
         draw_field.append(line)
     return draw_field
 
-def draw_additional_entities(position, chank_size:int, go_to_print, enemy_list, activity_list):
+def draw_additional_static_entities(position, chank_size:int, go_to_print, enemy_list, activity_list):
     """
-        Отрисовывает на динамическом чанке дополнительные сущности
+        Отрисовывает на динамическом чанке дополнительные статические сущности
     """
     
     for activity in activity_list:
@@ -976,19 +1003,25 @@ def draw_additional_entities(position, chank_size:int, go_to_print, enemy_list, 
                 position.chanks_use_map[activity.local_position[0] + chank_size][activity.local_position[1]] = activity.icon
             if position.number_chank == 4:
                 position.chanks_use_map[activity.local_position[0] + chank_size][activity.local_position[1] + chank_size] = activity.icon
-
-    for enemy in enemy_list:
-        if position.global_position == enemy.position:
-            if 0 <= enemy.dynamic_chank_position[0] <= (chank_size*2 - 2) and 0 <= enemy.dynamic_chank_position[1] <= (chank_size*2 - 2):
-                if position.number_chank == 1:
-                    position.chanks_use_map[enemy.dynamic_chank_position[0]][enemy.dynamic_chank_position[1]] = enemy.enemy.icon
-                if position.number_chank == 2:
-                    position.chanks_use_map[enemy.dynamic_chank_position[0]][enemy.dynamic_chank_position[1]] = enemy.enemy.icon
-                if position.number_chank == 3:
-                    position.chanks_use_map[enemy.dynamic_chank_position[0]][enemy.dynamic_chank_position[1]] = enemy.enemy.icon
-                if position.number_chank == 4:
-                    position.chanks_use_map[enemy.dynamic_chank_position[0]][enemy.dynamic_chank_position[1]] = enemy.enemy.icon
+                    
+def draw_additional_dynamic_entities(position, chank_size:int, go_to_print, enemy_list, activity_list, draw_field):
+    """
+        Перерасчёт координат динамических сущностей для отрисовки на итоговом выводе
+    """
+    enemy_position_draw = []
     
+    for enemy in enemy_list:
+        if position.global_position == enemy.global_position:
+            if (position.dynamic[0] - chank_size//2) <= enemy.dynamic_chank_position[0] <= (position.dynamic[0] + chank_size//2):
+                if (position.dynamic[1] - chank_size//2) <= enemy.dynamic_chank_position[1] <= (position.dynamic[1] + chank_size//2):
+                    if position.dynamic[0] <= enemy.dynamic_chank_position[0] and position.dynamic[1] <= enemy.dynamic_chank_position[1]:
+                        draw_field[enemy.dynamic_chank_position[0] - position.dynamic[0] + chank_size//2 - 2][enemy.dynamic_chank_position[1] - position.dynamic[1] + chank_size//2 + 2] = enemy.enemy.icon
+                    elif position.dynamic[0] <= enemy.dynamic_chank_position[0] and position.dynamic[1] > enemy.dynamic_chank_position[1]:
+                        draw_field[enemy.dynamic_chank_position[0] - position.dynamic[0] + chank_size//2 - 2][position.dynamic[1] - enemy.dynamic_chank_position[1] + chank_size//2 + 2] = enemy.enemy.icon
+                    elif position.dynamic[0] > enemy.dynamic_chank_position[0] and position.dynamic[1] <= enemy.dynamic_chank_position[1]:
+                        draw_field[position.dynamic[0] - enemy.dynamic_chank_position[0] + chank_size//2 - 2][enemy.dynamic_chank_position[1] - position.dynamic[1] + chank_size//2 + 2] = enemy.enemy.icon
+                    elif position.dynamic[0] > enemy.dynamic_chank_position[0] and position.dynamic[1] > enemy.dynamic_chank_position[1]:
+                        draw_field[position.dynamic[0] - enemy.dynamic_chank_position[0] + chank_size//2 - 2][position.dynamic[1] - enemy.dynamic_chank_position[1] + chank_size//2 + 2] = enemy.enemy.icon                  
 
 def master_draw(position, chank_size:int, go_to_print, global_map, mode_action, enemy_list, activity_list):
     """
@@ -997,9 +1030,12 @@ def master_draw(position, chank_size:int, go_to_print, global_map, mode_action, 
     if go_to_print.minimap_on:
         print_minimap(global_map, position, go_to_print, enemy_list)
 
-    draw_additional_entities(position, chank_size, go_to_print, enemy_list, activity_list)
+    draw_additional_static_entities(position, chank_size, go_to_print, enemy_list, activity_list)
     
     draw_field = draw_field_calculations(position, chank_size)
+
+    draw_additional_dynamic_entities(position, chank_size, go_to_print, enemy_list, activity_list, draw_field)
+    
     draw_box = []
     pointer_vision = ' '
     for line in range(len(draw_field)):
@@ -1021,7 +1057,10 @@ def master_draw(position, chank_size:int, go_to_print, global_map, mode_action, 
             elif line == position.gun[0] and tile == position.gun[1]:
                 print_line += draw_field[line][tile] + '+'
             else:
-                print_line += draw_field[line][tile] + ' '
+                if len(draw_field[line][tile]) == 2:
+                    print_line += draw_field[line][tile]
+                else:
+                    print_line += draw_field[line][tile] + ' '
         draw_box.append(print_line)
     go_to_print.game_field = draw_box
     go_to_print.text1 = (position.assemblage_point, ' - Позиция точки сборки | ', position.dynamic, ' - динамическая позиция | под ногами:', ground_dict(ground) )
@@ -1046,7 +1085,7 @@ def print_frame(go_to_print, frame_size, activity_list):
     for line in range(frame_size[0]):
         raw_frame.append('')
     
-    for line in range(len(go_to_print.game_field)): #Добавление изображения с основного экрана
+    for line in range(len(go_to_print.game_field)): #Добавление изображения с игрового экрана
         raw_frame[(line + 3)] += '      ' + go_to_print.game_field[line]
 
     if go_to_print.minimap_on: #Добавление изображения миникарты
