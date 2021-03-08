@@ -127,6 +127,7 @@ class Interfase:
         self.game_field = game_field
         self.biom_map = biom_map
         self.minimap_on = minimap_on
+        self.point_to_draw = [0,0]
         self.text1 = text1
         self.text2 = text2
         self.text3 = text3
@@ -522,16 +523,17 @@ def enemy_in_dynamic_chank(global_map, enemy, position, chank_size, step):
         Обрабатывает поведение NPC на динамическом чанке игрока
     """
     enemy_recalculation_dynamic_chank_position(global_map, enemy, position, chank_size, step)
+    print(enemy.enemy.name, ' находится в динамческой позиции: ', enemy.dynamic_chank_position)
 
-    #moved_chance = random.randrange(5)
-    #if moved_chance == 1:
-        #enemy.dynamic_chank_position[0] -= 1
-    #elif moved_chance == 2:
-        #enemy.dynamic_chank_position[0] += 1
-    #elif moved_chance == 3:
-        #enemy.dynamic_chank_position[1] += 1
-    #elif moved_chance == 4:
-        #enemy.dynamic_chank_position[1] -= 1
+    moved_chance = random.randrange(5)
+    if moved_chance == 1:
+        enemy.dynamic_chank_position[0] -= 1
+    elif moved_chance == 2:
+        enemy.dynamic_chank_position[0] += 1
+    elif moved_chance == 3:
+        enemy.dynamic_chank_position[1] += 1
+    elif moved_chance == 4:
+        enemy.dynamic_chank_position[1] -= 1
 
     enemy_global_position_recalculation(global_map, enemy, position, chank_size)
 
@@ -974,13 +976,18 @@ def ground_dict(tile):
     else:
         return 'нечто'                 
 
-def draw_field_calculations(position:list, views_field_size:int):
+def draw_field_calculations(position:list, views_field_size:int, go_to_print):
     """
         Формирует изображение игрового поля на печать
     """
+    
+    
     half_views = (views_field_size//2)
-    start_stop = [(position.dynamic[0] - half_views), (position.dynamic[1] - half_views), (position.dynamic[0] + half_views + 1),(position.dynamic[1] + half_views + 1)]
+    start_stop = [(position.dynamic[0] - half_views), (position.dynamic[1] - half_views),
+                  (position.dynamic[0] + half_views + 1),(position.dynamic[1] + half_views + 1)]
     line_views = position.chanks_use_map[start_stop[0]:start_stop[2]]
+
+    go_to_print.point_to_draw = [(position.dynamic[0] - half_views), (position.dynamic[1] - half_views)]
     
     draw_field = []
     for line in line_views:
@@ -1012,16 +1019,10 @@ def draw_additional_dynamic_entities(position, chank_size:int, go_to_print, enem
     
     for enemy in enemy_list:
         if position.global_position == enemy.global_position:
-            if (position.dynamic[0] - chank_size//2) <= enemy.dynamic_chank_position[0] <= (position.dynamic[0] + chank_size//2):
-                if (position.dynamic[1] - chank_size//2) <= enemy.dynamic_chank_position[1] <= (position.dynamic[1] + chank_size//2):
-                    if position.dynamic[0] <= enemy.dynamic_chank_position[0] and position.dynamic[1] <= enemy.dynamic_chank_position[1]:
-                        draw_field[enemy.dynamic_chank_position[0] - position.dynamic[0] + chank_size//2 - 2][enemy.dynamic_chank_position[1] - position.dynamic[1] + chank_size//2 + 2] = enemy.enemy.icon
-                    elif position.dynamic[0] <= enemy.dynamic_chank_position[0] and position.dynamic[1] > enemy.dynamic_chank_position[1]:
-                        draw_field[enemy.dynamic_chank_position[0] - position.dynamic[0] + chank_size//2 - 2][position.dynamic[1] - enemy.dynamic_chank_position[1] + chank_size//2 + 2] = enemy.enemy.icon
-                    elif position.dynamic[0] > enemy.dynamic_chank_position[0] and position.dynamic[1] <= enemy.dynamic_chank_position[1]:
-                        draw_field[position.dynamic[0] - enemy.dynamic_chank_position[0] + chank_size//2 - 2][enemy.dynamic_chank_position[1] - position.dynamic[1] + chank_size//2 + 2] = enemy.enemy.icon
-                    elif position.dynamic[0] > enemy.dynamic_chank_position[0] and position.dynamic[1] > enemy.dynamic_chank_position[1]:
-                        draw_field[position.dynamic[0] - enemy.dynamic_chank_position[0] + chank_size//2 - 2][position.dynamic[1] - enemy.dynamic_chank_position[1] + chank_size//2 + 2] = enemy.enemy.icon                  
+            if go_to_print.point_to_draw[0] <= enemy.dynamic_chank_position[0] <= go_to_print.point_to_draw[0] + chank_size - 1:
+                if go_to_print.point_to_draw[1] <= enemy.dynamic_chank_position[1] < go_to_print.point_to_draw[1] + chank_size - 1:
+                    draw_field[enemy.dynamic_chank_position[0] - go_to_print.point_to_draw[0]][enemy.dynamic_chank_position[1] - go_to_print.point_to_draw[1]] = enemy.enemy.icon
+              
 
 def master_draw(position, chank_size:int, go_to_print, global_map, mode_action, enemy_list, activity_list):
     """
@@ -1032,7 +1033,7 @@ def master_draw(position, chank_size:int, go_to_print, global_map, mode_action, 
 
     draw_additional_static_entities(position, chank_size, go_to_print, enemy_list, activity_list)
     
-    draw_field = draw_field_calculations(position, chank_size)
+    draw_field = draw_field_calculations(position, chank_size, go_to_print)
 
     draw_additional_dynamic_entities(position, chank_size, go_to_print, enemy_list, activity_list, draw_field)
     
