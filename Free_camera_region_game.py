@@ -38,6 +38,7 @@ garbage = ['░', '▒', '▓', '█', '☺']
     22)Перерассчёт глобального положения противников при премещении по динамическому чанку
     23)NPC не должны появляться и передвигаться по тайлам, передвижение по которым невозможно
     24)Добавить необсчитываемых персонажей, являющихся мелкими зверьми. Например: змей и гремучих змей
+    25)Переделать вывод игрового содержимого на экран
 
     ТЕМАТИКА:
     Игра о человеке, который сбежал от погони в пустынную область, имея только флягу с водой и револьвер с 5ю патронами.
@@ -584,15 +585,10 @@ def enemy_in_dynamic_chank(global_map, enemy, position, chank_size, step):
     enemy_recalculation_dynamic_chank_position(global_map, enemy, position, chank_size, step)
     print(enemy.enemy.name, ' находится в динамической позиции: ', enemy.dynamic_chank_position)
 
-    moved_chance = random.randrange(5)
-    if moved_chance == 1:
-        enemy.dynamic_chank_position[0] -= 1
-    elif moved_chance == 2:
-        enemy.dynamic_chank_position[0] += 1
-    elif moved_chance == 3:
-        enemy.dynamic_chank_position[1] += 1
-    elif moved_chance == 4:
-        enemy.dynamic_chank_position[1] -= 1
+
+
+    enemy.dynamic_chank_position[1] += 1
+
 
     enemy_global_position_recalculation(global_map, enemy, position, chank_size)
 
@@ -600,7 +596,8 @@ def enemy_global_position_recalculation(global_map, enemy, position, chank_size)
     """
         Перерассчитывает глобальную позицию NPC при их перемещении на динамическом чанке
     """
-    pass
+    enemy.global_position = [(position.assemblage_point[0] + enemy.dynamic_chank_position[0]//chank_size),
+                             (position.assemblage_point[1] + enemy.dynamic_chank_position[1]//chank_size)]
 
 def enemy_recalculation_dynamic_chank_position(global_map, enemy, position, chank_size, step):
     """
