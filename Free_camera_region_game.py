@@ -42,7 +42,30 @@ garbage = ['░', '▒', '▓', '█', '☺']
     ТЕМАТИКА:
     Игра о человеке, который сбежал от погони в пустынную область, имея только флягу с водой и револьвер с 5ю патронами.
     Он не может покинуть область "потому что его ищут" и поэтому должен выживать здесь.
-    Он может сталкиваться со зверьми и с людьми. В горных областях с золотоискателями, а в зелёных областях со всадниками, которые были отправлены его убить.
+    Он может сталкиваться со зверьми и с людьми. В горных областях с золотоискателями, а в зелёных областях со всадниками,
+    которые были отправлены его убить. Столкновение с NPC является нежелательным, ведь их оснащённость и шансы на выживание сильно больше.
+
+    ЛОГИКА ПЕРЕМЕЩЕНИЯ NPC
+    NPC делятся на охотников и хаотичных.
+    
+    Хаотичные NPC двигаются по старым правилам случайного выбора направления в рамках благоприятных биомов. К хаотичным NPC относятся животные и
+    золотоискатели. Предположительно, они обитают в одном месте и изображают свою деятельность.
+    
+    Перемещаясь по глобальной карте, NPC охотники получают задачу достигнуть точки на карте, и, они пытаются её достичь обходя неблагоприятные биомы
+    и стараясь перемещаться по благоприятным. Попутно они делают остановки, оставляющие свои следы.
+    Если достичь точки через благоприятные или нейтральные биомы невозможно, точка следования сменяется и так до конца игры или их гибели.
+    Появившись на динамическом чанке игрока, NPC продолжают следование выбранным курсом и так же делают короткие (а то и длинные) остановки
+    и совершают действия. NPC могут быть застигнуты врасплох во время сна, но это сложно сделать, потому что сон их чуток.
+
+    НЕОБЧИТЫВАЕМЫЕ СУЩНОСТИ:
+    Помимо NPC, жизнь имитируют пявляющиеся в зависимости от биома существа. Ими могут быть птицы, скорпионы и змеи.
+    Они могут появиться из соответствующих им тайлов даже если они нахоятся в зоне видимости игрока.
+    Некоторые тайлы будут опасны возможностью появления из них необчитываемых противников.
+
+    СТРЕЛЬБА:
+    Стрельба осуществляется нажатием клавиши "g", наведением курсора на противника и выстрелом "от бедра", при такой стрельбе довольно большой шанс промаха.
+    Можно прицелиться, повысив свои шансы, но пропустив один ход. Попадание либо сразу убивает персонажа, либо наносит ему критический урон,
+    несовместимый с дальнейшим выживанием.
     
 """
 
@@ -417,16 +440,16 @@ def action_dict(action, number):
     """ Принимает название активности, возвращает её иконку, описание и срок жизни"""
 
     action_dict =   {
-                    'camp':             ['/', 'следы лагеря',               50],
-                    'bonfire':          ['+', 'следы костра',               50],
-                    'rest_stop':        ['№', 'следы остановки человека',   50],
-                    'horse_tracks':     ['%', 'следы лошади',               50],
-                    'animal_traces':    ['@', 'следы зверя',                50],
-                    'gnawed bones':     ['#', 'обглоданные зверем кости',   50],
-                    'defecate':         ['&', 'справленная нужда',          50],
-                    'animal_rest_stop': ['$', 'следы животной лежанки',     50],
-                    'dead_man':         ['D', 'мёртвый человек',            50],
-                    'unknown':          ['?', 'неизвестно',                 50]
+                    'camp':             ['/', 'следы лагеря',               150],
+                    'bonfire':          ['+', 'следы костра',               150],
+                    'rest_stop':        ['№', 'следы остановки человека',   150],
+                    'horse_tracks':     ['%', 'следы лошади',               150],
+                    'animal_traces':    ['@', 'следы зверя',                150],
+                    'gnawed bones':     ['#', 'обглоданные зверем кости',   150],
+                    'defecate':         ['&', 'справленная нужда',          150],
+                    'animal_rest_stop': ['$', 'следы животной лежанки',     150],
+                    'dead_man':         ['D', 'мёртвый человек',            150],
+                    'unknown':          ['?', 'неизвестно',                 150]
                     }
 
     if action in action_dict:
@@ -459,6 +482,8 @@ class Horseman(Enemy):
         self.thirst = 100
         self.fatigue = 100
         self.reserves = 10
+        self.type = 'hunter'
+        self.task = [0, 0]
 
 class Riffleman(Enemy):
     """ Отвечает за стрелков """
@@ -473,6 +498,23 @@ class Riffleman(Enemy):
         self.thirst = 100
         self.fatigue = 100
         self.reserves = 5
+        self.type = 'hunter'
+        self.task = [0, 0]
+
+class Gold_digger(Enemy):
+    """ Отвечает за золотоискателей """
+    def __init__(self):
+        self.name = 'gold_digger'
+        self.name_npc = random.choice(['Бедовая Джейн', 'Бутч Кэссиди', 'Сандэнс Кид', 'Черный Барт'])
+        self.precedence_biom = ['.', 'A', '▲']
+        self.icon = '☻='
+        self.activity = [['чистит оружие', 'action_points', -2, 'rest_stop'], ['пьёт', 'thirst', 20, 'rest_stop'],
+                         ['готовит еду', 'hunger', 20, 'bonfire'], ['отдыхает', 'fatigue', 10, 'rest_stop'], ['разбил лагерь', 'fatigue', 20, 'camp']]
+        self.hunger = 100
+        self.thirst = 100
+        self.fatigue = 100
+        self.reserves = 5
+        self.type = 'chaotic'
 
 class Horse(Enemy):
     """ Отвечает за коней """
@@ -487,6 +529,7 @@ class Horse(Enemy):
         self.thirst = 100
         self.fatigue = 100
         self.reserves = 0
+        self.type = 'chaotic'
 
 class Coyot(Enemy):
     """ Отвечает за койотов """
@@ -502,6 +545,7 @@ class Coyot(Enemy):
         self.thirst = 200
         self.fatigue = 200
         self.reserves = 0
+        self.type = 'chaotic'
 
 def master_game_events(global_map, enemy_list, position, go_to_print, step, activity_list, chank_size):
     """
@@ -516,14 +560,29 @@ def master_game_events(global_map, enemy_list, position, go_to_print, step, acti
             enemy_in_dynamic_chank(global_map, enemy, position, chank_size, step)
             pass
         else:
-            enemy_emulation_life(global_map, enemy, go_to_print, step, activity_list, chank_size)
+            if enemy.enemy.type == 'hunter':
+                enemy_hunter_emulation_life(global_map, enemy, go_to_print, step, activity_list, chank_size)
+            else:
+                enemy_chaotic_emulation_life(global_map, enemy, go_to_print, step, activity_list, chank_size)
+
+def enemy_ideal_move_calculation():
+    """
+        Рассчитывает идеальную траекторию движения NPC
+    """
+    pass
+
+def enemy_not_ideal_move_recalculation():
+    """
+        Перерассчитывает идеальную траекторию под неидеальную местность
+    """
+    pass
 
 def enemy_in_dynamic_chank(global_map, enemy, position, chank_size, step):
     """
         Обрабатывает поведение NPC на динамическом чанке игрока
     """
     enemy_recalculation_dynamic_chank_position(global_map, enemy, position, chank_size, step)
-    print(enemy.enemy.name, ' находится в динамческой позиции: ', enemy.dynamic_chank_position)
+    print(enemy.enemy.name, ' находится в динамической позиции: ', enemy.dynamic_chank_position)
 
     moved_chance = random.randrange(5)
     if moved_chance == 1:
@@ -603,11 +662,17 @@ def enemy_dynamic_chank_check(global_map, enemy_list, position, step, chank_size
             enemy.dynamic_chank = False
         else:
             enemy.dynamic_chank = False
-
-
-def enemy_emulation_life(global_map, enemy, go_to_print, step, activity_list, chank_size):
+def enemy_hunter_emulation_life(global_map, enemy, go_to_print, step, activity_list, chank_size):
     """
-        Обрабатывает жизнь NPC за кадром, на глобальной карте
+        Обрабатывает жизнь hunter NPC за кадром, на глобальной карте
+        step нужен для запоминания следами деятельности времени в которое появились
+    """
+    pass
+    
+
+def enemy_chaotic_emulation_life(global_map, enemy, go_to_print, step, activity_list, chank_size):
+    """
+        Обрабатывает жизнь chaotic NPC за кадром, на глобальной карте
         step нужен для запоминания следами деятельности времени в которое появились
     """
 
@@ -721,6 +786,8 @@ def master_player_action(global_map, position, chank_size, go_to_print, changing
 
     if mode_action == 'move':
         request_move(global_map, position, chank_size, go_to_print, pressed_button, changing_step)
+    elif mode_action == 'test_move':
+        test_request_move(global_map, position, chank_size, go_to_print, pressed_button, changing_step)
     elif mode_action == 'pointer':    
         request_pointer(position, chank_size, go_to_print, pressed_button, changing_step)
     elif mode_action == 'gun':
@@ -773,6 +840,11 @@ def request_press_button(global_map, position, chank_size, go_to_print, changing
             return ('move', 'button_gun')
     elif key == 'm' or key == 'ь':
         return (mode_action, 'button_map')
+    elif key == 't' or key == 'е':
+        if mode_action == 'test_move':
+            return ('move', 'button_test')
+        else:
+            return ('test_move', 'button_test')
     else:
         return (mode_action, 'none')
 
@@ -809,6 +881,35 @@ def request_move(global_map:list, position, chank_size:int, go_to_print, pressed
             if position.dynamic[1] <= (chank_size + chank_size//2) and position.assemblage_point[1] != (len(global_map) - 2):
                 position.dynamic[1] += 1
                 calculation_assemblage_point(global_map, position, chank_size, 2)
+
+def test_request_move(global_map:list, position, chank_size:int, go_to_print, pressed_button, changing_step): #тестовый быстрый режим премещения
+    """
+        Меняет динамическое местоположение персонажа в тестовом режиме, без ограничений. По полчанка за раз.
+    """
+    
+    if pressed_button == 'up':
+        
+        if position.dynamic[0] >= chank_size//2 and position.assemblage_point[0] > 0:
+            position.dynamic[0] -= chank_size//2
+            calculation_assemblage_point(global_map, position, chank_size, 2)
+            
+    elif pressed_button == 'left':
+        
+        if position.dynamic[1] >= chank_size//2 and position.assemblage_point[1] > 0:
+            position.dynamic[1] -= chank_size//2
+            calculation_assemblage_point(global_map, position, chank_size, 2)
+            
+    elif pressed_button == 'down':
+        
+        if position.dynamic[0] <= (chank_size + chank_size//2) and position.assemblage_point[0] != (len(global_map) - 2):
+            position.dynamic[0] += chank_size//2
+            calculation_assemblage_point(global_map, position, chank_size, 2)
+            
+    elif pressed_button == 'right':
+        
+        if position.dynamic[1] <= (chank_size + chank_size//2) and position.assemblage_point[1] != (len(global_map) - 2):
+            position.dynamic[1] += chank_size//2
+            calculation_assemblage_point(global_map, position, chank_size, 2)
 
 def request_pointer(position, chank_size:int, go_to_print, pressed_button, changing_step):
     """
