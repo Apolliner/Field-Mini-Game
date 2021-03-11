@@ -8,7 +8,7 @@ import time
 garbage = ['░', '▒', '▓', '█', '☺']
 
 """
-    ВЕРСИЯ СО СВОБОДНОЙ КАМЕРОЙ И ГЛОБАЛЬНОЙ КАРТОЙ
+    ВЕРСИЯ СО СВОБОДНОЙ КАМЕРОЙ, ГЛОБАЛЬНОЙ КАРТОЙ И ПЕРСОНАЖАМИ NPC
 
     РЕАЛИЗОВАТЬ:
     1)Генерацию с чанками #РЕАЛИЗОВАНО
@@ -111,7 +111,7 @@ class Position:
             Рассчитывает глобальное положение по положению динамического чанка и положению внутри его
             Выдаёт глобальные координаты и номер чанка, в котором сейчас находится игрок
             Номера чанков выглядят так: 1 2
-                                    3 4
+                                        3 4
         """
         
         if self.dynamic[0] < chank_size > self.dynamic[1]:  
@@ -562,7 +562,7 @@ def master_game_events(global_map, enemy_list, position, go_to_print, step, acti
             pass
         else:
             if enemy.enemy.type == 'hunter':
-                enemy_hunter_emulation_life(global_map, enemy, go_to_print, step, activity_list, chank_size)
+                enemy_chaotic_emulation_life(global_map, enemy, go_to_print, step, activity_list, chank_size)
             else:
                 enemy_chaotic_emulation_life(global_map, enemy, go_to_print, step, activity_list, chank_size)
 
@@ -793,6 +793,8 @@ def master_player_action(global_map, position, chank_size, go_to_print, changing
         go_to_print.minimap_on = (go_to_print.minimap_on == False)
     request_processing(pressed_button)
 
+    calculation_assemblage_point(global_map, position, chank_size)
+    
     return mode_action
 
 
@@ -856,28 +858,25 @@ def request_move(global_map:list, position, chank_size:int, go_to_print, pressed
         if position.chanks_use_map[position.dynamic[0] - 1][position.dynamic[1]] != '▲':
             if position.dynamic[0] >= chank_size//2 and position.assemblage_point[0] > 0:
                 position.dynamic[0] -= 1
-                calculation_assemblage_point(global_map, position, chank_size, 2)
             
     elif pressed_button == 'left':
         
         if position.chanks_use_map[position.dynamic[0]][position.dynamic[1] - 1] != '▲':
             if position.dynamic[1] >= chank_size//2 and position.assemblage_point[1] > 0:
                 position.dynamic[1] -= 1
-                calculation_assemblage_point(global_map, position, chank_size, 2)
             
     elif pressed_button == 'down':
         
         if position.chanks_use_map[position.dynamic[0] + 1][position.dynamic[1]] != '▲':
             if position.dynamic[0] <= (chank_size + chank_size//2) and position.assemblage_point[0] != (len(global_map) - 2):
                 position.dynamic[0] += 1
-                calculation_assemblage_point(global_map, position, chank_size, 2)
             
     elif pressed_button == 'right':
         
         if position.chanks_use_map[position.dynamic[0]][position.dynamic[1] + 1] != '▲':
             if position.dynamic[1] <= (chank_size + chank_size//2) and position.assemblage_point[1] != (len(global_map) - 2):
                 position.dynamic[1] += 1
-                calculation_assemblage_point(global_map, position, chank_size, 2)
+    
 
 def test_request_move(global_map:list, position, chank_size:int, go_to_print, pressed_button, changing_step): #тестовый быстрый режим премещения
     """
@@ -885,28 +884,20 @@ def test_request_move(global_map:list, position, chank_size:int, go_to_print, pr
     """
     
     if pressed_button == 'up':
-        
         if position.dynamic[0] >= chank_size//2 and position.assemblage_point[0] > 0:
             position.dynamic[0] -= chank_size//2
-            calculation_assemblage_point(global_map, position, chank_size, 2)
             
     elif pressed_button == 'left':
-        
         if position.dynamic[1] >= chank_size//2 and position.assemblage_point[1] > 0:
             position.dynamic[1] -= chank_size//2
-            calculation_assemblage_point(global_map, position, chank_size, 2)
             
-    elif pressed_button == 'down':
-        
+    elif pressed_button == 'down': 
         if position.dynamic[0] <= (chank_size + chank_size//2) and position.assemblage_point[0] != (len(global_map) - 2):
             position.dynamic[0] += chank_size//2
-            calculation_assemblage_point(global_map, position, chank_size, 2)
             
     elif pressed_button == 'right':
-        
         if position.dynamic[1] <= (chank_size + chank_size//2) and position.assemblage_point[1] != (len(global_map) - 2):
             position.dynamic[1] += chank_size//2
-            calculation_assemblage_point(global_map, position, chank_size, 2)
 
 def request_pointer(position, chank_size:int, go_to_print, pressed_button, changing_step):
     """
@@ -937,44 +928,37 @@ def request_gun(global_map:list, position, chank_size:int, go_to_print, pressed_
     elif pressed_button == 'right' and position.gun[1] < chank_size//2 + 5:
         position.gun[1] += 1
 
-def calculation_assemblage_point(global_map:list, position, chank_size:int, change):
+def calculation_assemblage_point(global_map:list, position, chank_size:int):
     """
         Перерассчитывает положение точки сборки, динамические координаты, при необходимости перерассчитывает динамический чанк.
     """
-
     
     if position.dynamic[0] > (chank_size//2 + chank_size - 1):
         position.assemblage_point[0] += 1
-        position.dynamic[0] -= chank_size
-            
+        position.dynamic[0] -= chank_size        
     elif position.dynamic[0] < chank_size//2:
         position.assemblage_point[0] -= 1
         position.dynamic[0] += chank_size
-    else:
-        change -= 1
         
     if position.dynamic[1] > (chank_size//2 + chank_size - 1):
         position.assemblage_point[1] += 1
-        position.dynamic[1] -= chank_size
-            
+        position.dynamic[1] -= chank_size   
     elif position.dynamic[1] < chank_size//2:
         position.assemblage_point[1] -= 1
         position.dynamic[1] += chank_size
-    else:
-        change -= 1
 
-    if change != 0:
-        assemblage_chank = []
 
-        line_slice = global_map[position.assemblage_point[0]:(position.assemblage_point[0] + 2)]
+    assemblage_chank = []
+
+    line_slice = global_map[position.assemblage_point[0]:(position.assemblage_point[0] + 2)]
     
-        for line in line_slice:
-            line = line[position.assemblage_point[1]:(position.assemblage_point[1] + 2)]
-            assemblage_chank.append(line)
-        for number_line in range(len(assemblage_chank)):
-            for chank in range(len(assemblage_chank)):
-                assemblage_chank[number_line][chank] = assemblage_chank[number_line][chank].chank
-        position.chanks_use_map = gluing_location(assemblage_chank, 2, chank_size)
+    for line in line_slice:
+        line = line[position.assemblage_point[1]:(position.assemblage_point[1] + 2)]
+        assemblage_chank.append(line)
+    for number_line in range(len(assemblage_chank)):
+        for chank in range(len(assemblage_chank)):
+            assemblage_chank[number_line][chank] = assemblage_chank[number_line][chank].chank
+    position.chanks_use_map = gluing_location(assemblage_chank, 2, chank_size)
 
     position.global_position_calculation(chank_size) #Рассчитывает глобальное положение и номер чанка через метод
     position.check_encounter() #Рассчитывает порядок и координаты точек проверки
@@ -1093,34 +1077,26 @@ def draw_field_calculations(position:list, views_field_size:int, go_to_print):
         draw_field.append(line)
     return draw_field
 
-def draw_additional_static_entities(position, chank_size:int, go_to_print, enemy_list, activity_list):
+def draw_additional_entities(position, chank_size:int, go_to_print, enemy_list, activity_list):
     """
         Отрисовывает на динамическом чанке дополнительные статические сущности
     """
     
     for activity in activity_list:
-        if position.global_position == activity.global_position:
-            if position.number_chank == 1:
-                position.chanks_use_map[activity.local_position[0]][activity.local_position[1]] = activity.icon
-            if position.number_chank == 2:
-                position.chanks_use_map[activity.local_position[0]][activity.local_position[1] + chank_size] = activity.icon
-            if position.number_chank == 3:
-                position.chanks_use_map[activity.local_position[0] + chank_size][activity.local_position[1]] = activity.icon
-            if position.number_chank == 4:
-                position.chanks_use_map[activity.local_position[0] + chank_size][activity.local_position[1] + chank_size] = activity.icon
-                    
-def draw_additional_dynamic_entities(position, chank_size:int, go_to_print, enemy_list, activity_list, draw_field):
-    """
-        Перерасчёт координат динамических сущностей для отрисовки на итоговом выводе
-    """
-    enemy_position_draw = []
-    
+        if activity.global_position[0] == position.assemblage_point[0] and activity.global_position[1] == position.assemblage_point[1]:
+            position.chanks_use_map[activity.local_position[0]][activity.local_position[1]] = activity.icon
+        elif activity.global_position[0] == position.assemblage_point[0] and activity.global_position[1] == position.assemblage_point[1] + 1:
+            position.chanks_use_map[activity.local_position[0]][activity.local_position[1] + chank_size] = activity.icon
+        elif activity.global_position[0] == position.assemblage_point[0] + 1 and activity.global_position[1] == position.assemblage_point[1]:
+            position.chanks_use_map[activity.local_position[0] + chank_size][activity.local_position[1]] = activity.icon
+        elif activity.global_position[0] == position.assemblage_point[0] + 1 and activity.global_position[1] == position.assemblage_point[1] + 1:
+            position.chanks_use_map[activity.local_position[0] + chank_size][activity.local_position[1] + chank_size] = activity.icon
+
     for enemy in enemy_list:
-        if position.global_position == enemy.global_position:
-            if go_to_print.point_to_draw[0] <= enemy.dynamic_chank_position[0] <= go_to_print.point_to_draw[0] + chank_size - 1:
-                if go_to_print.point_to_draw[1] <= enemy.dynamic_chank_position[1] < go_to_print.point_to_draw[1] + chank_size - 1:
-                    draw_field[enemy.dynamic_chank_position[0] - go_to_print.point_to_draw[0]][enemy.dynamic_chank_position[1] - go_to_print.point_to_draw[1]] = enemy.enemy.icon
-              
+        if enemy.global_position in position.check_encounter_position:
+            if (0 <= enemy.dynamic_chank_position[0] <= chank_size * 2) and (0 <= enemy.dynamic_chank_position[1] <= chank_size * 2 - 2):
+                position.chanks_use_map[enemy.dynamic_chank_position[0]][enemy.dynamic_chank_position[1]] = enemy.enemy.icon
+                               
 
 def master_draw(position, chank_size:int, go_to_print, global_map, mode_action, enemy_list, activity_list):
     """
@@ -1129,12 +1105,10 @@ def master_draw(position, chank_size:int, go_to_print, global_map, mode_action, 
     if go_to_print.minimap_on:
         print_minimap(global_map, position, go_to_print, enemy_list)
 
-    draw_additional_static_entities(position, chank_size, go_to_print, enemy_list, activity_list)
-    
+    draw_additional_entities(position, chank_size, go_to_print, enemy_list, activity_list)
+
     draw_field = draw_field_calculations(position, chank_size, go_to_print)
 
-    draw_additional_dynamic_entities(position, chank_size, go_to_print, enemy_list, activity_list, draw_field)
-    
     draw_box = []
     pointer_vision = ' '
     for line in range(len(draw_field)):
@@ -1261,7 +1235,7 @@ def main():
     #progress_bar(5, 'Запуск игры') 
     global_map = master_generate(value_region_box, chank_size, grid)
     position = Position([value_region_box//2, value_region_box//2], [chank_size//2, chank_size//2], [], [chank_size//2, chank_size//2], [chank_size//2, chank_size//2])
-    calculation_assemblage_point(global_map, position, chank_size, 3)
+    calculation_assemblage_point(global_map, position, chank_size)
     enemy_list = [Enemy(Horseman(),[len(global_map)//2, len(global_map)//2] , 5), Enemy(Horseman(),[len(global_map)//3, len(global_map)//3] , 5),
                   Enemy(Riffleman(),[len(global_map)//4, len(global_map)//4] , 2), Enemy(Coyot(),[len(global_map)//5, len(global_map)//5] , 0)]
     game_loop(global_map, position, chank_size, frame_size, enemy_list)
