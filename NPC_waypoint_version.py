@@ -12,12 +12,12 @@ garbage = ['░', '▒', '▓', '█', '☺']
 
     РЕАЛИЗОВАТЬ:
     
-    17)Перехват шага у игрока
-    18)Золотоискатели, находясь в горах начинают искать золото
-    19)Встречи NPC друг с другом на глобальной карте
-    20)Остановку при достижени NPC края карты
-    23)NPC не должны появляться и передвигаться по тайлам, передвижение по которым невозможно
-    24)Добавить необсчитываемых персонажей, являющихся мелкими зверьми. Например: змей и гремучих змей
+    1)Перехват шага у игрока
+    2)Золотоискатели, находясь в горах начинают искать золото
+    3)Встречи NPC друг с другом на глобальной карте
+    4)Остановку при достижени NPC края карты
+    5)NPC не должны появляться и передвигаться по тайлам, передвижение по которым невозможно
+    6)Добавить необсчитываемых персонажей, являющихся мелкими зверьми. Например: змей и гремучих змей
 
     ЛОГИКА ПЕРЕМЕЩЕНИЯ NPC
     NPC делятся на охотников и хаотичных.
@@ -433,7 +433,7 @@ class Enemy:
         self.dynamic_chank_position = [0, 0]
         self.old_position_assemblage_point = [1, 1]
         self.step_exit_from_assemblage_point = 0
-        self.task = [0, 0]
+        self.waypoints = []
 
 class Horseman(Enemy):
     """ Отвечает за всадников """
@@ -512,30 +512,102 @@ class Coyot(Enemy):
         self.reserves = 0
         self.type = 'chaotic'
 
-def master_game_events(global_map, enemy_list, position, go_to_print, step, activity_list, chank_size):
+def master_game_events(global_map, enemy_list, position, go_to_print, step, activity_list, chank_size, interaction):
     """
         Здесь происходят все события, не связанные с пользовательским вводом
     """
     enemy_dynamic_chank_check(global_map, enemy_list, position, step, chank_size)
     activity_list_check(activity_list, step)
     go_to_print.text5 = ''
+    interaction_processing(global_map, interaction, enemy_list)
     
     for enemy in enemy_list:
+        print(f"{enemy.enemy.name} enemy.waypoints = {enemy.waypoints}")
         if enemy.dynamic_chank:
             enemy_in_dynamic_chank(global_map, enemy, position, chank_size, step)
             pass
         else:
             if enemy.enemy.type == 'hunter':
-                enemy_chaotic_emulation_life(global_map, enemy, go_to_print, step, activity_list, chank_size)
+                print(f"{enemy.enemy.name} hunter")
+                enemy_hunter_emulation_life(global_map, enemy, go_to_print, step, activity_list, chank_size)
             else:
                 enemy_chaotic_emulation_life(global_map, enemy, go_to_print, step, activity_list, chank_size)
 
-def enemy_ideal_move_calculation():
+def interaction_processing(global_map, interaction, enemy_list):
+    """
+        Обрабатывает взаимодействие игрока с миром
+    """
+    if len(interaction) != 0:
+        for interact in interaction:
+            if interact[0] == 'task_point_all_enemies':
+                for enemy in enemy_list:
+                    print(f"{enemy.enemy.name} получил задачу")
+                    print(f"interact[1] = {interact[1]}")
+                    enemy_ideal_move_calculation(global_map, enemy, interact[1])
+                
+
+def enemy_ideal_move_calculation(global_map, enemy, task):
     """
         Рассчитывает идеальную траекторию движения NPC
     """
-    abs(enemy.global_position[0] - enemy.task[0])
-    abs(enemy.global_position[1] - enemy.task[1])
+    
+    axis_y = task[0] - enemy.global_position[0] # длинна стороны и количество шагов
+    axis_x = task[1] - enemy.global_position[1] # длинна стороны и количество шагов
+    if abs(axis_y) > abs(axis_x):
+        if axis_x != 0:
+            length_step = abs(axis_y)//abs(axis_x) # на один X столько то Y
+        else:
+            length_step = abs(axis_y)
+        long_side = 'y'
+    else:
+        if axis_y != 0:
+            length_step = abs(axis_x)//abs(axis_y) # на один Y столько то X
+        else:
+            length_step = abs(axis_x)
+        long_side = 'x'
+        
+    enemy.waypoints = [enemy.global_position]
+        
+    for step in range((abs(axis_y) + abs(axis_x))):
+        if (step + 1)%(length_step + 1) == 0:
+            if long_side == 'y':
+                if axis_y >= 0 and axis_x >= 0:
+                    enemy.waypoints.append([enemy.waypoints[step][0], enemy.waypoints[step][1] + 1])
+                elif axis_y >= 0 and axis_x < 0:
+                    enemy.waypoints.append([enemy.waypoints[step][0], enemy.waypoints[step][1] - 1])
+                elif axis_y < 0 and axis_x >= 0:
+                    enemy.waypoints.append([enemy.waypoints[step][0], enemy.waypoints[step][1] + 1])
+                elif axis_y < 0 and axis_x < 0:
+                    enemy.waypoints.append([enemy.waypoints[step][0], enemy.waypoints[step][1] - 1])
+            elif long_side == 'x':
+                if axis_x >= 0 and axis_y >= 0:
+                    enemy.waypoints.append([enemy.waypoints[step][0] + 1, enemy.waypoints[step][1]])
+                elif axis_x >= 0 and axis_y < 0:
+                    enemy.waypoints.append([enemy.waypoints[step][0] - 1, enemy.waypoints[step][1]])
+                elif axis_x < 0 and axis_y >= 0:
+                    enemy.waypoints.append([enemy.waypoints[step][0] + 1, enemy.waypoints[step][1]])
+                elif axis_x < 0 and axis_y < 0:
+                    enemy.waypoints.append([enemy.waypoints[step][0] - 1, enemy.waypoints[step][1]])
+        else:
+            if long_side == 'y':
+                if axis_y >= 0 and axis_x >= 0:
+                    enemy.waypoints.append([enemy.waypoints[step][0] + 1, enemy.waypoints[step][1]])
+                elif axis_y >= 0 and axis_x < 0:
+                    enemy.waypoints.append([enemy.waypoints[step][0] + 1, enemy.waypoints[step][1]])
+                elif axis_y < 0 and axis_x >= 0:
+                    enemy.waypoints.append([enemy.waypoints[step][0] - 1, enemy.waypoints[step][1]])
+                elif axis_y < 0 and axis_x < 0:
+                    enemy.waypoints.append([enemy.waypoints[step][0] - 1, enemy.waypoints[step][1]])
+            elif long_side == 'x':
+                if axis_x >= 0 and axis_y >= 0:
+                    enemy.waypoints.append([enemy.waypoints[step][0], enemy.waypoints[step][1] + 1])
+                elif axis_x >= 0 and axis_y < 0:
+                    enemy.waypoints.append([enemy.waypoints[step][0], enemy.waypoints[step][1] + 1])
+                elif axis_x < 0 and axis_y >= 0:
+                    enemy.waypoints.append([enemy.waypoints[step][0], enemy.waypoints[step][1] - 1])
+                elif axis_x < 0 and axis_y < 0:
+                    enemy.waypoints.append([enemy.waypoints[step][0], enemy.waypoints[step][1] - 1])     
+             
 
 def enemy_not_ideal_move_recalculation():
     """
@@ -551,7 +623,7 @@ def enemy_in_dynamic_chank(global_map, enemy, position, chank_size, step):
     print(enemy.enemy.name, ' находится в динамической позиции: ', enemy.dynamic_chank_position)
 
 
-    enemy.dynamic_chank_position[1] += 1
+    #enemy.dynamic_chank_position[1] += 1
 
 
     enemy_global_position_recalculation(global_map, enemy, position, chank_size)
@@ -628,8 +700,55 @@ def enemy_hunter_emulation_life(global_map, enemy, go_to_print, step, activity_l
         Обрабатывает жизнь hunter NPC за кадром, на глобальной карте
         step нужен для запоминания следами деятельности времени в которое появились
     """
-    pass
+    enemy.action_points += 1
+    enemy.enemy.hunger -= 1
+    enemy.enemy.thirst -= 1
+    enemy.enemy.fatigue -= 1
     
+    if enemy.action_points >= 5:
+        if random.randrange(10)//6 == 1 or (global_map[enemy.global_position[0]][enemy.global_position[1]].icon in enemy.enemy.precedence_biom and random.randrange(10)//8 == 1):
+            move_hunter_enemy(global_map, enemy)
+            enemy.action_points -= 5
+            go_to_print.text5 += str(enemy.enemy.name_npc) + ' передвигается' + '\n'
+      
+        elif(enemy.enemy.thirst < 10 or enemy.enemy.hunger < 10) and enemy.enemy.reserves > 0:
+            enemy.enemy.reserves -= 1
+            enemy.enemy.hunger = 100
+            enemy.enemy.thirst = 100
+            enemy.action_points -= 3
+            go_to_print.text5 += str(enemy.enemy.name_npc)+ ' достаёт припасы \n'
+        elif enemy.enemy.fatigue < 10:
+            enemy.enemy.fatigue = 50
+            enemy.action_points -= 20
+            go_to_print.text5 += str(enemy.enemy.name_npc)+ ' уснул от усталости \n'
+            activity_list.append(Action_in_map('rest_stop', step, enemy.global_position, chank_size))
+        else:
+            activity = random.choice(enemy.enemy.activity)
+            if activity[1] == 'action_points':
+                enemy.action_points += activity[2]
+                activity_list.append(Action_in_map(activity[3], step, enemy.global_position, chank_size))
+            elif activity[1] == 'thirst':
+                enemy.enemy.thirst += activity[2]
+                activity_list.append(Action_in_map(activity[3], step, enemy.global_position, chank_size))
+            elif activity[1] == 'hunger':
+                enemy.enemy.hunger += activity[2]
+                activity_list.append(Action_in_map(activity[3], step, enemy.global_position, chank_size))
+            elif activity[1] == 'fatigue':
+                enemy.action_points -= 5
+                enemy.enemy.fatigue += activity[2]
+                activity_list.append(Action_in_map(activity[3], step, enemy.global_position, chank_size))
+            go_to_print.text5 += str(enemy.enemy.name_npc)+ ' ' + str(activity[0]) + ' его голод: ' + str(enemy.enemy.hunger) + ' его жажда: ' + str(enemy.enemy.thirst) + ' его усталость: ' + str(enemy.enemy.fatigue) + '\n'
+            enemy.action_points -= 3
+
+            
+def move_hunter_enemy(global_map, enemy):
+    """
+        Обрабатывает передвижение NPC по вейпоинтам
+    """
+    if len(enemy.waypoints) != 0:
+        enemy.global_position = enemy.waypoints[0]
+        enemy.waypoints.pop(0)
+
 
 def enemy_chaotic_emulation_life(global_map, enemy, go_to_print, step, activity_list, chank_size):
     """
@@ -739,16 +858,16 @@ def activity_list_check(activity_list, step):
 
 """
 
-def master_player_action(global_map, position, chank_size, go_to_print, changing_step, mode_action):
+def master_player_action(global_map, position, chank_size, go_to_print, changing_step, mode_action, interaction):
 
 
     pressed_button = ''
-    mode_action, pressed_button = request_press_button(global_map, position, chank_size, go_to_print, changing_step, mode_action)
+    mode_action, pressed_button = request_press_button(global_map, position, chank_size, go_to_print, changing_step, mode_action, interaction)
 
     if mode_action == 'move':
         request_move(global_map, position, chank_size, go_to_print, pressed_button, changing_step)
     elif mode_action == 'test_move':
-        test_request_move(global_map, position, chank_size, go_to_print, pressed_button, changing_step)
+        test_request_move(global_map, position, chank_size, go_to_print, pressed_button, changing_step, interaction)
     elif mode_action == 'pointer':    
         request_pointer(position, chank_size, go_to_print, pressed_button, changing_step)
     elif mode_action == 'gun':
@@ -762,7 +881,7 @@ def master_player_action(global_map, position, chank_size, go_to_print, changing
     return mode_action
 
 
-def request_press_button(global_map, position, chank_size, go_to_print, changing_step, mode_action):
+def request_press_button(global_map, position, chank_size, go_to_print, changing_step, mode_action, interaction):
     """
         Спрашивает ввод, возвращает тип активности и нажимаемую кнопку
 
@@ -808,6 +927,12 @@ def request_press_button(global_map, position, chank_size, go_to_print, changing
             return ('move', 'button_test')
         else:
             return ('test_move', 'button_test')
+    elif key == 'p' or key == 'з':
+        if mode_action == 'test_move':
+            return ('test_move', 'button_purpose_task')
+        else:
+            return (mode_action, 'none')
+            
     else:
         return (mode_action, 'none')
 
@@ -842,9 +967,10 @@ def request_move(global_map:list, position, chank_size:int, go_to_print, pressed
                 position.dynamic[1] += 1
     
 
-def test_request_move(global_map:list, position, chank_size:int, go_to_print, pressed_button, changing_step): #тестовый быстрый режим премещения
+def test_request_move(global_map:list, position, chank_size:int, go_to_print, pressed_button, changing_step, interaction): #тестовый быстрый режим премещения
     """
         Меняет динамическое местоположение персонажа в тестовом режиме, без ограничений. По полчанка за раз.
+        При нажатии на 'p' назначает всем NPC точку следования.
     """
     
     if pressed_button == 'up':
@@ -862,6 +988,10 @@ def test_request_move(global_map:list, position, chank_size:int, go_to_print, pr
     elif pressed_button == 'right':
         if position.dynamic[1] <= (chank_size + chank_size//2) and position.assemblage_point[1] != (len(global_map) - 2):
             position.dynamic[1] += chank_size//2
+
+    elif pressed_button == 'button_purpose_task':
+        interaction.append(['task_point_all_enemies', position.global_position])
+        
 
 def request_pointer(position, chank_size:int, go_to_print, pressed_button, changing_step):
     """
@@ -1169,12 +1299,14 @@ def game_loop(global_map:list, position:list, chank_size:int, frame_size:list, e
     global changing_step
     mode_action = 'move'
     while game_loop:
+        interaction = []
         changing_step = True
         if not_intercept_step[0]:
-            mode_action = master_player_action(global_map, position, chank_size, go_to_print, changing_step, mode_action)
+            mode_action = master_player_action(global_map, position, chank_size, go_to_print, changing_step, mode_action, interaction)
         #start = time.time() #проверка времени выполнения
         if changing_step:
-            master_game_events(global_map, enemy_list, position, go_to_print, step, activity_list, chank_size)
+            print(f"interaction = {interaction}")
+            master_game_events(global_map, enemy_list, position, go_to_print, step, activity_list, chank_size, interaction)
             step += 1
         #test1 = time.time() #проверка времени выполнения
         master_draw(position, chank_size, go_to_print, global_map, mode_action, enemy_list, activity_list)
