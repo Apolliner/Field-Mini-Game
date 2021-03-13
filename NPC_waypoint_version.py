@@ -11,7 +11,8 @@ garbage = ['░', '▒', '▓', '█', '☺']
     ВЕРСИЯ ДЛЯ ОТРАБОТКИ ПЕРЕМЕЩЕНИЯ NPC
 
     РЕАЛИЗОВАТЬ:
-    
+
+    0)заменить в коде слово chank на chunk!
     1)Перехват шага у игрока
     2)Золотоискатели, находясь в горах начинают искать золото
     3)Встречи NPC друг с другом на глобальной карте
@@ -35,8 +36,11 @@ garbage = ['░', '▒', '▓', '█', '☺']
     Персонажи получают точку прибытия и рассчитывают маршрут из точек (список), по которым им надо пройти. Они перемещаются в точку
     с индексом 0 и удаляют её.
 
+    СИСТЕМА ШУМА:
+    Находящиеся недалеко от стреляющего персонажа NPC слышат выстрелы, и, либо спешат посмотреть на того, кто стрелял, либо спешат убраться восвояси.
+
     НЕОБЧИТЫВАЕМЫЕ СУЩНОСТИ:
-    Помимо NPC, жизнь имитируют пявляющиеся в зависимости от биома существа. Ими могут быть птицы, скорпионы и змеи.
+    Помимо NPC, жизнь имитируют появляющиеся в зависимости от биома существа. Ими могут быть птицы, скорпионы и змеи.
     Они могут появиться из соответствующих им тайлов даже если они нахоятся в зоне видимости игрока.
     Некоторые тайлы будут опасны возможностью появления из них необчитываемых противников.
 
@@ -251,7 +255,8 @@ def selecting_generator(seed):
     """
     seed_dict = {  
                     0: ['field',              [20.0,35.0], ['u', '„', ','],       ['ü', 'o'],            '„'],
-                    1: ['hills',              [20.0,35.0], ['▲', 'o'],            ['„', ','],            '▲'],
+                    1: ['dried field',        [30.0,40.0], ['„', ','],            ['o', 'u'],            ','],
+                    2: ['hills',              [20.0,35.0], ['▲', 'o'],            ['„', ','],            '▲'],
                 }
     return seed_dict[seed]
 
@@ -341,7 +346,7 @@ def region_generate(size_region_box):
     """
     region_map = []
     for i in range(size_region_box):
-        region_map.append([random.randrange(2) for x in range(size_region_box)])
+        region_map.append([random.randrange(3) for x in range(size_region_box)])
     return region_map
 
 
@@ -440,7 +445,8 @@ class Horseman(Enemy):
     def __init__(self):
         self.name = 'horseman'
         self.name_npc = random.choice(['Малыш Билли', 'Буффало Билл', 'Маленькая Верная Рука Энни Окли', 'Дикий Билл Хикок'])
-        self.precedence_biom = [',', '„', 'P']
+        self.priority_biom = [',', '„', 'P']
+        self.banned_biom = ['▲']
         self.icon = '☻h'
         self.activity = [['кормит лошадь', 'action_points', -2, 'horse_tracks'], ['чистит оружие', 'action_points',  -2, 'rest_stop'],
                          ['пьёт', 'thirst', 20, 'horse_tracks'], ['готовит еду', 'hunger', 20, 'bonfire'],
@@ -456,7 +462,8 @@ class Riffleman(Enemy):
     def __init__(self):
         self.name = 'riffleman'
         self.name_npc = random.choice(['Бедовая Джейн', 'Бутч Кэссиди', 'Сандэнс Кид', 'Черный Барт'])
-        self.precedence_biom = ['.', 'A', '▲']
+        self.priority_biom = ['.', 'A', '▲']
+        self.banned_biom = ['~']
         self.icon = '☻-'
         self.activity = [['чистит оружие', 'action_points', -2, 'rest_stop'], ['пьёт', 'thirst', 20, 'rest_stop'],
                          ['готовит еду', 'hunger', 20, 'bonfire'], ['отдыхает', 'fatigue', 10, 'rest_stop'], ['разбил лагерь', 'fatigue', 20, 'camp']]
@@ -471,7 +478,8 @@ class Gold_digger(Enemy):
     def __init__(self):
         self.name = 'gold_digger'
         self.name_npc = random.choice(['Бедовая Джейн', 'Бутч Кэссиди', 'Сандэнс Кид', 'Черный Барт'])
-        self.precedence_biom = ['.', 'A', '▲']
+        self.priority_biom = ['.', 'A', '▲']
+        self.banned_biom = ['~']
         self.icon = '☻='
         self.activity = [['чистит оружие', 'action_points', -2, 'rest_stop'], ['пьёт', 'thirst', 20, 'rest_stop'],
                          ['готовит еду', 'hunger', 20, 'bonfire'], ['отдыхает', 'fatigue', 10, 'rest_stop'], ['разбил лагерь', 'fatigue', 20, 'camp']]
@@ -486,7 +494,8 @@ class Horse(Enemy):
     def __init__(self):
         self.name = 'horse'
         self.name_npc = random.choice(['Стреноженая белая лошадь', 'Стреноженая гнедая лошадь', 'Стреноженая черная лошадь'])
-        self.precedence_biom = [',', '„', 'P']
+        self.priority_biom = [',', '„', 'P']
+        self.banned_biom = ['~', ';']
         self.icon = 'ho'
         self.activity = [['пугатся и убегает', 'fatigue', -10, 'horse_tracks'], ['пьёт', 'thirst', 20, 'horse_tracks'],
                          ['ест траву', 'hunger', 20, 'horse_tracks'], ['отдыхает', 'fatigue', 20, 'animal_rest_stop']]
@@ -501,7 +510,8 @@ class Coyot(Enemy):
     def __init__(self):
         self.name = 'coyot'
         self.name_npc = random.choice(['Плешивый койот', 'Молодой койот', 'Подраный койот'])
-        self.precedence_biom = ['.', ',', '„', 'P', 'A']
+        self.priority_biom = ['.', ',', '„', 'P', 'A']
+        self.banned_biom = ['~', ';']
         self.icon = 'co'
         self.activity = [['охотится', 'action_points', -2, 'gnawed bones'], ['пьёт', 'thirst', 20, 'animal_traces'],
                          ['ест', 'hunger', 20, 'animal_traces'], ['чешется', 'action_points', -2, 'animal_traces'],
@@ -522,13 +532,12 @@ def master_game_events(global_map, enemy_list, position, go_to_print, step, acti
     interaction_processing(global_map, interaction, enemy_list)
     
     for enemy in enemy_list:
-        print(f"{enemy.enemy.name} enemy.waypoints = {enemy.waypoints}")
+        #print(f"{enemy.enemy.name} enemy.waypoints = {enemy.waypoints}")
         if enemy.dynamic_chank:
             enemy_in_dynamic_chank(global_map, enemy, position, chank_size, step)
             pass
         else:
             if enemy.enemy.type == 'hunter':
-                print(f"{enemy.enemy.name} hunter")
                 enemy_hunter_emulation_life(global_map, enemy, go_to_print, step, activity_list, chank_size)
             else:
                 enemy_chaotic_emulation_life(global_map, enemy, go_to_print, step, activity_list, chank_size)
@@ -543,16 +552,107 @@ def interaction_processing(global_map, interaction, enemy_list):
                 for enemy in enemy_list:
                     print(f"{enemy.enemy.name} получил задачу")
                     print(f"interact[1] = {interact[1]}")
-                    enemy_ideal_move_calculation(global_map, enemy, interact[1])
+                    enemy.waypoints = enemy_move_calculation(global_map, enemy, interact[1])
+
+
+def enemy_move_calculation(global_map, enemy, task):
+    """
+        Рассчитывает всю траекторию движения NPC
+    """
+    def checking_the_path(global_map, waypoints, enemy):
+        """
+            Проверяет путь на отсутствие преград
+        """
+        not_ok = False
+        for number_waypoint in range(len(waypoints)):
+            if global_map[waypoints[number_waypoint][0]][waypoints[number_waypoint][1]].icon in enemy.enemy.banned_biom:
+                not_ok = True
+                waypoints = waypoints[0: (number_waypoint + 1)]
+                break
+        return not_ok, waypoints
+        
+    not_ok = False
+    waypoints = enemy_ideal_move_calculation(global_map, enemy, enemy.global_position, task)
+    not_ok, waypoints = checking_the_path(global_map, waypoints, enemy)
+
+    if not_ok:
+        attempt_counter = 0
+        calculating_the_path = True
+        completed_path = [waypoints[-1]]
+        previous_point = [0, 0]
+
+        while calculating_the_path:
+            priority_parties = [] # Рассчёт приоритетных направлений
+            if task[0] - enemy.global_position[0] >= 0:
+                priority_parties.append(1)
+            else:
+                priority_parties.append(-1)
+            if task[1] - enemy.global_position[1] >= 0:
+                priority_parties.append(1)
+            else:
+                priority_parties.append(-1)
+            priority_part = [] # Формирование списка с возможными приоритетными направлениями
+            if not(global_map[completed_path[-1][0] + priority_parties[0]][completed_path[-1][1]].icon in enemy.enemy.banned_biom):
+                priority_part.append([completed_path[-1][0] + priority_parties[0], completed_path[-1][1]])
+            if not(global_map[completed_path[-1][0]][completed_path[-1][1] + priority_parties[1]].icon in enemy.enemy.banned_biom):
+                priority_part.append([completed_path[-1][0], completed_path[-1][1] + priority_parties[1]])
+            if previous_point in priority_part:
+                priority_part.remove(previous_point)
+              
+            if len(priority_part) > 0: # Если возможно пройти приоритетным путём
+                previous_point = completed_path[-1]
+                completed_path.append(priority_part[random.randrange(len(priority_part))])
+                sub_waypoints = enemy_ideal_move_calculation(global_map, enemy, completed_path[-1], task)
+                sub_not_ok = False
+                sub_not_ok, sub_waypoints = checking_the_path(global_map, sub_waypoints, enemy)
+                if not(sub_not_ok): # Если всё в порядке, то добавляются все высчитанные точки
+                    for number_added_point in range(1, len(completed_path)):
+                        waypoints.append(completed_path[number_added_point])
+                    for added_point in sub_waypoints:
+                        waypoints.append(added_point)
+                        not_ok = False # Объявление что всё в порядке
+                        calculating_the_path = False # Прерывание цикла с готовым путём
+            else: # Если не возможно пройти приоритетным путём, выбираются обычные
+                normal_paths = []
+                if not(global_map[completed_path[-1][0] + 1][completed_path[-1][1]].icon in enemy.enemy.banned_biom):
+                    normal_paths.append([completed_path[-1][0] + 1, completed_path[-1][1]])
+                if not(global_map[completed_path[-1][0] - 1][completed_path[-1][1]].icon in enemy.enemy.banned_biom):
+                    normal_paths.append([completed_path[-1][0] - 1, completed_path[-1][1]])
+                if not(global_map[completed_path[-1][0]][completed_path[-1][1] + 1].icon in enemy.enemy.banned_biom):
+                    normal_paths.append([completed_path[-1][0], completed_path[-1][1] + 1])
+                if not(global_map[completed_path[-1][0]][completed_path[-1][1] - 1].icon in enemy.enemy.banned_biom):
+                    normal_paths.append([completed_path[-1][0], completed_path[-1][1] - 1])
+                if previous_point in normal_paths:    
+                    normal_paths.remove(previous_point)
+                
+                if len(normal_paths) > 0: # Если возможно куда то пойти
+                    previous_point = completed_path[-1]
+                    completed_path.append(normal_paths[random.randrange(len(normal_paths))])
+                else: # Если нет, то путь сбрасывается в начало
+                    print('Путь не найден. Сброс в начало')
+                    previous_point = [0, 0]
+                    completed_path = [completed_path[0]]
+
+            attempt_counter += 1
+            print (f'{enemy.enemy.name} шаг цикла под номером {attempt_counter}')
+            if attempt_counter == 100:
+                calculating_the_path = False # Вынужденное прерывание цикла без готового пути
+
+    if not_ok:
+        print(f'{enemy.enemy.name} не нашел путь')
+    else:
+        print(f'{enemy.enemy.name} нашел путь')        
+    return waypoints
+    
                 
 
-def enemy_ideal_move_calculation(global_map, enemy, task):
+def enemy_ideal_move_calculation(global_map, enemy, start_point, task):
     """
         Рассчитывает идеальную траекторию движения NPC
     """
     
-    axis_y = task[0] - enemy.global_position[0] # длинна стороны и количество шагов
-    axis_x = task[1] - enemy.global_position[1] # длинна стороны и количество шагов
+    axis_y = task[0] - start_point[0] # длинна стороны и количество шагов
+    axis_x = task[1] - start_point[1] # длинна стороны и количество шагов
     if abs(axis_y) > abs(axis_x):
         if axis_x != 0:
             length_step = abs(axis_y)//abs(axis_x) # на один X столько то Y
@@ -566,48 +666,33 @@ def enemy_ideal_move_calculation(global_map, enemy, task):
             length_step = abs(axis_x)
         long_side = 'x'
         
-    enemy.waypoints = [enemy.global_position]
+    waypoints = [start_point]
         
     for step in range((abs(axis_y) + abs(axis_x))):
         if (step + 1)%(length_step + 1) == 0:
             if long_side == 'y':
-                if axis_y >= 0 and axis_x >= 0:
-                    enemy.waypoints.append([enemy.waypoints[step][0], enemy.waypoints[step][1] + 1])
-                elif axis_y >= 0 and axis_x < 0:
-                    enemy.waypoints.append([enemy.waypoints[step][0], enemy.waypoints[step][1] - 1])
-                elif axis_y < 0 and axis_x >= 0:
-                    enemy.waypoints.append([enemy.waypoints[step][0], enemy.waypoints[step][1] + 1])
-                elif axis_y < 0 and axis_x < 0:
-                    enemy.waypoints.append([enemy.waypoints[step][0], enemy.waypoints[step][1] - 1])
+                if axis_y >= 0 and axis_x >= 0 or axis_y < 0 and axis_x >= 0:
+                    waypoints.append([waypoints[step][0], waypoints[step][1] + 1])
+                else:
+                    waypoints.append([waypoints[step][0], waypoints[step][1] - 1])    
             elif long_side == 'x':
-                if axis_x >= 0 and axis_y >= 0:
-                    enemy.waypoints.append([enemy.waypoints[step][0] + 1, enemy.waypoints[step][1]])
-                elif axis_x >= 0 and axis_y < 0:
-                    enemy.waypoints.append([enemy.waypoints[step][0] - 1, enemy.waypoints[step][1]])
-                elif axis_x < 0 and axis_y >= 0:
-                    enemy.waypoints.append([enemy.waypoints[step][0] + 1, enemy.waypoints[step][1]])
-                elif axis_x < 0 and axis_y < 0:
-                    enemy.waypoints.append([enemy.waypoints[step][0] - 1, enemy.waypoints[step][1]])
+                if axis_x >= 0 and axis_y >= 0 or axis_x < 0 and axis_y >= 0:
+                    waypoints.append([waypoints[step][0] + 1, waypoints[step][1]])
+                else:
+                    waypoints.append([waypoints[step][0] - 1, waypoints[step][1]])
         else:
             if long_side == 'y':
-                if axis_y >= 0 and axis_x >= 0:
-                    enemy.waypoints.append([enemy.waypoints[step][0] + 1, enemy.waypoints[step][1]])
-                elif axis_y >= 0 and axis_x < 0:
-                    enemy.waypoints.append([enemy.waypoints[step][0] + 1, enemy.waypoints[step][1]])
-                elif axis_y < 0 and axis_x >= 0:
-                    enemy.waypoints.append([enemy.waypoints[step][0] - 1, enemy.waypoints[step][1]])
-                elif axis_y < 0 and axis_x < 0:
-                    enemy.waypoints.append([enemy.waypoints[step][0] - 1, enemy.waypoints[step][1]])
+                if axis_y >= 0 and axis_x >= 0 or axis_y >= 0 and axis_x < 0:
+                    waypoints.append([waypoints[step][0] + 1, waypoints[step][1]])
+                else:
+                    waypoints.append([waypoints[step][0] - 1, waypoints[step][1]])
             elif long_side == 'x':
-                if axis_x >= 0 and axis_y >= 0:
-                    enemy.waypoints.append([enemy.waypoints[step][0], enemy.waypoints[step][1] + 1])
-                elif axis_x >= 0 and axis_y < 0:
-                    enemy.waypoints.append([enemy.waypoints[step][0], enemy.waypoints[step][1] + 1])
-                elif axis_x < 0 and axis_y >= 0:
-                    enemy.waypoints.append([enemy.waypoints[step][0], enemy.waypoints[step][1] - 1])
-                elif axis_x < 0 and axis_y < 0:
-                    enemy.waypoints.append([enemy.waypoints[step][0], enemy.waypoints[step][1] - 1])     
-             
+                if axis_x >= 0 and axis_y >= 0 or axis_x >= 0 and axis_y < 0:
+                    waypoints.append([waypoints[step][0], waypoints[step][1] + 1])
+                else:
+                    waypoints.append([waypoints[step][0], waypoints[step][1] - 1])
+
+    return waypoints
 
 def enemy_not_ideal_move_recalculation():
     """
@@ -706,7 +791,7 @@ def enemy_hunter_emulation_life(global_map, enemy, go_to_print, step, activity_l
     enemy.enemy.fatigue -= 1
     
     if enemy.action_points >= 5:
-        if random.randrange(10)//6 == 1 or (global_map[enemy.global_position[0]][enemy.global_position[1]].icon in enemy.enemy.precedence_biom and random.randrange(10)//8 == 1):
+        if random.randrange(10)//6 == 1:
             move_hunter_enemy(global_map, enemy)
             enemy.action_points -= 5
             go_to_print.text5 += str(enemy.enemy.name_npc) + ' передвигается' + '\n'
@@ -762,7 +847,7 @@ def enemy_chaotic_emulation_life(global_map, enemy, go_to_print, step, activity_
     enemy.enemy.fatigue -= 1
     
     if enemy.action_points >= 5:
-        if random.randrange(10)//6 == 1 or (global_map[enemy.global_position[0]][enemy.global_position[1]].icon in enemy.enemy.precedence_biom and random.randrange(10)//8 == 1):
+        if random.randrange(10)//6 == 1 or (global_map[enemy.global_position[0]][enemy.global_position[1]].icon in enemy.enemy.priority_biom and random.randrange(10)//8 == 1):
             move_biom_enemy(global_map, enemy)
             enemy.action_points -= 5
             go_to_print.text5 += str(enemy.enemy.name_npc) + ' передвигается' + '\n'
@@ -802,15 +887,15 @@ def move_biom_enemy(global_map, enemy):
         Обрабатывает перемещение NPC за кадром между биомами
     """
 
-    if global_map[enemy.global_position[0]][enemy.global_position[1]].icon in enemy.enemy.precedence_biom:
+    if global_map[enemy.global_position[0]][enemy.global_position[1]].icon in enemy.enemy.priority_biom:
         direction_moved = []
-        if global_map[enemy.global_position[0] - 1][enemy.global_position[1]].icon in enemy.enemy.precedence_biom and enemy.global_position[0] - 1 > 0:
+        if global_map[enemy.global_position[0] - 1][enemy.global_position[1]].icon in enemy.enemy.priority_biom and enemy.global_position[0] - 1 > 0:
             direction_moved.append([enemy.global_position[0] - 1, enemy.global_position[1]])
-        if global_map[enemy.global_position[0] + 1][enemy.global_position[1]].icon in enemy.enemy.precedence_biom and enemy.global_position[0] + 1 < len(global_map) - 1:
+        if global_map[enemy.global_position[0] + 1][enemy.global_position[1]].icon in enemy.enemy.priority_biom and enemy.global_position[0] + 1 < len(global_map) - 1:
             direction_moved.append([enemy.global_position[0] + 1, enemy.global_position[1]]) 
-        if global_map[enemy.global_position[0]][enemy.global_position[1] - 1].icon in enemy.enemy.precedence_biom and enemy.global_position[1] - 1 > 0:
+        if global_map[enemy.global_position[0]][enemy.global_position[1] - 1].icon in enemy.enemy.priority_biom and enemy.global_position[1] - 1 > 0:
             direction_moved.append([enemy.global_position[0], enemy.global_position[1] - 1])
-        if global_map[enemy.global_position[0]][enemy.global_position[1] + 1].icon in enemy.enemy.precedence_biom and enemy.global_position[1] + 1 < len(global_map) - 1:
+        if global_map[enemy.global_position[0]][enemy.global_position[1] + 1].icon in enemy.enemy.priority_biom and enemy.global_position[1] + 1 < len(global_map) - 1:
             direction_moved.append([enemy.global_position[0], enemy.global_position[1] + 1])
         if len(direction_moved) != 0:
             enemy.global_position = random.choice(direction_moved)
