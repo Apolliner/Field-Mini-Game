@@ -10,6 +10,11 @@ garbage = ['░', '▒', '▓', '█', '☺']
 """
     ВЕРСИЯ ДЛЯ ОТРАБОТКИ ПЕРЕМЕЩЕНИЯ NPC
 
+    ИЗВЕСТНЫЕ БАГИ:
+    1)Проверка доступности тайла для шага за пределами карты
+    2)Попытка отрисовки за пределами динамического чанка
+    
+
     РЕАЛИЗОВАТЬ:
 
     0)заменить в коде слово chank на chunk!
@@ -19,6 +24,8 @@ garbage = ['░', '▒', '▓', '█', '☺']
     4)Остановку при достижени NPC края карты
     5)NPC не должны появляться и передвигаться по тайлам, передвижение по которым невозможно
     6)Добавить необсчитываемых персонажей, являющихся мелкими зверьми. Например: змей и гремучих змей
+    7)Реализовать алгоритм поиска пути A*
+    8)Перемещение NPC на динамическом чанке игрока в соответствии с просчитанным на глобальной карте путём
 
     ЛОГИКА ПЕРЕМЕЩЕНИЯ NPC
     NPC делятся на охотников и хаотичных.
@@ -567,7 +574,10 @@ def enemy_move_calculation(global_map, enemy, task):
         for number_waypoint in range(len(waypoints)):
             if global_map[waypoints[number_waypoint][0]][waypoints[number_waypoint][1]].icon in enemy.enemy.banned_biom:
                 not_ok = True
-                waypoints = waypoints[0: (number_waypoint + 1)]
+                if number_waypoint != 0:
+                    waypoints = waypoints[0: number_waypoint]
+                else:
+                    waypoints = waypoints[0: (number_waypoint + 1)]
                 break
         return not_ok, waypoints
         
@@ -583,18 +593,18 @@ def enemy_move_calculation(global_map, enemy, task):
 
         while calculating_the_path:
             priority_parties = [] # Рассчёт приоритетных направлений
-            if task[0] - enemy.global_position[0] >= 0:
+            if task[0] - completed_path[-1][0] >= 0:
                 priority_parties.append(1)
             else:
                 priority_parties.append(-1)
-            if task[1] - enemy.global_position[1] >= 0:
+            if task[1] - completed_path[-1][1] >= 0:
                 priority_parties.append(1)
             else:
                 priority_parties.append(-1)
             priority_part = [] # Формирование списка с возможными приоритетными направлениями
-            if not(global_map[completed_path[-1][0] + priority_parties[0]][completed_path[-1][1]].icon in enemy.enemy.banned_biom):
+            if not(global_map[completed_path[-1][0] + priority_parties[0]][completed_path[-1][1]].icon in enemy.enemy.banned_biom) and 0 < completed_path[-1][0] < len(global_map) :
                 priority_part.append([completed_path[-1][0] + priority_parties[0], completed_path[-1][1]])
-            if not(global_map[completed_path[-1][0]][completed_path[-1][1] + priority_parties[1]].icon in enemy.enemy.banned_biom):
+            if not(global_map[completed_path[-1][0]][completed_path[-1][1] + priority_parties[1]].icon in enemy.enemy.banned_biom) and 0 < completed_path[-1][1] < len(global_map):
                 priority_part.append([completed_path[-1][0], completed_path[-1][1] + priority_parties[1]])
             if previous_point in priority_part:
                 priority_part.remove(previous_point)
@@ -614,13 +624,13 @@ def enemy_move_calculation(global_map, enemy, task):
                         calculating_the_path = False # Прерывание цикла с готовым путём
             else: # Если не возможно пройти приоритетным путём, выбираются обычные
                 normal_paths = []
-                if not(global_map[completed_path[-1][0] + 1][completed_path[-1][1]].icon in enemy.enemy.banned_biom):
+                if not(global_map[completed_path[-1][0] + 1][completed_path[-1][1]].icon in enemy.enemy.banned_biom) and 0 < completed_path[-1][0] < len(global_map):
                     normal_paths.append([completed_path[-1][0] + 1, completed_path[-1][1]])
-                if not(global_map[completed_path[-1][0] - 1][completed_path[-1][1]].icon in enemy.enemy.banned_biom):
+                if not(global_map[completed_path[-1][0] - 1][completed_path[-1][1]].icon in enemy.enemy.banned_biom) and 0 < completed_path[-1][0] < len(global_map):
                     normal_paths.append([completed_path[-1][0] - 1, completed_path[-1][1]])
-                if not(global_map[completed_path[-1][0]][completed_path[-1][1] + 1].icon in enemy.enemy.banned_biom):
+                if not(global_map[completed_path[-1][0]][completed_path[-1][1] + 1].icon in enemy.enemy.banned_biom) and 0 < completed_path[-1][1] < len(global_map):
                     normal_paths.append([completed_path[-1][0], completed_path[-1][1] + 1])
-                if not(global_map[completed_path[-1][0]][completed_path[-1][1] - 1].icon in enemy.enemy.banned_biom):
+                if not(global_map[completed_path[-1][0]][completed_path[-1][1] - 1].icon in enemy.enemy.banned_biom) and 0 < completed_path[-1][1] < len(global_map):
                     normal_paths.append([completed_path[-1][0], completed_path[-1][1] - 1])
                 if previous_point in normal_paths:    
                     normal_paths.remove(previous_point)
@@ -630,7 +640,7 @@ def enemy_move_calculation(global_map, enemy, task):
                     completed_path.append(normal_paths[random.randrange(len(normal_paths))])
                 else: # Если нет, то путь сбрасывается в начало
                     print('Путь не найден. Сброс в начало')
-                    previous_point = [0, 0]
+                    previous_point = [completed_path[-1]]
                     completed_path = [completed_path[0]]
 
             attempt_counter += 1
@@ -640,6 +650,8 @@ def enemy_move_calculation(global_map, enemy, task):
 
     if not_ok:
         print(f'{enemy.enemy.name} не нашел путь')
+        for number_added_point in range(1, len(completed_path)):
+            waypoints.append(completed_path[number_added_point])
     else:
         print(f'{enemy.enemy.name} нашел путь')        
     return waypoints
@@ -791,7 +803,7 @@ def enemy_hunter_emulation_life(global_map, enemy, go_to_print, step, activity_l
     enemy.enemy.fatigue -= 1
     
     if enemy.action_points >= 5:
-        if random.randrange(10)//6 == 1:
+        if random.randrange(10) > -1:
             move_hunter_enemy(global_map, enemy)
             enemy.action_points -= 5
             go_to_print.text5 += str(enemy.enemy.name_npc) + ' передвигается' + '\n'
@@ -1273,7 +1285,7 @@ def draw_additional_entities(position, chank_size:int, go_to_print, enemy_list, 
 
     for enemy in enemy_list:
         if enemy.global_position in position.check_encounter_position:
-            if (0 <= enemy.dynamic_chank_position[0] <= chank_size * 2) and (0 <= enemy.dynamic_chank_position[1] <= chank_size * 2 - 2):
+            if (0 <= enemy.dynamic_chank_position[0] < chank_size * 2) and (0 <= enemy.dynamic_chank_position[1] < chank_size * 2 - 2):
                 position.chanks_use_map[enemy.dynamic_chank_position[0]][enemy.dynamic_chank_position[1]] = enemy.enemy.icon
                                
 
