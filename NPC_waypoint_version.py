@@ -579,92 +579,127 @@ def enemy_move_calculation(global_map, enemy, task):
                 else:
                     waypoints = waypoints[0: (number_waypoint + 1)]
                 break
-        return not_ok, waypoints
-        
-    not_ok = False
-    waypoints = enemy_ideal_move_calculation(global_map, enemy, enemy.global_position, task)
-    not_ok, waypoints = checking_the_path(global_map, waypoints, enemy)
+        return not_ok, waypoints       
 
-    if not_ok:
-        attempt_counter = 0
-        calculating_the_path = True
-        completed_path = [waypoints[-1]]
-        previous_point = [0, 0]
+    def calculating_the_path(global_map, start_point, finish_point, not_ok):
+        """
+            Просчитывает путь. Не важно, туда или обратно.
+        """
+    
+        waypoints = enemy_ideal_move_calculation(global_map, start_point, finish_point)
+        not_ok, waypoints = checking_the_path(global_map, waypoints, enemy)
 
-        while calculating_the_path:
-            priority_parties = [] # Рассчёт приоритетных направлений
-            if task[0] - completed_path[-1][0] >= 0:
-                priority_parties.append(1)
-            else:
-                priority_parties.append(-1)
-            if task[1] - completed_path[-1][1] >= 0:
-                priority_parties.append(1)
-            else:
-                priority_parties.append(-1)
-            priority_part = [] # Формирование списка с возможными приоритетными направлениями
-            if not(global_map[completed_path[-1][0] + priority_parties[0]][completed_path[-1][1]].icon in enemy.enemy.banned_biom) and 0 < completed_path[-1][0] < len(global_map) :
-                priority_part.append([completed_path[-1][0] + priority_parties[0], completed_path[-1][1]])
-            if not(global_map[completed_path[-1][0]][completed_path[-1][1] + priority_parties[1]].icon in enemy.enemy.banned_biom) and 0 < completed_path[-1][1] < len(global_map):
-                priority_part.append([completed_path[-1][0], completed_path[-1][1] + priority_parties[1]])
-            if previous_point in priority_part:
-                priority_part.remove(previous_point)
+        if not_ok:
+    
+            attempt_counter = 0
+            calculating_the_path = True
+            completed_path = [waypoints[-1]]
+            previous_point = [0, 0]
+
+            while calculating_the_path:
+                priority_parties = [] # Рассчёт приоритетных направлений
+                if task[0] - completed_path[-1][0] >= 0:
+                    priority_parties.append(1)
+                else:
+                    priority_parties.append(-1)
+                if task[1] - completed_path[-1][1] >= 0:
+                    priority_parties.append(1)
+                else:
+                    priority_parties.append(-1)
+                priority_part = [] # Формирование списка с возможными приоритетными направлениями
+                if 0 < completed_path[-1][0] < (len(global_map) - 1):
+                    if not(global_map[completed_path[-1][0] + priority_parties[0]][completed_path[-1][1]].icon in enemy.enemy.banned_biom):
+                        priority_part.append([completed_path[-1][0] + priority_parties[0], completed_path[-1][1]])
+                if 0 < completed_path[-1][1] < (len(global_map) - 1):
+                    if not(global_map[completed_path[-1][0]][completed_path[-1][1] + priority_parties[1]].icon in enemy.enemy.banned_biom):
+                        priority_part.append([completed_path[-1][0], completed_path[-1][1] + priority_parties[1]])
+                if previous_point in priority_part:
+                    priority_part.remove(previous_point)
+                for part in priority_part:
+                    if part in completed_path:
+                        priority_part.remove(part)
               
-            if len(priority_part) > 0: # Если возможно пройти приоритетным путём
-                previous_point = completed_path[-1]
-                completed_path.append(priority_part[random.randrange(len(priority_part))])
-                sub_waypoints = enemy_ideal_move_calculation(global_map, enemy, completed_path[-1], task)
-                sub_not_ok = False
-                sub_not_ok, sub_waypoints = checking_the_path(global_map, sub_waypoints, enemy)
-                if not(sub_not_ok): # Если всё в порядке, то добавляются все высчитанные точки
-                    for number_added_point in range(1, len(completed_path)):
-                        waypoints.append(completed_path[number_added_point])
-                    for added_point in sub_waypoints:
-                        waypoints.append(added_point)
-                        not_ok = False # Объявление что всё в порядке
-                        calculating_the_path = False # Прерывание цикла с готовым путём
-            else: # Если не возможно пройти приоритетным путём, выбираются обычные
-                normal_paths = []
-                if not(global_map[completed_path[-1][0] + 1][completed_path[-1][1]].icon in enemy.enemy.banned_biom) and 0 < completed_path[-1][0] < len(global_map):
-                    normal_paths.append([completed_path[-1][0] + 1, completed_path[-1][1]])
-                if not(global_map[completed_path[-1][0] - 1][completed_path[-1][1]].icon in enemy.enemy.banned_biom) and 0 < completed_path[-1][0] < len(global_map):
-                    normal_paths.append([completed_path[-1][0] - 1, completed_path[-1][1]])
-                if not(global_map[completed_path[-1][0]][completed_path[-1][1] + 1].icon in enemy.enemy.banned_biom) and 0 < completed_path[-1][1] < len(global_map):
-                    normal_paths.append([completed_path[-1][0], completed_path[-1][1] + 1])
-                if not(global_map[completed_path[-1][0]][completed_path[-1][1] - 1].icon in enemy.enemy.banned_biom) and 0 < completed_path[-1][1] < len(global_map):
-                    normal_paths.append([completed_path[-1][0], completed_path[-1][1] - 1])
-                if previous_point in normal_paths:    
-                    normal_paths.remove(previous_point)
-                
-                if len(normal_paths) > 0: # Если возможно куда то пойти
+                if len(priority_part) > 0: # Если возможно пройти приоритетным путём
                     previous_point = completed_path[-1]
-                    completed_path.append(normal_paths[random.randrange(len(normal_paths))])
-                else: # Если нет, то путь сбрасывается в начало
-                    print('Путь не найден. Сброс в начало')
-                    previous_point = [completed_path[-1]]
-                    completed_path = [completed_path[0]]
+                    completed_path.append(priority_part[random.randrange(len(priority_part))])
+                    sub_waypoints = enemy_ideal_move_calculation(global_map, completed_path[-1], finish_point)
+                    sub_not_ok = False
+                    sub_not_ok, sub_waypoints = checking_the_path(global_map, sub_waypoints, enemy)
+                    if not(sub_not_ok): # Если всё в порядке, то добавляются все высчитанные точки
+                        for number_added_point in range(1, len(completed_path)):
+                            waypoints.append(completed_path[number_added_point])
+                        for added_point in sub_waypoints:
+                            waypoints.append(added_point)
+                            not_ok = False # Объявление что всё в порядке
+                            calculating_the_path = False # Прерывание цикла с готовым путём
+                else: # Если не возможно пройти приоритетным путём, выбираются обычные
+                    normal_paths = []
+                    if 0 < completed_path[-1][0] < (len(global_map) - 1):
+                        if not(global_map[completed_path[-1][0] + 1][completed_path[-1][1]].icon in enemy.enemy.banned_biom):
+                            normal_paths.append([completed_path[-1][0] + 1, completed_path[-1][1]])
+                        if not(global_map[completed_path[-1][0] - 1][completed_path[-1][1]].icon in enemy.enemy.banned_biom):
+                            normal_paths.append([completed_path[-1][0] - 1, completed_path[-1][1]])
+                    if 0 < completed_path[-1][1] < (len(global_map) - 1):
+                        if not(global_map[completed_path[-1][0]][completed_path[-1][1] + 1].icon in enemy.enemy.banned_biom):
+                            normal_paths.append([completed_path[-1][0], completed_path[-1][1] + 1])
+                        if not(global_map[completed_path[-1][0]][completed_path[-1][1] - 1].icon in enemy.enemy.banned_biom):
+                            normal_paths.append([completed_path[-1][0], completed_path[-1][1] - 1])
+                    if previous_point in normal_paths:    
+                        normal_paths.remove(previous_point)
+                    if len(normal_paths) > 1:
+                        for part in normal_paths:
+                            if part in completed_path:
+                                normal_paths.remove(part)
+                    if len(normal_paths) > 0: # Если возможно куда то пойти
+                        previous_point = completed_path[-1]
+                        completed_path.append(normal_paths[random.randrange(len(normal_paths))])
+                    else: # Если нет, то путь сбрасывается в начало
+                        print('Путь не найден. Сброс в начало')
+                        previous_point = [completed_path[-1]]
+                        completed_path = [completed_path[0]]
 
-            attempt_counter += 1
-            print (f'{enemy.enemy.name} шаг цикла под номером {attempt_counter}')
-            if attempt_counter == 100:
-                calculating_the_path = False # Вынужденное прерывание цикла без готового пути
+                attempt_counter += 1
+                print (f'{enemy.enemy.name} шаг цикла под номером {attempt_counter}')
+                if attempt_counter == 100:
+                    calculating_the_path = False # Вынужденное прерывание цикла без готового пути
 
+        if not_ok:
+            print(f'{enemy.enemy.name} не нашел путь')
+            for number_added_point in range(1, len(completed_path)):
+                waypoints.append(completed_path[number_added_point])
+        else:
+            print(f'{enemy.enemy.name} нашел путь')
+
+        return not_ok, waypoints
+
+
+
+    not_ok = False
+    not_ok, waypoints = calculating_the_path(global_map, enemy.global_position, task, not_ok) # рассчитывается прямой путь
     if not_ok:
-        print(f'{enemy.enemy.name} не нашел путь')
-        for number_added_point in range(1, len(completed_path)):
-            waypoints.append(completed_path[number_added_point])
+        not_ok, reversed_waypoints = calculating_the_path(global_map, task, enemy.global_position, not_ok) # рассчитывается обратный путь
+        if not_ok:
+            not_ok, chanse_waypoints = calculating_the_path(global_map, waypoints[-1], task, False) # рассчитывается путь от последней точки
+            if not_ok:
+                print(f'{enemy.enemy.name} не нашел никакой путь')
+            for chanse_waypoint in chanse_waypoints:
+                waypoints.append(chanse_waypoint)
+            return waypoints
+        else:
+            return reversed_waypoints.reverse()
     else:
-        print(f'{enemy.enemy.name} нашел путь')        
-    return waypoints
+        return waypoints
+
     
                 
 
-def enemy_ideal_move_calculation(global_map, enemy, start_point, task):
+def enemy_ideal_move_calculation(global_map, start_point, finish_point):
     """
         Рассчитывает идеальную траекторию движения NPC
     """
     
-    axis_y = task[0] - start_point[0] # длинна стороны и количество шагов
-    axis_x = task[1] - start_point[1] # длинна стороны и количество шагов
+    axis_y = finish_point[0] - start_point[0] # длинна стороны и количество шагов
+    axis_x = finish_point[1] - start_point[1] # длинна стороны и количество шагов
     if abs(axis_y) > abs(axis_x):
         if axis_x != 0:
             length_step = abs(axis_y)//abs(axis_x) # на один X столько то Y
@@ -842,7 +877,7 @@ def move_hunter_enemy(global_map, enemy):
     """
         Обрабатывает передвижение NPC по вейпоинтам
     """
-    if len(enemy.waypoints) != 0:
+    if enemy.waypoints:
         enemy.global_position = enemy.waypoints[0]
         enemy.waypoints.pop(0)
 
