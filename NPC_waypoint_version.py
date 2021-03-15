@@ -11,7 +11,7 @@ garbage = ['░', '▒', '▓', '█', '☺']
     ВЕРСИЯ ДЛЯ ОТРАБОТКИ ПЕРЕМЕЩЕНИЯ NPC
 
     ИЗВЕСТНЫЕ БАГИ:
-    1)Проверка доступности тайла для шага за пределами карты
+    1)Проверка доступности тайла для шага за пределами карты в стандартном алгоритме
     2)Попытка отрисовки за пределами динамического чанка
     
 
@@ -21,10 +21,10 @@ garbage = ['░', '▒', '▓', '█', '☺']
     1)Перехват шага у игрока
     2)Золотоискатели, находясь в горах начинают искать золото
     3)Встречи NPC друг с другом на глобальной карте
-    4)Остановку при достижени NPC края карты
-    5)NPC не должны появляться и передвигаться по тайлам, передвижение по которым невозможно
+    4)Остановку при достижени NPC края карты #РЕАЛИЗОВАНО
+    5)NPC не должны появляться и передвигаться по тайлам, передвижение по которым невозможно 
     6)Добавить необсчитываемых персонажей, являющихся мелкими зверьми. Например: змей и гремучих змей
-    7)Реализовать алгоритм поиска пути A*
+    7)Реализовать алгоритм поиска пути A* #РЕАЛИЗОВАНО
     8)Перемещение NPC на динамическом чанке игрока в соответствии с просчитанным на глобальной карте путём
 
     ЛОГИКА ПЕРЕМЕЩЕНИЯ NPC
@@ -114,11 +114,12 @@ class Position:
         
 class Location:
     """ Содержит описание локации """
-    def __init__(self, name:str, temperature:float, chank:list, icon:str):
+    def __init__(self, name:str, temperature:float, chank:list, icon:str, price_move:int):
         self.name = name
         self.temperature = temperature
         self.chank = chank
         self.icon = icon
+        self.price_move = price_move
 
 class Description_location:
     """ Содержит информацию для генератора локаций """
@@ -128,6 +129,7 @@ class Description_location:
         self.main_tileset = description[2]
         self.random_tileset = description[3]
         self.icon = description[4]
+        self.price_move = description[5]
 
 class Interfase:
     """ Содержит элементы для последующего вывода на экран """
@@ -248,11 +250,11 @@ def advanced_location_generate(mini_region_map, grid, game_field_size):
             region_location_line.append(region_location)
         raw_location.append(region_location_line)
         
-    ready_location = Location(mini_region_map[1].name, 35, [], '')
+    ready_location = Location(mini_region_map[1].name, 35, [], mini_region_map[1].icon, mini_region_map[1].price_move)
     ready_location.chank = random_location_post_generate(gluing_location(raw_location, grid, count_block), mini_region_map[1])
     temperature = mini_region_map[1].temperature
     ready_location.temperature = [random.randrange(temperature[0], temperature[1])]
-    ready_location.icon = mini_region_map[1].icon
+
     return ready_location
 
 
@@ -261,9 +263,9 @@ def selecting_generator(seed):
         Содержит и выдаёт значения семян генерации.
     """
     seed_dict = {  
-                    0: ['field',              [20.0,35.0], ['u', '„', ','],       ['ü', 'o'],            '„'],
-                    1: ['dried field',        [30.0,40.0], ['„', ','],            ['o', 'u'],            ','],
-                    2: ['hills',              [20.0,35.0], ['▲', 'o'],            ['„', ','],            '▲'],
+                    0: ['field',              [20.0,35.0], ['u', '„', ','],       ['ü', 'o'],       '„',         5],
+                    1: ['dried field',        [30.0,40.0], ['„', ','],            ['o', 'u'],       ',',         2],
+                    2: ['hills',              [20.0,35.0], ['▲', 'o'],            ['„', ','],       '▲',        20],
                 }
     return seed_dict[seed]
 
@@ -280,6 +282,11 @@ def description_seed_merge(one_description, two_description):
         for char in range(len(two_description[3])):
             one_description[3].append(two_description[3][char])
         one_description[4] = random.choice([one_description[4], two_description[4]])
+        if one_description[5] < two_description[5]:
+            one_description[5] = random.randrange(one_description[5], two_description[5], 1)
+        elif one_description[5] > two_description[5]:
+            one_description[5] = random.randrange(two_description[5], one_description[5], 1)
+        
 
 def master_generate(value_region_box:int, game_field_size:int, grid):
     """
@@ -344,6 +351,7 @@ def location_generate(description, game_field_size):
         ready_location.chank.append([random.choice(description[2]) for x in range(game_field_size)])
     ready_location.temperature = [random.randrange(description[1][0], description[1][1])]
     ready_location.icon = description[4]
+    ready_location.price_move = description[5]
 
     return ready_location
 
@@ -559,7 +567,8 @@ def interaction_processing(global_map, interaction, enemy_list):
                 for enemy in enemy_list:
                     print(f"{enemy.enemy.name} получил задачу")
                     print(f"interact[1] = {interact[1]}")
-                    enemy.waypoints = enemy_move_calculation(global_map, enemy, interact[1])
+                    #enemy.waypoints = enemy_move_calculation(global_map, enemy, interact[1])
+                    enemy.waypoints = enemy_a_star_algorithm_move_calculation(global_map, enemy, interact[1])
 
 
 def enemy_move_calculation(global_map, enemy, task):
@@ -659,7 +668,6 @@ def enemy_move_calculation(global_map, enemy, task):
                         completed_path = [completed_path[0]]
 
                 attempt_counter += 1
-                print (f'{enemy.enemy.name} шаг цикла под номером {attempt_counter}')
                 if attempt_counter == 100:
                     calculating_the_path = False # Вынужденное прерывание цикла без готового пути
 
@@ -669,10 +677,8 @@ def enemy_move_calculation(global_map, enemy, task):
                 waypoints.append(completed_path[number_added_point])
         else:
             print(f'{enemy.enemy.name} нашел путь')
-
         return not_ok, waypoints
-
-
+    
 
     not_ok = False
     not_ok, waypoints = calculating_the_path(global_map, enemy.global_position, task, not_ok) # рассчитывается прямой путь
@@ -689,9 +695,7 @@ def enemy_move_calculation(global_map, enemy, task):
             return reversed_waypoints.reverse()
     else:
         return waypoints
-
-    
-                
+       
 
 def enemy_ideal_move_calculation(global_map, start_point, finish_point):
     """
@@ -741,11 +745,102 @@ def enemy_ideal_move_calculation(global_map, start_point, finish_point):
 
     return waypoints
 
-def enemy_not_ideal_move_recalculation():
+class Node:
+    """Содержит узлы графа"""
+    def __init__(self, number, position, price, direction):
+        self.number = number
+        self.position = position
+        self.friends = []
+        self.price = price
+        self.direction = direction
+
+def enemy_a_star_algorithm_move_calculation(global_map, enemy, finish_point):
     """
-        Перерассчитывает идеальную траекторию под неидеальную местность
+        Рассчитывает поиск пути по алгоритму A*
     """
-    pass
+    def path_length(start_point, finish_point):
+        """
+            Вычисляет примерное расстояния до финиша, для рассчётов стоимости перемещения
+        """
+        return (abs(start_point[0] - finish_point[0]) + abs(start_point[1] - finish_point[1]))
+        
+    def node_friends_calculation(global_map, graph, node, enemy, verified_node):
+        """
+            Вычисляет соседние узлы графа
+        """
+        friends = []
+        if 0 < node.position[0] < (len(global_map) - 1):
+            if not(global_map[node.position[0] + 1][node.position[1]].icon in enemy.enemy.banned_biom) and not([node.position[0] + 1, node.position[1]] in verified_node):
+                 friend = Node(len(graph), [node.position[0] + 1, node.position[1]], global_map[
+                     node.position[0] + 1][node.position[1]].price_move + path_length([node.position[0] + 1, node.position[1]], finish_point), [-1, 0])
+                 friends.append(friend)
+                 graph.append(friend)                                                                                              
+                                                                                                               
+            if not(global_map[node.position[0] - 1][node.position[1]].icon in enemy.enemy.banned_biom) and not([node.position[0] - 1, node.position[1]] in verified_node):
+                 friend = Node(len(graph), [node.position[0] - 1, node.position[1]], global_map[
+                     node.position[0] - 1][node.position[1]].price_move + path_length([node.position[0] - 1, node.position[1]], finish_point), [1, 0])
+                 friends.append(friend)
+                 graph.append(friend)                
+        if 0 < node.position[1] < (len(global_map) - 1):                                                                                                  
+            if not(global_map[node.position[0]][node.position[1] + 1].icon in enemy.enemy.banned_biom) and not([node.position[0], node.position[1] + 1] in verified_node):
+                 friend = Node(len(graph), [node.position[0], node.position[1] + 1], global_map[
+                     node.position[0]][node.position[1] + 1].price_move + path_length([node.position[0], node.position[1] + 1], finish_point), [0, -1])
+                 friends.append(friend)
+                 graph.append(friend)                
+            if not(global_map[node.position[0]][node.position[1] - 1].icon in enemy.enemy.banned_biom) and not([node.position[0], node.position[1] - 1] in verified_node):
+                 friend = Node(len(graph), [node.position[0], node.position[1] - 1], global_map[
+                     node.position[0]][node.position[1] - 1].price_move + path_length([node.position[0], node.position[1] - 1], finish_point), [0, 1])
+                 friends.append(friend)
+                 graph.append(friend)                
+        return friends
+
+    graph = []
+    verified_node = []
+    start_node = Node(0, enemy.global_position, 0, [0, 0])
+    start_node.friends = node_friends_calculation(global_map, graph, start_node, enemy, verified_node)
+    graph.append(start_node)
+    verified_node.append(start_node.position)
+    finding_a_path = True
+    finish_node = 0
+    sucess = True
+    step_count = 0
+    reversed_waypoints = []
+    while finding_a_path:
+        min_price = 99999
+        node = graph[-1]
+        for number_node in range(len(graph)):
+            if not(graph[number_node].position in verified_node):
+                if graph[number_node].price < min_price:
+                    min_price = graph[number_node].price
+                    node = graph[number_node]
+        if min_price == 99999:
+            sucess = False
+            finding_a_path = False
+            
+        verified_node.append(node.position)
+        node.friends = node_friends_calculation(global_map, graph, node, enemy, verified_node)
+        if node.position == finish_point:
+            finding_a_path = False
+            finish_node = node.number
+        step_count += 1
+        if step_count == 300:
+            sucess = False
+            finding_a_path = False
+    if sucess:
+        check_node = graph[-1]
+        while check_node.position != start_node.position:
+            reversed_waypoints.append(graph[finish_node].position)
+            preview_node = [graph[finish_node].position[0] + graph[finish_node].direction[0], graph[finish_node].position[1] + graph[finish_node].direction[1]]
+            for number_node in range(len(graph)):
+                if graph[number_node].position == preview_node:
+                    finish_node = number_node
+                    check_node = graph[number_node]
+    else:
+        print("По алгоритму А* не нашлось пути")
+    
+    #print(f"{enemy.enemy.name} получил waypoints - {list(reversed(reversed_waypoints))}")
+            
+    return list(reversed(reversed_waypoints))
 
 def enemy_in_dynamic_chank(global_map, enemy, position, chank_size, step):
     """
