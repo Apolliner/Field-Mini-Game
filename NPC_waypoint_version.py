@@ -13,6 +13,7 @@ garbage = ['░', '▒', '▓', '█', '☺']
     ИЗВЕСТНЫЕ БАГИ:
     1)Проверка доступности тайла для шага за пределами карты в стандартном алгоритме
     2)Попытка отрисовки за пределами динамического чанка
+    3)Отталкивание наверх по глобальным координатам при попытке приблизиться
     
 
     РЕАЛИЗОВАТЬ:
@@ -263,9 +264,10 @@ def selecting_generator(seed):
         Содержит и выдаёт значения семян генерации.
     """
     seed_dict = {  
-                    0: ['field',              [20.0,35.0], ['u', '„', ','],       ['ü', 'o'],       '„',         5],
-                    1: ['dried field',        [30.0,40.0], ['„', ','],            ['o', 'u'],       ',',         2],
-                    2: ['hills',              [20.0,35.0], ['▲', 'o'],            ['„', ','],       '▲',        20],
+                    0: ['desert',             [40.0,60.0], ['.'],                 ['j'],            'j',        20],
+                    1: ['field',              [20.0,35.0], ['u', '„', ','],       ['ü', 'o'],       '„',         5],
+                    2: ['dried field',        [30.0,40.0], ['„', ','],            ['o', 'u'],       ',',         2],
+                    3: ['hills',              [20.0,35.0], ['▲', 'o'],            ['„', ','],       '▲',        20],
                 }
     return seed_dict[seed]
 
@@ -361,7 +363,7 @@ def region_generate(size_region_box):
     """
     region_map = []
     for i in range(size_region_box):
-        region_map.append([random.randrange(3) for x in range(size_region_box)])
+        region_map.append([random.randrange(4) for x in range(size_region_box)])
     return region_map
 
 
@@ -454,6 +456,7 @@ class Enemy:
         self.old_position_assemblage_point = [1, 1]
         self.step_exit_from_assemblage_point = 0
         self.waypoints = []
+        self.dynamic_waypoints = []
 
 class Horseman(Enemy):
     """ Отвечает за всадников """
@@ -595,7 +598,7 @@ def enemy_move_calculation(global_map, enemy, task):
             Просчитывает путь. Не важно, туда или обратно.
         """
     
-        waypoints = enemy_ideal_move_calculation(global_map, start_point, finish_point)
+        waypoints = enemy_ideal_move_calculation(start_point, finish_point)
         not_ok, waypoints = checking_the_path(global_map, waypoints, enemy)
 
         if not_ok:
@@ -631,7 +634,7 @@ def enemy_move_calculation(global_map, enemy, task):
                 if len(priority_part) > 0: # Если возможно пройти приоритетным путём
                     previous_point = completed_path[-1]
                     completed_path.append(priority_part[random.randrange(len(priority_part))])
-                    sub_waypoints = enemy_ideal_move_calculation(global_map, completed_path[-1], finish_point)
+                    sub_waypoints = enemy_ideal_move_calculation(completed_path[-1], finish_point)
                     sub_not_ok = False
                     sub_not_ok, sub_waypoints = checking_the_path(global_map, sub_waypoints, enemy)
                     if not(sub_not_ok): # Если всё в порядке, то добавляются все высчитанные точки
@@ -697,7 +700,7 @@ def enemy_move_calculation(global_map, enemy, task):
         return waypoints
        
 
-def enemy_ideal_move_calculation(global_map, start_point, finish_point):
+def enemy_ideal_move_calculation(start_point, finish_point):
     """
         Рассчитывает идеальную траекторию движения NPC
     """
@@ -848,12 +851,55 @@ def enemy_in_dynamic_chank(global_map, enemy, position, chank_size, step):
     """
     enemy_recalculation_dynamic_chank_position(global_map, enemy, position, chank_size, step)
     print(enemy.enemy.name, ' находится в динамической позиции: ', enemy.dynamic_chank_position)
-
-
-    #enemy.dynamic_chank_position[1] += 1
-
+    if len(enemy.dynamic_waypoints) > 0:   
+        enemy.dynamic_chank_position = enemy.dynamic_waypoints[0]
+        enemy.dynamic_waypoints.pop(0)
+    else:
+        enemy_dynamic_chunk_move_calculation(global_map, enemy, chank_size)
 
     enemy_global_position_recalculation(global_map, enemy, position, chank_size)
+
+def enemy_dynamic_chunk_move_calculation(global_map, enemy, chank_size):
+    """
+        Рассчитывает точку прибытия и маршрут движения NPC по динамическому чанку
+    """
+    if len(enemy.waypoints) > 0:
+        if enemy.waypoints[0] == [enemy.global_position[0] - 1, enemy.global_position[1] - 1]:
+            enemy.dynamic_waypoints = enemy_ideal_move_calculation(enemy.dynamic_chank_position,
+                                      [enemy.dynamic_chank_position[0] - chank_size, enemy.dynamic_chank_position[1] - chank_size])
+            enemy.waypoints.pop(0)
+        elif enemy.waypoints[0] == [enemy.global_position[0] - 1, enemy.global_position[1]]:
+            enemy.dynamic_waypoints = enemy_ideal_move_calculation(enemy.dynamic_chank_position,
+                                      [enemy.dynamic_chank_position[0] - chank_size, enemy.dynamic_chank_position[1]])
+            enemy.waypoints.pop(0)
+        elif enemy.waypoints[0] == [enemy.global_position[0] - 1, enemy.global_position[1] + 1]:
+            enemy.dynamic_waypoints = enemy_ideal_move_calculation(enemy.dynamic_chank_position,
+                                      [enemy.dynamic_chank_position[0] - chank_size, enemy.dynamic_chank_position[1] + chank_size])
+            enemy.waypoints.pop(0)
+        elif enemy.waypoints[0] == [enemy.global_position[0], enemy.global_position[1] - 1]:
+            enemy.dynamic_waypoints = enemy_ideal_move_calculation(enemy.dynamic_chank_position,
+                                      [enemy.dynamic_chank_position[0], enemy.dynamic_chank_position[1] - chank_size])
+            enemy.waypoints.pop(0)
+        elif enemy.waypoints[0] == [enemy.global_position[0], enemy.global_position[1]]:
+            enemy.dynamic_waypoints = enemy_ideal_move_calculation(enemy.dynamic_chank_position,
+                                      [enemy.dynamic_chank_position[0], enemy.dynamic_chank_position[1]])
+            enemy.waypoints.pop(0)
+        elif enemy.waypoints[0] == [enemy.global_position[0], enemy.global_position[1] + 1]:
+            enemy.dynamic_waypoints = enemy_ideal_move_calculation(enemy.dynamic_chank_position,
+                                      [enemy.dynamic_chank_position[0], enemy.dynamic_chank_position[1] + chank_size])
+            enemy.waypoints.pop(0)
+        elif enemy.waypoints[0] == [enemy.global_position[0] + 1, enemy.global_position[1] - 1]:
+            enemy.dynamic_waypoints = enemy_ideal_move_calculation(enemy.dynamic_chank_position,
+                                      [enemy.dynamic_chank_position[0] + chank_size, enemy.dynamic_chank_position[1] - chank_size])
+            enemy.waypoints.pop(0)
+        elif enemy.waypoints[0] == [enemy.global_position[0] + 1, enemy.global_position[1]]:
+            enemy.dynamic_waypoints = enemy_ideal_move_calculation(enemy.dynamic_chank_position,
+                                      [enemy.dynamic_chank_position[0] + chank_size, enemy.dynamic_chank_position[1]])
+            enemy.waypoints.pop(0)
+        elif enemy.waypoints[0] == [enemy.global_position[0] + 1, enemy.global_position[1] + 1]:
+            enemy.dynamic_waypoints = enemy_ideal_move_calculation(enemy.dynamic_chank_position,
+                                      [enemy.dynamic_chank_position[0] + chank_size, enemy.dynamic_chank_position[1] + chank_size])
+            enemy.waypoints.pop(0)
 
 def enemy_global_position_recalculation(global_map, enemy, position, chank_size):
     """
@@ -864,17 +910,28 @@ def enemy_global_position_recalculation(global_map, enemy, position, chank_size)
 
 def enemy_recalculation_dynamic_chank_position(global_map, enemy, position, chank_size, step):
     """
-        Перерассчитывает позицию NPC при перерассчёте динамического чанка
+        Перерассчитывает позицию NPC и его динамические путевые точки при перерассчёте динамического чанка
     """
     if enemy.old_position_assemblage_point != position.assemblage_point:
         if position.assemblage_point[0] == (enemy.old_position_assemblage_point[0] - 1):
-           enemy.dynamic_chank_position[0] += chank_size
+            enemy.dynamic_chank_position[0] += chank_size
+            for dynamic_waypoint in enemy.dynamic_waypoints:
+                dynamic_waypoint[0] += chank_size
+           
         elif position.assemblage_point[0] == (enemy.old_position_assemblage_point[0] + 1):
-           enemy.dynamic_chank_position[0] -= chank_size
+            enemy.dynamic_chank_position[0] -= chank_size
+            for dynamic_waypoint in enemy.dynamic_waypoints:
+                dynamic_waypoint[0] -= chank_size
+                
         if position.assemblage_point[1] == (enemy.old_position_assemblage_point[1] - 1):
-           enemy.dynamic_chank_position[1] += chank_size
+            enemy.dynamic_chank_position[1] += chank_size
+            for dynamic_waypoint in enemy.dynamic_waypoints:
+                dynamic_waypoint[1] += chank_size
+            
         elif position.assemblage_point[1] == (enemy.old_position_assemblage_point[1] + 1):
-           enemy.dynamic_chank_position[1] -= chank_size
+            enemy.dynamic_chank_position[1] -= chank_size
+            for dynamic_waypoint in enemy.dynamic_waypoints:
+                dynamic_waypoint[0] -= chank_size
 
     if (0 <= enemy.dynamic_chank_position[0] >= chank_size*2) and (0 <= enemy.dynamic_chank_position[1] >= chank_size*2):
         enemy.step_exit_from_assemblage_point = step
@@ -973,6 +1030,13 @@ def move_hunter_enemy(global_map, enemy):
         Обрабатывает передвижение NPC по вейпоинтам
     """
     if enemy.waypoints:
+        number_slice = 0
+        for number_waypoint in range(len(enemy.waypoints)):
+            if enemy.global_position == enemy.waypoints[number_waypoint]:
+                number_slice = number_waypoint - 1
+        if number_slice > 0:
+            enemy.waypoints[number_slice: len(enemy.waypoints)]
+        
         enemy.global_position = enemy.waypoints[0]
         enemy.waypoints.pop(0)
 
