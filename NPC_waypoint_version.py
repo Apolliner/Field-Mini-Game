@@ -18,7 +18,6 @@ garbage = ['░', '▒', '▓', '█', '☺']
 
     РЕАЛИЗОВАТЬ:
 
-    0)заменить в коде слово chank на chunk!
     1)Перехват шага у игрока
     2)Золотоискатели, находясь в горах начинают искать золото
     3)Встречи NPC друг с другом на глобальной карте
@@ -27,6 +26,7 @@ garbage = ['░', '▒', '▓', '█', '☺']
     6)Добавить необсчитываемых персонажей, являющихся мелкими зверьми. Например: змей и гремучих змей
     7)Реализовать алгоритм поиска пути A* #РЕАЛИЗОВАНО
     8)Перемещение NPC на динамическом чанке игрока в соответствии с просчитанным на глобальной карте путём
+    9)"Стоимость" перемещения по разным тайлам
 
     ЛОГИКА ПЕРЕМЕЩЕНИЯ NPC
     NPC делятся на охотников и хаотичных.
@@ -43,6 +43,9 @@ garbage = ['░', '▒', '▓', '█', '☺']
     СИСТЕМА ВЕЙПОИНТОВ:
     Персонажи получают точку прибытия и рассчитывают маршрут из точек (список), по которым им надо пройти. Они перемещаются в точку
     с индексом 0 и удаляют её.
+
+    ПЕРЕМЕЩЕНИЕ NPC ПО ДИНАМИЧЕСКОМУ ЧАНКУ:
+    При составлении списка динамических вейпоинтов, NPC подгружает два чанка, по которым ему необходимо пройти и рассчитывает путь
 
     СИСТЕМА ШУМА:
     Находящиеся недалеко от стреляющего персонажа NPC слышат выстрелы, и, либо спешат посмотреть на того, кто стрелял, либо спешат убраться восвояси.
@@ -265,9 +268,14 @@ def selecting_generator(seed):
     """
     seed_dict = {  
                     0: ['desert',             [40.0,60.0], ['.'],                 ['j'],            'j',        20],
-                    1: ['field',              [20.0,35.0], ['u', '„', ','],       ['ü', 'o'],       '„',         5],
-                    2: ['dried field',        [30.0,40.0], ['„', ','],            ['o', 'u'],       ',',         2],
-                    3: ['hills',              [20.0,35.0], ['▲', 'o'],            ['„', ','],       '▲',        20],
+                    1: ['semidesert',         [35.0,50.0], ['.', ','],            ['▲', 'o', 'i'],  '.',        10],
+                    2: ['cliff semidesert',   [35.0,50.0], ['▲', 'A', '.', ','],  ['o', 'i'],       'A',        15],
+                    3: ['saline land',        [40.0,50.0], [';'],                 [':'],            ';',        20],
+                    4: ['field',              [20.0,35.0], ['u', '„', ','],       ['ü', 'o'],       '„',         5],
+                    5: ['dried field',        [30.0,40.0], ['„', ','],            ['o', 'u'],       ',',         2],
+                    6: ['oasis',              [15.0,30.0], ['F', '„', '~'],       ['P', ','],       'P',         0],
+                    7: ['salty lake',         [25.0,40.0], ['~', ','],            ['„', '.'],       '~',        20],
+                    8: ['hills',              [20.0,35.0], ['▲', 'o'],            ['„', ','],       '▲',        20],
                 }
     return seed_dict[seed]
 
@@ -363,7 +371,7 @@ def region_generate(size_region_box):
     """
     region_map = []
     for i in range(size_region_box):
-        region_map.append([random.randrange(4) for x in range(size_region_box)])
+        region_map.append([random.randrange(9) for x in range(size_region_box)])
     return region_map
 
 
@@ -391,6 +399,45 @@ def gluing_location(raw_gluing_map, grid, count_block):
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
     ОБРАБОТКА ИГРОВЫХ СОБЫТИЙ
+        
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+"""
+
+def master_game_events(global_map, enemy_list, position, go_to_print, step, activity_list, chunk_size, interaction):
+    """
+        Здесь происходят все события, не связанные с пользовательским вводом
+    """
+    interaction_processing(global_map, interaction, enemy_list)
+    activity_list_check(activity_list, step)
+    master_npc_calculation(global_map, enemy_list, position, go_to_print, step, activity_list, chunk_size, interaction)
+
+def interaction_processing(global_map, interaction, enemy_list):
+    """
+        Обрабатывает взаимодействие игрока с миром
+    """
+    if len(interaction) != 0:
+        for interact in interaction:
+            if interact[0] == 'task_point_all_enemies':
+                for enemy in enemy_list:
+                    print(f"{enemy.enemy.name} получил задачу")
+                    print(f"interact[1] = {interact[1]}")
+                    #enemy.waypoints = enemy_move_calculation(global_map, enemy, interact[1])
+                    enemy.waypoints = enemy_a_star_algorithm_move_calculation(global_map, enemy, interact[1])
+
+
+def activity_list_check(activity_list, step):
+    """
+        Проверяет активности на истечение времени
+    """
+    for activity in activity_list:
+        if step - activity.lifetime > activity.birth:
+            activity_list.remove(activity)
+
+"""
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+    ОБРАБОТКА NPC
         
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -540,14 +587,13 @@ class Coyot(Enemy):
         self.reserves = 0
         self.type = 'chaotic'
 
-def master_game_events(global_map, enemy_list, position, go_to_print, step, activity_list, chunk_size, interaction):
+def master_npc_calculation(global_map, enemy_list, position, go_to_print, step, activity_list, chunk_size, interaction):
     """
-        Здесь происходят все события, не связанные с пользовательским вводом
+        Здесь происходят все события, связанные с NPC
     """
     enemy_dynamic_chunk_check(global_map, enemy_list, position, step, chunk_size)
-    activity_list_check(activity_list, step)
     go_to_print.text5 = ''
-    interaction_processing(global_map, interaction, enemy_list)
+    
     
     for enemy in enemy_list:
         #print(f"{enemy.enemy.name} enemy.waypoints = {enemy.waypoints}")
@@ -559,19 +605,6 @@ def master_game_events(global_map, enemy_list, position, go_to_print, step, acti
                 enemy_hunter_emulation_life(global_map, enemy, go_to_print, step, activity_list, chunk_size)
             else:
                 enemy_chaotic_emulation_life(global_map, enemy, go_to_print, step, activity_list, chunk_size)
-
-def interaction_processing(global_map, interaction, enemy_list):
-    """
-        Обрабатывает взаимодействие игрока с миром
-    """
-    if len(interaction) != 0:
-        for interact in interaction:
-            if interact[0] == 'task_point_all_enemies':
-                for enemy in enemy_list:
-                    print(f"{enemy.enemy.name} получил задачу")
-                    print(f"interact[1] = {interact[1]}")
-                    #enemy.waypoints = enemy_move_calculation(global_map, enemy, interact[1])
-                    enemy.waypoints = enemy_a_star_algorithm_move_calculation(global_map, enemy, interact[1])
 
 
 def enemy_move_calculation(global_map, enemy, task):
@@ -849,15 +882,22 @@ def enemy_in_dynamic_chunk(global_map, enemy, position, chunk_size, step):
     """
         Обрабатывает поведение NPC на динамическом чанке игрока
     """
+    #print(f"{enemy.enemy.name} сначала имеет вейпоинты: {enemy.dynamic_waypoints}")
+    #print(f"{enemy.enemy.name} сначала находился в динамической позиции: {enemy.dynamic_chunk_position} и глобальной: {enemy.global_position}")
     enemy_recalculation_dynamic_chank_position(global_map, enemy, position, chunk_size, step)
-    print(enemy.enemy.name, ' находится в динамической позиции: ', enemy.dynamic_chunk_position)
+    #print(f"{enemy.enemy.name} теперь находится в динамической позиции: {enemy.dynamic_chunk_position} и глобальной: {enemy.global_position}")
+    #print(f"{enemy.enemy.name} имеет вейпоинты: {enemy.dynamic_waypoints}")
+    if enemy.waypoints:
+        if enemy.global_position == enemy.waypoints[0]:
+            enemy.waypoints.pop(0)
     if len(enemy.dynamic_waypoints) > 0:   
         enemy.dynamic_chunk_position = enemy.dynamic_waypoints[0]
         enemy.dynamic_waypoints.pop(0)
     else:
         enemy_dynamic_chunk_move_calculation(global_map, enemy, chunk_size)
-
     enemy_global_position_recalculation(global_map, enemy, position, chunk_size)
+    #print(f"{enemy.enemy.name} проверка вейпоинтов: {enemy.dynamic_waypoints}")
+    #print(f"{enemy.enemy.name} проверка нахождения в динамической позиции: {enemy.dynamic_chunk_position} и глобальной: {enemy.global_position}")
 
 def enemy_dynamic_chunk_move_calculation(global_map, enemy, chunk_size):
     """
@@ -867,39 +907,30 @@ def enemy_dynamic_chunk_move_calculation(global_map, enemy, chunk_size):
         if enemy.waypoints[0] == [enemy.global_position[0] - 1, enemy.global_position[1] - 1]:
             enemy.dynamic_waypoints = enemy_ideal_move_calculation(enemy.dynamic_chunk_position,
                                       [enemy.dynamic_chunk_position[0] - chunk_size, enemy.dynamic_chunk_position[1] - chunk_size])
-            enemy.waypoints.pop(0)
         elif enemy.waypoints[0] == [enemy.global_position[0] - 1, enemy.global_position[1]]:
             enemy.dynamic_waypoints = enemy_ideal_move_calculation(enemy.dynamic_chunk_position,
                                       [enemy.dynamic_chunk_position[0] - chunk_size, enemy.dynamic_chunk_position[1]])
-            enemy.waypoints.pop(0)
         elif enemy.waypoints[0] == [enemy.global_position[0] - 1, enemy.global_position[1] + 1]:
             enemy.dynamic_waypoints = enemy_ideal_move_calculation(enemy.dynamic_chunk_position,
                                       [enemy.dynamic_chunk_position[0] - chunk_size, enemy.dynamic_chunk_position[1] + chunk_size])
-            enemy.waypoints.pop(0)
         elif enemy.waypoints[0] == [enemy.global_position[0], enemy.global_position[1] - 1]:
             enemy.dynamic_waypoints = enemy_ideal_move_calculation(enemy.dynamic_chunk_position,
                                       [enemy.dynamic_chunk_position[0], enemy.dynamic_chunk_position[1] - chunk_size])
-            enemy.waypoints.pop(0)
         elif enemy.waypoints[0] == [enemy.global_position[0], enemy.global_position[1]]:
             enemy.dynamic_waypoints = enemy_ideal_move_calculation(enemy.dynamic_chunk_position,
                                       [enemy.dynamic_chunk_position[0], enemy.dynamic_chunk_position[1]])
-            enemy.waypoints.pop(0)
         elif enemy.waypoints[0] == [enemy.global_position[0], enemy.global_position[1] + 1]:
             enemy.dynamic_waypoints = enemy_ideal_move_calculation(enemy.dynamic_chunk_position,
                                       [enemy.dynamic_chunk_position[0], enemy.dynamic_chunk_position[1] + chunk_size])
-            enemy.waypoints.pop(0)
         elif enemy.waypoints[0] == [enemy.global_position[0] + 1, enemy.global_position[1] - 1]:
             enemy.dynamic_waypoints = enemy_ideal_move_calculation(enemy.dynamic_chunk_position,
                                       [enemy.dynamic_chunk_position[0] + chunk_size, enemy.dynamic_chunk_position[1] - chunk_size])
-            enemy.waypoints.pop(0)
         elif enemy.waypoints[0] == [enemy.global_position[0] + 1, enemy.global_position[1]]:
             enemy.dynamic_waypoints = enemy_ideal_move_calculation(enemy.dynamic_chunk_position,
                                       [enemy.dynamic_chunk_position[0] + chunk_size, enemy.dynamic_chunk_position[1]])
-            enemy.waypoints.pop(0)
         elif enemy.waypoints[0] == [enemy.global_position[0] + 1, enemy.global_position[1] + 1]:
             enemy.dynamic_waypoints = enemy_ideal_move_calculation(enemy.dynamic_chunk_position,
                                       [enemy.dynamic_chunk_position[0] + chunk_size, enemy.dynamic_chunk_position[1] + chunk_size])
-            enemy.waypoints.pop(0)
 
 def enemy_global_position_recalculation(global_map, enemy, position, chunk_size):
     """
@@ -915,23 +946,23 @@ def enemy_recalculation_dynamic_chank_position(global_map, enemy, position, chun
     if enemy.old_position_assemblage_point != position.assemblage_point:
         if position.assemblage_point[0] == (enemy.old_position_assemblage_point[0] - 1):
             enemy.dynamic_chunk_position[0] += chunk_size
-            for dynamic_waypoint in enemy.dynamic_waypoints:
-                dynamic_waypoint[0] += chunk_size
+            for number_dynamic_waypoint in range(len(enemy.dynamic_waypoints)):
+                enemy.dynamic_waypoints[number_dynamic_waypoint][0] += chunk_size
            
         elif position.assemblage_point[0] == (enemy.old_position_assemblage_point[0] + 1):
             enemy.dynamic_chunk_position[0] -= chunk_size
-            for dynamic_waypoint in enemy.dynamic_waypoints:
-                dynamic_waypoint[0] -= chunk_size
+            for number_dynamic_waypoint in range(len(enemy.dynamic_waypoints)):
+                enemy.dynamic_waypoints[number_dynamic_waypoint][0] -= chunk_size
                 
         if position.assemblage_point[1] == (enemy.old_position_assemblage_point[1] - 1):
             enemy.dynamic_chunk_position[1] += chunk_size
-            for dynamic_waypoint in enemy.dynamic_waypoints:
-                dynamic_waypoint[1] += chunk_size
+            for number_dynamic_waypoint in range(len(enemy.dynamic_waypoints)):
+                enemy.dynamic_waypoints[number_dynamic_waypoint][1] += chunk_size
             
         elif position.assemblage_point[1] == (enemy.old_position_assemblage_point[1] + 1):
             enemy.dynamic_chunk_position[1] -= chunk_size
-            for dynamic_waypoint in enemy.dynamic_waypoints:
-                dynamic_waypoint[0] -= chunk_size
+            for number_dynamic_waypoint in range(len(enemy.dynamic_waypoints)):
+                enemy.dynamic_waypoints[number_dynamic_waypoint][1] -= chunk_size
 
     if (0 <= enemy.dynamic_chunk_position[0] >= chunk_size*2) and (0 <= enemy.dynamic_chunk_position[1] >= chunk_size*2):
         enemy.step_exit_from_assemblage_point = step
@@ -968,16 +999,18 @@ def enemy_dynamic_chunk_check(global_map, enemy_list, position, step, chunk_size
             elif number_encounter_chank_ok == 8:
                 enemy.dynamic_chunk_position = [position.dynamic[0] + chunk_size, position.dynamic[1] + chunk_size]
 
-        elif enemy.dynamic_chunk  and number_encounter_chank_ok != 99:
+        elif enemy.dynamic_chunk and number_encounter_chank_ok != 99:
             pass
         
-        elif (step - enemy.step_exit_from_assemblage_point) < 15 and enemy.step_exit_from_assemblage_point and step > 15:
+        elif (step - enemy.step_exit_from_assemblage_point) < 30 and enemy.step_exit_from_assemblage_point and step > 30:
             pass
         
-        elif (step - enemy.step_exit_from_assemblage_point) == 15 and step != 15:
+        elif (step - enemy.step_exit_from_assemblage_point) == 30 and step != 30:
             enemy.step_exit_from_assemblage_point = 0
+            enemy.dynamic_waypoints = []
             enemy.dynamic_chunk = False
         else:
+            enemy.dynamic_waypoints = []
             enemy.dynamic_chunk = False
 def enemy_hunter_emulation_life(global_map, enemy, go_to_print, step, activity_list, chunk_size):
     """
@@ -1131,13 +1164,7 @@ def move_biom_enemy(global_map, enemy):
             enemy.global_position = random.choice(direction_moved)
 
 
-def activity_list_check(activity_list, step):
-    """
-        Проверяет активности на истечение времени
-    """
-    for activity in activity_list:
-        if step - activity.lifetime > activity.birth:
-            activity_list.remove(activity)
+
 
 
 """
@@ -1596,7 +1623,6 @@ def game_loop(global_map:list, position:list, chunk_size:int, frame_size:list, e
             mode_action = master_player_action(global_map, position, chunk_size, go_to_print, changing_step, mode_action, interaction)
         #start = time.time() #проверка времени выполнения
         if changing_step:
-            print(f"interaction = {interaction}")
             master_game_events(global_map, enemy_list, position, go_to_print, step, activity_list, chunk_size, interaction)
             step += 1
         #test1 = time.time() #проверка времени выполнения
