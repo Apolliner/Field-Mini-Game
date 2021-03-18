@@ -27,6 +27,7 @@ garbage = ['░', '▒', '▓', '█', '☺']
     7)Реализовать алгоритм поиска пути A* #РЕАЛИЗОВАНО
     8)Перемещение NPC на динамическом чанке игрока в соответствии с просчитанным на глобальной карте путём
     9)"Стоимость" перемещения по разным тайлам
+    10)Переделать алгоритм А* что бы он работал как на глобальной карте, так и на динамической.
 
     ЛОГИКА ПЕРЕМЕЩЕНИЯ NPC
     NPC делятся на охотников и хаотичных.
@@ -54,6 +55,12 @@ garbage = ['░', '▒', '▓', '█', '☺']
     Помимо NPC, жизнь имитируют появляющиеся в зависимости от биома существа. Ими могут быть птицы, скорпионы и змеи.
     Они могут появиться из соответствующих им тайлов даже если они нахоятся в зоне видимости игрока.
     Некоторые тайлы будут опасны возможностью появления из них необчитываемых противников.
+
+    РАЗНЫЕ РЕЖИМЫ СЛЕДОВАНИЯ:
+    Патруль, спешка, поиск. Разная скорость премещения по вейпоинтам и разные следы. Нужно придумать причины выбора и смены режимов.
+
+    ТЕМАТИКА:
+    Всё, что мне нравится. Персонажи как в хороший плохой злой, вяленое конское мясо и гремучие змеи!
 
     
 """
@@ -153,6 +160,35 @@ class Interfase:
         self.text9 = text9
         self.text10 = text10
 
+class Tile:
+    """ Содержит изображение, описание и особое содержание тайла """
+    def __init__(self, icon):
+        self.icon = icon
+        self.description = self.description(icon)
+        self.list_of_features = []
+
+    def description(self, icon):
+        ground_dict =   {
+                        'j': 'бархан',
+                        '.': 'горячий песок',
+                        ',': 'жухлая трава',
+                        'o': 'валун',
+                        'A': 'холм',
+                        '▲': 'скала',
+                        'i': 'кактус',
+                        ':': 'солончак',
+                        ';': 'солончак',
+                        '„': 'трава',
+                        'u': 'высокая трава',
+                        'ü': 'колючая трава',
+                        'F': 'чахлое дерево',
+                        'P': 'раскидистое дерево',
+                        '~': 'солёная вода',
+                        '??': 'ничего'
+                        }
+        return ground_dict[icon]       
+    
+
 """
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -207,7 +243,7 @@ def random_location_post_generate(location:list, description:list):
     for line in range(len(location)):
         for tile in range(len(location)):
             if random.randrange(10)//9:
-                location[line][tile] = random.choice(description.random_tileset)
+                location[line][tile] = Tile(random.choice(description.random_tileset))
     return location
 
 def master_location_generate(mini_region, game_field_size, grid):
@@ -235,18 +271,18 @@ def advanced_location_generate(mini_region_map, grid, game_field_size):
                     left_right_tile = ''                  
                     if number_tile_line <= 1: #Обрабатываем верхний край мини региона
                         if number_line != 0:
-                            top_down_tile = mini_region_map[0][number_line - 1][number_seed]
+                            top_down_tile = Tile(mini_region_map[0][number_line - 1][number_seed])
                     elif number_tile_line >= (count_block - 1): #Обрабатываем нижний край мини региона
                         if number_tile != (count_block - 1):
-                            top_down_tile = mini_region_map[0][number_line][number_seed]
+                            top_down_tile = Tile(mini_region_map[0][number_line][number_seed])
                     if number_tile <= 1: #Обрабатываем левый край мини региона
                         if number_seed != 0:
-                            left_right_tile = mini_region_map[0][number_line][number_seed - 1]
+                            left_right_tile = Tile(mini_region_map[0][number_line][number_seed - 1])
                     elif number_tile != (count_block - 1): #Обрабатываем правый край мини региона
                         if number_seed != (count_block - 1):
-                            left_right_tile = mini_region_map[0][number_line][number_seed]
+                            left_right_tile = Tile(mini_region_map[0][number_line][number_seed])
      
-                    main_tile = mini_region_map[0][number_line][number_seed]
+                    main_tile = Tile(mini_region_map[0][number_line][number_seed])
                     main_tile = mini_region_tile_merge(main_tile, top_down_tile)
                     main_tile = mini_region_tile_merge(main_tile, left_right_tile)
                     tile_line.append(main_tile)
@@ -358,7 +394,7 @@ def location_generate(description, game_field_size):
     ready_location = Location(description[0], 35, [], '')
 
     for i in range(game_field_size):
-        ready_location.chunk.append([random.choice(description[2]) for x in range(game_field_size)])
+        ready_location.chunk.append([Tile(random.choice(description[2])) for x in range(game_field_size)])
     ready_location.temperature = [random.randrange(description[1][0], description[1][1])]
     ready_location.icon = description[4]
     ready_location.price_move = description[5]
@@ -521,6 +557,7 @@ class Horseman(Enemy):
         self.fatigue = 100
         self.reserves = 10
         self.type = 'hunter'
+        self.description = f"Знаменитый охотник за головами {self.name_npc}"
 
 class Riffleman(Enemy):
     """ Отвечает за стрелков """
@@ -537,6 +574,7 @@ class Riffleman(Enemy):
         self.fatigue = 100
         self.reserves = 5
         self.type = 'hunter'
+        self.description = f"отчаяный стрелок {self.name_npc}"
 
 class Gold_digger(Enemy):
     """ Отвечает за золотоискателей """
@@ -553,6 +591,7 @@ class Gold_digger(Enemy):
         self.fatigue = 100
         self.reserves = 5
         self.type = 'chaotic'
+        self.description = f"отчаяный золотоискатель {self.name_npc}"
 
 class Horse(Enemy):
     """ Отвечает за коней """
@@ -569,12 +608,13 @@ class Horse(Enemy):
         self.fatigue = 100
         self.reserves = 0
         self.type = 'chaotic'
+        self.description = f"{self.name_npc}"
 
 class Coyot(Enemy):
     """ Отвечает за койотов """
     def __init__(self):
         self.name = 'coyot'
-        self.name_npc = random.choice(['Плешивый койот', 'Молодой койот', 'Подраный койот'])
+        self.name_npc = random.choice(['плешивый койот', 'молодой койот', 'подраный койот'])
         self.priority_biom = ['.', ',', '„', 'P', 'A']
         self.banned_biom = ['~', ';']
         self.icon = 'co'
@@ -586,6 +626,7 @@ class Coyot(Enemy):
         self.fatigue = 200
         self.reserves = 0
         self.type = 'chaotic'
+        self.description = f"Голодный и злой {self.name_npc}"
 
 def master_npc_calculation(global_map, enemy_list, position, go_to_print, step, activity_list, chunk_size, interaction):
     """
@@ -1165,8 +1206,6 @@ def move_biom_enemy(global_map, enemy):
 
 
 
-
-
 """
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -1259,28 +1298,27 @@ def request_move(global_map:list, position, chunk_size:int, go_to_print, pressed
     """
         Меняет динамическое местоположение персонажа
     """
-    
     if pressed_button == 'up':
         
-        if position.chunks_use_map[position.dynamic[0] - 1][position.dynamic[1]] != '▲':
+        if position.chunks_use_map[position.dynamic[0] - 1][position.dynamic[1]].icon != '▲':
             if position.dynamic[0] >= chunk_size//2 and position.assemblage_point[0] > 0:
                 position.dynamic[0] -= 1
             
     elif pressed_button == 'left':
         
-        if position.chunks_use_map[position.dynamic[0]][position.dynamic[1] - 1] != '▲':
+        if position.chunks_use_map[position.dynamic[0]][position.dynamic[1] - 1].icon != '▲':
             if position.dynamic[1] >= chunk_size//2 and position.assemblage_point[1] > 0:
                 position.dynamic[1] -= 1
             
     elif pressed_button == 'down':
         
-        if position.chunks_use_map[position.dynamic[0] + 1][position.dynamic[1]] != '▲':
+        if position.chunks_use_map[position.dynamic[0] + 1][position.dynamic[1]].icon != '▲':
             if position.dynamic[0] <= (chunk_size + chunk_size//2) and position.assemblage_point[0] != (len(global_map) - 2):
                 position.dynamic[0] += 1
             
     elif pressed_button == 'right':
         
-        if position.chunks_use_map[position.dynamic[0]][position.dynamic[1] + 1] != '▲':
+        if position.chunks_use_map[position.dynamic[0]][position.dynamic[1] + 1].icon != '▲':
             if position.dynamic[1] <= (chunk_size + chunk_size//2) and position.assemblage_point[1] != (len(global_map) - 2):
                 position.dynamic[1] += 1
     
@@ -1342,7 +1380,7 @@ def request_gun(global_map:list, position, chunk_size:int, go_to_print, pressed_
 
 def calculation_assemblage_point(global_map:list, position, chunk_size:int):
     """
-        Перерассчитывает положение точки сборки, динамические координаты, при необходимости перерассчитывает динамический чанк.
+        Перерассчитывает положение точки сборки, динамические координаты, перерассчитывает динамический чанк.
     """
     
     if position.dynamic[0] > (chunk_size//2 + chunk_size - 1):
@@ -1475,7 +1513,6 @@ def draw_field_calculations(position:list, views_field_size:int, go_to_print):
         Формирует изображение игрового поля на печать
     """
     
-    
     half_views = (views_field_size//2)
     start_stop = [(position.dynamic[0] - half_views), (position.dynamic[1] - half_views),
                   (position.dynamic[0] + half_views + 1),(position.dynamic[1] + half_views + 1)]
@@ -1485,8 +1522,11 @@ def draw_field_calculations(position:list, views_field_size:int, go_to_print):
     
     draw_field = []
     for line in line_views:
+        line_icon = []
         line = line[start_stop[1]:start_stop[3]]
-        draw_field.append(line)
+        for tile in line:
+            line_icon.append(tile)
+        draw_field.append(line_icon)
     return draw_field
 
 def draw_additional_entities(position, chunk_size:int, go_to_print, enemy_list, activity_list):
@@ -1496,18 +1536,18 @@ def draw_additional_entities(position, chunk_size:int, go_to_print, enemy_list, 
     
     for activity in activity_list:
         if activity.global_position[0] == position.assemblage_point[0] and activity.global_position[1] == position.assemblage_point[1]:
-            position.chunks_use_map[activity.local_position[0]][activity.local_position[1]] = activity.icon
+            position.chunks_use_map[activity.local_position[0]][activity.local_position[1]] = activity
         elif activity.global_position[0] == position.assemblage_point[0] and activity.global_position[1] == position.assemblage_point[1] + 1:
-            position.chunks_use_map[activity.local_position[0]][activity.local_position[1] + chunk_size] = activity.icon
+            position.chunks_use_map[activity.local_position[0]][activity.local_position[1] + chunk_size] = activity
         elif activity.global_position[0] == position.assemblage_point[0] + 1 and activity.global_position[1] == position.assemblage_point[1]:
-            position.chunks_use_map[activity.local_position[0] + chunk_size][activity.local_position[1]] = activity.icon
+            position.chunks_use_map[activity.local_position[0] + chunk_size][activity.local_position[1]] = activity
         elif activity.global_position[0] == position.assemblage_point[0] + 1 and activity.global_position[1] == position.assemblage_point[1] + 1:
-            position.chunks_use_map[activity.local_position[0] + chunk_size][activity.local_position[1] + chunk_size] = activity.icon
+            position.chunks_use_map[activity.local_position[0] + chunk_size][activity.local_position[1] + chunk_size] = activity
 
     for enemy in enemy_list:
         if enemy.global_position in position.check_encounter_position:
             if (0 <= enemy.dynamic_chunk_position[0] < chunk_size * 2) and (0 <= enemy.dynamic_chunk_position[1] < chunk_size * 2 - 2):
-                position.chunks_use_map[enemy.dynamic_chunk_position[0]][enemy.dynamic_chunk_position[1]] = enemy.enemy.icon
+                position.chunks_use_map[enemy.dynamic_chunk_position[0]][enemy.dynamic_chunk_position[1]] = enemy.enemy
                                
 
 def master_draw(position, chunk_size:int, go_to_print, global_map, mode_action, enemy_list, activity_list):
@@ -1522,34 +1562,34 @@ def master_draw(position, chunk_size:int, go_to_print, global_map, mode_action, 
     draw_field = draw_field_calculations(position, chunk_size, go_to_print)
 
     draw_box = []
-    pointer_vision = ' '
+    pointer_vision = Tile('??')
     for line in range(len(draw_field)):
         print_line = ''
         for tile in range(len(draw_field)):
             if line == chunk_size//2 and tile == chunk_size//2:
-                ground = draw_field[line][tile]
+                ground = draw_field[line][tile].description
                 print_line += '☺'
                 if mode_action == 'pointer' and position.pointer == [chunk_size//2, chunk_size//2]:
                     print_line += '<'
-                    pointer_vision = draw_field[line][tile]
+                    pointer_vision = draw_field[line][tile].icon
                 elif mode_action == 'gun' and position.gun == [chunk_size//2, chunk_size//2]:
                     print_line += '+'    
                 else:
                     print_line += ' '
             elif line == position.pointer[0] and tile == position.pointer[1]:
-                print_line += draw_field[line][tile] + '<'
-                pointer_vision = draw_field[line][tile]
+                print_line += draw_field[line][tile].icon + '<'
+                pointer_vision = draw_field[line][tile].icon
             elif line == position.gun[0] and tile == position.gun[1]:
-                print_line += draw_field[line][tile] + '+'
+                print_line += draw_field[line][tile].icon + '+'
             else:
-                if len(draw_field[line][tile]) == 2:
-                    print_line += draw_field[line][tile]
+                if len(draw_field[line][tile].icon) == 2:
+                    print_line += draw_field[line][tile].icon
                 else:
-                    print_line += draw_field[line][tile] + ' '
+                    print_line += draw_field[line][tile].icon + ' '
         draw_box.append(print_line)
     go_to_print.game_field = draw_box
-    go_to_print.text1 = (position.assemblage_point, ' - Позиция точки сборки | ', position.dynamic, ' - динамическая позиция | под ногами:', ground_dict(ground) )
-    go_to_print.text4 = ground_dict(pointer_vision)
+    go_to_print.text1 = (f"{position.assemblage_point} - Позиция точки сборки | {position.dynamic} - динамическая позиция | под ногами: {ground}")
+    go_to_print.text4 = pointer_vision.description
     
 """
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
