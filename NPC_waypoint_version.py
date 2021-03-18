@@ -164,29 +164,30 @@ class Tile:
     """ Содержит изображение, описание и особое содержание тайла """
     def __init__(self, icon):
         self.icon = icon
-        self.description = self.description(icon)
+        self.description = self.getting_attributes(icon, 0)
         self.list_of_features = []
+        self.price_move = self.getting_attributes(icon, 0)
 
-    def description(self, icon):
+    def getting_attributes(self, icon, number):
         ground_dict =   {
-                        'j': 'бархан',
-                        '.': 'горячий песок',
-                        ',': 'жухлая трава',
-                        'o': 'валун',
-                        'A': 'холм',
-                        '▲': 'скала',
-                        'i': 'кактус',
-                        ':': 'солончак',
-                        ';': 'солончак',
-                        '„': 'трава',
-                        'u': 'высокая трава',
-                        'ü': 'колючая трава',
-                        'F': 'чахлое дерево',
-                        'P': 'раскидистое дерево',
-                        '~': 'солёная вода',
-                        '??': 'ничего'
+                        'j': ['бархан', 15],
+                        '.': ['горячий песок', 10],
+                        ',': ['жухлая трава', 2],
+                        'o': ['валун', 15],
+                        'A': ['холм', 15],
+                        '▲': ['скала', 50],
+                        'i': ['кактус', 20],
+                        ':': ['солончак', 5],
+                        ';': ['солончак', 7],
+                        '„': ['трава', 3],
+                        'u': ['высокая трава', 8],
+                        'ü': ['колючая трава', 15],
+                        'F': ['чахлое дерево', 5],
+                        'P': ['раскидистое дерево', 5],
+                        '~': ['солёная вода', 50],
+                        '??': ['ничего', 10],
                         }
-        return ground_dict[icon]       
+        return ground_dict[icon][number]       
     
 
 """
@@ -459,7 +460,7 @@ def interaction_processing(global_map, interaction, enemy_list):
                     print(f"{enemy.enemy.name} получил задачу")
                     print(f"interact[1] = {interact[1]}")
                     #enemy.waypoints = enemy_move_calculation(global_map, enemy, interact[1])
-                    enemy.waypoints = enemy_a_star_algorithm_move_calculation(global_map, enemy, interact[1])
+                    enemy.waypoints = enemy_a_star_algorithm_move_calculation(global_map, enemy, interact[1], enemy.enemy.banned_biom)
 
 
 def activity_list_check(activity_list, step):
@@ -574,7 +575,7 @@ class Riffleman(Enemy):
         self.fatigue = 100
         self.reserves = 5
         self.type = 'hunter'
-        self.description = f"отчаяный стрелок {self.name_npc}"
+        self.description = f"Шериф одного мрачного города {self.name_npc}"
 
 class Gold_digger(Enemy):
     """ Отвечает за золотоискателей """
@@ -591,7 +592,7 @@ class Gold_digger(Enemy):
         self.fatigue = 100
         self.reserves = 5
         self.type = 'chaotic'
-        self.description = f"отчаяный золотоискатель {self.name_npc}"
+        self.description = f"Отчаяный золотоискатель {self.name_npc}"
 
 class Horse(Enemy):
     """ Отвечает за коней """
@@ -831,7 +832,7 @@ class Node:
         self.price = price
         self.direction = direction
 
-def enemy_a_star_algorithm_move_calculation(global_map, enemy, finish_point):
+def enemy_a_star_algorithm_move_calculation(calculation_map, enemy, finish_point, banned_list):
     """
         Рассчитывает поиск пути по алгоритму A*
     """
@@ -841,31 +842,31 @@ def enemy_a_star_algorithm_move_calculation(global_map, enemy, finish_point):
         """
         return (abs(start_point[0] - finish_point[0]) + abs(start_point[1] - finish_point[1]))
         
-    def node_friends_calculation(global_map, graph, node, enemy, verified_node):
+    def node_friends_calculation(calculation_map, graph, node, verified_node, banned_list):
         """
             Вычисляет соседние узлы графа
         """
         friends = []
-        if 0 < node.position[0] < (len(global_map) - 1):
-            if not(global_map[node.position[0] + 1][node.position[1]].icon in enemy.enemy.banned_biom) and not([node.position[0] + 1, node.position[1]] in verified_node):
-                 friend = Node(len(graph), [node.position[0] + 1, node.position[1]], global_map[
+        if 0 < node.position[0] < (len(calculation_map) - 1):
+            if not(calculation_map[node.position[0] + 1][node.position[1]].icon in banned_list) and not([node.position[0] + 1, node.position[1]] in verified_node):
+                 friend = Node(len(graph), [node.position[0] + 1, node.position[1]], calculation_map[
                      node.position[0] + 1][node.position[1]].price_move + path_length([node.position[0] + 1, node.position[1]], finish_point), [-1, 0])
                  friends.append(friend)
                  graph.append(friend)                                                                                              
                                                                                                                
-            if not(global_map[node.position[0] - 1][node.position[1]].icon in enemy.enemy.banned_biom) and not([node.position[0] - 1, node.position[1]] in verified_node):
-                 friend = Node(len(graph), [node.position[0] - 1, node.position[1]], global_map[
+            if not(calculation_map[node.position[0] - 1][node.position[1]].icon in banned_list) and not([node.position[0] - 1, node.position[1]] in verified_node):
+                 friend = Node(len(graph), [node.position[0] - 1, node.position[1]], calculation_map[
                      node.position[0] - 1][node.position[1]].price_move + path_length([node.position[0] - 1, node.position[1]], finish_point), [1, 0])
                  friends.append(friend)
                  graph.append(friend)                
-        if 0 < node.position[1] < (len(global_map) - 1):                                                                                                  
-            if not(global_map[node.position[0]][node.position[1] + 1].icon in enemy.enemy.banned_biom) and not([node.position[0], node.position[1] + 1] in verified_node):
-                 friend = Node(len(graph), [node.position[0], node.position[1] + 1], global_map[
+        if 0 < node.position[1] < (len(calculation_map) - 1):                                                                                                  
+            if not(calculation_map[node.position[0]][node.position[1] + 1].icon in banned_list) and not([node.position[0], node.position[1] + 1] in verified_node):
+                 friend = Node(len(graph), [node.position[0], node.position[1] + 1], calculation_map[
                      node.position[0]][node.position[1] + 1].price_move + path_length([node.position[0], node.position[1] + 1], finish_point), [0, -1])
                  friends.append(friend)
                  graph.append(friend)                
-            if not(global_map[node.position[0]][node.position[1] - 1].icon in enemy.enemy.banned_biom) and not([node.position[0], node.position[1] - 1] in verified_node):
-                 friend = Node(len(graph), [node.position[0], node.position[1] - 1], global_map[
+            if not(calculation_map[node.position[0]][node.position[1] - 1].icon in banned_list) and not([node.position[0], node.position[1] - 1] in verified_node):
+                 friend = Node(len(graph), [node.position[0], node.position[1] - 1], calculation_map[
                      node.position[0]][node.position[1] - 1].price_move + path_length([node.position[0], node.position[1] - 1], finish_point), [0, 1])
                  friends.append(friend)
                  graph.append(friend)                
@@ -874,7 +875,7 @@ def enemy_a_star_algorithm_move_calculation(global_map, enemy, finish_point):
     graph = []
     verified_node = []
     start_node = Node(0, enemy.global_position, 0, [0, 0])
-    start_node.friends = node_friends_calculation(global_map, graph, start_node, enemy, verified_node)
+    start_node.friends = node_friends_calculation(calculation_map, graph, start_node, verified_node, banned_list)
     graph.append(start_node)
     verified_node.append(start_node.position)
     finding_a_path = True
@@ -895,7 +896,7 @@ def enemy_a_star_algorithm_move_calculation(global_map, enemy, finish_point):
             finding_a_path = False
             
         verified_node.append(node.position)
-        node.friends = node_friends_calculation(global_map, graph, node, enemy, verified_node)
+        node.friends = node_friends_calculation(calculation_map, graph, node, verified_node, banned_list)
         if node.position == finish_point:
             finding_a_path = False
             finish_node = node.number
@@ -1571,14 +1572,14 @@ def master_draw(position, chunk_size:int, go_to_print, global_map, mode_action, 
                 print_line += '☺'
                 if mode_action == 'pointer' and position.pointer == [chunk_size//2, chunk_size//2]:
                     print_line += '<'
-                    pointer_vision = draw_field[line][tile].icon
+                    pointer_vision = draw_field[line][tile]
                 elif mode_action == 'gun' and position.gun == [chunk_size//2, chunk_size//2]:
                     print_line += '+'    
                 else:
                     print_line += ' '
             elif line == position.pointer[0] and tile == position.pointer[1]:
                 print_line += draw_field[line][tile].icon + '<'
-                pointer_vision = draw_field[line][tile].icon
+                pointer_vision = draw_field[line][tile]
             elif line == position.gun[0] and tile == position.gun[1]:
                 print_line += draw_field[line][tile].icon + '+'
             else:
