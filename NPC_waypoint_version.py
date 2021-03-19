@@ -25,9 +25,9 @@ garbage = ['░', '▒', '▓', '█', '☺']
     5)NPC не должны появляться и передвигаться по тайлам, передвижение по которым невозможно 
     6)Добавить необсчитываемых персонажей, являющихся мелкими зверьми. Например: змей и гремучих змей
     7)Реализовать алгоритм поиска пути A* #РЕАЛИЗОВАНО
-    8)Перемещение NPC на динамическом чанке игрока в соответствии с просчитанным на глобальной карте путём
-    9)"Стоимость" перемещения по разным тайлам
-    10)Переделать алгоритм А* что бы он работал как на глобальной карте, так и на динамической.
+    8)Перемещение NPC на динамическом чанке игрока в соответствии с просчитанным на глобальной карте путём #РЕАЛИЗОВАНО
+    9)"Стоимость" перемещения по разным тайлам #РЕАЛИЗОВАНО
+    10)Переделать алгоритм А* что бы он работал как на глобальной карте, так и на динамической #РЕАЛИЗОВАНО
 
     ЛОГИКА ПЕРЕМЕЩЕНИЯ NPC
     NPC делятся на охотников и хаотичных.
@@ -74,10 +74,11 @@ class Temperature:
 
 class Position:
     """ Содержит в себе глобальное местоположение персонажа, расположение в пределах загруженного участка карты и координаты используемых чанков """
-    def __init__(self, assemblage_point:list, dynamic:list, chanks_use_map:list, pointer:list, gun:list):
+    __slots__ = ('assemblage_point', 'dynamic', 'chunks_use_map', 'pointer', 'gun', 'global_position', 'number_chunk', 'check_encounter_position')
+    def __init__(self, assemblage_point:list, dynamic:list, chunks_use_map:list, pointer:list, gun:list):
         self.assemblage_point = assemblage_point
         self.dynamic = dynamic
-        self.chank = chanks_use_map
+        self.chunks_use_map = chunks_use_map
         self.pointer = pointer
         self.gun = gun
         self.global_position = assemblage_point
@@ -125,6 +126,7 @@ class Position:
         
 class Location:
     """ Содержит описание локации """
+    __slots__ = ('name', 'temperature', 'chunk', 'icon', 'price_move')
     def __init__(self, name:str, temperature:float, chunk:list, icon:str, price_move:int):
         self.name = name
         self.temperature = temperature
@@ -134,6 +136,7 @@ class Location:
 
 class Description_location:
     """ Содержит информацию для генератора локаций """
+    __slots__ = ('name', 'temperature', 'main_tileset', 'random_tileset', 'icon', 'price_move')
     def __init__(self, description:list):
         self.name = description[0]
         self.temperature = description[1]
@@ -144,6 +147,7 @@ class Description_location:
 
 class Interfase:
     """ Содержит элементы для последующего вывода на экран """
+    __slots__ = ('game_field', 'biom_map', 'minimap_on', 'point_to_draw', 'text1', 'text2', 'text3', 'text4', 'text5', 'text6', 'text7', 'text8', 'text9', 'text10')
     def __init__(self, game_field, biom_map, minimap_on, text1, text2, text3, text4, text5, text6, text7, text8, text9, text10):
         self.game_field = game_field
         self.biom_map = biom_map
@@ -162,11 +166,12 @@ class Interfase:
 
 class Tile:
     """ Содержит изображение, описание и особое содержание тайла """
+    __slots__ = ('icon', 'description', 'list_of_features', 'price_move')
     def __init__(self, icon):
         self.icon = icon
         self.description = self.getting_attributes(icon, 0)
         self.list_of_features = []
-        self.price_move = self.getting_attributes(icon, 0)
+        self.price_move = self.getting_attributes(icon, 1)
 
     def getting_attributes(self, icon, number):
         ground_dict =   {
@@ -460,7 +465,7 @@ def interaction_processing(global_map, interaction, enemy_list):
                     print(f"{enemy.enemy.name} получил задачу")
                     print(f"interact[1] = {interact[1]}")
                     #enemy.waypoints = enemy_move_calculation(global_map, enemy, interact[1])
-                    enemy.waypoints = enemy_a_star_algorithm_move_calculation(global_map, enemy, interact[1], enemy.enemy.banned_biom)
+                    enemy.waypoints = enemy_a_star_algorithm_move_calculation(global_map, enemy.global_position, interact[1], enemy.enemy.banned_biom)
 
 
 def activity_list_check(activity_list, step):
@@ -493,11 +498,14 @@ def person_dict():
                     '☺h': 'horseman',
                     '☺‰': 'dart',
                     '☺Ð': 'archer',
-                    '☻ ': 'enemy'
+                    '☻ ': 'enemy',
+                    's ': 'snake',
+                    'S ': 'rattlesnake'
                     }
 
 class Action_in_map:
     """ Содержит в себе описание активности и срок её жизни """
+    __slots__ = ('name', 'icon', 'description', 'lifetime', 'birth', 'global_position', 'local_position')
     def __init__(self, name, birth, position_npc, chunk_size):
         self.name = name
         self.icon = action_dict(name, 0)
@@ -825,6 +833,7 @@ def enemy_ideal_move_calculation(start_point, finish_point):
 
 class Node:
     """Содержит узлы графа"""
+    __slots__ = ('number', 'position', 'friends', 'price', 'direction')
     def __init__(self, number, position, price, direction):
         self.number = number
         self.position = position
@@ -832,7 +841,7 @@ class Node:
         self.price = price
         self.direction = direction
 
-def enemy_a_star_algorithm_move_calculation(calculation_map, enemy, finish_point, banned_list):
+def enemy_a_star_algorithm_move_calculation(calculation_map, start_point, finish_point, banned_list):
     """
         Рассчитывает поиск пути по алгоритму A*
     """
@@ -874,7 +883,7 @@ def enemy_a_star_algorithm_move_calculation(calculation_map, enemy, finish_point
 
     graph = []
     verified_node = []
-    start_node = Node(0, enemy.global_position, 0, [0, 0])
+    start_node = Node(0, start_point, 0, [0, 0])
     start_node.friends = node_friends_calculation(calculation_map, graph, start_node, verified_node, banned_list)
     graph.append(start_node)
     verified_node.append(start_node.position)
@@ -932,47 +941,80 @@ def enemy_in_dynamic_chunk(global_map, enemy, position, chunk_size, step):
     if enemy.waypoints:
         if enemy.global_position == enemy.waypoints[0]:
             enemy.waypoints.pop(0)
-    if len(enemy.dynamic_waypoints) > 0:   
-        enemy.dynamic_chunk_position = enemy.dynamic_waypoints[0]
-        enemy.dynamic_waypoints.pop(0)
-    else:
-        enemy_dynamic_chunk_move_calculation(global_map, enemy, chunk_size)
+        if len(enemy.dynamic_waypoints) > 0:   
+            enemy.dynamic_chunk_position = enemy.dynamic_waypoints[0]
+            enemy.dynamic_waypoints.pop(0)
+        else:
+            enemy_a_star_move_dynamic_calculations(global_map, enemy, chunk_size)
     enemy_global_position_recalculation(global_map, enemy, position, chunk_size)
     #print(f"{enemy.enemy.name} проверка вейпоинтов: {enemy.dynamic_waypoints}")
     #print(f"{enemy.enemy.name} проверка нахождения в динамической позиции: {enemy.dynamic_chunk_position} и глобальной: {enemy.global_position}")
 
-def enemy_dynamic_chunk_move_calculation(global_map, enemy, chunk_size):
+
+
+def enemy_a_star_move_dynamic_calculations(global_map, enemy, chunk_size):
     """
-        Рассчитывает точку прибытия и маршрут движения NPC по динамическому чанку
+        Рассчитывает передвижение по динамическому чанку с помощью алгоритма А*
     """
-    if len(enemy.waypoints) > 0:
-        if enemy.waypoints[0] == [enemy.global_position[0] - 1, enemy.global_position[1] - 1]:
-            enemy.dynamic_waypoints = enemy_ideal_move_calculation(enemy.dynamic_chunk_position,
-                                      [enemy.dynamic_chunk_position[0] - chunk_size, enemy.dynamic_chunk_position[1] - chunk_size])
-        elif enemy.waypoints[0] == [enemy.global_position[0] - 1, enemy.global_position[1]]:
-            enemy.dynamic_waypoints = enemy_ideal_move_calculation(enemy.dynamic_chunk_position,
-                                      [enemy.dynamic_chunk_position[0] - chunk_size, enemy.dynamic_chunk_position[1]])
-        elif enemy.waypoints[0] == [enemy.global_position[0] - 1, enemy.global_position[1] + 1]:
-            enemy.dynamic_waypoints = enemy_ideal_move_calculation(enemy.dynamic_chunk_position,
-                                      [enemy.dynamic_chunk_position[0] - chunk_size, enemy.dynamic_chunk_position[1] + chunk_size])
-        elif enemy.waypoints[0] == [enemy.global_position[0], enemy.global_position[1] - 1]:
-            enemy.dynamic_waypoints = enemy_ideal_move_calculation(enemy.dynamic_chunk_position,
-                                      [enemy.dynamic_chunk_position[0], enemy.dynamic_chunk_position[1] - chunk_size])
-        elif enemy.waypoints[0] == [enemy.global_position[0], enemy.global_position[1]]:
-            enemy.dynamic_waypoints = enemy_ideal_move_calculation(enemy.dynamic_chunk_position,
-                                      [enemy.dynamic_chunk_position[0], enemy.dynamic_chunk_position[1]])
-        elif enemy.waypoints[0] == [enemy.global_position[0], enemy.global_position[1] + 1]:
-            enemy.dynamic_waypoints = enemy_ideal_move_calculation(enemy.dynamic_chunk_position,
-                                      [enemy.dynamic_chunk_position[0], enemy.dynamic_chunk_position[1] + chunk_size])
-        elif enemy.waypoints[0] == [enemy.global_position[0] + 1, enemy.global_position[1] - 1]:
-            enemy.dynamic_waypoints = enemy_ideal_move_calculation(enemy.dynamic_chunk_position,
-                                      [enemy.dynamic_chunk_position[0] + chunk_size, enemy.dynamic_chunk_position[1] - chunk_size])
-        elif enemy.waypoints[0] == [enemy.global_position[0] + 1, enemy.global_position[1]]:
-            enemy.dynamic_waypoints = enemy_ideal_move_calculation(enemy.dynamic_chunk_position,
-                                      [enemy.dynamic_chunk_position[0] + chunk_size, enemy.dynamic_chunk_position[1]])
-        elif enemy.waypoints[0] == [enemy.global_position[0] + 1, enemy.global_position[1] + 1]:
-            enemy.dynamic_waypoints = enemy_ideal_move_calculation(enemy.dynamic_chunk_position,
-                                      [enemy.dynamic_chunk_position[0] + chunk_size, enemy.dynamic_chunk_position[1] + chunk_size])
+    use_calculation_map = global_map[enemy.global_position[0]][enemy.global_position[1]].chunk
+    paired_map = global_map[enemy.waypoints[0][0]][enemy.waypoints[0][1]].chunk
+    start_point = [enemy.dynamic_chunk_position[0]%chunk_size, enemy.dynamic_chunk_position[1]%chunk_size]
+    banned_list = ['▲']
+    direction = ''
+    if enemy.global_position[0] > enemy.waypoints[0][0]:
+        suitable_points = []
+        direction = 'up'
+        for number_tile in range(len(use_calculation_map[0])):
+            if not(use_calculation_map[0][number_tile] in banned_list) and not(paired_map[len(paired_map) - 1][number_tile] in banned_list):
+                suitable_points.append([0, number_tile])
+        finish_point = random.choice(suitable_points)
+
+    elif enemy.global_position[0] < enemy.waypoints[0][0]:
+        suitable_points = []
+        direction = 'down'
+        for number_tile in range(len(use_calculation_map[0])):
+            if not(use_calculation_map[len(use_calculation_map) - 1][number_tile] in banned_list) and not(paired_map[0][number_tile] in banned_list):
+                suitable_points.append([len(use_calculation_map) - 1, number_tile])
+        finish_point = random.choice(suitable_points)
+
+    elif enemy.global_position[1] > enemy.waypoints[0][1]:
+        suitable_points = []
+        direction = 'left'
+        for number_line in range(len(use_calculation_map)):
+            if not(use_calculation_map[number_line][0] in banned_list) and not(paired_map[number_line][len(paired_map[0]) - 1] in banned_list):
+                suitable_points.append([number_line, 0])
+        finish_point = random.choice(suitable_points)
+                                 
+    elif enemy.global_position[1] < enemy.waypoints[0][1]:
+        suitable_points = []
+        direction = 'right'
+        for number_line in range(len(use_calculation_map)):
+            if not(use_calculation_map[number_line][0] in banned_list) and not(paired_map[number_line][len(paired_map[0]) - 1] in banned_list):
+                suitable_points.append([number_line, len(use_calculation_map[0]) - 1])
+        finish_point = random.choice(suitable_points)
+
+    #надо посчитать координаты внутри используемого чанка, а потом пересчитать вейпоинты на динамические
+
+    number_of_chunks_y = enemy.dynamic_chunk_position[0]//chunk_size
+    number_of_chunks_x = enemy.dynamic_chunk_position[1]//chunk_size
+    
+    raw_waypoints = enemy_a_star_algorithm_move_calculation(use_calculation_map, start_point, finish_point, banned_list)
+
+    if enemy.dynamic_waypoints:
+        if direction == 'up':
+            raw_waypoints.append([raw_waypoints[-1][0] - 1, raw_waypoints[-1][1]])
+        elif direction == 'down':
+            raw_waypoints.append([raw_waypoints[-1][0] + 1, raw_waypoints[-1][1]])
+        elif direction == 'left':
+            raw_waypoints.append([raw_waypoints[-1][0], raw_waypoints[-1][1] - 1])
+        elif direction == 'right':
+            raw_waypoints.append([raw_waypoints[-1][0], raw_waypoints[-1][1] + 1])
+    enemy.dynamic_waypoints = []
+    for waypoint in raw_waypoints:
+        enemy.dynamic_waypoints.append([waypoint[0] + number_of_chunks_y * chunk_size, waypoint[1] + number_of_chunks_x * chunk_size])
+
+    
+   
 
 def enemy_global_position_recalculation(global_map, enemy, position, chunk_size):
     """
@@ -1191,7 +1233,7 @@ def move_biom_enemy(global_map, enemy):
                     direction_moved.append([enemy.global_position[0], enemy.global_position[1] - 1])
                 elif enemy.global_position[1] + 1 < len(global_map) - 1:
                     direction_moved.append([enemy.global_position[0], enemy.global_position[1] + 1])
-                enemy.global_position = random.choice(direction_moved)
+                enemy.waypoints = random.choice(direction_moved)
     else:
         if random.randrange(10)//8 == 1:
             direction_moved = []
@@ -1203,7 +1245,7 @@ def move_biom_enemy(global_map, enemy):
                 direction_moved.append([enemy.global_position[0], enemy.global_position[1] - 1])
             if enemy.global_position[1] + 1 < len(global_map) - 1:
                 direction_moved.append([enemy.global_position[0], enemy.global_position[1] + 1])
-            enemy.global_position = random.choice(direction_moved)
+            enemy.waypoints = random.choice(direction_moved)
 
 
 
@@ -1662,17 +1704,17 @@ def game_loop(global_map:list, position:list, chunk_size:int, frame_size:list, e
         changing_step = True
         if not_intercept_step[0]:
             mode_action = master_player_action(global_map, position, chunk_size, go_to_print, changing_step, mode_action, interaction)
-        #start = time.time() #проверка времени выполнения
+        start = time.time() #проверка времени выполнения
         if changing_step:
             master_game_events(global_map, enemy_list, position, go_to_print, step, activity_list, chunk_size, interaction)
             step += 1
-        #test1 = time.time() #проверка времени выполнения
+        test1 = time.time() #проверка времени выполнения
         master_draw(position, chunk_size, go_to_print, global_map, mode_action, enemy_list, activity_list)
-        #test2 = time.time() #проверка времени выполнения
+        test2 = time.time() #проверка времени выполнения
         print_frame(go_to_print, frame_size, activity_list)
         #print('step = ', step)
-        #end = time.time() #проверка времени выполнения
-        #print(test1 - start, ' - test1 ', test2 - start, ' - test2 ', end - start, ' - end ') #
+        end = time.time() #проверка времени выполнения
+        print(test1 - start, ' - test1 ', test2 - start, ' - test2 ', end - start, ' - end ') #
              
 
 def main():
