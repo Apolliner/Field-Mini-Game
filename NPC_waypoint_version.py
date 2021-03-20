@@ -923,7 +923,14 @@ def enemy_a_star_algorithm_move_calculation(calculation_map, start_point, finish
                     finish_node = number_node
                     check_node = graph[number_node]
     else:
-        print("По алгоритму А* не нашлось пути")
+        print(f"По алгоритму А* не нашлось пути. На входе было: start_point - {start_point}, finish_point - {finish_point}")
+        test_print = ''
+        for number_line in range(len(calculation_map)):
+            for tile in calculation_map[number_line]:
+                test_print += tile.icon + ' '
+            test_print += '\n'
+        print(test_print)
+            
     
     #print(f"{enemy.enemy.name} получил waypoints - {list(reversed(reversed_waypoints))}")
             
@@ -936,9 +943,10 @@ def enemy_in_dynamic_chunk(global_map, enemy, position, chunk_size, step):
     #print(f"{enemy.enemy.name} сначала имеет вейпоинты: {enemy.dynamic_waypoints}")
     #print(f"{enemy.enemy.name} сначала находился в динамической позиции: {enemy.dynamic_chunk_position} и глобальной: {enemy.global_position}")
     enemy_recalculation_dynamic_chank_position(global_map, enemy, position, chunk_size, step)
-    #print(f"{enemy.enemy.name} теперь находится в динамической позиции: {enemy.dynamic_chunk_position} и глобальной: {enemy.global_position}")
-    #print(f"{enemy.enemy.name} имеет вейпоинты: {enemy.dynamic_waypoints}")
-    if enemy.waypoints:
+    print(f"{enemy.enemy.name} теперь находится в динамической позиции: {enemy.dynamic_chunk_position} и глобальной: {enemy.global_position}")
+    print(f"{enemy.enemy.name} имеет динамичские вейпоинты: {enemy.dynamic_waypoints}")
+    print(f"{enemy.enemy.name} имеет глобальные вейпоинты: {enemy.waypoints}")
+    if len(enemy.waypoints) > 0:
         if enemy.global_position == enemy.waypoints[0]:
             enemy.waypoints.pop(0)
         if len(enemy.dynamic_waypoints) > 0:   
@@ -1000,7 +1008,7 @@ def enemy_a_star_move_dynamic_calculations(global_map, enemy, chunk_size):
     
     raw_waypoints = enemy_a_star_algorithm_move_calculation(use_calculation_map, start_point, finish_point, banned_list)
 
-    if enemy.dynamic_waypoints:
+    if raw_waypoints:
         if direction == 'up':
             raw_waypoints.append([raw_waypoints[-1][0] - 1, raw_waypoints[-1][1]])
         elif direction == 'down':
@@ -1014,8 +1022,6 @@ def enemy_a_star_move_dynamic_calculations(global_map, enemy, chunk_size):
         enemy.dynamic_waypoints.append([waypoint[0] + number_of_chunks_y * chunk_size, waypoint[1] + number_of_chunks_x * chunk_size])
 
     
-   
-
 def enemy_global_position_recalculation(global_map, enemy, position, chunk_size):
     """
         Перерассчитывает глобальную позицию NPC при их перемещении на динамическом чанке
