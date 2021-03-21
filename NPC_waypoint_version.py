@@ -4,6 +4,7 @@ import random
 import string
 import keyboard
 import time
+import math
 
 garbage = ['░', '▒', '▓', '█', '☺']
 
@@ -337,9 +338,9 @@ def description_seed_merge(one_description, two_description):
             one_description[3].append(two_description[3][char])
         one_description[4] = random.choice([one_description[4], two_description[4]])
         if one_description[5] < two_description[5]:
-            one_description[5] = random.randrange(one_description[5], two_description[5], 1)
+            one_description[5] = random.uniform(one_description[5], two_description[5])
         elif one_description[5] > two_description[5]:
-            one_description[5] = random.randrange(two_description[5], one_description[5], 1)
+            one_description[5] = random.uniform(two_description[5], one_description[5])
         
 
 def master_generate(value_region_box:int, game_field_size:int, grid):
@@ -466,8 +467,8 @@ def interaction_processing(global_map, interaction, enemy_list):
                 for enemy in enemy_list:
                     print(f"{enemy.enemy.name} получил задачу")
                     print(f"interact[1] = {interact[1]}")
-                    #enemy.waypoints = enemy_move_calculation(global_map, enemy, interact[1])
-                    enemy.waypoints = enemy_a_star_algorithm_move_calculation(global_map, enemy.global_position, interact[1], enemy.enemy.banned_biom)
+                    if enemy.enemy.type == 'hunter':
+                        enemy.waypoints = enemy_a_star_algorithm_move_calculation(global_map, enemy.global_position, interact[1], enemy.enemy.banned_biom)
 
 
 def activity_list_check(activity_list, step):
@@ -648,7 +649,6 @@ def master_npc_calculation(global_map, enemy_list, position, go_to_print, step, 
     
     
     for enemy in enemy_list:
-        #print(f"{enemy.enemy.name} enemy.waypoints = {enemy.waypoints}")
         if enemy.dynamic_chunk:
             enemy_in_dynamic_chunk(global_map, enemy, position, chunk_size, step)
             pass
@@ -661,26 +661,12 @@ def master_npc_calculation(global_map, enemy_list, position, go_to_print, step, 
 
 def enemy_move_calculation(global_map, enemy, task):
     """
-        Рассчитывает всю траекторию движения NPC
-    """
-    def checking_the_path(global_map, waypoints, enemy):
-        """
-            Проверяет путь на отсутствие преград
-        """
-        not_ok = False
-        for number_waypoint in range(len(waypoints)):
-            if global_map[waypoints[number_waypoint][0]][waypoints[number_waypoint][1]].icon in enemy.enemy.banned_biom:
-                not_ok = True
-                if number_waypoint != 0:
-                    waypoints = waypoints[0: number_waypoint]
-                else:
-                    waypoints = waypoints[0: (number_waypoint + 1)]
-                break
-        return not_ok, waypoints       
+        Рассчитывает всю траекторию движения NPC. НЕ АКТУАЛЬНО
+    """      
 
     def calculating_the_path(global_map, start_point, finish_point, not_ok):
         """
-            Просчитывает путь. Не важно, туда или обратно.
+            Просчитывает путь. Не важно, туда или обратно. НЕ АКТУАЛЬНО
         """
     
         waypoints = enemy_ideal_move_calculation(start_point, finish_point)
@@ -784,55 +770,6 @@ def enemy_move_calculation(global_map, enemy, task):
     else:
         return waypoints
        
-
-def enemy_ideal_move_calculation(start_point, finish_point):
-    """
-        Рассчитывает идеальную траекторию движения NPC
-    """
-    
-    axis_y = finish_point[0] - start_point[0] # длинна стороны и количество шагов
-    axis_x = finish_point[1] - start_point[1] # длинна стороны и количество шагов
-    if abs(axis_y) > abs(axis_x):
-        if axis_x != 0:
-            length_step = abs(axis_y)//abs(axis_x) # на один X столько то Y
-        else:
-            length_step = abs(axis_y)
-        long_side = 'y'
-    else:
-        if axis_y != 0:
-            length_step = abs(axis_x)//abs(axis_y) # на один Y столько то X
-        else:
-            length_step = abs(axis_x)
-        long_side = 'x'
-        
-    waypoints = [start_point]
-        
-    for step in range((abs(axis_y) + abs(axis_x))):
-        if (step + 1)%(length_step + 1) == 0:
-            if long_side == 'y':
-                if axis_y >= 0 and axis_x >= 0 or axis_y < 0 and axis_x >= 0:
-                    waypoints.append([waypoints[step][0], waypoints[step][1] + 1])
-                else:
-                    waypoints.append([waypoints[step][0], waypoints[step][1] - 1])    
-            elif long_side == 'x':
-                if axis_x >= 0 and axis_y >= 0 or axis_x < 0 and axis_y >= 0:
-                    waypoints.append([waypoints[step][0] + 1, waypoints[step][1]])
-                else:
-                    waypoints.append([waypoints[step][0] - 1, waypoints[step][1]])
-        else:
-            if long_side == 'y':
-                if axis_y >= 0 and axis_x >= 0 or axis_y >= 0 and axis_x < 0:
-                    waypoints.append([waypoints[step][0] + 1, waypoints[step][1]])
-                else:
-                    waypoints.append([waypoints[step][0] - 1, waypoints[step][1]])
-            elif long_side == 'x':
-                if axis_x >= 0 and axis_y >= 0 or axis_x >= 0 and axis_y < 0:
-                    waypoints.append([waypoints[step][0], waypoints[step][1] + 1])
-                else:
-                    waypoints.append([waypoints[step][0], waypoints[step][1] - 1])
-
-    return waypoints
-
 class Node:
     """Содержит узлы графа"""
     __slots__ = ('number', 'position', 'friends', 'price', 'direction')
@@ -851,7 +788,7 @@ def enemy_a_star_algorithm_move_calculation(calculation_map, start_point, finish
         """
             Вычисляет примерное расстояния до финиша, для рассчётов стоимости перемещения
         """
-        return (abs(start_point[0] - finish_point[0]) + abs(start_point[1] - finish_point[1]))
+        return abs(math.sqrt((start_point[0] - finish_point[0])**2 + (start_point[1] - finish_point[1])**2))
         
     def node_friends_calculation(calculation_map, graph, node, verified_node, banned_list):
         """
@@ -952,9 +889,7 @@ def enemy_a_star_algorithm_move_calculation(calculation_map, start_point, finish
             test_print += '\n'
  
         print(test_print)
-            
-    
-    #print(f"{enemy.enemy.name} получил waypoints - {list(reversed(reversed_waypoints))}")
+
             
     return list(reversed(reversed_waypoints))
 
@@ -992,8 +927,8 @@ def enemy_a_star_move_dynamic_calculations(global_map, enemy, chunk_size):
     start_point = [enemy.dynamic_chunk_position[0]%chunk_size, enemy.dynamic_chunk_position[1]%chunk_size]
     banned_list = ['▲']
     direction = ''
+    suitable_points = []
     if enemy.global_position[0] > enemy.waypoints[0][0]:
-        suitable_points = []
         direction = 'up'
         for number_tile in range(len(use_calculation_map[0])):
             if not(use_calculation_map[0][number_tile] in banned_list) and not(paired_map[len(paired_map) - 1][number_tile] in banned_list):
@@ -1001,7 +936,6 @@ def enemy_a_star_move_dynamic_calculations(global_map, enemy, chunk_size):
         finish_point = random.choice(suitable_points)
 
     elif enemy.global_position[0] < enemy.waypoints[0][0]:
-        suitable_points = []
         direction = 'down'
         for number_tile in range(len(use_calculation_map[0])):
             if not(use_calculation_map[len(use_calculation_map) - 1][number_tile] in banned_list) and not(paired_map[0][number_tile] in banned_list):
@@ -1009,7 +943,6 @@ def enemy_a_star_move_dynamic_calculations(global_map, enemy, chunk_size):
         finish_point = random.choice(suitable_points)
 
     elif enemy.global_position[1] > enemy.waypoints[0][1]:
-        suitable_points = []
         direction = 'left'
         for number_line in range(len(use_calculation_map)):
             if not(use_calculation_map[number_line][0] in banned_list) and not(paired_map[number_line][len(paired_map[0]) - 1] in banned_list):
@@ -1017,7 +950,6 @@ def enemy_a_star_move_dynamic_calculations(global_map, enemy, chunk_size):
         finish_point = random.choice(suitable_points)
                                  
     elif enemy.global_position[1] < enemy.waypoints[0][1]:
-        suitable_points = []
         direction = 'right'
         for number_line in range(len(use_calculation_map)):
             if not(use_calculation_map[number_line][0] in banned_list) and not(paired_map[number_line][len(paired_map[0]) - 1] in banned_list):
@@ -1028,8 +960,16 @@ def enemy_a_star_move_dynamic_calculations(global_map, enemy, chunk_size):
 
     number_of_chunks_y = enemy.dynamic_chunk_position[0]//chunk_size
     number_of_chunks_x = enemy.dynamic_chunk_position[1]//chunk_size
-    
-    raw_waypoints = enemy_a_star_algorithm_move_calculation(use_calculation_map, start_point, finish_point, banned_list)
+
+    raw_waypoints = enemy_ideal_move_calculation(start_point, finish_point)
+    not_ok, raw_waypoints = checking_the_path(use_calculation_map, raw_waypoints, banned_list)
+    if raw_waypoints:
+        if raw_waypoints[-1] != finish_point:
+            calculation_waypoints = enemy_a_star_algorithm_move_calculation(use_calculation_map, raw_waypoints[-1], finish_point, banned_list)
+            for waypoint in calculation_waypoints:
+                raw_waypoints.append(waypoint)
+    else:
+        raw_waypoints = enemy_a_star_algorithm_move_calculation(use_calculation_map, start_point, finish_point, banned_list)
 
     if raw_waypoints:
         if direction == 'up':
@@ -1045,6 +985,79 @@ def enemy_a_star_move_dynamic_calculations(global_map, enemy, chunk_size):
     for waypoint in raw_waypoints:
         enemy.dynamic_waypoints.append([waypoint[0] + number_of_chunks_y * chunk_size, waypoint[1] + number_of_chunks_x * chunk_size])
 
+
+    test_print = '' # Печать рассчитанной карты
+    for number_line in range(len(use_calculation_map)):
+        for number_tile in range(len(use_calculation_map[number_line])):
+            if [number_line, number_tile] in raw_waypoints:
+                test_print += use_calculation_map[number_line][number_tile].icon + 'L'
+            else:
+                test_print += use_calculation_map[number_line][number_tile].icon + ' '
+        test_print += '\n'
+    print(test_print)
+
+def enemy_ideal_move_calculation(start_point, finish_point):
+    """
+        Рассчитывает идеальную траекторию движения NPC.
+    """
+    
+    axis_y = finish_point[0] - start_point[0] # длинна стороны и количество шагов
+    axis_x = finish_point[1] - start_point[1] # длинна стороны и количество шагов
+    if abs(axis_y) > abs(axis_x):
+        if axis_x != 0:
+            length_step = abs(axis_y)//abs(axis_x) # на один X столько то Y
+        else:
+            length_step = abs(axis_y)
+        long_side = 'y'
+    else:
+        if axis_y != 0:
+            length_step = abs(axis_x)//abs(axis_y) # на один Y столько то X
+        else:
+            length_step = abs(axis_x)
+        long_side = 'x'
+        
+    waypoints = [start_point]
+        
+    for step in range((abs(axis_y) + abs(axis_x))):
+        if (step + 1)%(length_step + 1) == 0:
+            if long_side == 'y':
+                if axis_y >= 0 and axis_x >= 0 or axis_y < 0 and axis_x >= 0:
+                    waypoints.append([waypoints[step][0], waypoints[step][1] + 1])
+                else:
+                    waypoints.append([waypoints[step][0], waypoints[step][1] - 1])    
+            elif long_side == 'x':
+                if axis_x >= 0 and axis_y >= 0 or axis_x < 0 and axis_y >= 0:
+                    waypoints.append([waypoints[step][0] + 1, waypoints[step][1]])
+                else:
+                    waypoints.append([waypoints[step][0] - 1, waypoints[step][1]])
+        else:
+            if long_side == 'y':
+                if axis_y >= 0 and axis_x >= 0 or axis_y >= 0 and axis_x < 0:
+                    waypoints.append([waypoints[step][0] + 1, waypoints[step][1]])
+                else:
+                    waypoints.append([waypoints[step][0] - 1, waypoints[step][1]])
+            elif long_side == 'x':
+                if axis_x >= 0 and axis_y >= 0 or axis_x >= 0 and axis_y < 0:
+                    waypoints.append([waypoints[step][0], waypoints[step][1] + 1])
+                else:
+                    waypoints.append([waypoints[step][0], waypoints[step][1] - 1])
+
+    return waypoints
+
+def checking_the_path(calculation_map, waypoints, banned_list):
+        """
+            Проверяет путь на отсутствие преград.
+        """
+        not_ok = False
+        for number_waypoint in range(len(waypoints)):
+            if calculation_map[waypoints[number_waypoint][0]][waypoints[number_waypoint][1]].icon in banned_list:
+                not_ok = True
+                if number_waypoint != 0:
+                    waypoints = waypoints[0: number_waypoint]
+                else:
+                    waypoints = waypoints[0: (number_waypoint + 1)]
+                break
+        return not_ok, waypoints 
     
 def enemy_global_position_recalculation(global_map, enemy, position, chunk_size):
     """
