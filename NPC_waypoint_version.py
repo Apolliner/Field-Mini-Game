@@ -12,8 +12,8 @@ garbage = ['░', '▒', '▓', '█', '☺']
 
     ИЗВЕСТНЫЕ БАГИ:
     1)Проверка доступности тайла для шага за пределами карты в стандартном алгоритме
-    2)Попытка отрисовки за пределами динамического чанка
-    3)Отталкивание наверх по глобальным координатам при попытке приблизиться
+    2)Попытка отрисовки за пределами динамического чанка #ИСПРАВЛЕНО
+    3)Отталкивание наверх по глобальным координатам при попытке приблизиться #ИСПРАВЛЕНО
     
 
     РЕАЛИЗОВАТЬ:
@@ -28,6 +28,8 @@ garbage = ['░', '▒', '▓', '█', '☺']
     8)Перемещение NPC на динамическом чанке игрока в соответствии с просчитанным на глобальной карте путём #РЕАЛИЗОВАНО
     9)"Стоимость" перемещения по разным тайлам #РЕАЛИЗОВАНО
     10)Переделать алгоритм А* что бы он работал как на глобальной карте, так и на динамической #РЕАЛИЗОВАНО
+    11)Улучшить логику нахождения финишной точки при передвижении по динамическому чанку. Она должна определяться в зависимости от следующего
+    за ней вейпоинта, текущего положения персонажа и "стоимости" финишного вейпоинта.
 
     ЛОГИКА ПЕРЕМЕЩЕНИЯ NPC
     NPC делятся на охотников и хаотичных.
@@ -175,20 +177,20 @@ class Tile:
 
     def getting_attributes(self, icon, number):
         ground_dict =   {
-                        'j': ['бархан', 5],
-                        '.': ['горячий песок', 5],
-                        ',': ['жухлая трава', 2],
+                        'j': ['бархан', 1],
+                        '.': ['горячий песок', 1],
+                        ',': ['жухлая трава', 1],
                         'o': ['валун', 10],
                         'A': ['холм', 10],
                         '▲': ['скала', 20],
-                        'i': ['кактус', 5],
-                        ':': ['солончак', 3],
-                        ';': ['солончак', 3],
-                        '„': ['трава', 2],
-                        'u': ['высокая трава', 4],
+                        'i': ['кактус', 1],
+                        ':': ['солончак', 1],
+                        ';': ['солончак', 1],
+                        '„': ['трава', 1],
+                        'u': ['высокая трава', 1],
                         'ü': ['колючая трава', 10],
-                        'F': ['чахлое дерево', 2],
-                        'P': ['раскидистое дерево', 3],
+                        'F': ['чахлое дерево', 1],
+                        'P': ['раскидистое дерево', 1],
                         '~': ['солёная вода', 20],
                         '??': ['ничего', 10],
                         }
@@ -913,7 +915,7 @@ def enemy_a_star_algorithm_move_calculation(calculation_map, start_point, finish
             finding_a_path = False
             finish_node = node.number
         step_count += 1
-        if step_count == 300:
+        if step_count == 200:
             sucess = False
             finding_a_path = False
     if sucess:
@@ -969,6 +971,7 @@ def enemy_in_dynamic_chunk(global_map, enemy, position, chunk_size, step):
     if len(enemy.waypoints) > 0:
         if enemy.global_position == enemy.waypoints[0]:
             enemy.waypoints.pop(0)
+    if len(enemy.waypoints) > 0:
         if len(enemy.dynamic_waypoints) > 0:   
             enemy.dynamic_chunk_position = enemy.dynamic_waypoints[0]
             enemy.dynamic_waypoints.pop(0)
@@ -1260,7 +1263,7 @@ def move_biom_enemy(global_map, enemy):
                     direction_moved.append([enemy.global_position[0], enemy.global_position[1] - 1])
                 elif enemy.global_position[1] + 1 < len(global_map) - 1:
                     direction_moved.append([enemy.global_position[0], enemy.global_position[1] + 1])
-                enemy.waypoints = random.choice(direction_moved)
+                enemy.waypoints = [random.choice(direction_moved)]
     else:
         if random.randrange(10)//8 == 1:
             direction_moved = []
@@ -1272,7 +1275,7 @@ def move_biom_enemy(global_map, enemy):
                 direction_moved.append([enemy.global_position[0], enemy.global_position[1] - 1])
             if enemy.global_position[1] + 1 < len(global_map) - 1:
                 direction_moved.append([enemy.global_position[0], enemy.global_position[1] + 1])
-            enemy.waypoints = random.choice(direction_moved)
+            enemy.waypoints = [random.choice(direction_moved)]
 
 
 
