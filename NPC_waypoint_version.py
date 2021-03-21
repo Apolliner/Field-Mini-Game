@@ -175,21 +175,21 @@ class Tile:
 
     def getting_attributes(self, icon, number):
         ground_dict =   {
-                        'j': ['бархан', 15],
-                        '.': ['горячий песок', 10],
+                        'j': ['бархан', 5],
+                        '.': ['горячий песок', 5],
                         ',': ['жухлая трава', 2],
-                        'o': ['валун', 15],
-                        'A': ['холм', 15],
-                        '▲': ['скала', 50],
-                        'i': ['кактус', 20],
-                        ':': ['солончак', 5],
-                        ';': ['солончак', 7],
-                        '„': ['трава', 3],
-                        'u': ['высокая трава', 8],
-                        'ü': ['колючая трава', 15],
-                        'F': ['чахлое дерево', 5],
-                        'P': ['раскидистое дерево', 5],
-                        '~': ['солёная вода', 50],
+                        'o': ['валун', 10],
+                        'A': ['холм', 10],
+                        '▲': ['скала', 20],
+                        'i': ['кактус', 5],
+                        ':': ['солончак', 3],
+                        ';': ['солончак', 3],
+                        '„': ['трава', 2],
+                        'u': ['высокая трава', 4],
+                        'ü': ['колючая трава', 10],
+                        'F': ['чахлое дерево', 2],
+                        'P': ['раскидистое дерево', 3],
+                        '~': ['солёная вода', 20],
                         '??': ['ничего', 10],
                         }
         return ground_dict[icon][number]       
@@ -856,29 +856,32 @@ def enemy_a_star_algorithm_move_calculation(calculation_map, start_point, finish
             Вычисляет соседние узлы графа
         """
         friends = []
-        if 0 < node.position[0] < (len(calculation_map) - 1):
-            if not(calculation_map[node.position[0] + 1][node.position[1]].icon in banned_list) and not([node.position[0] + 1, node.position[1]] in verified_node):
-                 friend = Node(len(graph), [node.position[0] + 1, node.position[1]], calculation_map[
-                     node.position[0] + 1][node.position[1]].price_move + path_length([node.position[0] + 1, node.position[1]], finish_point), [-1, 0])
-                 friends.append(friend)
-                 graph.append(friend)                                                                                              
-                                                                                                               
-            if not(calculation_map[node.position[0] - 1][node.position[1]].icon in banned_list) and not([node.position[0] - 1, node.position[1]] in verified_node):
-                 friend = Node(len(graph), [node.position[0] - 1, node.position[1]], calculation_map[
-                     node.position[0] - 1][node.position[1]].price_move + path_length([node.position[0] - 1, node.position[1]], finish_point), [1, 0])
-                 friends.append(friend)
-                 graph.append(friend)                
-        if 0 < node.position[1] < (len(calculation_map) - 1):                                                                                                  
-            if not(calculation_map[node.position[0]][node.position[1] + 1].icon in banned_list) and not([node.position[0], node.position[1] + 1] in verified_node):
-                 friend = Node(len(graph), [node.position[0], node.position[1] + 1], calculation_map[
-                     node.position[0]][node.position[1] + 1].price_move + path_length([node.position[0], node.position[1] + 1], finish_point), [0, -1])
-                 friends.append(friend)
-                 graph.append(friend)                
-            if not(calculation_map[node.position[0]][node.position[1] - 1].icon in banned_list) and not([node.position[0], node.position[1] - 1] in verified_node):
-                 friend = Node(len(graph), [node.position[0], node.position[1] - 1], calculation_map[
-                     node.position[0]][node.position[1] - 1].price_move + path_length([node.position[0], node.position[1] - 1], finish_point), [0, 1])
-                 friends.append(friend)
-                 graph.append(friend)                
+        if 0 <= node.position[0] < len(calculation_map):
+            if node.position[0] + 1 < len(calculation_map):
+                if not(calculation_map[node.position[0] + 1][node.position[1]].icon in banned_list) and not([node.position[0] + 1, node.position[1]] in verified_node):
+                    friend = Node(len(graph), [node.position[0] + 1, node.position[1]], calculation_map[
+                             node.position[0] + 1][node.position[1]].price_move + path_length([node.position[0] + 1, node.position[1]], finish_point), [-1, 0])
+                    friends.append(friend)
+                    graph.append(friend)                                                                                              
+            if node.position[0] - 1 >= 0:                                                                                                   
+                if not(calculation_map[node.position[0] - 1][node.position[1]].icon in banned_list) and not([node.position[0] - 1, node.position[1]] in verified_node):
+                    friend = Node(len(graph), [node.position[0] - 1, node.position[1]], calculation_map[
+                            node.position[0] - 1][node.position[1]].price_move + path_length([node.position[0] - 1, node.position[1]], finish_point), [1, 0])
+                    friends.append(friend)
+                    graph.append(friend)                
+        if 0 <= node.position[1] < len(calculation_map):
+            if node.position[1] + 1 < len(calculation_map):
+                if not(calculation_map[node.position[0]][node.position[1] + 1].icon in banned_list) and not([node.position[0], node.position[1] + 1] in verified_node):
+                    friend = Node(len(graph), [node.position[0], node.position[1] + 1], calculation_map[
+                            node.position[0]][node.position[1] + 1].price_move + path_length([node.position[0], node.position[1] + 1], finish_point), [0, -1])
+                    friends.append(friend)
+                    graph.append(friend)
+            if node.position[1] - 1 >= 0:
+                if not(calculation_map[node.position[0]][node.position[1] - 1].icon in banned_list) and not([node.position[0], node.position[1] - 1] in verified_node):
+                    friend = Node(len(graph), [node.position[0], node.position[1] - 1], calculation_map[
+                            node.position[0]][node.position[1] - 1].price_move + path_length([node.position[0], node.position[1] - 1], finish_point), [0, 1])
+                    friends.append(friend)
+                    graph.append(friend)                
         return friends
 
     graph = []
@@ -922,13 +925,30 @@ def enemy_a_star_algorithm_move_calculation(calculation_map, start_point, finish
                 if graph[number_node].position == preview_node:
                     finish_node = number_node
                     check_node = graph[number_node]
+        test_print = ''
+        for number_line in range(len(calculation_map)):
+            for number_tile in range(len(calculation_map[number_line])):
+                
+                if [number_line, number_tile] in reversed_waypoints:
+                    test_print += calculation_map[number_line][number_tile].icon + 'v'
+                elif [number_line, number_tile] in verified_node:
+                    test_print += calculation_map[number_line][number_tile].icon + 'x'
+                else:
+                    test_print += calculation_map[number_line][number_tile].icon + ' '
+            test_print += '\n'
+ 
+        print(test_print)
     else:
         print(f"По алгоритму А* не нашлось пути. На входе было: start_point - {start_point}, finish_point - {finish_point}")
         test_print = ''
         for number_line in range(len(calculation_map)):
-            for tile in calculation_map[number_line]:
-                test_print += tile.icon + ' '
+            for number_tile in range(len(calculation_map[number_line])):
+                if [number_line, number_tile] in verified_node:
+                    test_print += calculation_map[number_line][number_tile].icon + 'x'
+                else:
+                    test_print += calculation_map[number_line][number_tile].icon + ' '
             test_print += '\n'
+ 
         print(test_print)
             
     
@@ -944,7 +964,7 @@ def enemy_in_dynamic_chunk(global_map, enemy, position, chunk_size, step):
     #print(f"{enemy.enemy.name} сначала находился в динамической позиции: {enemy.dynamic_chunk_position} и глобальной: {enemy.global_position}")
     enemy_recalculation_dynamic_chank_position(global_map, enemy, position, chunk_size, step)
     print(f"{enemy.enemy.name} теперь находится в динамической позиции: {enemy.dynamic_chunk_position} и глобальной: {enemy.global_position}")
-    print(f"{enemy.enemy.name} имеет динамичские вейпоинты: {enemy.dynamic_waypoints}")
+    print(f"{enemy.enemy.name} имеет динамические вейпоинты: {enemy.dynamic_waypoints}")
     print(f"{enemy.enemy.name} имеет глобальные вейпоинты: {enemy.waypoints}")
     if len(enemy.waypoints) > 0:
         if enemy.global_position == enemy.waypoints[0]:
@@ -1017,6 +1037,7 @@ def enemy_a_star_move_dynamic_calculations(global_map, enemy, chunk_size):
             raw_waypoints.append([raw_waypoints[-1][0], raw_waypoints[-1][1] - 1])
         elif direction == 'right':
             raw_waypoints.append([raw_waypoints[-1][0], raw_waypoints[-1][1] + 1])
+    
     enemy.dynamic_waypoints = []
     for waypoint in raw_waypoints:
         enemy.dynamic_waypoints.append([waypoint[0] + number_of_chunks_y * chunk_size, waypoint[1] + number_of_chunks_x * chunk_size])
