@@ -31,6 +31,8 @@ garbage = ['░', '▒', '▓', '█', '☺']
     10)Переделать алгоритм А* что бы он работал как на глобальной карте, так и на динамической #РЕАЛИЗОВАНО
     11)Улучшить логику нахождения финишной точки при передвижении по динамическому чанку. Она должна определяться в зависимости от следующего
     за ней вейпоинта, текущего положения персонажа и "стоимости" финишного вейпоинта.
+    12)Реализовать проверку на возможность пройти от одной динамической точки до другой напрямую, путём проверки нет ли на прямой линии х и у
+    путевой точки с бОльшим индексом.
 
     ЛОГИКА ПЕРЕМЕЩЕНИЯ NPC
     NPC делятся на охотников и хаотичных.
@@ -788,7 +790,7 @@ def enemy_a_star_algorithm_move_calculation(calculation_map, start_point, finish
         """
             Вычисляет примерное расстояния до финиша, для рассчётов стоимости перемещения
         """
-        return abs(math.sqrt((start_point[0] - finish_point[0])**2 + (start_point[1] - finish_point[1])**2))
+        return math.sqrt((start_point[0] - finish_point[0])**2 + (start_point[1] - finish_point[1])**2)
         
     def node_friends_calculation(calculation_map, graph, node, verified_node, banned_list):
         """
@@ -928,33 +930,50 @@ def enemy_a_star_move_dynamic_calculations(global_map, enemy, chunk_size):
     banned_list = ['▲']
     direction = ''
     suitable_points = []
+    reserve_points = []
     if enemy.global_position[0] > enemy.waypoints[0][0]:
         direction = 'up'
         for number_tile in range(len(use_calculation_map[0])):
             if not(use_calculation_map[0][number_tile].icon in banned_list) and not(paired_map[len(paired_map) - 1][number_tile].icon in banned_list):
-                suitable_points.append([0, number_tile])
-        finish_point = random.choice(suitable_points)
+                if use_calculation_map[0][number_tile].price_move <= 10:
+                    suitable_points.append([0, number_tile])
+                else:
+                    reserve_points.append([0, number_tile])
+        
 
     elif enemy.global_position[0] < enemy.waypoints[0][0]:
         direction = 'down'
         for number_tile in range(len(use_calculation_map[0])):
             if not(use_calculation_map[len(use_calculation_map) - 1][number_tile].icon in banned_list) and not(paired_map[0][number_tile].icon in banned_list):
-                suitable_points.append([len(use_calculation_map) - 1, number_tile])
-        finish_point = random.choice(suitable_points)
+                if use_calculation_map[len(use_calculation_map) - 1][number_tile].price_move <= 10:
+                    suitable_points.append([len(use_calculation_map) - 1, number_tile])
+                else:
+                    reserve_points.append([len(use_calculation_map) - 1, number_tile])
 
     elif enemy.global_position[1] > enemy.waypoints[0][1]:
         direction = 'left'
         for number_line in range(len(use_calculation_map)):
             if not(use_calculation_map[number_line][0].icon in banned_list) and not(paired_map[number_line][len(paired_map[0]) - 1].icon in banned_list):
-                suitable_points.append([number_line, 0])
-        finish_point = random.choice(suitable_points)
+                if use_calculation_map[number_line][0].price_move <= 10:
+                    suitable_points.append([number_line, 0])
+                else:
+                    reserve_points.append([number_line, 0])
                                  
     elif enemy.global_position[1] < enemy.waypoints[0][1]:
         direction = 'right'
         for number_line in range(len(use_calculation_map)):
-            if not(use_calculation_map[number_line][0].icon in banned_list) and not(paired_map[number_line][len(paired_map[0]) - 1].icon in banned_list):
-                suitable_points.append([number_line, len(use_calculation_map[0]) - 1])
+            if not(use_calculation_map[number_line][len(use_calculation_map) - 1].icon in banned_list) and not(paired_map[number_line][0].icon in banned_list):
+                if use_calculation_map[number_line][len(use_calculation_map) - 1].price_move <= 10:
+                    suitable_points.append([number_line, len(use_calculation_map[0]) - 1])
+                else:
+                    reserve_points.append([number_line, len(use_calculation_map[0]) - 1])
+
+    if suitable_points:   
         finish_point = random.choice(suitable_points)
+    elif reserve_points:
+        finish_point = random.choice(reserve_points)
+    else:
+        finish_point = [random.randrange(len(use_calculation_map)), random.randrange(len(use_calculation_map))]
 
     #надо посчитать координаты внутри используемого чанка, а потом пересчитать вейпоинты на динамические
 
