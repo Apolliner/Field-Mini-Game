@@ -181,8 +181,8 @@ class Tile:
                         'j': ['бархан', 1],
                         '.': ['горячий песок', 1],
                         ',': ['жухлая трава', 1],
-                        'o': ['валун', 10],
-                        'A': ['холм', 10],
+                        'o': ['валун', 15],
+                        'A': ['холм', 15],
                         '▲': ['скала', 20],
                         'i': ['кактус', 1],
                         ':': ['солончак', 1],
@@ -852,7 +852,7 @@ def enemy_a_star_algorithm_move_calculation(calculation_map, start_point, finish
             finding_a_path = False
             finish_node = node.number
         step_count += 1
-        if step_count == 200:
+        if step_count == 250:
             sucess = False
             finding_a_path = False
     if sucess:
@@ -931,28 +931,28 @@ def enemy_a_star_move_dynamic_calculations(global_map, enemy, chunk_size):
     if enemy.global_position[0] > enemy.waypoints[0][0]:
         direction = 'up'
         for number_tile in range(len(use_calculation_map[0])):
-            if not(use_calculation_map[0][number_tile] in banned_list) and not(paired_map[len(paired_map) - 1][number_tile] in banned_list):
+            if not(use_calculation_map[0][number_tile].icon in banned_list) and not(paired_map[len(paired_map) - 1][number_tile].icon in banned_list):
                 suitable_points.append([0, number_tile])
         finish_point = random.choice(suitable_points)
 
     elif enemy.global_position[0] < enemy.waypoints[0][0]:
         direction = 'down'
         for number_tile in range(len(use_calculation_map[0])):
-            if not(use_calculation_map[len(use_calculation_map) - 1][number_tile] in banned_list) and not(paired_map[0][number_tile] in banned_list):
+            if not(use_calculation_map[len(use_calculation_map) - 1][number_tile].icon in banned_list) and not(paired_map[0][number_tile].icon in banned_list):
                 suitable_points.append([len(use_calculation_map) - 1, number_tile])
         finish_point = random.choice(suitable_points)
 
     elif enemy.global_position[1] > enemy.waypoints[0][1]:
         direction = 'left'
         for number_line in range(len(use_calculation_map)):
-            if not(use_calculation_map[number_line][0] in banned_list) and not(paired_map[number_line][len(paired_map[0]) - 1] in banned_list):
+            if not(use_calculation_map[number_line][0].icon in banned_list) and not(paired_map[number_line][len(paired_map[0]) - 1].icon in banned_list):
                 suitable_points.append([number_line, 0])
         finish_point = random.choice(suitable_points)
                                  
     elif enemy.global_position[1] < enemy.waypoints[0][1]:
         direction = 'right'
         for number_line in range(len(use_calculation_map)):
-            if not(use_calculation_map[number_line][0] in banned_list) and not(paired_map[number_line][len(paired_map[0]) - 1] in banned_list):
+            if not(use_calculation_map[number_line][0].icon in banned_list) and not(paired_map[number_line][len(paired_map[0]) - 1].icon in banned_list):
                 suitable_points.append([number_line, len(use_calculation_map[0]) - 1])
         finish_point = random.choice(suitable_points)
 
@@ -1050,7 +1050,8 @@ def checking_the_path(calculation_map, waypoints, banned_list):
         """
         not_ok = False
         for number_waypoint in range(len(waypoints)):
-            if calculation_map[waypoints[number_waypoint][0]][waypoints[number_waypoint][1]].icon in banned_list:
+            if calculation_map[waypoints[number_waypoint][0]][waypoints[number_waypoint][1]].icon in banned_list or calculation_map[waypoints[number_waypoint][0]][waypoints[number_waypoint][1]].price_move > 10:
+                print(f"Обнаружено препятствие в позиции {waypoints[number_waypoint]} price_move = {calculation_map[waypoints[number_waypoint][0]][waypoints[number_waypoint][1]].price_move}")
                 not_ok = True
                 if number_waypoint != 0:
                     waypoints = waypoints[0: number_waypoint]
