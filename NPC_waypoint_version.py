@@ -316,8 +316,8 @@ def selecting_generator(seed):
     seed_dict = {  
                     0: ['desert',             [40.0,60.0], ['.'],                 ['j'],            'j',        20],
                     1: ['semidesert',         [35.0,50.0], ['.', ','],            ['▲', 'o', 'i'],  '.',        10],
-                    2: ['cliff semidesert',   [35.0,50.0], ['▲', 'A', '.', ','],  ['o', 'i'],       'A',        15],
-                    3: ['saline land',        [40.0,50.0], [';'],                 [':'],            ';',        20],
+                    2: ['cliff semidesert',   [35.0,50.0], ['▲', 'A', '.', ','],  ['o', 'i'],       'A',        7],
+                    3: ['saline land',        [40.0,50.0], [';'],                 [':'],            ';',        15],
                     4: ['field',              [20.0,35.0], ['u', '„', ','],       ['ü', 'o'],       '„',         5],
                     5: ['dried field',        [30.0,40.0], ['„', ','],            ['o', 'u'],       ',',         2],
                     6: ['oasis',              [15.0,30.0], ['F', '„', '~'],       ['P', ','],       'P',         0],
@@ -895,6 +895,91 @@ def enemy_a_star_algorithm_move_calculation(calculation_map, start_point, finish
             
     return list(reversed(reversed_waypoints))
 
+def path_straightener(calculation_map, waypoints, banned_list):
+    """
+        Проверяет, можно ли из путевой точки с малым индексом, срезать напрямую до точки с большим индексом.
+        Сначала находит все точки, которые можно достичь прямыми путями из стартовой точки, и, начинает проверять
+        с точки с бОльшим индексом.
+    """
+    def straight_path(calculation_map, start_point, second_point, finish_point, banned_list):
+        """
+            Проверяет доступность прямого пути между двумя точками. В случае удачи строит между ними путь не включая начальную и конечную.
+        """
+        new_waypoints = [start_point]
+        not_ok = False
+        if start_point[0] == finish_point[0]:
+            if start_point[1] < finish_point[1]:
+                while new_waypoints[-1][1] < finish_point[1]:
+                    new_waypoint = [new_waypoints[-1][0], new_waypoints[-1][1] + 1]
+                    if not(calculation_map[new_waypoint[0]][new_waypoint[1]].icon in banned_list) and calculation_map[new_waypoint[0]][new_waypoint[1]].price_move <= 10 and not(new_waypoint == second_point):
+                        new_waypoints.append(new_waypoint)
+                    else:
+                        not_ok = True
+                        break
+            else:
+                while new_waypoints[-1][1] > finish_point[1]:
+                    new_waypoint = [new_waypoints[-1][0], new_waypoints[-1][1] - 1]
+                    if not(calculation_map[new_waypoint[0]][new_waypoint[1]].icon in banned_list) and calculation_map[new_waypoint[0]][new_waypoint[1]].price_move <= 10 and not(new_waypoint == second_point):
+                        new_waypoints.append(new_waypoint)
+                    else:
+                        not_ok = True
+                        break
+                
+        elif start_point[1] == finish_point[1]:
+            if start_point[0] < finish_point[0]:
+                while new_waypoints[-1][0] < finish_point[0]:
+                    new_waypoint = [new_waypoints[-1][0] + 1, new_waypoints[-1][1]]
+                    if not(calculation_map[new_waypoint[0]][new_waypoint[1]].icon in banned_list) and calculation_map[new_waypoint[0]][new_waypoint[1]].price_move <= 10 and not(new_waypoint == second_point):
+                        new_waypoints.append(new_waypoint)
+                    else:
+                        not_ok = True
+                        break
+            else:
+                while new_waypoints[-1][0] > finish_point[0]:
+                    new_waypoint = [new_waypoints[-1][0] - 1, new_waypoints[-1][1]]
+                    if not(calculation_map[new_waypoint[0]][new_waypoint[1]].icon in banned_list) and calculation_map[new_waypoint[0]][new_waypoint[1]].price_move <= 10 and not(new_waypoint == second_point):
+                        new_waypoints.append(new_waypoint)
+                    else:
+                        not_ok = True
+                        break
+        if not_ok:
+            return []
+        else:
+            return new_waypoints
+        
+    verified_points = []
+    start_check = 0
+    for number_check_waypoint in range(start_check, len(waypoints) - 1):
+        found_points = []
+        if number_check_waypoint >= start_check:
+            for number_waypoint in range(number_check_waypoint + 2, len(waypoints)):
+                if waypoints[number_check_waypoint][0] == waypoints[number_waypoint][0]:
+                    found_points.append(number_waypoint)
+                if waypoints[number_check_waypoint][1] == waypoints[number_waypoint][1]:
+                    found_points.append(number_waypoint)
+            while found_points:
+                check_point = max(found_points)
+                found_points.remove(check_point)
+                new_waypoints = straight_path(calculation_map, waypoints[number_check_waypoint], waypoints[number_check_waypoint + 1], waypoints[check_point], banned_list)
+                if new_waypoints:
+                    first_waypoints = waypoints[0: number_check_waypoint]
+                    #print(f'first_waypoints - {first_waypoints}')
+                    second_waypoints = waypoints[check_point: (len(waypoints) + 1)]
+                    #print(f'second_waypoints - {second_waypoints}')
+                    waypoints = []
+                    for first_waypoint in first_waypoints:
+                        waypoints.append(first_waypoint)
+                    for new_waypoint in new_waypoints:
+                        waypoints.append(new_waypoint)
+                    for second_waypoint in second_waypoints:
+                        waypoints.append(second_waypoint)
+                    start_check = check_point
+                found_points = []
+            #print('Цикл while found_points кончился')
+    return waypoints
+                 
+    
+
 def enemy_in_dynamic_chunk(global_map, enemy, position, chunk_size, step):
     """
         Обрабатывает поведение NPC на динамическом чанке игрока
@@ -999,11 +1084,6 @@ def enemy_a_star_move_dynamic_calculations(global_map, enemy, chunk_size):
             raw_waypoints.append([raw_waypoints[-1][0], raw_waypoints[-1][1] - 1])
         elif direction == 'right':
             raw_waypoints.append([raw_waypoints[-1][0], raw_waypoints[-1][1] + 1])
-    
-    enemy.dynamic_waypoints = []
-    for waypoint in raw_waypoints:
-        enemy.dynamic_waypoints.append([waypoint[0] + number_of_chunks_y * chunk_size, waypoint[1] + number_of_chunks_x * chunk_size])
-
 
     test_print = '' # Печать рассчитанной карты
     for number_line in range(len(use_calculation_map)):
@@ -1014,6 +1094,25 @@ def enemy_a_star_move_dynamic_calculations(global_map, enemy, chunk_size):
                 test_print += use_calculation_map[number_line][number_tile].icon + ' '
         test_print += '\n'
     print(test_print)
+
+    raw_waypoints = path_straightener(use_calculation_map, raw_waypoints, banned_list)
+
+    test_print = '' # Печать перессчитанной карты
+    for number_line in range(len(use_calculation_map)):
+        for number_tile in range(len(use_calculation_map[number_line])):
+            if [number_line, number_tile] in raw_waypoints:
+                test_print += use_calculation_map[number_line][number_tile].icon + 'M'
+            else:
+                test_print += use_calculation_map[number_line][number_tile].icon + ' '
+        test_print += '\n'
+    print(test_print)
+    print(raw_waypoints)
+    enemy.dynamic_waypoints = []
+    for waypoint in raw_waypoints:
+        enemy.dynamic_waypoints.append([waypoint[0] + (number_of_chunks_y * chunk_size), waypoint[1] + (number_of_chunks_x * chunk_size)])
+
+
+    
 
 def enemy_ideal_move_calculation(start_point, finish_point):
     """
@@ -1069,14 +1168,22 @@ def checking_the_path(calculation_map, waypoints, banned_list):
         """
         not_ok = False
         for number_waypoint in range(len(waypoints)):
-            if calculation_map[waypoints[number_waypoint][0]][waypoints[number_waypoint][1]].icon in banned_list or calculation_map[waypoints[number_waypoint][0]][waypoints[number_waypoint][1]].price_move > 10:
-                print(f"Обнаружено препятствие в позиции {waypoints[number_waypoint]} price_move = {calculation_map[waypoints[number_waypoint][0]][waypoints[number_waypoint][1]].price_move}")
+            print(f'number_waypoint - {number_waypoint}, waypoints - {waypoints}')
+            if waypoints[number_waypoint][0] >= len(calculation_map) or waypoints[number_waypoint][1] >= len(calculation_map):
+                if calculation_map[waypoints[number_waypoint][0]][waypoints[number_waypoint][1]].icon in banned_list or calculation_map[waypoints[number_waypoint][0]][waypoints[number_waypoint][1]].price_move > 10:
+                    not_ok = True
+                    if number_waypoint != 0:
+                        waypoints = waypoints[0: number_waypoint]
+                    else:
+                        waypoints = waypoints[0: (number_waypoint + 1)]
+                        break
+            else:
                 not_ok = True
                 if number_waypoint != 0:
                     waypoints = waypoints[0: number_waypoint]
                 else:
                     waypoints = waypoints[0: (number_waypoint + 1)]
-                break
+                    break
         return not_ok, waypoints 
     
 def enemy_global_position_recalculation(global_map, enemy, position, chunk_size):
@@ -1159,6 +1266,7 @@ def enemy_dynamic_chunk_check(global_map, enemy_list, position, step, chunk_size
         else:
             enemy.dynamic_waypoints = []
             enemy.dynamic_chunk = False
+            
 def enemy_hunter_emulation_life(global_map, enemy, go_to_print, step, activity_list, chunk_size):
     """
         Обрабатывает жизнь hunter NPC за кадром, на глобальной карте
