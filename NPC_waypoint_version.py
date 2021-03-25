@@ -467,8 +467,8 @@ def interaction_processing(global_map, interaction, enemy_list):
         for interact in interaction:
             if interact[0] == 'task_point_all_enemies':
                 for enemy in enemy_list:
-                    print(f"{enemy.enemy.name} получил задачу")
-                    print(f"interact[1] = {interact[1]}")
+                    #print(f"{enemy.enemy.name} получил задачу")
+                    #print(f"interact[1] = {interact[1]}")
                     if enemy.enemy.type == 'hunter':
                         enemy.waypoints = enemy_a_star_algorithm_move_calculation(global_map, enemy.global_position, interact[1], enemy.enemy.banned_biom)
 
@@ -554,6 +554,7 @@ class Enemy:
         self.step_exit_from_assemblage_point = 0
         self.waypoints = []
         self.dynamic_waypoints = []
+        self.alarm = False
 
 class Horseman(Enemy):
     """ Отвечает за всадников """
@@ -659,118 +660,6 @@ def master_npc_calculation(global_map, enemy_list, position, go_to_print, step, 
                 enemy_hunter_emulation_life(global_map, enemy, go_to_print, step, activity_list, chunk_size)
             else:
                 enemy_chaotic_emulation_life(global_map, enemy, go_to_print, step, activity_list, chunk_size)
-
-
-def enemy_move_calculation(global_map, enemy, task):
-    """
-        Рассчитывает всю траекторию движения NPC. НЕ АКТУАЛЬНО
-    """      
-
-    def calculating_the_path(global_map, start_point, finish_point, not_ok):
-        """
-            Просчитывает путь. Не важно, туда или обратно. НЕ АКТУАЛЬНО
-        """
-    
-        waypoints = enemy_ideal_move_calculation(start_point, finish_point)
-        not_ok, waypoints = checking_the_path(global_map, waypoints, enemy)
-
-        if not_ok:
-    
-            attempt_counter = 0
-            calculating_the_path = True
-            completed_path = [waypoints[-1]]
-            previous_point = [0, 0]
-
-            while calculating_the_path:
-                priority_parties = [] # Рассчёт приоритетных направлений
-                if task[0] - completed_path[-1][0] >= 0:
-                    priority_parties.append(1)
-                else:
-                    priority_parties.append(-1)
-                if task[1] - completed_path[-1][1] >= 0:
-                    priority_parties.append(1)
-                else:
-                    priority_parties.append(-1)
-                priority_part = [] # Формирование списка с возможными приоритетными направлениями
-                if 0 < completed_path[-1][0] < (len(global_map) - 1):
-                    if not(global_map[completed_path[-1][0] + priority_parties[0]][completed_path[-1][1]].icon in enemy.enemy.banned_biom):
-                        priority_part.append([completed_path[-1][0] + priority_parties[0], completed_path[-1][1]])
-                if 0 < completed_path[-1][1] < (len(global_map) - 1):
-                    if not(global_map[completed_path[-1][0]][completed_path[-1][1] + priority_parties[1]].icon in enemy.enemy.banned_biom):
-                        priority_part.append([completed_path[-1][0], completed_path[-1][1] + priority_parties[1]])
-                if previous_point in priority_part:
-                    priority_part.remove(previous_point)
-                for part in priority_part:
-                    if part in completed_path:
-                        priority_part.remove(part)
-              
-                if len(priority_part) > 0: # Если возможно пройти приоритетным путём
-                    previous_point = completed_path[-1]
-                    completed_path.append(priority_part[random.randrange(len(priority_part))])
-                    sub_waypoints = enemy_ideal_move_calculation(completed_path[-1], finish_point)
-                    sub_not_ok = False
-                    sub_not_ok, sub_waypoints = checking_the_path(global_map, sub_waypoints, enemy)
-                    if not(sub_not_ok): # Если всё в порядке, то добавляются все высчитанные точки
-                        for number_added_point in range(1, len(completed_path)):
-                            waypoints.append(completed_path[number_added_point])
-                        for added_point in sub_waypoints:
-                            waypoints.append(added_point)
-                            not_ok = False # Объявление что всё в порядке
-                            calculating_the_path = False # Прерывание цикла с готовым путём
-                else: # Если не возможно пройти приоритетным путём, выбираются обычные
-                    normal_paths = []
-                    if 0 < completed_path[-1][0] < (len(global_map) - 1):
-                        if not(global_map[completed_path[-1][0] + 1][completed_path[-1][1]].icon in enemy.enemy.banned_biom):
-                            normal_paths.append([completed_path[-1][0] + 1, completed_path[-1][1]])
-                        if not(global_map[completed_path[-1][0] - 1][completed_path[-1][1]].icon in enemy.enemy.banned_biom):
-                            normal_paths.append([completed_path[-1][0] - 1, completed_path[-1][1]])
-                    if 0 < completed_path[-1][1] < (len(global_map) - 1):
-                        if not(global_map[completed_path[-1][0]][completed_path[-1][1] + 1].icon in enemy.enemy.banned_biom):
-                            normal_paths.append([completed_path[-1][0], completed_path[-1][1] + 1])
-                        if not(global_map[completed_path[-1][0]][completed_path[-1][1] - 1].icon in enemy.enemy.banned_biom):
-                            normal_paths.append([completed_path[-1][0], completed_path[-1][1] - 1])
-                    if previous_point in normal_paths:    
-                        normal_paths.remove(previous_point)
-                    if len(normal_paths) > 1:
-                        for part in normal_paths:
-                            if part in completed_path:
-                                normal_paths.remove(part)
-                    if len(normal_paths) > 0: # Если возможно куда то пойти
-                        previous_point = completed_path[-1]
-                        completed_path.append(normal_paths[random.randrange(len(normal_paths))])
-                    else: # Если нет, то путь сбрасывается в начало
-                        print('Путь не найден. Сброс в начало')
-                        previous_point = [completed_path[-1]]
-                        completed_path = [completed_path[0]]
-
-                attempt_counter += 1
-                if attempt_counter == 100:
-                    calculating_the_path = False # Вынужденное прерывание цикла без готового пути
-
-        if not_ok:
-            print(f'{enemy.enemy.name} не нашел путь')
-            for number_added_point in range(1, len(completed_path)):
-                waypoints.append(completed_path[number_added_point])
-        else:
-            print(f'{enemy.enemy.name} нашел путь')
-        return not_ok, waypoints
-    
-
-    not_ok = False
-    not_ok, waypoints = calculating_the_path(global_map, enemy.global_position, task, not_ok) # рассчитывается прямой путь
-    if not_ok:
-        not_ok, reversed_waypoints = calculating_the_path(global_map, task, enemy.global_position, not_ok) # рассчитывается обратный путь
-        if not_ok:
-            not_ok, chanse_waypoints = calculating_the_path(global_map, waypoints[-1], task, False) # рассчитывается путь от последней точки
-            if not_ok:
-                print(f'{enemy.enemy.name} не нашел никакой путь')
-            for chanse_waypoint in chanse_waypoints:
-                waypoints.append(chanse_waypoint)
-            return waypoints
-        else:
-            return reversed_waypoints.reverse()
-    else:
-        return waypoints
        
 class Node:
     """Содержит узлы графа"""
@@ -878,9 +767,9 @@ def enemy_a_star_algorithm_move_calculation(calculation_map, start_point, finish
                     test_print += calculation_map[number_line][number_tile].icon + ' '
             test_print += '\n'
  
-        print(test_print)
+        #print(test_print)
     else:
-        print(f"По алгоритму А* не нашлось пути. На входе было: start_point - {start_point}, finish_point - {finish_point}")
+        #print(f"По алгоритму А* не нашлось пути. На входе было: start_point - {start_point}, finish_point - {finish_point}")
         test_print = ''
         for number_line in range(len(calculation_map)):
             for number_tile in range(len(calculation_map[number_line])):
@@ -890,7 +779,7 @@ def enemy_a_star_algorithm_move_calculation(calculation_map, start_point, finish
                     test_print += calculation_map[number_line][number_tile].icon + ' '
             test_print += '\n'
  
-        print(test_print)
+       # print(test_print)
 
             
     return list(reversed(reversed_waypoints))
@@ -987,9 +876,9 @@ def enemy_in_dynamic_chunk(global_map, enemy, position, chunk_size, step):
     #print(f"{enemy.enemy.name} сначала имеет вейпоинты: {enemy.dynamic_waypoints}")
     #print(f"{enemy.enemy.name} сначала находился в динамической позиции: {enemy.dynamic_chunk_position} и глобальной: {enemy.global_position}")
     enemy_recalculation_dynamic_chank_position(global_map, enemy, position, chunk_size, step)
-    print(f"{enemy.enemy.name} теперь находится в динамической позиции: {enemy.dynamic_chunk_position} и глобальной: {enemy.global_position}")
-    print(f"{enemy.enemy.name} имеет динамические вейпоинты: {enemy.dynamic_waypoints}")
-    print(f"{enemy.enemy.name} имеет глобальные вейпоинты: {enemy.waypoints}")
+    #print(f"{enemy.enemy.name} теперь находится в динамической позиции: {enemy.dynamic_chunk_position} и глобальной: {enemy.global_position}")
+    #print(f"{enemy.enemy.name} имеет динамические вейпоинты: {enemy.dynamic_waypoints}")
+    #print(f"{enemy.enemy.name} имеет глобальные вейпоинты: {enemy.waypoints}")
     if len(enemy.waypoints) > 0:
         if enemy.global_position == enemy.waypoints[0]:
             enemy.waypoints.pop(0)
@@ -1093,7 +982,7 @@ def enemy_a_star_move_dynamic_calculations(global_map, enemy, chunk_size):
             else:
                 test_print += use_calculation_map[number_line][number_tile].icon + ' '
         test_print += '\n'
-    print(test_print)
+    #print(test_print)
 
     raw_waypoints = path_straightener(use_calculation_map, raw_waypoints, banned_list)
 
@@ -1105,13 +994,11 @@ def enemy_a_star_move_dynamic_calculations(global_map, enemy, chunk_size):
             else:
                 test_print += use_calculation_map[number_line][number_tile].icon + ' '
         test_print += '\n'
-    print(test_print)
-    print(raw_waypoints)
+    #print(test_print)
+    #print(raw_waypoints)
     enemy.dynamic_waypoints = []
     for waypoint in raw_waypoints:
         enemy.dynamic_waypoints.append([waypoint[0] + (number_of_chunks_y * chunk_size), waypoint[1] + (number_of_chunks_x * chunk_size)])
-
-
     
 
 def enemy_ideal_move_calculation(start_point, finish_point):
@@ -1168,7 +1055,7 @@ def checking_the_path(calculation_map, waypoints, banned_list):
         """
         not_ok = False
         for number_waypoint in range(len(waypoints)):
-            print(f'number_waypoint - {number_waypoint}, waypoints - {waypoints}')
+            #print(f'number_waypoint - {number_waypoint}, waypoints - {waypoints}')
             if waypoints[number_waypoint][0] >= len(calculation_map) or waypoints[number_waypoint][1] >= len(calculation_map):
                 if calculation_map[waypoints[number_waypoint][0]][waypoints[number_waypoint][1]].icon in banned_list or calculation_map[waypoints[number_waypoint][0]][waypoints[number_waypoint][1]].price_move > 10:
                     not_ok = True
@@ -1266,6 +1153,13 @@ def enemy_dynamic_chunk_check(global_map, enemy_list, position, step, chunk_size
         else:
             enemy.dynamic_waypoints = []
             enemy.dynamic_chunk = False
+
+def action_in_dynamic_chank(global_map, enemy, activity_list):
+    """
+        Обрабатывает появление активностей на динамическом чанке
+    """
+    pass
+    
             
 def enemy_hunter_emulation_life(global_map, enemy, go_to_print, step, activity_list, chunk_size):
     """
