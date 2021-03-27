@@ -511,36 +511,39 @@ def person_dict():
 class Action_in_map:
     """ Содержит в себе описание активности и срок её жизни """
     __slots__ = ('name', 'icon', 'description', 'lifetime', 'birth', 'global_position', 'local_position')
-    def __init__(self, name, birth, position_npc, chunk_size):
+    def __init__(self, name, birth, position_npc, dynamic_position, chunk_size):
         self.name = name
-        self.icon = action_dict(name, 0)
-        self.description = action_dict(name, 1)
-        self.lifetime = action_dict(name, 2)
+        self.icon = self.action_dict(name, 0)
+        self.description = self.action_dict(name, 1)
+        self.lifetime = self.action_dict(name, 2)
         self.birth = birth
         self.global_position = position_npc
-        self.local_position = [random. randrange(chunk_size), random. randrange(chunk_size)]
+        self.local_position = [dynamic_position[0]%chunk_size, dynamic_position[1]%chunk_size]
 
         
-def action_dict(action, number):
-    """ Принимает название активности, возвращает её иконку, описание и срок жизни"""
+    def action_dict(self, action, number):
+        """ Принимает название активности, возвращает её иконку, описание и срок жизни"""
 
-    action_dict =   {
-                    'camp':             ['/', 'следы лагеря',               150],
-                    'bonfire':          ['+', 'следы костра',               150],
-                    'rest_stop':        ['№', 'следы остановки человека',   150],
-                    'horse_tracks':     ['%', 'следы лошади',               150],
-                    'animal_traces':    ['@', 'следы зверя',                150],
-                    'gnawed bones':     ['#', 'обглоданные зверем кости',   150],
-                    'defecate':         ['&', 'справленная нужда',          150],
-                    'animal_rest_stop': ['$', 'следы животной лежанки',     150],
-                    'dead_man':         ['D', 'мёртвый человек',            150],
-                    'unknown':          ['?', 'неизвестно',                 150]
-                    }
+        action_dict =   {
+                        'camp':             ['/', 'следы лагеря',               150],
+                        'bonfire':          ['+', 'следы костра',               150],
+                        'rest_stop':        ['№', 'следы остановки человека',   150],
+                        'person_tracks':    ['8', 'ваши следы',                 100],
+                        'horse_tracks':     ['%', 'следы лошади',               150],
+                        'human_tracks':     ['8', 'следы человека',             150],
+                        'animal_traces':    ['@', 'следы зверя',                150],
+                        'gnawed bones':     ['#', 'обглоданные зверем кости',   150],
+                        'defecate':         ['&', 'справленная нужда',          150],
+                        'animal_rest_stop': ['$', 'следы животной лежанки',     150],
+                        'dead_man':         ['D', 'мёртвый человек',            150],
+                        'unknown':          ['?', 'неизвестно',                 150]
+                        }
 
-    if action in action_dict:
-        return action_dict[action][number]
-    else:
-        return action_dict['unknown'][number]
+        if action in action_dict:
+            return action_dict[action][number]
+        else:
+            return action_dict['unknown'][number]
+
 
 class Enemy:
     """ Отвечает за всех NPC """
@@ -555,9 +558,11 @@ class Enemy:
         self.waypoints = []
         self.dynamic_waypoints = []
         self.alarm = False
+        self.pass_step = 0
 
 class Horseman(Enemy):
     """ Отвечает за всадников """
+    """ activity_map содержит следующие значения [описание активности, название активности, добавляемые очки, количество пропускаемых шагов] """
     def __init__(self):
         self.name = 'horseman'
         self.name_npc = random.choice(['Малыш Билли', 'Буффало Билл', 'Маленькая Верная Рука Энни Окли', 'Дикий Билл Хикок'])
@@ -567,6 +572,13 @@ class Horseman(Enemy):
         self.activity = [['кормит лошадь', 'action_points', -2, 'horse_tracks'], ['чистит оружие', 'action_points',  -2, 'rest_stop'],
                          ['пьёт', 'thirst', 20, 'horse_tracks'], ['готовит еду', 'hunger', 20, 'bonfire'],
                          ['отдыхает', 'fatigue', 10, 'rest_stop'], ['разбил лагерь', 'fatigue', 20, 'camp']]
+        self.activity_map = {
+                            'move': [['передвигается', 'horse_tracks', 0]],
+                            'hunger': [['перекусывает', 'rest_stop', 40, 5], ['готовит еду', 'bonfire', 80, 10]],
+                            'thirst': [['пьёт', 'horse_tracks', 80, 3]],
+                            'fatique': [['отдыхает', 'rest_stop', 30, 10], ['разбил лагерь', 'camp', 80, 20]],
+                            'other': [['кормит лошадь', 'horse_tracks', 0, 5], ['чистит оружие', 'rest_stop', 0, 10]],
+                            }
         self.hunger = 100
         self.thirst = 100
         self.fatigue = 100
@@ -584,6 +596,13 @@ class Riffleman(Enemy):
         self.icon = '☻-'
         self.activity = [['чистит оружие', 'action_points', -2, 'rest_stop'], ['пьёт', 'thirst', 20, 'rest_stop'],
                          ['готовит еду', 'hunger', 20, 'bonfire'], ['отдыхает', 'fatigue', 10, 'rest_stop'], ['разбил лагерь', 'fatigue', 20, 'camp']]
+        self.activity_map = {
+                            'move': [['передвигается', 'human_tracks', 0, 0]],
+                            'hunger': [['перекусывает', 'rest_stop', 40, 5], ['готовит еду', 'bonfire', 80, 10]],
+                            'thirst': [['пьёт', 'human_tracks', 80, 3]],
+                            'fatique': [['отдыхает', 'rest_stop', 30, 10], ['разбил лагерь', 'camp', 80, 20]],
+                            'other': [['чистит оружие', 'rest_stop', 0, 10]],
+                            }
         self.hunger = 100
         self.thirst = 100
         self.fatigue = 100
@@ -601,6 +620,13 @@ class Gold_digger(Enemy):
         self.icon = '☻='
         self.activity = [['чистит оружие', 'action_points', -2, 'rest_stop'], ['пьёт', 'thirst', 20, 'rest_stop'],
                          ['готовит еду', 'hunger', 20, 'bonfire'], ['отдыхает', 'fatigue', 10, 'rest_stop'], ['разбил лагерь', 'fatigue', 20, 'camp']]
+        self.activity_map = {
+                            'move': [['передвигается', 'human_tracks', 0, 0]],
+                            'hunger': [['перекусывает', 'rest_stop', 40, 5], ['готовит еду', 'bonfire', 80, 10]],
+                            'thirst': [['пьёт', 'human_tracks', 80, 3]],
+                            'fatique': [['отдыхает', 'rest_stop', 30, 10], ['разбил лагерь', 'camp', 80, 20]],
+                            'other': [['чистит оружие', 'rest_stop', 0, 10]],
+                            }
         self.hunger = 100
         self.thirst = 100
         self.fatigue = 100
@@ -618,6 +644,13 @@ class Horse(Enemy):
         self.icon = 'ho'
         self.activity = [['пугатся и убегает', 'fatigue', -10, 'horse_tracks'], ['пьёт', 'thirst', 20, 'horse_tracks'],
                          ['ест траву', 'hunger', 20, 'horse_tracks'], ['отдыхает', 'fatigue', 20, 'animal_rest_stop']]
+        self.activity_map = {
+                            'move': [['передвигается', 'horse_tracks', 0, 0]],
+                            'hunger': [['ест траву', 'horse_tracks', 80, 5]],
+                            'thirst': [['пьёт', 'horse_tracks', 80, 5]],
+                            'fatique': [['отдыхает', 'animal_rest_stop', 80, 20]],
+                            'other': [['пугатся и убегает', 'horse_trucks', 0, 0]],
+                            }
         self.hunger = 100
         self.thirst = 100
         self.fatigue = 100
@@ -636,6 +669,13 @@ class Coyot(Enemy):
         self.activity = [['охотится', 'action_points', -2, 'gnawed bones'], ['пьёт', 'thirst', 20, 'animal_traces'],
                          ['ест', 'hunger', 20, 'animal_traces'], ['чешется', 'action_points', -2, 'animal_traces'],
                          ['отдыхает', 'fatigue', 20, 'animal_rest_stop']]
+        self.activity_map = {
+                            'move': [['передвигается', 'animal_traces', 0, 0]],
+                            'hunger': [['охотится', 'gnawed bones', 80, 15], ['ест', 'animal_traces', 30, 10]],
+                            'thirst': [['пьёт', 'animal_traces', 80, 5]],
+                            'fatique': [['отдыхает', 'animal_rest_stop', 80, 15]],
+                            'other': [['чешется', 'animal_traces', 0, 0]],
+                            }
         self.hunger = 200
         self.thirst = 200
         self.fatigue = 200
@@ -653,7 +693,7 @@ def master_npc_calculation(global_map, enemy_list, position, go_to_print, step, 
     
     for enemy in enemy_list:
         if enemy.dynamic_chunk:
-            enemy_in_dynamic_chunk(global_map, enemy, position, chunk_size, step)
+            enemy_in_dynamic_chunk(global_map, enemy, position, chunk_size, step, activity_list)
             pass
         else:
             if enemy.enemy.type == 'hunter':
@@ -869,7 +909,7 @@ def path_straightener(calculation_map, waypoints, banned_list):
                  
     
 
-def enemy_in_dynamic_chunk(global_map, enemy, position, chunk_size, step):
+def enemy_in_dynamic_chunk(global_map, enemy, position, chunk_size, step, activity_list):
     """
         Обрабатывает поведение NPC на динамическом чанке игрока
     """
@@ -886,6 +926,10 @@ def enemy_in_dynamic_chunk(global_map, enemy, position, chunk_size, step):
         if len(enemy.dynamic_waypoints) > 0:   
             enemy.dynamic_chunk_position = enemy.dynamic_waypoints[0]
             enemy.dynamic_waypoints.pop(0)
+            if random.randrange(21)//18 > 0:
+                activity_list.append(Action_in_map(enemy.enemy.activity_map['move'][0][1], step, enemy.global_position, enemy.dynamic_chunk_position, chunk_size))
+            if random.randrange(101)//99 > 0:
+                action_in_dynamic_chank(global_map, enemy, activity_list, step, chunk_size)
         else:
             enemy_a_star_move_dynamic_calculations(global_map, enemy, chunk_size)
     enemy_global_position_recalculation(global_map, enemy, position, chunk_size)
@@ -1154,12 +1198,38 @@ def enemy_dynamic_chunk_check(global_map, enemy_list, position, step, chunk_size
             enemy.dynamic_waypoints = []
             enemy.dynamic_chunk = False
 
-def action_in_dynamic_chank(global_map, enemy, activity_list):
+def action_in_dynamic_chank(global_map, enemy, activity_list, step, chunk_size):
     """
         Обрабатывает появление активностей на динамическом чанке
     """
-    pass
-    
+    request_activity = []
+    if enemy.enemy.hunger < 20:
+        request_activity.append('hunger')
+    if enemy.enemy.thirst < 20:
+        request_activity.append('thirst')
+    if enemy.enemy.fatigue < 20:
+        request_activity.append('fatigue')
+    if random.randrange(10)//8 >= 1:
+        request_activity.append('other')
+        
+    if request_activity:
+        type_activity = random.choice(request_activity)
+        activity = random.choice(enemy.enemy.activity_map[type_activity])
+        if type_activity == 'hunger': 
+            activity_list.append(Action_in_map(activity[1], step, enemy.global_position, enemy.dynamic_chunk_position, chunk_size))
+            enemy.hunger += activity[2]
+        elif type_activity == 'thirst':
+            activity_list.append(Action_in_map(activity[1], step, enemy.global_position, enemy.dynamic_chunk_position, chunk_size))
+            enemy.thirst += activity[2]
+        elif type_activity == 'fatigue':
+            activity_list.append(Action_in_map(activity[1], step, enemy.global_position, enemy.dynamic_chunk_position, chunk_size))
+            enemy.fatigue += activity[2]
+        elif type_activity == 'other':
+            activity_list.append(Action_in_map(activity[1], step, enemy.global_position, enemy.dynamic_chunk_position, chunk_size))
+            
+        enemy.pass_step += activity[3] # Пропуск указанного количества шагов
+
+        
             
 def enemy_hunter_emulation_life(global_map, enemy, go_to_print, step, activity_list, chunk_size):
     """
@@ -1187,18 +1257,18 @@ def enemy_hunter_emulation_life(global_map, enemy, go_to_print, step, activity_l
             enemy.enemy.fatigue = 50
             enemy.action_points -= 20
             go_to_print.text5 += str(enemy.enemy.name_npc)+ ' уснул от усталости \n'
-            activity_list.append(Action_in_map('rest_stop', step, enemy.global_position, chunk_size))
+            activity_list.append(Action_in_map('rest_stop', step, enemy.global_position, [random.randrange(chunk_size), random.randrange(chunk_size)], chunk_size))
         else:
             activity = random.choice(enemy.enemy.activity)
             if activity[1] == 'action_points':
                 enemy.action_points += activity[2]
-                activity_list.append(Action_in_map(activity[3], step, enemy.global_position, chunk_size))
+                activity_list.append(Action_in_map(activity[3], step, enemy.global_position, [random.randrange(chunk_size), random.randrange(chunk_size)], chunk_size))
             elif activity[1] == 'thirst':
                 enemy.enemy.thirst += activity[2]
-                activity_list.append(Action_in_map(activity[3], step, enemy.global_position, chunk_size))
+                activity_list.append(Action_in_map(activity[3], step, enemy.global_position, [random.randrange(chunk_size), random.randrange(chunk_size)], chunk_size))
             elif activity[1] == 'hunger':
                 enemy.enemy.hunger += activity[2]
-                activity_list.append(Action_in_map(activity[3], step, enemy.global_position, chunk_size))
+                activity_list.append(Action_in_map(activity[3], step, enemy.global_position, [random.randrange(chunk_size), random.randrange(chunk_size)], chunk_size))
             elif activity[1] == 'fatigue':
                 enemy.action_points -= 5
                 enemy.enemy.fatigue += activity[2]
@@ -1250,22 +1320,22 @@ def enemy_chaotic_emulation_life(global_map, enemy, go_to_print, step, activity_
             enemy.enemy.fatigue = 50
             enemy.action_points -= 20
             go_to_print.text5 += str(enemy.enemy.name_npc)+ ' уснул от усталости \n'
-            activity_list.append(Action_in_map('rest_stop', step, enemy.global_position, chunk_size))
+            activity_list.append(Action_in_map('rest_stop', step, enemy.global_position, [random.randrange(chunk_size), random.randrange(chunk_size)], chunk_size))
         else:
             activity = random.choice(enemy.enemy.activity)
             if activity[1] == 'action_points':
                 enemy.action_points += activity[2]
-                activity_list.append(Action_in_map(activity[3], step, enemy.global_position, chunk_size))
+                activity_list.append(Action_in_map(activity[3], step, enemy.global_position, [random.randrange(chunk_size), random.randrange(chunk_size)], chunk_size))
             elif activity[1] == 'thirst':
                 enemy.enemy.thirst += activity[2]
-                activity_list.append(Action_in_map(activity[3], step, enemy.global_position, chunk_size))
+                activity_list.append(Action_in_map(activity[3], step, enemy.global_position, [random.randrange(chunk_size), random.randrange(chunk_size)], chunk_size))
             elif activity[1] == 'hunger':
                 enemy.enemy.hunger += activity[2]
-                activity_list.append(Action_in_map(activity[3], step, enemy.global_position, chunk_size))
+                activity_list.append(Action_in_map(activity[3], step, enemy.global_position, [random.randrange(chunk_size), random.randrange(chunk_size)], chunk_size))
             elif activity[1] == 'fatigue':
                 enemy.action_points -= 5
                 enemy.enemy.fatigue += activity[2]
-                activity_list.append(Action_in_map(activity[3], step, enemy.global_position, chunk_size))
+                activity_list.append(Action_in_map(activity[3], step, enemy.global_position, [random.randrange(chunk_size), random.randrange(chunk_size)], chunk_size))
             go_to_print.text5 += str(enemy.enemy.name_npc)+ ' ' + str(activity[0]) + ' его голод: ' + str(enemy.enemy.hunger) + ' его жажда: ' + str(enemy.enemy.thirst) + ' его усталость: ' + str(enemy.enemy.fatigue) + '\n'
             enemy.action_points -= 3
     
@@ -1323,7 +1393,7 @@ def move_biom_enemy(global_map, enemy):
 
 """
 
-def master_player_action(global_map, position, chunk_size, go_to_print, changing_step, mode_action, interaction):
+def master_player_action(global_map, position, chunk_size, go_to_print, changing_step, mode_action, interaction, activity_list, step):
 
 
     pressed_button = ''
@@ -1331,6 +1401,9 @@ def master_player_action(global_map, position, chunk_size, go_to_print, changing
 
     if mode_action == 'move':
         request_move(global_map, position, chunk_size, go_to_print, pressed_button, changing_step)
+        if random.randrange(21)//18 > 0: # Оставление персонажем следов
+            activity_list.append(Action_in_map('person_tracks', step, position.global_position, position.dynamic, chunk_size))
+    
     elif mode_action == 'test_move':
         test_request_move(global_map, position, chunk_size, go_to_print, pressed_button, changing_step, interaction)
     elif mode_action == 'pointer':    
@@ -1428,8 +1501,7 @@ def request_move(global_map:list, position, chunk_size:int, go_to_print, pressed
         
         if position.chunks_use_map[position.dynamic[0]][position.dynamic[1] + 1].icon != '▲':
             if position.dynamic[1] <= (chunk_size + chunk_size//2) and position.assemblage_point[1] != (len(global_map) - 2):
-                position.dynamic[1] += 1
-    
+                position.dynamic[1] += 1    
 
 def test_request_move(global_map:list, position, chunk_size:int, go_to_print, pressed_button, changing_step, interaction): #тестовый быстрый режим премещения
     """
@@ -1768,18 +1840,18 @@ def game_loop(global_map:list, position:list, chunk_size:int, frame_size:list, e
         interaction = []
         changing_step = True
         if not_intercept_step[0]:
-            mode_action = master_player_action(global_map, position, chunk_size, go_to_print, changing_step, mode_action, interaction)
-        start = time.time() #проверка времени выполнения
+            mode_action = master_player_action(global_map, position, chunk_size, go_to_print, changing_step, mode_action, interaction, activity_list, step)
+        #start = time.time() #проверка времени выполнения
         if changing_step:
             master_game_events(global_map, enemy_list, position, go_to_print, step, activity_list, chunk_size, interaction)
             step += 1
-        test1 = time.time() #проверка времени выполнения
+        #test1 = time.time() #проверка времени выполнения
         master_draw(position, chunk_size, go_to_print, global_map, mode_action, enemy_list, activity_list)
-        test2 = time.time() #проверка времени выполнения
+        #test2 = time.time() #проверка времени выполнения
         print_frame(go_to_print, frame_size, activity_list)
         #print('step = ', step)
-        end = time.time() #проверка времени выполнения
-        print(test1 - start, ' - test1 ', test2 - start, ' - test2 ', end - start, ' - end ') #
+        #end = time.time() #проверка времени выполнения
+        #print(test1 - start, ' - test1 ', test2 - start, ' - test2 ', end - start, ' - end ') #
              
 
 def main():
