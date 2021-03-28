@@ -699,10 +699,7 @@ def master_npc_calculation(global_map, enemy_list, position, go_to_print, step, 
             enemy_in_dynamic_chunk(global_map, enemy, position, chunk_size, step, activity_list)
             pass
         else:
-            if enemy.enemy.type == 'hunter':
-                enemy_hunter_emulation_life(global_map, enemy, go_to_print, step, activity_list, chunk_size)
-            else:
-                enemy_chaotic_emulation_life(global_map, enemy, go_to_print, step, activity_list, chunk_size)
+            enemy_emulation_life(global_map, enemy, go_to_print, step, activity_list, chunk_size)
        
 class Node:
     """Содержит узлы графа"""
@@ -1237,65 +1234,6 @@ def action_in_dynamic_chank(global_map, enemy, activity_list, step, chunk_size):
         enemy.pass_step += activity[3] # Пропуск указанного количества шагов
         enemy.enemy.pass_description = activity[0]
 
-        
-            
-def enemy_hunter_emulation_life(global_map, enemy, go_to_print, step, activity_list, chunk_size):
-    """
-        Обрабатывает жизнь hunter NPC за кадром, на глобальной карте
-        step нужен для запоминания следами деятельности времени в которое появились
-    """
-    enemy.action_points += 1
-    enemy.enemy.hunger -= 1
-    enemy.enemy.thirst -= 1
-    enemy.enemy.fatigue -= 1
-    
-    if enemy.action_points >= 5:
-        if random.randrange(10)//8 > 0:
-            if len(enemy.waypoints) > 0:
-                move_hunter_enemy(global_map, enemy)
-                enemy.action_points -= 5
-            else:
-                move_biom_enemy(global_map, enemy)
-                enemy.action_points -= 5
-            go_to_print.text5 += str(enemy.enemy.name_npc) + ' передвигается' + '\n'
-      
-        elif(enemy.enemy.thirst < 10 or enemy.enemy.hunger < 10) and enemy.enemy.reserves > 0:
-            enemy.enemy.reserves -= 1
-            enemy.enemy.hunger = 100
-            enemy.enemy.thirst = 100
-            enemy.action_points -= 3
-            go_to_print.text5 += str(enemy.enemy.name_npc)+ ' достаёт припасы \n'
-        elif enemy.enemy.fatigue < 10:
-            enemy.enemy.fatigue = 50
-            enemy.action_points -= 20
-            go_to_print.text5 += str(enemy.enemy.name_npc)+ ' уснул от усталости \n'
-            activity_list.append(Action_in_map('rest_stop', step, enemy.global_position, [random.randrange(chunk_size), random.randrange(chunk_size)], chunk_size))
-        else:
-            request_activity = []
-            if enemy.enemy.hunger < 20:
-                request_activity.append('hunger')
-            if enemy.enemy.thirst < 20:
-                request_activity.append('thirst')
-            if enemy.enemy.fatigue < 20:
-                request_activity.append('fatigue')
-            if random.randrange(10)//8 >= 1:
-                request_activity.append('other')
-        
-            if request_activity:
-                type_activity = random.choice(request_activity)
-                activity = random.choice(enemy.enemy.activity_map[type_activity])
-                if type_activity == 'hunger': 
-                    activity_list.append(Action_in_map(activity[1], step, enemy.global_position, [random.randrange(chunk_size), random.randrange(chunk_size)], chunk_size))
-                    enemy.enemy.hunger += activity[2]
-                elif type_activity == 'thirst':
-                    activity_list.append(Action_in_map(activity[1], step, enemy.global_position, [random.randrange(chunk_size), random.randrange(chunk_size)], chunk_size))
-                    enemy.enemy.thirst += activity[2]
-                elif type_activity == 'fatigue':
-                    activity_list.append(Action_in_map(activity[1], step, enemy.global_position, [random.randrange(chunk_size), random.randrange(chunk_size)], chunk_size))
-                    enemy.enemy.fatigue += activity[2]
-                elif type_activity == 'other':
-                    activity_list.append(Action_in_map(activity[1], step, enemy.global_position, [random.randrange(chunk_size), random.randrange(chunk_size)], chunk_size))
-                enemy.action_points -= activity[2]//3
             
 def move_hunter_enemy(global_map, enemy):
     """
@@ -1313,7 +1251,7 @@ def move_hunter_enemy(global_map, enemy):
         enemy.waypoints.pop(0)
 
 
-def enemy_chaotic_emulation_life(global_map, enemy, go_to_print, step, activity_list, chunk_size):
+def enemy_emulation_life(global_map, enemy, go_to_print, step, activity_list, chunk_size):
     """
         Обрабатывает жизнь chaotic NPC за кадром, на глобальной карте
         step нужен для запоминания следами деятельности времени в которое появились
@@ -1325,10 +1263,19 @@ def enemy_chaotic_emulation_life(global_map, enemy, go_to_print, step, activity_
     enemy.enemy.fatigue -= 1
     
     if enemy.action_points >= 5:
-        if (global_map[enemy.global_position[0]][enemy.global_position[1]].icon in enemy.enemy.priority_biom and random.randrange(10)//8 == 1) and len(enemy.waypoints) == 0:
+        if enemy.enemy.type == 'chaotic' and (global_map[enemy.global_position[0]][enemy.global_position[1]].icon in enemy.enemy.priority_biom and random.randrange(10)//8 == 1) and len(enemy.waypoints) == 0:
             move_biom_enemy(global_map, enemy)
             enemy.action_points -= 5
             go_to_print.text5 += str(enemy.enemy.name_npc) + ' передвигается' + '\n'
+        elif enemy.enemy.type == 'hunter':
+            if random.randrange(10)//8 > 0:
+                if len(enemy.waypoints) > 0:
+                    move_hunter_enemy(global_map, enemy)
+                    enemy.action_points -= 5
+                else:
+                    move_biom_enemy(global_map, enemy)
+                    enemy.action_points -= 5
+                go_to_print.text5 += str(enemy.enemy.name_npc) + ' передвигается' + '\n'
       
         elif(enemy.enemy.thirst < 10 or enemy.enemy.hunger < 10) and enemy.enemy.reserves > 0:
             enemy.enemy.reserves -= 1
