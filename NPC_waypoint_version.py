@@ -33,6 +33,7 @@ garbage = ['░', '▒', '▓', '█', '☺']
     за ней вейпоинта, текущего положения персонажа и "стоимости" финишного вейпоинта.
     12)Реализовать проверку на возможность пройти от одной динамической точки до другой напрямую, путём проверки нет ли на прямой линии х и у
     путевой точки с бОльшим индексом.
+    13)Разобраться с наследованим классов и привести код в соответствие с их правильным применением.
 
     ЛОГИКА ПЕРЕМЕЩЕНИЯ NPC
     NPC делятся на охотников и хаотичных.
@@ -562,6 +563,7 @@ class Enemy:
 
 class Horseman(Enemy):
     """ Отвечает за всадников """
+    
     """ activity_map содержит следующие значения [описание активности, название активности, добавляемые очки, количество пропускаемых шагов] """
     def __init__(self):
         self.name = 'horseman'
@@ -569,14 +571,11 @@ class Horseman(Enemy):
         self.priority_biom = [',', '„', 'P']
         self.banned_biom = ['▲']
         self.icon = '☻h'
-        self.activity = [['кормит лошадь', 'action_points', -2, 'horse_tracks'], ['чистит оружие', 'action_points',  -2, 'rest_stop'],
-                         ['пьёт', 'thirst', 20, 'horse_tracks'], ['готовит еду', 'hunger', 20, 'bonfire'],
-                         ['отдыхает', 'fatigue', 10, 'rest_stop'], ['разбил лагерь', 'fatigue', 20, 'camp']]
         self.activity_map = {
-                            'move': [['передвигается', 'horse_tracks', 0]],
+                            'move': [['передвигается', 'horse_tracks', 0, 0]],
                             'hunger': [['перекусывает', 'rest_stop', 40, 5], ['готовит еду', 'bonfire', 80, 10]],
                             'thirst': [['пьёт', 'horse_tracks', 80, 3]],
-                            'fatique': [['отдыхает', 'rest_stop', 30, 10], ['разбил лагерь', 'camp', 80, 20]],
+                            'fatigue': [['отдыхает', 'rest_stop', 30, 10], ['разбил лагерь', 'camp', 80, 20]],
                             'other': [['кормит лошадь', 'horse_tracks', 0, 5], ['чистит оружие', 'rest_stop', 0, 10]],
                             }
         self.hunger = 100
@@ -584,23 +583,24 @@ class Horseman(Enemy):
         self.fatigue = 100
         self.reserves = 10
         self.type = 'hunter'
-        self.description = f"Знаменитый охотник за головами {self.name_npc}"
+        self.pass_description = ''
+        self.description = f"Знаменитый охотник за головами {self.name_npc} " + self.pass_description
 
 class Riffleman(Enemy):
     """ Отвечает за стрелков """
+        
+    """ activity_map содержит следующие значения [описание активности, название активности, добавляемые очки, количество пропускаемых шагов] """
     def __init__(self):
         self.name = 'riffleman'
         self.name_npc = random.choice(['Бедовая Джейн', 'Бутч Кэссиди', 'Сандэнс Кид', 'Черный Барт'])
         self.priority_biom = ['.', 'A', '▲']
         self.banned_biom = ['~']
         self.icon = '☻-'
-        self.activity = [['чистит оружие', 'action_points', -2, 'rest_stop'], ['пьёт', 'thirst', 20, 'rest_stop'],
-                         ['готовит еду', 'hunger', 20, 'bonfire'], ['отдыхает', 'fatigue', 10, 'rest_stop'], ['разбил лагерь', 'fatigue', 20, 'camp']]
         self.activity_map = {
                             'move': [['передвигается', 'human_tracks', 0, 0]],
                             'hunger': [['перекусывает', 'rest_stop', 40, 5], ['готовит еду', 'bonfire', 80, 10]],
                             'thirst': [['пьёт', 'human_tracks', 80, 3]],
-                            'fatique': [['отдыхает', 'rest_stop', 30, 10], ['разбил лагерь', 'camp', 80, 20]],
+                            'fatigue': [['отдыхает', 'rest_stop', 30, 10], ['разбил лагерь', 'camp', 80, 20]],
                             'other': [['чистит оружие', 'rest_stop', 0, 10]],
                             }
         self.hunger = 100
@@ -608,23 +608,24 @@ class Riffleman(Enemy):
         self.fatigue = 100
         self.reserves = 5
         self.type = 'hunter'
-        self.description = f"Шериф одного мрачного города {self.name_npc}"
+        self.pass_description = ''
+        self.description = f"Шериф одного мрачного города {self.name_npc} " + self.pass_description
 
 class Gold_digger(Enemy):
     """ Отвечает за золотоискателей """
+        
+    """ activity_map содержит следующие значения [описание активности, название активности, добавляемые очки, количество пропускаемых шагов] """
     def __init__(self):
         self.name = 'gold_digger'
         self.name_npc = random.choice(['Бедовая Джейн', 'Бутч Кэссиди', 'Сандэнс Кид', 'Черный Барт'])
         self.priority_biom = ['.', 'A', '▲']
         self.banned_biom = ['~']
         self.icon = '☻='
-        self.activity = [['чистит оружие', 'action_points', -2, 'rest_stop'], ['пьёт', 'thirst', 20, 'rest_stop'],
-                         ['готовит еду', 'hunger', 20, 'bonfire'], ['отдыхает', 'fatigue', 10, 'rest_stop'], ['разбил лагерь', 'fatigue', 20, 'camp']]
         self.activity_map = {
                             'move': [['передвигается', 'human_tracks', 0, 0]],
                             'hunger': [['перекусывает', 'rest_stop', 40, 5], ['готовит еду', 'bonfire', 80, 10]],
                             'thirst': [['пьёт', 'human_tracks', 80, 3]],
-                            'fatique': [['отдыхает', 'rest_stop', 30, 10], ['разбил лагерь', 'camp', 80, 20]],
+                            'fatigue': [['отдыхает', 'rest_stop', 30, 10], ['разбил лагерь', 'camp', 80, 20]],
                             'other': [['чистит оружие', 'rest_stop', 0, 10]],
                             }
         self.hunger = 100
@@ -632,23 +633,24 @@ class Gold_digger(Enemy):
         self.fatigue = 100
         self.reserves = 5
         self.type = 'chaotic'
-        self.description = f"Отчаяный золотоискатель {self.name_npc}"
+        self.pass_description = ''
+        self.description = f"Отчаяный золотоискатель {self.name_npc} " + self.pass_description
 
 class Horse(Enemy):
     """ Отвечает за коней """
+        
+    """ activity_map содержит следующие значения [описание активности, название активности, добавляемые очки, количество пропускаемых шагов] """
     def __init__(self):
         self.name = 'horse'
         self.name_npc = random.choice(['Стреноженая белая лошадь', 'Стреноженая гнедая лошадь', 'Стреноженая черная лошадь'])
         self.priority_biom = [',', '„', 'P']
         self.banned_biom = ['~', ';']
         self.icon = 'ho'
-        self.activity = [['пугатся и убегает', 'fatigue', -10, 'horse_tracks'], ['пьёт', 'thirst', 20, 'horse_tracks'],
-                         ['ест траву', 'hunger', 20, 'horse_tracks'], ['отдыхает', 'fatigue', 20, 'animal_rest_stop']]
         self.activity_map = {
                             'move': [['передвигается', 'horse_tracks', 0, 0]],
                             'hunger': [['ест траву', 'horse_tracks', 80, 5]],
                             'thirst': [['пьёт', 'horse_tracks', 80, 5]],
-                            'fatique': [['отдыхает', 'animal_rest_stop', 80, 20]],
+                            'fatigue': [['отдыхает', 'animal_rest_stop', 80, 20]],
                             'other': [['пугатся и убегает', 'horse_trucks', 0, 0]],
                             }
         self.hunger = 100
@@ -656,24 +658,24 @@ class Horse(Enemy):
         self.fatigue = 100
         self.reserves = 0
         self.type = 'chaotic'
-        self.description = f"{self.name_npc}"
+        self.pass_description = ''
+        self.description = f"{self.name_npc} " + self.pass_description
 
 class Coyot(Enemy):
     """ Отвечает за койотов """
+        
+    """ activity_map содержит следующие значения [описание активности, название активности, добавляемые очки, количество пропускаемых шагов] """
     def __init__(self):
         self.name = 'coyot'
         self.name_npc = random.choice(['плешивый койот', 'молодой койот', 'подраный койот'])
         self.priority_biom = ['.', ',', '„', 'P', 'A']
         self.banned_biom = ['~', ';']
         self.icon = 'co'
-        self.activity = [['охотится', 'action_points', -2, 'gnawed bones'], ['пьёт', 'thirst', 20, 'animal_traces'],
-                         ['ест', 'hunger', 20, 'animal_traces'], ['чешется', 'action_points', -2, 'animal_traces'],
-                         ['отдыхает', 'fatigue', 20, 'animal_rest_stop']]
         self.activity_map = {
                             'move': [['передвигается', 'animal_traces', 0, 0]],
                             'hunger': [['охотится', 'gnawed bones', 80, 15], ['ест', 'animal_traces', 30, 10]],
                             'thirst': [['пьёт', 'animal_traces', 80, 5]],
-                            'fatique': [['отдыхает', 'animal_rest_stop', 80, 15]],
+                            'fatigue': [['отдыхает', 'animal_rest_stop', 80, 15]],
                             'other': [['чешется', 'animal_traces', 0, 0]],
                             }
         self.hunger = 200
@@ -681,7 +683,8 @@ class Coyot(Enemy):
         self.fatigue = 200
         self.reserves = 0
         self.type = 'chaotic'
-        self.description = f"Голодный и злой {self.name_npc}"
+        self.pass_description = ''
+        self.description = f"Голодный и злой {self.name_npc} " + self.pass_description
 
 def master_npc_calculation(global_map, enemy_list, position, go_to_print, step, activity_list, chunk_size, interaction):
     """
@@ -923,13 +926,17 @@ def enemy_in_dynamic_chunk(global_map, enemy, position, chunk_size, step, activi
         if enemy.global_position == enemy.waypoints[0]:
             enemy.waypoints.pop(0)
     if len(enemy.waypoints) > 0:
-        if len(enemy.dynamic_waypoints) > 0:   
-            enemy.dynamic_chunk_position = enemy.dynamic_waypoints[0]
-            enemy.dynamic_waypoints.pop(0)
-            if random.randrange(21)//18 > 0:
-                activity_list.append(Action_in_map(enemy.enemy.activity_map['move'][0][1], step, enemy.global_position, enemy.dynamic_chunk_position, chunk_size))
-            if random.randrange(101)//99 > 0:
-                action_in_dynamic_chank(global_map, enemy, activity_list, step, chunk_size)
+        if len(enemy.dynamic_waypoints) > 0:
+            if enemy.pass_step == 0:
+                enemy.enemy.pass_description = ''
+                enemy.dynamic_chunk_position = enemy.dynamic_waypoints[0]
+                enemy.dynamic_waypoints.pop(0)
+                if random.randrange(21)//18 > 0:
+                    activity_list.append(Action_in_map(enemy.enemy.activity_map['move'][0][1], step, enemy.global_position, enemy.dynamic_chunk_position, chunk_size))
+                if random.randrange(101)//99 > 0:
+                    action_in_dynamic_chank(global_map, enemy, activity_list, step, chunk_size)
+            else:
+                enemy.pass_step -= 1
         else:
             enemy_a_star_move_dynamic_calculations(global_map, enemy, chunk_size)
     enemy_global_position_recalculation(global_map, enemy, position, chunk_size)
@@ -1217,17 +1224,18 @@ def action_in_dynamic_chank(global_map, enemy, activity_list, step, chunk_size):
         activity = random.choice(enemy.enemy.activity_map[type_activity])
         if type_activity == 'hunger': 
             activity_list.append(Action_in_map(activity[1], step, enemy.global_position, enemy.dynamic_chunk_position, chunk_size))
-            enemy.hunger += activity[2]
+            enemy.enemy.hunger += activity[2]
         elif type_activity == 'thirst':
             activity_list.append(Action_in_map(activity[1], step, enemy.global_position, enemy.dynamic_chunk_position, chunk_size))
-            enemy.thirst += activity[2]
+            enemy.enemy.thirst += activity[2]
         elif type_activity == 'fatigue':
             activity_list.append(Action_in_map(activity[1], step, enemy.global_position, enemy.dynamic_chunk_position, chunk_size))
-            enemy.fatigue += activity[2]
+            enemy.enemy.fatigue += activity[2]
         elif type_activity == 'other':
             activity_list.append(Action_in_map(activity[1], step, enemy.global_position, enemy.dynamic_chunk_position, chunk_size))
             
         enemy.pass_step += activity[3] # Пропуск указанного количества шагов
+        enemy.enemy.pass_description = activity[0]
 
         
             
@@ -1242,9 +1250,13 @@ def enemy_hunter_emulation_life(global_map, enemy, go_to_print, step, activity_l
     enemy.enemy.fatigue -= 1
     
     if enemy.action_points >= 5:
-        if random.randrange(10) > -1:
-            move_hunter_enemy(global_map, enemy)
-            enemy.action_points -= 5
+        if random.randrange(10)//8 > 0:
+            if len(enemy.waypoints) > 0:
+                move_hunter_enemy(global_map, enemy)
+                enemy.action_points -= 5
+            else:
+                move_biom_enemy(global_map, enemy)
+                enemy.action_points -= 5
             go_to_print.text5 += str(enemy.enemy.name_npc) + ' передвигается' + '\n'
       
         elif(enemy.enemy.thirst < 10 or enemy.enemy.hunger < 10) and enemy.enemy.reserves > 0:
@@ -1259,23 +1271,31 @@ def enemy_hunter_emulation_life(global_map, enemy, go_to_print, step, activity_l
             go_to_print.text5 += str(enemy.enemy.name_npc)+ ' уснул от усталости \n'
             activity_list.append(Action_in_map('rest_stop', step, enemy.global_position, [random.randrange(chunk_size), random.randrange(chunk_size)], chunk_size))
         else:
-            activity = random.choice(enemy.enemy.activity)
-            if activity[1] == 'action_points':
-                enemy.action_points += activity[2]
-                activity_list.append(Action_in_map(activity[3], step, enemy.global_position, [random.randrange(chunk_size), random.randrange(chunk_size)], chunk_size))
-            elif activity[1] == 'thirst':
-                enemy.enemy.thirst += activity[2]
-                activity_list.append(Action_in_map(activity[3], step, enemy.global_position, [random.randrange(chunk_size), random.randrange(chunk_size)], chunk_size))
-            elif activity[1] == 'hunger':
-                enemy.enemy.hunger += activity[2]
-                activity_list.append(Action_in_map(activity[3], step, enemy.global_position, [random.randrange(chunk_size), random.randrange(chunk_size)], chunk_size))
-            elif activity[1] == 'fatigue':
-                enemy.action_points -= 5
-                enemy.enemy.fatigue += activity[2]
-                activity_list.append(Action_in_map(activity[3], step, enemy.global_position, chunk_size))
-            go_to_print.text5 += str(enemy.enemy.name_npc)+ ' ' + str(activity[0]) + ' его голод: ' + str(enemy.enemy.hunger) + ' его жажда: ' + str(enemy.enemy.thirst) + ' его усталость: ' + str(enemy.enemy.fatigue) + '\n'
-            enemy.action_points -= 3
-
+            request_activity = []
+            if enemy.enemy.hunger < 20:
+                request_activity.append('hunger')
+            if enemy.enemy.thirst < 20:
+                request_activity.append('thirst')
+            if enemy.enemy.fatigue < 20:
+                request_activity.append('fatigue')
+            if random.randrange(10)//8 >= 1:
+                request_activity.append('other')
+        
+            if request_activity:
+                type_activity = random.choice(request_activity)
+                activity = random.choice(enemy.enemy.activity_map[type_activity])
+                if type_activity == 'hunger': 
+                    activity_list.append(Action_in_map(activity[1], step, enemy.global_position, [random.randrange(chunk_size), random.randrange(chunk_size)], chunk_size))
+                    enemy.enemy.hunger += activity[2]
+                elif type_activity == 'thirst':
+                    activity_list.append(Action_in_map(activity[1], step, enemy.global_position, [random.randrange(chunk_size), random.randrange(chunk_size)], chunk_size))
+                    enemy.enemy.thirst += activity[2]
+                elif type_activity == 'fatigue':
+                    activity_list.append(Action_in_map(activity[1], step, enemy.global_position, [random.randrange(chunk_size), random.randrange(chunk_size)], chunk_size))
+                    enemy.enemy.fatigue += activity[2]
+                elif type_activity == 'other':
+                    activity_list.append(Action_in_map(activity[1], step, enemy.global_position, [random.randrange(chunk_size), random.randrange(chunk_size)], chunk_size))
+                enemy.action_points -= activity[2]//3
             
 def move_hunter_enemy(global_map, enemy):
     """
@@ -1305,7 +1325,7 @@ def enemy_chaotic_emulation_life(global_map, enemy, go_to_print, step, activity_
     enemy.enemy.fatigue -= 1
     
     if enemy.action_points >= 5:
-        if random.randrange(10)//6 == 1 or (global_map[enemy.global_position[0]][enemy.global_position[1]].icon in enemy.enemy.priority_biom and random.randrange(10)//8 == 1):
+        if (global_map[enemy.global_position[0]][enemy.global_position[1]].icon in enemy.enemy.priority_biom and random.randrange(10)//8 == 1) and len(enemy.waypoints) == 0:
             move_biom_enemy(global_map, enemy)
             enemy.action_points -= 5
             go_to_print.text5 += str(enemy.enemy.name_npc) + ' передвигается' + '\n'
@@ -1322,24 +1342,33 @@ def enemy_chaotic_emulation_life(global_map, enemy, go_to_print, step, activity_
             go_to_print.text5 += str(enemy.enemy.name_npc)+ ' уснул от усталости \n'
             activity_list.append(Action_in_map('rest_stop', step, enemy.global_position, [random.randrange(chunk_size), random.randrange(chunk_size)], chunk_size))
         else:
-            activity = random.choice(enemy.enemy.activity)
-            if activity[1] == 'action_points':
-                enemy.action_points += activity[2]
-                activity_list.append(Action_in_map(activity[3], step, enemy.global_position, [random.randrange(chunk_size), random.randrange(chunk_size)], chunk_size))
-            elif activity[1] == 'thirst':
-                enemy.enemy.thirst += activity[2]
-                activity_list.append(Action_in_map(activity[3], step, enemy.global_position, [random.randrange(chunk_size), random.randrange(chunk_size)], chunk_size))
-            elif activity[1] == 'hunger':
-                enemy.enemy.hunger += activity[2]
-                activity_list.append(Action_in_map(activity[3], step, enemy.global_position, [random.randrange(chunk_size), random.randrange(chunk_size)], chunk_size))
-            elif activity[1] == 'fatigue':
-                enemy.action_points -= 5
-                enemy.enemy.fatigue += activity[2]
-                activity_list.append(Action_in_map(activity[3], step, enemy.global_position, [random.randrange(chunk_size), random.randrange(chunk_size)], chunk_size))
-            go_to_print.text5 += str(enemy.enemy.name_npc)+ ' ' + str(activity[0]) + ' его голод: ' + str(enemy.enemy.hunger) + ' его жажда: ' + str(enemy.enemy.thirst) + ' его усталость: ' + str(enemy.enemy.fatigue) + '\n'
-            enemy.action_points -= 3
-    
+            request_activity = []
+            if enemy.enemy.hunger < 20:
+                request_activity.append('hunger')
+            if enemy.enemy.thirst < 20:
+                request_activity.append('thirst')
+            if enemy.enemy.fatigue < 20:
+                request_activity.append('fatigue')
+            if random.randrange(10)//8 >= 1:
+                request_activity.append('other')
+        
+            if request_activity:
+                type_activity = random.choice(request_activity)
+                activity = random.choice(enemy.enemy.activity_map[type_activity])
+                if type_activity == 'hunger': 
+                    activity_list.append(Action_in_map(activity[1], step, enemy.global_position, [random.randrange(chunk_size), random.randrange(chunk_size)], chunk_size))
+                    enemy.enemy.hunger += activity[2]
+                elif type_activity == 'thirst':
+                    activity_list.append(Action_in_map(activity[1], step, enemy.global_position, [random.randrange(chunk_size), random.randrange(chunk_size)], chunk_size))
+                    enemy.enemy.thirst += activity[2]
+                elif type_activity == 'fatigue':
+                    activity_list.append(Action_in_map(activity[1], step, enemy.global_position, [random.randrange(chunk_size), random.randrange(chunk_size)], chunk_size))
+                    enemy.enemy.fatigue += activity[2]
+                elif type_activity == 'other':
+                    activity_list.append(Action_in_map(activity[1], step, enemy.global_position, [random.randrange(chunk_size), random.randrange(chunk_size)], chunk_size))
+                enemy.action_points -= activity[2]//3
 
+                
 def move_biom_enemy(global_map, enemy):
     """
         Обрабатывает перемещение NPC за кадром между биомами
