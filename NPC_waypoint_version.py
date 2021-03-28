@@ -511,15 +511,16 @@ def person_dict():
 
 class Action_in_map:
     """ Содержит в себе описание активности и срок её жизни """
-    __slots__ = ('name', 'icon', 'description', 'lifetime', 'birth', 'global_position', 'local_position')
-    def __init__(self, name, birth, position_npc, dynamic_position, chunk_size):
+    __slots__ = ('name', 'icon', 'description', 'lifetime', 'birth', 'global_position', 'local_position', 'caused')
+    def __init__(self, name, birth, position_npc, dynamic_position, chunk_size, caused):
         self.name = name
         self.icon = self.action_dict(name, 0)
-        self.description = self.action_dict(name, 1)
         self.lifetime = self.action_dict(name, 2)
         self.birth = birth
         self.global_position = position_npc
         self.local_position = [dynamic_position[0]%chunk_size, dynamic_position[1]%chunk_size]
+        self.caused = caused
+        self.description = f'{self.action_dict(name, 1)} похоже на {self.caused}'
 
         
     def action_dict(self, action, number):
@@ -529,7 +530,6 @@ class Action_in_map:
                         'camp':             ['/', 'следы лагеря',               150],
                         'bonfire':          ['+', 'следы костра',               150],
                         'rest_stop':        ['№', 'следы остановки человека',   150],
-                        'person_tracks':    ['8', 'ваши следы',                 100],
                         'horse_tracks':     ['%', 'следы лошади',               150],
                         'human_tracks':     ['8', 'следы человека',             150],
                         'animal_traces':    ['@', 'следы зверя',                150],
@@ -929,7 +929,7 @@ def enemy_in_dynamic_chunk(global_map, enemy, position, chunk_size, step, activi
                 enemy.dynamic_chunk_position = enemy.dynamic_waypoints[0]
                 enemy.dynamic_waypoints.pop(0)
                 if random.randrange(21)//18 > 0:
-                    activity_list.append(Action_in_map(enemy.enemy.activity_map['move'][0][1], step, enemy.global_position, enemy.dynamic_chunk_position, chunk_size))
+                    activity_list.append(Action_in_map(enemy.enemy.activity_map['move'][0][1], step, enemy.global_position, enemy.dynamic_chunk_position, chunk_size, enemy.enemy.name_npc))
                 if random.randrange(101)//99 > 0:
                     action_in_dynamic_chank(global_map, enemy, activity_list, step, chunk_size)
             else:
@@ -1220,16 +1220,16 @@ def action_in_dynamic_chank(global_map, enemy, activity_list, step, chunk_size):
         type_activity = random.choice(request_activity)
         activity = random.choice(enemy.enemy.activity_map[type_activity])
         if type_activity == 'hunger': 
-            activity_list.append(Action_in_map(activity[1], step, enemy.global_position, enemy.dynamic_chunk_position, chunk_size))
+            activity_list.append(Action_in_map(activity[1], step, enemy.global_position, enemy.dynamic_chunk_position, chunk_size, enemy.enemy.name_npc))
             enemy.enemy.hunger += activity[2]
         elif type_activity == 'thirst':
-            activity_list.append(Action_in_map(activity[1], step, enemy.global_position, enemy.dynamic_chunk_position, chunk_size))
+            activity_list.append(Action_in_map(activity[1], step, enemy.global_position, enemy.dynamic_chunk_position, chunk_size, enemy.enemy.name_npc))
             enemy.enemy.thirst += activity[2]
         elif type_activity == 'fatigue':
-            activity_list.append(Action_in_map(activity[1], step, enemy.global_position, enemy.dynamic_chunk_position, chunk_size))
+            activity_list.append(Action_in_map(activity[1], step, enemy.global_position, enemy.dynamic_chunk_position, chunk_size, enemy.enemy.name_npc))
             enemy.enemy.fatigue += activity[2]
         elif type_activity == 'other':
-            activity_list.append(Action_in_map(activity[1], step, enemy.global_position, enemy.dynamic_chunk_position, chunk_size))
+            activity_list.append(Action_in_map(activity[1], step, enemy.global_position, enemy.dynamic_chunk_position, chunk_size, enemy.enemy.name_npc))
             
         enemy.pass_step += activity[3] # Пропуск указанного количества шагов
         enemy.enemy.pass_description = activity[0]
@@ -1303,16 +1303,16 @@ def enemy_emulation_life(global_map, enemy, go_to_print, step, activity_list, ch
                 type_activity = random.choice(request_activity)
                 activity = random.choice(enemy.enemy.activity_map[type_activity])
                 if type_activity == 'hunger': 
-                    activity_list.append(Action_in_map(activity[1], step, enemy.global_position, [random.randrange(chunk_size), random.randrange(chunk_size)], chunk_size))
+                    activity_list.append(Action_in_map(activity[1], step, enemy.global_position, [random.randrange(chunk_size), random.randrange(chunk_size)], chunk_size, enemy.enemy.name_npc))
                     enemy.enemy.hunger += activity[2]
                 elif type_activity == 'thirst':
-                    activity_list.append(Action_in_map(activity[1], step, enemy.global_position, [random.randrange(chunk_size), random.randrange(chunk_size)], chunk_size))
+                    activity_list.append(Action_in_map(activity[1], step, enemy.global_position, [random.randrange(chunk_size), random.randrange(chunk_size)], chunk_size, enemy.enemy.name_npc))
                     enemy.enemy.thirst += activity[2]
                 elif type_activity == 'fatigue':
-                    activity_list.append(Action_in_map(activity[1], step, enemy.global_position, [random.randrange(chunk_size), random.randrange(chunk_size)], chunk_size))
+                    activity_list.append(Action_in_map(activity[1], step, enemy.global_position, [random.randrange(chunk_size), random.randrange(chunk_size)], chunk_size, enemy.enemy.name_npc))
                     enemy.enemy.fatigue += activity[2]
                 elif type_activity == 'other':
-                    activity_list.append(Action_in_map(activity[1], step, enemy.global_position, [random.randrange(chunk_size), random.randrange(chunk_size)], chunk_size))
+                    activity_list.append(Action_in_map(activity[1], step, enemy.global_position, [random.randrange(chunk_size), random.randrange(chunk_size)], chunk_size, enemy.enemy.name_npc))
                 enemy.action_points -= activity[2]//3
 
                 
@@ -1378,7 +1378,7 @@ def master_player_action(global_map, position, chunk_size, go_to_print, changing
     if mode_action == 'move':
         request_move(global_map, position, chunk_size, go_to_print, pressed_button, changing_step)
         if random.randrange(21)//18 > 0: # Оставление персонажем следов
-            activity_list.append(Action_in_map('person_tracks', step, position.global_position, position.dynamic, chunk_size))
+            activity_list.append(Action_in_map('human_tracks', step, position.global_position, position.dynamic, chunk_size, 'ваши'))
     
     elif mode_action == 'test_move':
         test_request_move(global_map, position, chunk_size, go_to_print, pressed_button, changing_step, interaction)
