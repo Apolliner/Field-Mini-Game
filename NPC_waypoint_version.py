@@ -252,9 +252,10 @@ def random_location_post_generate(location:list, description:list):
     """
         Случайно заполняет готовую локацию из списка случайных тайлов
     """
+    banned_list = ['~', '▲']
     for line in range(len(location)):
         for tile in range(len(location)):
-            if random.randrange(10)//9:
+            if random.randrange(10)//9 and not(location[line][tile].icon in banned_list):
                 location[line][tile] = Tile(random.choice(description.random_tileset))
     return location
 
@@ -317,7 +318,7 @@ def selecting_generator(seed):
     seed_dict = {  
                     0: ['desert',             [40.0,60.0], ['.'],                 ['j'],            'j',        20],
                     1: ['semidesert',         [35.0,50.0], ['.', ','],            ['▲', 'o', 'i'],  '.',        10],
-                    2: ['cliff semidesert',   [35.0,50.0], ['▲', 'A', '.', ','],  ['o', 'i'],       'A',        7],
+                    2: ['cliff semidesert',   [35.0,50.0], ['▲', 'A', '.', ','],  ['o', 'i'],       'A',         7],
                     3: ['saline land',        [40.0,50.0], [';'],                 [':'],            ';',        15],
                     4: ['field',              [20.0,35.0], ['u', '„', ','],       ['ü', 'o'],       '„',         5],
                     5: ['dried field',        [30.0,40.0], ['„', ','],            ['o', 'u'],       ',',         2],
@@ -836,41 +837,42 @@ def path_straightener(calculation_map, waypoints, banned_list):
         """
         new_waypoints = [start_point]
         not_ok = False
-        if start_point[0] == finish_point[0]:
-            if start_point[1] < finish_point[1]:
-                while new_waypoints[-1][1] < finish_point[1]:
-                    new_waypoint = [new_waypoints[-1][0], new_waypoints[-1][1] + 1]
-                    if not(calculation_map[new_waypoint[0]][new_waypoint[1]].icon in banned_list) and calculation_map[new_waypoint[0]][new_waypoint[1]].price_move <= 10 and not(new_waypoint == second_point):
-                        new_waypoints.append(new_waypoint)
-                    else:
-                        not_ok = True
-                        break
-            else:
-                while new_waypoints[-1][1] > finish_point[1]:
-                    new_waypoint = [new_waypoints[-1][0], new_waypoints[-1][1] - 1]
-                    if not(calculation_map[new_waypoint[0]][new_waypoint[1]].icon in banned_list) and calculation_map[new_waypoint[0]][new_waypoint[1]].price_move <= 10 and not(new_waypoint == second_point):
-                        new_waypoints.append(new_waypoint)
-                    else:
-                        not_ok = True
-                        break
+        if new_waypoint[0] < len(calculation_map) and new_waypoint[1] < len(calculation_map[0]):
+            if start_point[0] == finish_point[0]:
+                if start_point[1] < finish_point[1]:
+                    while new_waypoints[-1][1] < finish_point[1]:
+                        new_waypoint = [new_waypoints[-1][0], new_waypoints[-1][1] + 1]
+                        if not(calculation_map[new_waypoint[0]][new_waypoint[1]].icon in banned_list) and calculation_map[new_waypoint[0]][new_waypoint[1]].price_move <= 10 and not(new_waypoint == second_point):
+                            new_waypoints.append(new_waypoint)
+                        else:
+                            not_ok = True
+                            break
+                else:
+                    while new_waypoints[-1][1] > finish_point[1]:
+                        new_waypoint = [new_waypoints[-1][0], new_waypoints[-1][1] - 1]
+                        if not(calculation_map[new_waypoint[0]][new_waypoint[1]].icon in banned_list) and calculation_map[new_waypoint[0]][new_waypoint[1]].price_move <= 10 and not(new_waypoint == second_point):
+                            new_waypoints.append(new_waypoint)
+                        else:
+                            not_ok = True
+                            break
                 
-        elif start_point[1] == finish_point[1]:
-            if start_point[0] < finish_point[0]:
-                while new_waypoints[-1][0] < finish_point[0]:
-                    new_waypoint = [new_waypoints[-1][0] + 1, new_waypoints[-1][1]]
-                    if not(calculation_map[new_waypoint[0]][new_waypoint[1]].icon in banned_list) and calculation_map[new_waypoint[0]][new_waypoint[1]].price_move <= 10 and not(new_waypoint == second_point):
-                        new_waypoints.append(new_waypoint)
-                    else:
-                        not_ok = True
-                        break
-            else:
-                while new_waypoints[-1][0] > finish_point[0]:
-                    new_waypoint = [new_waypoints[-1][0] - 1, new_waypoints[-1][1]]
-                    if not(calculation_map[new_waypoint[0]][new_waypoint[1]].icon in banned_list) and calculation_map[new_waypoint[0]][new_waypoint[1]].price_move <= 10 and not(new_waypoint == second_point):
-                        new_waypoints.append(new_waypoint)
-                    else:
-                        not_ok = True
-                        break
+            elif start_point[1] == finish_point[1]:
+                if start_point[0] < finish_point[0]:
+                    while new_waypoints[-1][0] < finish_point[0]:
+                        new_waypoint = [new_waypoints[-1][0] + 1, new_waypoints[-1][1]]
+                        if not(calculation_map[new_waypoint[0]][new_waypoint[1]].icon in banned_list) and calculation_map[new_waypoint[0]][new_waypoint[1]].price_move <= 10 and not(new_waypoint == second_point):
+                            new_waypoints.append(new_waypoint)
+                        else:
+                            not_ok = True
+                            break
+                else:
+                    while new_waypoints[-1][0] > finish_point[0]:
+                        new_waypoint = [new_waypoints[-1][0] - 1, new_waypoints[-1][1]]
+                        if not(calculation_map[new_waypoint[0]][new_waypoint[1]].icon in banned_list) and calculation_map[new_waypoint[0]][new_waypoint[1]].price_move <= 10 and not(new_waypoint == second_point):
+                            new_waypoints.append(new_waypoint)
+                        else:
+                            not_ok = True
+                            break
         if not_ok:
             return []
         else:
@@ -906,25 +908,19 @@ def path_straightener(calculation_map, waypoints, banned_list):
                 found_points = []
             #print('Цикл while found_points кончился')
     return waypoints
-                 
-    
 
 def enemy_in_dynamic_chunk(global_map, enemy, position, chunk_size, step, activity_list):
     """
         Обрабатывает поведение NPC на динамическом чанке игрока
     """
-    #print(f"{enemy.enemy.name} сначала имеет вейпоинты: {enemy.dynamic_waypoints}")
-    #print(f"{enemy.enemy.name} сначала находился в динамической позиции: {enemy.dynamic_chunk_position} и глобальной: {enemy.global_position}")
     enemy_recalculation_dynamic_chank_position(global_map, enemy, position, chunk_size, step)
-    #print(f"{enemy.enemy.name} теперь находится в динамической позиции: {enemy.dynamic_chunk_position} и глобальной: {enemy.global_position}")
-    #print(f"{enemy.enemy.name} имеет динамические вейпоинты: {enemy.dynamic_waypoints}")
-    #print(f"{enemy.enemy.name} имеет глобальные вейпоинты: {enemy.waypoints}")
     if len(enemy.waypoints) > 0:
         if enemy.global_position == enemy.waypoints[0]:
             enemy.waypoints.pop(0)
     if len(enemy.waypoints) > 0:
         if len(enemy.dynamic_waypoints) > 0:
             if enemy.pass_step == 0:
+                print(f"enemy.enemy.pass_description - {enemy.enemy.pass_description}")
                 enemy.enemy.pass_description = ''
                 enemy.dynamic_chunk_position = enemy.dynamic_waypoints[0]
                 enemy.dynamic_waypoints.pop(0)
@@ -937,10 +933,6 @@ def enemy_in_dynamic_chunk(global_map, enemy, position, chunk_size, step, activi
         else:
             enemy_a_star_move_dynamic_calculations(global_map, enemy, chunk_size)
     enemy_global_position_recalculation(global_map, enemy, position, chunk_size)
-    #print(f"{enemy.enemy.name} проверка вейпоинтов: {enemy.dynamic_waypoints}")
-    #print(f"{enemy.enemy.name} проверка нахождения в динамической позиции: {enemy.dynamic_chunk_position} и глобальной: {enemy.global_position}")
-
-
 
 def enemy_a_star_move_dynamic_calculations(global_map, enemy, chunk_size):
     """
@@ -1287,7 +1279,7 @@ def enemy_emulation_life(global_map, enemy, go_to_print, step, activity_list, ch
             enemy.enemy.fatigue = 50
             enemy.action_points -= 20
             go_to_print.text5 += str(enemy.enemy.name_npc)+ ' уснул от усталости \n'
-            activity_list.append(Action_in_map('rest_stop', step, enemy.global_position, [random.randrange(chunk_size), random.randrange(chunk_size)], chunk_size))
+            activity_list.append(Action_in_map('rest_stop', step, enemy.global_position, [random.randrange(chunk_size), random.randrange(chunk_size)], chunk_size, enemy.enemy.name_npc))
         else:
             request_activity = []
             if enemy.enemy.hunger < 20:
@@ -1626,43 +1618,6 @@ def print_minimap(global_map, position, go_to_print, enemy_list):
         minimap.append((print_line))
     go_to_print.biom_map = minimap
 
-
-def ground_dict(tile):
-
-    ground_dict =   {
-                    'j': 'бархан',
-                    '.': 'горячий песок',
-                    ',': 'жухлая трава',
-                    'o': 'валун',
-                    'A': 'холм',
-                    '▲': 'скала',
-                    'i': 'кактус',
-                    ':': 'солончак',
-                    ';': 'солончак',
-                    '„': 'трава',
-                    'u': 'высокая трава',
-                    'ü': 'колючая трава',
-                    'F': 'чахлое дерево',
-                    'P': 'раскидистое дерево',
-                    '~': 'солёная вода',
-                    
-                    '/': 'следы лагеря',
-                    '+': 'следы костра',
-                    '%': 'следы лошади',
-                    '@': 'следы зверя',
-                    '#': 'обглоданные зверем кости',
-                    '№': 'следы остановки человека',
-                    '&': 'справленная нужда',
-                    '$': 'следы животной лежанки',
-                    'D': 'мёртвый человек',
-                    'd': 'мёртвое животное',
-                    '?': 'неизвестно что',
-                    }
-
-    if tile in  ground_dict:
-        return ground_dict[tile]
-    else:
-        return 'нечто'                 
 
 def draw_field_calculations(position:list, views_field_size:int, go_to_print):
     """
