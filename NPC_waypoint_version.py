@@ -1627,6 +1627,36 @@ def print_minimap(global_map, position, go_to_print, enemy_list):
         minimap.append((print_line))
     go_to_print.biom_map = minimap
 
+def print_help(go_to_print):
+    help_dict = ['**************************************************',
+                 '*                 ОБЫЧНЫЙ РЕЖИМ                  *',
+                 '*                                                *',
+                 '* wasd - управление персонажем;                  *',
+                 '* m - миникарта биомов;                          *',
+                 '* k - режим курсора;                             *',
+                 '* g - режим прицеливания;                        *',
+                 '*                                                *',
+                 '*                                                *',
+                 '*                ТЕСТОВЫЙ РЕЖИМ                  *',
+                 '*                                                *',
+                 '* t - тестовый режим перемещения;                *',
+                 '* p - назначение точки прибытия для hunter NPC;  *',
+                 '* m - установка тестового маяка;                 *',
+                 '*                                                *',
+                 '*                                                *',
+                 '*                                                *',
+                 '*                                                *',
+                 '*                                                *',
+                 '*                                                *',
+                 '*                                                *',
+                 '*                                                *',
+                 '*                                                *',
+                 '*                                                *',
+                 '**************************************************'
+                 ]
+
+    go_to_print.biom_map = help_dict
+
 
 def draw_field_calculations(position:list, views_field_size:int, go_to_print):
     """
@@ -1687,6 +1717,8 @@ def master_draw(position, chunk_size:int, go_to_print, global_map, mode_action, 
     """
     if go_to_print.minimap_on:
         print_minimap(global_map, position, go_to_print, enemy_list)
+    else:
+        print_help(go_to_print)
 
     draw_additional_entities(position, chunk_size, go_to_print, enemy_list, activity_list)
 
@@ -1744,9 +1776,8 @@ def print_frame(go_to_print, frame_size, activity_list):
     for line in range(len(go_to_print.game_field)): #Добавление изображения с игрового экрана
         raw_frame[(line + 3)] += '      ' + go_to_print.game_field[line]
 
-    if go_to_print.minimap_on: #Добавление изображения миникарты
-        for line in range(len(go_to_print.biom_map)):
-            raw_frame[(line + 3)] += '      ' + go_to_print.biom_map[line]
+    for line in range(len(go_to_print.biom_map)): #Добавление изображения миникарты или помощи
+        raw_frame[(line + 3)] += '      ' + go_to_print.biom_map[line]
 
     raw_frame[4+len(go_to_print.game_field)] += '   ' + str(go_to_print.text1)
 
