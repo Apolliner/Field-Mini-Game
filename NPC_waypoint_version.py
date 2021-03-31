@@ -518,7 +518,7 @@ class Action_in_map:
         self.icon = self.action_dict(name, 0)
         self.lifetime = self.action_dict(name, 2)
         self.birth = birth
-        self.global_position = position_npc
+        self.global_position = copy.deepcopy(position_npc)
         self.local_position = [dynamic_position[0]%chunk_size, dynamic_position[1]%chunk_size]
         self.caused = caused
         self.description = f'{self.action_dict(name, 1)} похоже на {self.caused}'
@@ -534,13 +534,13 @@ class Action_in_map:
                         'horse_tracks':     ['%', 'следы лошади',               150],
                         'human_tracks':     ['8', 'следы человека',             150],
                         'animal_traces':    ['@', 'следы зверя',                150],
-                        'gnawed bones':     ['#', 'обглоданные зверем кости',   150],
+                        'gnawed bones':     ['#', 'обглоданные зверем кости',   500],
                         'defecate':         ['&', 'справленная нужда',          150],
                         'animal_rest_stop': ['$', 'следы животной лежанки',     150],
-                        'dead_man':         ['D', 'мёртвый человек',            150],
-                        'unknown':          ['?', 'неизвестно',                 150]
+                        'dead_man':         ['D', 'мёртвый человек',           1000],
+                        'test_beacon':      ['B', 'Маяк для теста',            1000],
+                        'unknown':          ['?', 'неизвестно',                 150],
                         }
-
         if action in action_dict:
             return action_dict[action][number]
         else:
@@ -837,7 +837,8 @@ def path_straightener(calculation_map, waypoints, banned_list):
         """
         new_waypoints = [start_point]
         not_ok = False
-        if new_waypoint[0] < len(calculation_map) and new_waypoint[1] < len(calculation_map[0]):
+        
+        if start_point[0] < len(calculation_map) and start_point[1] < len(calculation_map[0]) and finish_point[0] < len(calculation_map) and finish_point[1] < len(calculation_map[0]):
             if start_point[0] == finish_point[0]:
                 if start_point[1] < finish_point[1]:
                     while new_waypoints[-1][1] < finish_point[1]:
@@ -1279,7 +1280,7 @@ def enemy_emulation_life(global_map, enemy, go_to_print, step, activity_list, ch
             enemy.enemy.fatigue = 50
             enemy.action_points -= 20
             go_to_print.text5 += str(enemy.enemy.name_npc)+ ' уснул от усталости \n'
-            activity_list.append(Action_in_map('rest_stop', step, enemy.global_position, [random.randrange(chunk_size), random.randrange(chunk_size)], chunk_size, enemy.enemy.name_npc))
+            activity_list.append(Action_in_map(random.choice(enemy.enemy.activity_map['fatigue'])[1], step, enemy.global_position, [random.randrange(chunk_size), random.randrange(chunk_size)], chunk_size, enemy.enemy.name_npc))
         else:
             request_activity = []
             if enemy.enemy.hunger < 20:
@@ -1374,6 +1375,9 @@ def master_player_action(global_map, position, chunk_size, go_to_print, changing
     
     elif mode_action == 'test_move':
         test_request_move(global_map, position, chunk_size, go_to_print, pressed_button, changing_step, interaction)
+        if pressed_button == 'button_add_beacon':
+            activity_list.append(Action_in_map('test_beacon', step, position.global_position, position.dynamic, chunk_size, f'\n оставлен вами в локальной точке - {[position.dynamic[0]%chunk_size, position.dynamic[1]%chunk_size]}| динамической - {position.dynamic}| глобальной - {position.global_position}'))
+
     elif mode_action == 'pointer':    
         request_pointer(position, chunk_size, go_to_print, pressed_button, changing_step)
     elif mode_action == 'gun':
@@ -1436,6 +1440,11 @@ def request_press_button(global_map, position, chunk_size, go_to_print, changing
     elif key == 'p' or key == 'з':
         if mode_action == 'test_move':
             return ('test_move', 'button_purpose_task')
+        else:
+            return (mode_action, 'none')
+    elif key == 'b' or 'и':
+        if mode_action == 'test_move':
+            return ('test_move', 'button_add_beacon')
         else:
             return (mode_action, 'none')
             
@@ -1648,12 +1657,23 @@ def draw_additional_entities(position, chunk_size:int, go_to_print, enemy_list, 
     for activity in activity_list:
         if activity.global_position[0] == position.assemblage_point[0] and activity.global_position[1] == position.assemblage_point[1]:
             position.chunks_use_map[activity.local_position[0]][activity.local_position[1]] = activity
+            if activity.icon == 'B':
+                print(f'Для тестового маяка сработало условие отображения 1')
+            
         elif activity.global_position[0] == position.assemblage_point[0] and activity.global_position[1] == position.assemblage_point[1] + 1:
             position.chunks_use_map[activity.local_position[0]][activity.local_position[1] + chunk_size] = activity
+            if activity.icon == 'B':
+                print(f'Для тестового маяка сработало условие отображения 2')
+            
         elif activity.global_position[0] == position.assemblage_point[0] + 1 and activity.global_position[1] == position.assemblage_point[1]:
             position.chunks_use_map[activity.local_position[0] + chunk_size][activity.local_position[1]] = activity
+            if activity.icon == 'B':
+                print(f'Для тестового маяка сработало условие отображения 3')
+            
         elif activity.global_position[0] == position.assemblage_point[0] + 1 and activity.global_position[1] == position.assemblage_point[1] + 1:
             position.chunks_use_map[activity.local_position[0] + chunk_size][activity.local_position[1] + chunk_size] = activity
+            if activity.icon == 'B':
+                print(f'Для тестового маяка сработало условие отображения 4')
 
     for enemy in enemy_list:
         if enemy.global_position in position.check_encounter_position:
