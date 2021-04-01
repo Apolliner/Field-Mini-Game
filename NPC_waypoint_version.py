@@ -32,8 +32,9 @@ garbage = ['░', '▒', '▓', '█', '☺']
     11)Улучшить логику нахождения финишной точки при передвижении по динамическому чанку. Она должна определяться в зависимости от следующего
     за ней вейпоинта, текущего положения персонажа и "стоимости" финишного вейпоинта.
     12)Реализовать проверку на возможность пройти от одной динамической точки до другой напрямую, путём проверки нет ли на прямой линии х и у
-    путевой точки с бОльшим индексом.
+    путевой точки с бОльшим индексом. #РЕАЛИЗОВАНО
     13)Разобраться с наследованим классов и привести код в соответствие с их правильным применением.
+    14)Добавить для NPC режим поиска, который включается когда NPC обнаруживает незнакомые следы или видит незнакомого NPC или персонажа.
 
     ЛОГИКА ПЕРЕМЕЩЕНИЯ NPC
     NPC делятся на охотников и хаотичных.
@@ -469,10 +470,10 @@ def interaction_processing(global_map, interaction, enemy_list):
         for interact in interaction:
             if interact[0] == 'task_point_all_enemies':
                 for enemy in enemy_list:
-                    #print(f"{enemy.enemy.name} получил задачу")
+                    #print(f"{enemy.name} получил задачу")
                     #print(f"interact[1] = {interact[1]}")
-                    if enemy.enemy.type == 'hunter':
-                        enemy.waypoints = enemy_a_star_algorithm_move_calculation(global_map, enemy.global_position, interact[1], enemy.enemy.banned_biom)
+                    if enemy.type == 'hunter':
+                        enemy.waypoints = enemy_a_star_algorithm_move_calculation(global_map, enemy.global_position, interact[1], enemy.banned_biom)
 
 
 def activity_list_check(activity_list, step):
@@ -480,6 +481,8 @@ def activity_list_check(activity_list, step):
         Проверяет активности на истечение времени
     """
     for activity in activity_list:
+        activity.lifetime_description_calculation(step)
+        activity.all_description()
         if step - activity.lifetime > activity.birth:
             activity_list.remove(activity)
 
@@ -512,19 +515,23 @@ def person_dict():
 
 class Action_in_map:
     """ Содержит в себе описание активности и срок её жизни """
-    __slots__ = ('name', 'icon', 'description', 'lifetime', 'birth', 'global_position', 'local_position', 'caused')
+    __slots__ = ('name', 'icon', 'description', 'lifetime', 'birth', 'global_position', 'local_position', 'caused', 'lifetime_description')
     def __init__(self, name, birth, position_npc, dynamic_position, chunk_size, caused):
         self.name = name
-        self.icon = self.action_dict(name, 0)
-        self.lifetime = self.action_dict(name, 2)
+        self.icon = self.action_dict(0)
+        self.lifetime = self.action_dict(2)
         self.birth = birth
         self.global_position = copy.deepcopy(position_npc)
         self.local_position = [dynamic_position[0]%chunk_size, dynamic_position[1]%chunk_size]
         self.caused = caused
-        self.description = f'{self.action_dict(name, 1)} похоже на {self.caused}'
+        self.lifetime_description = ''
+        self.description = f'{self.action_dict(1)} похоже на {self.caused}'
+
+    def all_description(self):
+        self.description = f'{self.lifetime_description} {self.action_dict(1)} похоже на {self.caused}'
 
         
-    def action_dict(self, action, number):
+    def action_dict(self, number):
         """ Принимает название активности, возвращает её иконку, описание и срок жизни"""
 
         action_dict =   {
@@ -538,19 +545,27 @@ class Action_in_map:
                         'defecate':         ['&', 'справленная нужда',          150],
                         'animal_rest_stop': ['$', 'следы животной лежанки',     150],
                         'dead_man':         ['D', 'мёртвый человек',           1000],
-                        'test_beacon':      ['B', 'Маяк для теста',            1000],
+                        'test_beacon':      ['B', 'маяк для теста',            1000],
                         'unknown':          ['?', 'неизвестно',                 150],
                         }
-        if action in action_dict:
-            return action_dict[action][number]
+        if self.name in action_dict:
+            return action_dict[self.name][number]
         else:
             return action_dict['unknown'][number]
+
+    def lifetime_description_calculation(self, step):
+        if step < (self.birth + self.lifetime//3):
+            self.lifetime_description = f'свежие [{self.birth + self.lifetime - step}]'
+        elif step > (self.birth + (self.lifetime//3)*2):
+            self.lifetime_description = f'старые [{self.birth + self.lifetime - step}]'
+        else:
+            self.lifetime_description = f'[{self.birth + self.lifetime - step}]'
+        
 
 
 class Enemy:
     """ Отвечает за всех NPC """
-    def __init__(self, enemy, global_position, action_points):
-        self.enemy = enemy
+    def __init__(self, global_position, action_points):
         self.global_position = global_position
         self.action_points = action_points
         self.dynamic_chunk = False
@@ -562,11 +577,15 @@ class Enemy:
         self.alarm = False
         self.pass_step = 0
 
+    def all_description_calculation(self):
+        self.description = f"{self.pass_description} {self.person_description}"
+
 class Horseman(Enemy):
     """ Отвечает за всадников """
     
     """ activity_map содержит следующие значения [описание активности, название активности, добавляемые очки, количество пропускаемых шагов] """
-    def __init__(self):
+    def __init__(self, global_position, action_points):
+        super().__init__(global_position, action_points)
         self.name = 'horseman'
         self.name_npc = random.choice(['Малыш Билли', 'Буффало Билл', 'Маленькая Верная Рука Энни Окли', 'Дикий Билл Хикок'])
         self.priority_biom = [',', '„', 'P']
@@ -585,13 +604,15 @@ class Horseman(Enemy):
         self.reserves = 10
         self.type = 'hunter'
         self.pass_description = ''
-        self.description = f"Знаменитый охотник за головами {self.name_npc} " + self.pass_description
+        self.person_description = f"Знаменитый охотник за головами {self.name_npc}"
+        self.description = ''
 
 class Riffleman(Enemy):
     """ Отвечает за стрелков """
         
     """ activity_map содержит следующие значения [описание активности, название активности, добавляемые очки, количество пропускаемых шагов] """
-    def __init__(self):
+    def __init__(self, global_position, action_points):
+        super().__init__(global_position, action_points)
         self.name = 'riffleman'
         self.name_npc = random.choice(['Бедовая Джейн', 'Бутч Кэссиди', 'Сандэнс Кид', 'Черный Барт'])
         self.priority_biom = ['.', 'A', '▲']
@@ -610,13 +631,15 @@ class Riffleman(Enemy):
         self.reserves = 5
         self.type = 'hunter'
         self.pass_description = ''
-        self.description = f"Шериф одного мрачного города {self.name_npc} " + self.pass_description
+        self.person_description = f"Шериф одного мрачного города {self.name_npc}"
+        self.description = ''
 
 class Gold_digger(Enemy):
     """ Отвечает за золотоискателей """
         
     """ activity_map содержит следующие значения [описание активности, название активности, добавляемые очки, количество пропускаемых шагов] """
-    def __init__(self):
+    def __init__(self, global_position, action_points):
+        super().__init__(global_position, action_points)
         self.name = 'gold_digger'
         self.name_npc = random.choice(['Бедовая Джейн', 'Бутч Кэссиди', 'Сандэнс Кид', 'Черный Барт'])
         self.priority_biom = ['.', 'A', '▲']
@@ -635,13 +658,15 @@ class Gold_digger(Enemy):
         self.reserves = 5
         self.type = 'chaotic'
         self.pass_description = ''
-        self.description = f"Отчаяный золотоискатель {self.name_npc} " + self.pass_description
+        self.person_description = f"Отчаяный золотоискатель {self.name_npc}"
+        self.description = ''
 
 class Horse(Enemy):
     """ Отвечает за коней """
         
     """ activity_map содержит следующие значения [описание активности, название активности, добавляемые очки, количество пропускаемых шагов] """
-    def __init__(self):
+    def __init__(self, global_position, action_points):
+        super().__init__(global_position, action_points)
         self.name = 'horse'
         self.name_npc = random.choice(['Стреноженая белая лошадь', 'Стреноженая гнедая лошадь', 'Стреноженая черная лошадь'])
         self.priority_biom = [',', '„', 'P']
@@ -660,13 +685,15 @@ class Horse(Enemy):
         self.reserves = 0
         self.type = 'chaotic'
         self.pass_description = ''
-        self.description = f"{self.name_npc} " + self.pass_description
+        self.person_description = f"{self.name_npc}"
+        self.description = ''
 
 class Coyot(Enemy):
     """ Отвечает за койотов """
         
     """ activity_map содержит следующие значения [описание активности, название активности, добавляемые очки, количество пропускаемых шагов] """
-    def __init__(self):
+    def __init__(self, global_position, action_points):
+        super().__init__(global_position, action_points)
         self.name = 'coyot'
         self.name_npc = random.choice(['плешивый койот', 'молодой койот', 'подраный койот'])
         self.priority_biom = ['.', ',', '„', 'P', 'A']
@@ -685,7 +712,8 @@ class Coyot(Enemy):
         self.reserves = 0
         self.type = 'chaotic'
         self.pass_description = ''
-        self.description = f"Голодный и злой {self.name_npc} " + self.pass_description
+        self.person_description = f"Голодный и злой {self.name_npc}"
+        self.description = ''
 
 def master_npc_calculation(global_map, enemy_list, position, go_to_print, step, activity_list, chunk_size, interaction):
     """
@@ -915,27 +943,27 @@ def enemy_in_dynamic_chunk(global_map, enemy, position, chunk_size, step, activi
         Обрабатывает поведение NPC на динамическом чанке игрока
     """
     enemy_recalculation_dynamic_chank_position(global_map, enemy, position, chunk_size, step)
+    enemy.all_description_calculation()
     if len(enemy.waypoints) > 0:
         if enemy.global_position == enemy.waypoints[0]:
             enemy.waypoints.pop(0)
     if len(enemy.waypoints) > 0:
         if len(enemy.dynamic_waypoints) > 0:
             if enemy.pass_step == 0:
-                print(f"enemy.enemy.pass_description - {enemy.enemy.pass_description}")
-                enemy.enemy.pass_description = ''
+                enemy.pass_description = ''
                 enemy.dynamic_chunk_position = enemy.dynamic_waypoints[0]
                 enemy.dynamic_waypoints.pop(0)
                 if random.randrange(21)//18 > 0:
-                    activity_list.append(Action_in_map(enemy.enemy.activity_map['move'][0][1], step, enemy.global_position, enemy.dynamic_chunk_position, chunk_size, enemy.enemy.name_npc))
+                    activity_list.append(Action_in_map(enemy.activity_map['move'][0][1], step, enemy.global_position, enemy.dynamic_chunk_position, chunk_size, enemy.name_npc))
                 if random.randrange(101)//99 > 0:
                     action_in_dynamic_chank(global_map, enemy, activity_list, step, chunk_size)
             else:
                 enemy.pass_step -= 1
         else:
-            enemy_a_star_move_dynamic_calculations(global_map, enemy, chunk_size)
+            enemy_a_star_move_dynamic_calculations(global_map, enemy, chunk_size, 'moving_between_locations', [chunk_size//2, chunk_size//2])
     enemy_global_position_recalculation(global_map, enemy, position, chunk_size)
 
-def enemy_a_star_move_dynamic_calculations(global_map, enemy, chunk_size):
+def enemy_a_star_move_dynamic_calculations(global_map, enemy, chunk_size, mode, target_point):
     """
         Рассчитывает передвижение по динамическому чанку с помощью алгоритма А*
     """
@@ -946,42 +974,45 @@ def enemy_a_star_move_dynamic_calculations(global_map, enemy, chunk_size):
     direction = ''
     suitable_points = []
     reserve_points = []
-    if enemy.global_position[0] > enemy.waypoints[0][0]:
-        direction = 'up'
-        for number_tile in range(len(use_calculation_map[0])):
-            if not(use_calculation_map[0][number_tile].icon in banned_list) and not(paired_map[len(paired_map) - 1][number_tile].icon in banned_list):
-                if use_calculation_map[0][number_tile].price_move <= 10:
-                    suitable_points.append([0, number_tile])
-                else:
-                    reserve_points.append([0, number_tile])
+    if mode == 'moving_between_locations':
+        if enemy.global_position[0] > enemy.waypoints[0][0]:
+            direction = 'up'
+            for number_tile in range(len(use_calculation_map[0])):
+                if not(use_calculation_map[0][number_tile].icon in banned_list) and not(paired_map[len(paired_map) - 1][number_tile].icon in banned_list):
+                    if use_calculation_map[0][number_tile].price_move <= 10:
+                        suitable_points.append([0, number_tile])
+                    else:
+                        reserve_points.append([0, number_tile])
         
 
-    elif enemy.global_position[0] < enemy.waypoints[0][0]:
-        direction = 'down'
-        for number_tile in range(len(use_calculation_map[0])):
-            if not(use_calculation_map[len(use_calculation_map) - 1][number_tile].icon in banned_list) and not(paired_map[0][number_tile].icon in banned_list):
-                if use_calculation_map[len(use_calculation_map) - 1][number_tile].price_move <= 10:
-                    suitable_points.append([len(use_calculation_map) - 1, number_tile])
-                else:
-                    reserve_points.append([len(use_calculation_map) - 1, number_tile])
+        elif enemy.global_position[0] < enemy.waypoints[0][0]:
+            direction = 'down'
+            for number_tile in range(len(use_calculation_map[0])):
+                if not(use_calculation_map[len(use_calculation_map) - 1][number_tile].icon in banned_list) and not(paired_map[0][number_tile].icon in banned_list):
+                    if use_calculation_map[len(use_calculation_map) - 1][number_tile].price_move <= 10:
+                        suitable_points.append([len(use_calculation_map) - 1, number_tile])
+                    else:
+                        reserve_points.append([len(use_calculation_map) - 1, number_tile])
 
-    elif enemy.global_position[1] > enemy.waypoints[0][1]:
-        direction = 'left'
-        for number_line in range(len(use_calculation_map)):
-            if not(use_calculation_map[number_line][0].icon in banned_list) and not(paired_map[number_line][len(paired_map[0]) - 1].icon in banned_list):
-                if use_calculation_map[number_line][0].price_move <= 10:
-                    suitable_points.append([number_line, 0])
-                else:
-                    reserve_points.append([number_line, 0])
+        elif enemy.global_position[1] > enemy.waypoints[0][1]:
+            direction = 'left'
+            for number_line in range(len(use_calculation_map)):
+                if not(use_calculation_map[number_line][0].icon in banned_list) and not(paired_map[number_line][len(paired_map[0]) - 1].icon in banned_list):
+                    if use_calculation_map[number_line][0].price_move <= 10:
+                        suitable_points.append([number_line, 0])
+                    else:
+                        reserve_points.append([number_line, 0])
                                  
-    elif enemy.global_position[1] < enemy.waypoints[0][1]:
-        direction = 'right'
-        for number_line in range(len(use_calculation_map)):
-            if not(use_calculation_map[number_line][len(use_calculation_map) - 1].icon in banned_list) and not(paired_map[number_line][0].icon in banned_list):
-                if use_calculation_map[number_line][len(use_calculation_map) - 1].price_move <= 10:
-                    suitable_points.append([number_line, len(use_calculation_map[0]) - 1])
-                else:
-                    reserve_points.append([number_line, len(use_calculation_map[0]) - 1])
+        elif enemy.global_position[1] < enemy.waypoints[0][1]:
+            direction = 'right'
+            for number_line in range(len(use_calculation_map)):
+                if not(use_calculation_map[number_line][len(use_calculation_map) - 1].icon in banned_list) and not(paired_map[number_line][0].icon in banned_list):
+                    if use_calculation_map[number_line][len(use_calculation_map) - 1].price_move <= 10:
+                        suitable_points.append([number_line, len(use_calculation_map[0]) - 1])
+                    else:
+                        reserve_points.append([number_line, len(use_calculation_map[0]) - 1])
+    else:
+        finish_point = target_point
 
     if suitable_points:   
         finish_point = random.choice(suitable_points)
@@ -1200,32 +1231,32 @@ def action_in_dynamic_chank(global_map, enemy, activity_list, step, chunk_size):
         Обрабатывает появление активностей на динамическом чанке
     """
     request_activity = []
-    if enemy.enemy.hunger < 20:
+    if enemy.hunger < 20:
         request_activity.append('hunger')
-    if enemy.enemy.thirst < 20:
+    if enemy.thirst < 20:
         request_activity.append('thirst')
-    if enemy.enemy.fatigue < 20:
+    if enemy.fatigue < 20:
         request_activity.append('fatigue')
     if random.randrange(10)//8 >= 1:
         request_activity.append('other')
         
     if request_activity:
         type_activity = random.choice(request_activity)
-        activity = random.choice(enemy.enemy.activity_map[type_activity])
+        activity = random.choice(enemy.activity_map[type_activity])
         if type_activity == 'hunger': 
-            activity_list.append(Action_in_map(activity[1], step, enemy.global_position, enemy.dynamic_chunk_position, chunk_size, enemy.enemy.name_npc))
-            enemy.enemy.hunger += activity[2]
+            activity_list.append(Action_in_map(activity[1], step, enemy.global_position, enemy.dynamic_chunk_position, chunk_size, enemy.name_npc))
+            enemy.hunger += activity[2]
         elif type_activity == 'thirst':
-            activity_list.append(Action_in_map(activity[1], step, enemy.global_position, enemy.dynamic_chunk_position, chunk_size, enemy.enemy.name_npc))
-            enemy.enemy.thirst += activity[2]
+            activity_list.append(Action_in_map(activity[1], step, enemy.global_position, enemy.dynamic_chunk_position, chunk_size, enemy.name_npc))
+            enemy.thirst += activity[2]
         elif type_activity == 'fatigue':
-            activity_list.append(Action_in_map(activity[1], step, enemy.global_position, enemy.dynamic_chunk_position, chunk_size, enemy.enemy.name_npc))
-            enemy.enemy.fatigue += activity[2]
+            activity_list.append(Action_in_map(activity[1], step, enemy.global_position, enemy.dynamic_chunk_position, chunk_size, enemy.name_npc))
+            enemy.fatigue += activity[2]
         elif type_activity == 'other':
-            activity_list.append(Action_in_map(activity[1], step, enemy.global_position, enemy.dynamic_chunk_position, chunk_size, enemy.enemy.name_npc))
+            activity_list.append(Action_in_map(activity[1], step, enemy.global_position, enemy.dynamic_chunk_position, chunk_size, enemy.name_npc))
             
         enemy.pass_step += activity[3] # Пропуск указанного количества шагов
-        enemy.enemy.pass_description = activity[0]
+        enemy.pass_description = activity[0]
 
             
 def move_hunter_enemy(global_map, enemy):
@@ -1251,16 +1282,16 @@ def enemy_emulation_life(global_map, enemy, go_to_print, step, activity_list, ch
     """
 
     enemy.action_points += 1
-    enemy.enemy.hunger -= 1
-    enemy.enemy.thirst -= 1
-    enemy.enemy.fatigue -= 1
+    enemy.hunger -= 1
+    enemy.thirst -= 1
+    enemy.fatigue -= 1
     
     if enemy.action_points >= 5:
-        if enemy.enemy.type == 'chaotic' and (global_map[enemy.global_position[0]][enemy.global_position[1]].icon in enemy.enemy.priority_biom and random.randrange(10)//8 == 1) and len(enemy.waypoints) == 0:
+        if enemy.type == 'chaotic' and (global_map[enemy.global_position[0]][enemy.global_position[1]].icon in enemy.priority_biom and random.randrange(10)//8 == 1) and len(enemy.waypoints) == 0:
             move_biom_enemy(global_map, enemy)
             enemy.action_points -= 5
-            go_to_print.text5 += str(enemy.enemy.name_npc) + ' передвигается' + '\n'
-        elif enemy.enemy.type == 'hunter':
+            go_to_print.text5 += str(enemy.name_npc) + ' передвигается' + '\n'
+        elif enemy.type == 'hunter':
             if random.randrange(10)//8 > 0:
                 if len(enemy.waypoints) > 0:
                     move_hunter_enemy(global_map, enemy)
@@ -1268,44 +1299,44 @@ def enemy_emulation_life(global_map, enemy, go_to_print, step, activity_list, ch
                 else:
                     move_biom_enemy(global_map, enemy)
                     enemy.action_points -= 5
-                go_to_print.text5 += str(enemy.enemy.name_npc) + ' передвигается' + '\n'
+                go_to_print.text5 += str(enemy.name_npc) + ' передвигается' + '\n'
       
-        elif(enemy.enemy.thirst < 10 or enemy.enemy.hunger < 10) and enemy.enemy.reserves > 0:
-            enemy.enemy.reserves -= 1
-            enemy.enemy.hunger = 100
-            enemy.enemy.thirst = 100
+        elif(enemy.thirst < 10 or enemy.hunger < 10) and enemy.reserves > 0:
+            enemy.reserves -= 1
+            enemy.hunger = 100
+            enemy.thirst = 100
             enemy.action_points -= 3
-            go_to_print.text5 += str(enemy.enemy.name_npc)+ ' достаёт припасы \n'
-        elif enemy.enemy.fatigue < 10:
-            enemy.enemy.fatigue = 50
+            go_to_print.text5 += str(enemy.name_npc)+ ' достаёт припасы \n'
+        elif enemy.fatigue < 10:
+            enemy.fatigue = 50
             enemy.action_points -= 20
-            go_to_print.text5 += str(enemy.enemy.name_npc)+ ' уснул от усталости \n'
-            activity_list.append(Action_in_map(random.choice(enemy.enemy.activity_map['fatigue'])[1], step, enemy.global_position, [random.randrange(chunk_size), random.randrange(chunk_size)], chunk_size, enemy.enemy.name_npc))
+            go_to_print.text5 += str(enemy.name_npc)+ ' уснул от усталости \n'
+            activity_list.append(Action_in_map(random.choice(enemy.activity_map['fatigue'])[1], step, enemy.global_position, [random.randrange(chunk_size), random.randrange(chunk_size)], chunk_size, enemy.name_npc))
         else:
             request_activity = []
-            if enemy.enemy.hunger < 20:
+            if enemy.hunger < 20:
                 request_activity.append('hunger')
-            if enemy.enemy.thirst < 20:
+            if enemy.thirst < 20:
                 request_activity.append('thirst')
-            if enemy.enemy.fatigue < 20:
+            if enemy.fatigue < 20:
                 request_activity.append('fatigue')
             if random.randrange(10)//8 >= 1:
                 request_activity.append('other')
         
             if request_activity:
                 type_activity = random.choice(request_activity)
-                activity = random.choice(enemy.enemy.activity_map[type_activity])
+                activity = random.choice(enemy.activity_map[type_activity])
                 if type_activity == 'hunger': 
-                    activity_list.append(Action_in_map(activity[1], step, enemy.global_position, [random.randrange(chunk_size), random.randrange(chunk_size)], chunk_size, enemy.enemy.name_npc))
-                    enemy.enemy.hunger += activity[2]
+                    activity_list.append(Action_in_map(activity[1], step, enemy.global_position, [random.randrange(chunk_size), random.randrange(chunk_size)], chunk_size, enemy.name_npc))
+                    enemy.hunger += activity[2]
                 elif type_activity == 'thirst':
-                    activity_list.append(Action_in_map(activity[1], step, enemy.global_position, [random.randrange(chunk_size), random.randrange(chunk_size)], chunk_size, enemy.enemy.name_npc))
-                    enemy.enemy.thirst += activity[2]
+                    activity_list.append(Action_in_map(activity[1], step, enemy.global_position, [random.randrange(chunk_size), random.randrange(chunk_size)], chunk_size, enemy.name_npc))
+                    enemy.thirst += activity[2]
                 elif type_activity == 'fatigue':
-                    activity_list.append(Action_in_map(activity[1], step, enemy.global_position, [random.randrange(chunk_size), random.randrange(chunk_size)], chunk_size, enemy.enemy.name_npc))
-                    enemy.enemy.fatigue += activity[2]
+                    activity_list.append(Action_in_map(activity[1], step, enemy.global_position, [random.randrange(chunk_size), random.randrange(chunk_size)], chunk_size, enemy.name_npc))
+                    enemy.fatigue += activity[2]
                 elif type_activity == 'other':
-                    activity_list.append(Action_in_map(activity[1], step, enemy.global_position, [random.randrange(chunk_size), random.randrange(chunk_size)], chunk_size, enemy.enemy.name_npc))
+                    activity_list.append(Action_in_map(activity[1], step, enemy.global_position, [random.randrange(chunk_size), random.randrange(chunk_size)], chunk_size, enemy.name_npc))
                 enemy.action_points -= activity[2]//3
 
                 
@@ -1314,15 +1345,15 @@ def move_biom_enemy(global_map, enemy):
         Обрабатывает перемещение NPC за кадром между биомами
     """
 
-    if global_map[enemy.global_position[0]][enemy.global_position[1]].icon in enemy.enemy.priority_biom:
+    if global_map[enemy.global_position[0]][enemy.global_position[1]].icon in enemy.priority_biom:
         direction_moved = []
-        if global_map[enemy.global_position[0] - 1][enemy.global_position[1]].icon in enemy.enemy.priority_biom and enemy.global_position[0] - 1 > 0:
+        if global_map[enemy.global_position[0] - 1][enemy.global_position[1]].icon in enemy.priority_biom and enemy.global_position[0] - 1 > 0:
             direction_moved.append([enemy.global_position[0] - 1, enemy.global_position[1]])
-        if global_map[enemy.global_position[0] + 1][enemy.global_position[1]].icon in enemy.enemy.priority_biom and enemy.global_position[0] + 1 < len(global_map) - 1:
+        if global_map[enemy.global_position[0] + 1][enemy.global_position[1]].icon in enemy.priority_biom and enemy.global_position[0] + 1 < len(global_map) - 1:
             direction_moved.append([enemy.global_position[0] + 1, enemy.global_position[1]]) 
-        if global_map[enemy.global_position[0]][enemy.global_position[1] - 1].icon in enemy.enemy.priority_biom and enemy.global_position[1] - 1 > 0:
+        if global_map[enemy.global_position[0]][enemy.global_position[1] - 1].icon in enemy.priority_biom and enemy.global_position[1] - 1 > 0:
             direction_moved.append([enemy.global_position[0], enemy.global_position[1] - 1])
-        if global_map[enemy.global_position[0]][enemy.global_position[1] + 1].icon in enemy.enemy.priority_biom and enemy.global_position[1] + 1 < len(global_map) - 1:
+        if global_map[enemy.global_position[0]][enemy.global_position[1] + 1].icon in enemy.priority_biom and enemy.global_position[1] + 1 < len(global_map) - 1:
             direction_moved.append([enemy.global_position[0], enemy.global_position[1] + 1])
         if len(direction_moved) != 0:
             enemy.global_position = random.choice(direction_moved)
@@ -1615,7 +1646,7 @@ def print_minimap(global_map, position, go_to_print, enemy_list):
             enemy_here = '--'
             for enemy in range(len(enemy_list)):
                 if number_line == enemy_list[enemy].global_position[0] and biom == enemy_list[enemy].global_position[1]:
-                    enemy_here = enemy_list[enemy].enemy.icon
+                    enemy_here = enemy_list[enemy].icon
             if number_line == position.global_position[0] and biom == position.global_position[1]:
                 go_to_print.text2 = global_map[number_line][biom].name
                 go_to_print.text3 = [global_map[number_line][biom].temperature, 36.6]
@@ -1632,14 +1663,14 @@ def print_help(go_to_print):
                  '*                 ОБЫЧНЫЙ РЕЖИМ                  *',
                  '*                                                *',
                  '* wasd - управление персонажем;                  *',
-                 '* m - миникарта биомов;                          *',
-                 '* k - режим курсора;                             *',
-                 '* g - режим прицеливания;                        *',
+                 '* m - ВКЛ/ВЫКЛ миникарта биомов;                 *',
+                 '* k - ВКЛ/ВЫКЛ режим курсора;                    *',
+                 '* g - ВКЛ/ВЫКЛ режим прицеливания;               *',
                  '*                                                *',
                  '*                                                *',
                  '*                ТЕСТОВЫЙ РЕЖИМ                  *',
                  '*                                                *',
-                 '* t - тестовый режим перемещения;                *',
+                 '* t - ВКЛ/ВЫКЛ тестовый режим перемещения;       *',
                  '* p - назначение точки прибытия для hunter NPC;  *',
                  '* m - установка тестового маяка;                 *',
                  '*                                                *',
@@ -1708,7 +1739,7 @@ def draw_additional_entities(position, chunk_size:int, go_to_print, enemy_list, 
     for enemy in enemy_list:
         if enemy.global_position in position.check_encounter_position:
             if (0 <= enemy.dynamic_chunk_position[0] < chunk_size * 2) and (0 <= enemy.dynamic_chunk_position[1] < chunk_size * 2 - 2):
-                position.chunks_use_map[enemy.dynamic_chunk_position[0]][enemy.dynamic_chunk_position[1]] = enemy.enemy
+                position.chunks_use_map[enemy.dynamic_chunk_position[0]][enemy.dynamic_chunk_position[1]] = enemy
                                
 
 def master_draw(position, chunk_size:int, go_to_print, global_map, mode_action, enemy_list, activity_list):
@@ -1846,13 +1877,13 @@ def main():
     grid = 5                #Должно быть кратно размеру игрового экрана.
     frame_size = [35, 40]   #Размер одного кадра [высота, ширина].
 
-
+    print('Подождите, генерируется локация для игры')
     #progress_bar(5, 'Запуск игры') 
     global_map = master_generate(value_region_box, chunk_size, grid)
     position = Position([value_region_box//2, value_region_box//2], [chunk_size//2, chunk_size//2], [], [chunk_size//2, chunk_size//2], [chunk_size//2, chunk_size//2])
     calculation_assemblage_point(global_map, position, chunk_size)
-    enemy_list = [Enemy(Horseman(),[len(global_map)//2, len(global_map)//2] , 5), Enemy(Horseman(),[len(global_map)//3, len(global_map)//3] , 5),
-                  Enemy(Riffleman(),[len(global_map)//4, len(global_map)//4] , 2), Enemy(Coyot(),[len(global_map)//5, len(global_map)//5] , 0)]
+    enemy_list = [Horseman([len(global_map)//2, len(global_map)//2] , 5), Horseman([len(global_map)//3, len(global_map)//3] , 5),
+                  Riffleman([len(global_map)//4, len(global_map)//4] , 2), Coyot([len(global_map)//5, len(global_map)//5] , 0)]
     game_loop(global_map, position, chunk_size, frame_size, enemy_list)
     
     print('Игра окончена!')
