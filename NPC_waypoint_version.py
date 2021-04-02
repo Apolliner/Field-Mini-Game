@@ -77,7 +77,7 @@ garbage = ['░', '▒', '▓', '█', '☺']
 class Person:
     """ Содержит в себе глобальное местоположение персонажа, расположение в пределах загруженного участка карты и координаты используемых чанков """
     __slots__ = ('assemblage_point', 'dynamic', 'chunks_use_map', 'pointer', 'gun', 'global_position', 'number_chunk',
-                 'check_encounter_position', 'environment_temperature', 'person_temperature')
+                 'check_encounter_position', 'environment_temperature', 'person_temperature', 'person_pass_step', 'enemy_pass_step')
     def __init__(self, assemblage_point:list, dynamic:list, chunks_use_map:list, pointer:list, gun:list):
         self.assemblage_point = assemblage_point
         self.dynamic = dynamic
@@ -93,6 +93,8 @@ class Person:
                                         [self.global_position[0] + 1, self.global_position[1] + 1]]
         self.environment_temperature = 36.6
         self.person_temperature = 36.6
+        self.person_pass_step = 0
+        self.enemy_pass_step = 0
 
 
         
@@ -1393,26 +1395,26 @@ def move_biom_enemy(global_map, enemy):
 
 """
 
-def master_player_action(global_map, person, chunk_size, go_to_print, changing_step, mode_action, interaction, activity_list, step):
+def master_player_action(global_map, person, chunk_size, go_to_print, mode_action, interaction, activity_list, step):
 
 
     pressed_button = ''
-    mode_action, pressed_button = request_press_button(global_map, person, chunk_size, go_to_print, changing_step, mode_action, interaction)
+    mode_action, pressed_button = request_press_button(global_map, person, chunk_size, go_to_print, mode_action, interaction)
 
     if mode_action == 'move':
-        request_move(global_map, person, chunk_size, go_to_print, pressed_button, changing_step)
+        request_move(global_map, person, chunk_size, go_to_print, pressed_button)
         if random.randrange(21)//18 > 0: # Оставление персонажем следов
             activity_list.append(Action_in_map('human_tracks', step, person.global_position, person.dynamic, chunk_size, 'ваши'))
     
     elif mode_action == 'test_move':
-        test_request_move(global_map, person, chunk_size, go_to_print, pressed_button, changing_step, interaction)
+        test_request_move(global_map, person, chunk_size, go_to_print, pressed_button, interaction)
         if pressed_button == 'button_add_beacon':
             activity_list.append(Action_in_map('test_beacon', step, person.global_position, person.dynamic, chunk_size, f'\n оставлен вами в локальной точке - {[person.dynamic[0]%chunk_size, person.dynamic[1]%chunk_size]}| динамической - {person.dynamic}| глобальной - {person.global_position}'))
 
     elif mode_action == 'pointer':    
-        request_pointer(person, chunk_size, go_to_print, pressed_button, changing_step)
+        request_pointer(person, chunk_size, go_to_print, pressed_button)
     elif mode_action == 'gun':
-        request_gun(global_map, person, chunk_size, go_to_print, pressed_button, changing_step)
+        request_gun(global_map, person, chunk_size, go_to_print, pressed_button)
     if pressed_button == 'button_map':
         go_to_print.minimap_on = (go_to_print.minimap_on == False)
     request_processing(pressed_button)
@@ -1422,7 +1424,7 @@ def master_player_action(global_map, person, chunk_size, go_to_print, changing_s
     return mode_action
 
 
-def request_press_button(global_map, person, chunk_size, go_to_print, changing_step, mode_action, interaction):
+def request_press_button(global_map, person, chunk_size, go_to_print, mode_action, interaction):
     """
         Спрашивает ввод, возвращает тип активности и нажимаемую кнопку
 
@@ -1483,7 +1485,7 @@ def request_press_button(global_map, person, chunk_size, go_to_print, changing_s
         return (mode_action, 'none')
 
 
-def request_move(global_map:list, person, chunk_size:int, go_to_print, pressed_button, changing_step):
+def request_move(global_map:list, person, chunk_size:int, go_to_print, pressed_button):
     """
         Меняет динамическое местоположение персонажа
     """
@@ -1511,7 +1513,7 @@ def request_move(global_map:list, person, chunk_size:int, go_to_print, pressed_b
             if person.dynamic[1] <= (chunk_size + chunk_size//2) and person.assemblage_point[1] != (len(global_map) - 2):
                 person.dynamic[1] += 1    
 
-def test_request_move(global_map:list, person, chunk_size:int, go_to_print, pressed_button, changing_step, interaction): #тестовый быстрый режим премещения
+def test_request_move(global_map:list, person, chunk_size:int, go_to_print, pressed_button, interaction): #тестовый быстрый режим премещения
     """
         Меняет динамическое местоположение персонажа в тестовом режиме, без ограничений. По полчанка за раз.
         При нажатии на 'p' назначает всем NPC точку следования.
@@ -1537,7 +1539,7 @@ def test_request_move(global_map:list, person, chunk_size:int, go_to_print, pres
         interaction.append(['task_point_all_enemies', person.global_position])
         
 
-def request_pointer(person, chunk_size:int, go_to_print, pressed_button, changing_step):
+def request_pointer(person, chunk_size:int, go_to_print, pressed_button):
     """
         Меняет местоположение указателя
     """
@@ -1550,7 +1552,7 @@ def request_pointer(person, chunk_size:int, go_to_print, pressed_button, changin
     elif pressed_button == 'right' and person.pointer[1] < chunk_size - 1:
         person.pointer[1] += 1
 
-def request_gun(global_map:list, person, chunk_size:int, go_to_print, pressed_button, changing_step):
+def request_gun(global_map:list, person, chunk_size:int, go_to_print, pressed_button):
     """
         Меняет местоположение указателя оружия
     """
@@ -1835,10 +1837,27 @@ def print_frame(go_to_print, frame_size, activity_list):
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 """
-
-def all_pass_step_calculations(person, enemy_list):
+class Interaction:
     
-    pass
+    def __init__(self, perform, whom, type_interaction, description):
+        self.perform = perform
+        self.whom = whom
+        self.type = type_interaction
+        self.description = description
+
+def all_pass_step_calculations(person, enemy_list, mode_action, interaction):
+    """
+        Рассчитывает пропуск хода персонажа и NPC и кем он осуществляется.
+    """
+    if mode_action == 'move':
+        person.person_pass_step = 0
+        person.enemy_pass_step = 0
+    if mode_action == 'pointer':
+        person.person_pass_step = 0
+        person.enemy_pass_step = 1
+    if mode_action == 'gun':
+        person.person_pass_step = 0
+        person.enemy_pass_step = 1    
 
 """
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1856,18 +1875,17 @@ def game_loop(global_map:list, person:list, chunk_size:int, frame_size:list, ene
     """
     go_to_print = Interfase([], [], False, '', '', '', '', '', '', '', '', '', '')
     activity_list = []
-    not_intercept_step = [True]
     step = 0
     print('game_loop запущен')
     global changing_step
     mode_action = 'move'
     while game_loop:
         interaction = []
-        changing_step = True
-        if not_intercept_step[0]:
-            mode_action = master_player_action(global_map, person, chunk_size, go_to_print, changing_step, mode_action, interaction, activity_list, step)
+        if not person.person_pass_step:
+            mode_action = master_player_action(global_map, person, chunk_size, go_to_print, mode_action, interaction, activity_list, step)
         #start = time.time() #проверка времени выполнения
-        if changing_step:
+        all_pass_step_calculations(person, enemy_list, mode_action, interaction)
+        if not person.enemy_pass_step:
             master_game_events(global_map, enemy_list, person, go_to_print, step, activity_list, chunk_size, interaction)
             step += 1
         #test1 = time.time() #проверка времени выполнения
