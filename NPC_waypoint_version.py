@@ -77,7 +77,7 @@ garbage = ['░', '▒', '▓', '█', '☺']
 class Person:
     """ Содержит в себе глобальное местоположение персонажа, расположение в пределах загруженного участка карты и координаты используемых чанков """
     __slots__ = ('assemblage_point', 'dynamic', 'chunks_use_map', 'pointer', 'gun', 'global_position', 'number_chunk',
-                 'check_encounter_position', 'environment_temperature', 'person_temperature', 'person_pass_step', 'enemy_pass_step')
+                 'check_encounter_position', 'environment_temperature', 'person_temperature', 'person_pass_step', 'enemy_pass_step', 'speed')
     def __init__(self, assemblage_point:list, dynamic:list, chunks_use_map:list, pointer:list, gun:list):
         self.assemblage_point = assemblage_point
         self.dynamic = dynamic
@@ -95,6 +95,7 @@ class Person:
         self.person_temperature = 36.6
         self.person_pass_step = 0
         self.enemy_pass_step = 0
+        self.speed = 1
 
 
         
@@ -608,6 +609,7 @@ class Horseman(Enemy):
         self.pass_description = ''
         self.person_description = f"Знаменитый охотник за головами {self.name_npc}"
         self.description = ''
+        self.speed = 2
 
 class Riffleman(Enemy):
     """ Отвечает за стрелков """
@@ -635,6 +637,7 @@ class Riffleman(Enemy):
         self.pass_description = ''
         self.person_description = f"Шериф одного мрачного города {self.name_npc}"
         self.description = ''
+        self.speed = 1
 
 class Gold_digger(Enemy):
     """ Отвечает за золотоискателей """
@@ -662,6 +665,7 @@ class Gold_digger(Enemy):
         self.pass_description = ''
         self.person_description = f"Отчаяный золотоискатель {self.name_npc}"
         self.description = ''
+        self.speed = 1
 
 class Horse(Enemy):
     """ Отвечает за коней """
@@ -689,6 +693,7 @@ class Horse(Enemy):
         self.pass_description = ''
         self.person_description = f"{self.name_npc}"
         self.description = ''
+        self.speed = 2
 
 class Coyot(Enemy):
     """ Отвечает за койотов """
@@ -716,6 +721,7 @@ class Coyot(Enemy):
         self.pass_description = ''
         self.person_description = f"Голодный и злой {self.name_npc}"
         self.description = ''
+        self.speed = 1
 
 def master_npc_calculation(global_map, enemy_list, person, go_to_print, step, activity_list, chunk_size, interaction):
     """
@@ -946,23 +952,26 @@ def enemy_in_dynamic_chunk(global_map, enemy, person, chunk_size, step, activity
     """
     enemy_recalculation_dynamic_chank_position(global_map, enemy, person, chunk_size, step)
     enemy.all_description_calculation()
-    if len(enemy.waypoints) > 0:
-        if enemy.global_position == enemy.waypoints[0]:
-            enemy.waypoints.pop(0)
-    if len(enemy.waypoints) > 0:
-        if len(enemy.dynamic_waypoints) > 0:
-            if enemy.pass_step == 0:
-                enemy.pass_description = ''
-                enemy.dynamic_chunk_position = enemy.dynamic_waypoints[0]
-                enemy.dynamic_waypoints.pop(0)
-                if random.randrange(21)//18 > 0:
-                    activity_list.append(Action_in_map(enemy.activity_map['move'][0][1], step, enemy.global_position, enemy.dynamic_chunk_position, chunk_size, enemy.name_npc))
-                if random.randrange(101)//99 > 0:
-                    action_in_dynamic_chank(global_map, enemy, activity_list, step, chunk_size)
+    count_speed = enemy.speed
+    while count_speed != 0:
+        count_speed -= 1
+        if len(enemy.waypoints) > 0:
+            if enemy.global_position == enemy.waypoints[0]:
+                enemy.waypoints.pop(0)
+        if len(enemy.waypoints) > 0:
+            if len(enemy.dynamic_waypoints) > 0:
+                if enemy.pass_step == 0:
+                    enemy.pass_description = ''
+                    enemy.dynamic_chunk_position = enemy.dynamic_waypoints[0]
+                    enemy.dynamic_waypoints.pop(0)
+                    if random.randrange(21)//18 > 0:
+                        activity_list.append(Action_in_map(enemy.activity_map['move'][0][1], step, enemy.global_position, enemy.dynamic_chunk_position, chunk_size, enemy.name_npc))
+                    if random.randrange(101)//99 > 0:
+                        action_in_dynamic_chank(global_map, enemy, activity_list, step, chunk_size)
+                else:
+                    enemy.pass_step -= 1
             else:
-                enemy.pass_step -= 1
-        else:
-            enemy_a_star_move_dynamic_calculations(global_map, enemy, chunk_size, 'moving_between_locations', [chunk_size//2, chunk_size//2])
+                enemy_a_star_move_dynamic_calculations(global_map, enemy, chunk_size, 'moving_between_locations', [chunk_size//2, chunk_size//2])
     enemy_global_position_recalculation(global_map, enemy, person, chunk_size)
 
 def enemy_a_star_move_dynamic_calculations(global_map, enemy, chunk_size, mode, target_point):
