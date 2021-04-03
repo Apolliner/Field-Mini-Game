@@ -962,7 +962,6 @@ def enemy_on_the_screen(enemy, person, chunk_size):
         enemy.on_the_screen = True
     else:
         enemy.on_the_screen = False
-    print(f"{enemy.name} enemy.on_the_screen = {enemy.on_the_screen}")
 
 
 def enemy_in_dynamic_chunk(global_map, enemy, person, chunk_size, step, activity_list, new_step, max_speed_enemy_visible):
@@ -977,9 +976,7 @@ def enemy_in_dynamic_chunk(global_map, enemy, person, chunk_size, step, activity
         enemy.steps_to_new_step = enemy.speed
 
     if enemy.on_the_screen or max_speed_enemy_visible:
-        print(f"{enemy.name} сработало условие 'enemy.on_the_screen or max_speed_enemy_visible'")
         if enemy.steps_to_new_step:
-            print(f"{enemy.name} сработало условие 'enemy.steps_to_new_step'")
             if len(enemy.waypoints) > 0:
                 if enemy.global_position == enemy.waypoints[0]:
                     enemy.waypoints.pop(0)
@@ -1000,7 +997,6 @@ def enemy_in_dynamic_chunk(global_map, enemy, person, chunk_size, step, activity
             enemy.steps_to_new_step -= 1
         
     else:
-        print(f"{enemy.name} сработало условие 'else'")
         count_speed = enemy.speed
         while count_speed != 0:
             count_speed -= 1
@@ -1930,7 +1926,7 @@ def new_step_calculation(enemy_list, person):
     new_step = True
     person.person_pass_step = False
     for enemy in enemy_list:
-        if (enemy.on_the_screen and enemy.steps_to_new_step) or (enemy.speed > 1 and enemy.steps_to_new_step == 1 and enemy.dynamic_chunk and enemy.steps_to_new_step):
+        if (enemy.on_the_screen and enemy.steps_to_new_step):
             new_step = False
             person.person_pass_step = True
     return new_step
