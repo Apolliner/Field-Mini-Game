@@ -457,13 +457,13 @@ def gluing_location(raw_gluing_map, grid, count_block):
 
 """
 
-def master_game_events(global_map, enemy_list, person, go_to_print, step, activity_list, chunk_size, interaction):
+def master_game_events(global_map, enemy_list, person, go_to_print, step, activity_list, chunk_size, interaction, new_step):
     """
         Здесь происходят все события, не связанные с пользовательским вводом
     """
     interaction_processing(global_map, interaction, enemy_list)
     activity_list_check(activity_list, step)
-    master_npc_calculation(global_map, enemy_list, person, go_to_print, step, activity_list, chunk_size, interaction)
+    master_npc_calculation(global_map, enemy_list, person, go_to_print, step, activity_list, chunk_size, interaction, new_step)
 
 def interaction_processing(global_map, interaction, enemy_list):
     """
@@ -579,6 +579,8 @@ class Enemy:
         self.dynamic_waypoints = []
         self.alarm = False
         self.pass_step = 0
+        self.on_the_screen = False
+        self.steps_to_new_step = 1
 
     def all_description_calculation(self):
         self.description = f"{self.pass_description} {self.person_description}"
@@ -723,17 +725,21 @@ class Coyot(Enemy):
         self.description = ''
         self.speed = 1
 
-def master_npc_calculation(global_map, enemy_list, person, go_to_print, step, activity_list, chunk_size, interaction):
+def master_npc_calculation(global_map, enemy_list, person, go_to_print, step, activity_list, chunk_size, interaction, new_step):
     """
         Здесь происходят все события, связанные с NPC
     """
     enemy_dynamic_chunk_check(global_map, enemy_list, person, step, chunk_size)
     go_to_print.text5 = ''
-    
+    for enemy in enemy_list:
+        if enemy.speed == 2 and enemy.on_the_screen:
+            max_speed_enemy_visible = True
+        else:
+            max_speed_enemy_visible = False
     
     for enemy in enemy_list:
         if enemy.dynamic_chunk:
-            enemy_in_dynamic_chunk(global_map, enemy, person, chunk_size, step, activity_list)
+            enemy_in_dynamic_chunk(global_map, enemy, person, chunk_size, step, activity_list, new_step, max_speed_enemy_visible)
             pass
         else:
             enemy_emulation_life(global_map, enemy, go_to_print, step, activity_list, chunk_size)
@@ -928,7 +934,8 @@ def path_straightener(calculation_map, waypoints, banned_list):
             while found_points:
                 check_point = max(found_points)
                 found_points.remove(check_point)
-                new_waypoints = straight_path(calculation_map, waypoints[number_check_waypoint], waypoints[number_check_waypoint + 1], waypoints[check_point], banned_list)
+                new_waypoints = straight_path(calculation_map, waypoints[number_check_waypoint], waypoints[number_check_waypoint + 1],
+                                              waypoints[check_point], banned_list)
                 if new_waypoints:
                     first_waypoints = waypoints[0: number_check_waypoint]
                     #print(f'first_waypoints - {first_waypoints}')
@@ -946,32 +953,74 @@ def path_straightener(calculation_map, waypoints, banned_list):
             #print('Цикл while found_points кончился')
     return waypoints
 
-def enemy_in_dynamic_chunk(global_map, enemy, person, chunk_size, step, activity_list):
+def enemy_on_the_screen(enemy, person, chunk_size):
+    """
+        Проверяет NPC на видимость игроком
+    """
+    if (person.dynamic[0] - chunk_size//2 - 1 < enemy.dynamic_chunk_position[0] < person.dynamic[0] + chunk_size//2 + 1) and (
+        person.dynamic[1] - chunk_size//2 - 1 < enemy.dynamic_chunk_position[1] < person.dynamic[1] + chunk_size//2 + 1):
+        enemy.on_the_screen = True
+    else:
+        enemy.on_the_screen = False
+    print(f"{enemy.name} enemy.on_the_screen = {enemy.on_the_screen}")
+
+
+def enemy_in_dynamic_chunk(global_map, enemy, person, chunk_size, step, activity_list, new_step, max_speed_enemy_visible):
     """
         Обрабатывает поведение NPC на динамическом чанке игрока
     """
     enemy_recalculation_dynamic_chank_position(global_map, enemy, person, chunk_size, step)
     enemy.all_description_calculation()
+    enemy_on_the_screen(enemy, person, chunk_size)
     count_speed = enemy.speed
-    while count_speed != 0:
-        count_speed -= 1
-        if len(enemy.waypoints) > 0:
-            if enemy.global_position == enemy.waypoints[0]:
-                enemy.waypoints.pop(0)
-        if len(enemy.waypoints) > 0:
-            if len(enemy.dynamic_waypoints) > 0:
-                if enemy.pass_step == 0:
-                    enemy.pass_description = ''
-                    enemy.dynamic_chunk_position = enemy.dynamic_waypoints[0]
-                    enemy.dynamic_waypoints.pop(0)
-                    if random.randrange(21)//18 > 0:
-                        activity_list.append(Action_in_map(enemy.activity_map['move'][0][1], step, enemy.global_position, enemy.dynamic_chunk_position, chunk_size, enemy.name_npc))
-                    if random.randrange(101)//99 > 0:
-                        action_in_dynamic_chank(global_map, enemy, activity_list, step, chunk_size)
+    if new_step:
+        enemy.steps_to_new_step = enemy.speed
+
+    if enemy.on_the_screen or max_speed_enemy_visible:
+        print(f"{enemy.name} сработало условие 'enemy.on_the_screen or max_speed_enemy_visible'")
+        if enemy.steps_to_new_step:
+            print(f"{enemy.name} сработало условие 'enemy.steps_to_new_step'")
+            if len(enemy.waypoints) > 0:
+                if enemy.global_position == enemy.waypoints[0]:
+                    enemy.waypoints.pop(0)
+            if len(enemy.waypoints) > 0:
+                if len(enemy.dynamic_waypoints) > 0:
+                    if enemy.pass_step == 0:
+                        enemy.pass_description = ''
+                        enemy.dynamic_chunk_position = enemy.dynamic_waypoints[0]
+                        enemy.dynamic_waypoints.pop(0)
+                        if random.randrange(21)//18 > 0:
+                            activity_list.append(Action_in_map(enemy.activity_map['move'][0][1], step, enemy.global_position, enemy.dynamic_chunk_position, chunk_size, enemy.name_npc))
+                        if random.randrange(101)//99 > 0:
+                            action_in_dynamic_chank(global_map, enemy, activity_list, step, chunk_size)
+                    else:
+                        enemy.pass_step -= 1
                 else:
-                    enemy.pass_step -= 1
-            else:
-                enemy_a_star_move_dynamic_calculations(global_map, enemy, chunk_size, 'moving_between_locations', [chunk_size//2, chunk_size//2])
+                    enemy_a_star_move_dynamic_calculations(global_map, enemy, chunk_size, 'moving_between_locations', [chunk_size//2, chunk_size//2])
+            enemy.steps_to_new_step -= 1
+        
+    else:
+        print(f"{enemy.name} сработало условие 'else'")
+        count_speed = enemy.speed
+        while count_speed != 0:
+            count_speed -= 1
+            if len(enemy.waypoints) > 0:
+                if enemy.global_position == enemy.waypoints[0]:
+                    enemy.waypoints.pop(0)
+            if len(enemy.waypoints) > 0:
+                if len(enemy.dynamic_waypoints) > 0:
+                    if enemy.pass_step == 0:
+                        enemy.pass_description = ''
+                        enemy.dynamic_chunk_position = enemy.dynamic_waypoints[0]
+                        enemy.dynamic_waypoints.pop(0)
+                        if random.randrange(21)//18 > 0:
+                            activity_list.append(Action_in_map(enemy.activity_map['move'][0][1], step, enemy.global_position, enemy.dynamic_chunk_position, chunk_size, enemy.name_npc))
+                        if random.randrange(101)//99 > 0:
+                            action_in_dynamic_chank(global_map, enemy, activity_list, step, chunk_size)
+                    else:
+                        enemy.pass_step -= 1
+                else:
+                    enemy_a_star_move_dynamic_calculations(global_map, enemy, chunk_size, 'moving_between_locations', [chunk_size//2, chunk_size//2])
     enemy_global_position_recalculation(global_map, enemy, person, chunk_size)
 
 def enemy_a_star_move_dynamic_calculations(global_map, enemy, chunk_size, mode, target_point):
@@ -1854,6 +1903,12 @@ class Interaction:
         self.type = type_interaction
         self.description = description
 
+class Pass_step:
+    """ Содержит информацию о том, сколько шагов должен сделать персонаж пред тем, как ход окончится """
+    def __init__(self, creature, step):
+        self.creature = creature
+        self.step = step
+
 def all_pass_step_calculations(person, enemy_list, mode_action, interaction):
     """
         Рассчитывает пропуск хода персонажа и NPC и кем он осуществляется.
@@ -1866,8 +1921,19 @@ def all_pass_step_calculations(person, enemy_list, mode_action, interaction):
         person.enemy_pass_step = 1
     if mode_action == 'gun':
         person.person_pass_step = 0
-        person.enemy_pass_step = 1    
+        person.enemy_pass_step = 1
 
+def new_step_calculation(enemy_list, person):
+    """
+        Считает когда начинается новый шаг
+    """
+    new_step = True
+    person.person_pass_step = False
+    for enemy in enemy_list:
+        if (enemy.on_the_screen and enemy.steps_to_new_step) or (enemy.speed > 1 and enemy.steps_to_new_step == 1 and enemy.dynamic_chunk and enemy.steps_to_new_step):
+            new_step = False
+            person.person_pass_step = True
+    return new_step
 """
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -1888,14 +1954,16 @@ def game_loop(global_map:list, person:list, chunk_size:int, frame_size:list, ene
     print('game_loop запущен')
     global changing_step
     mode_action = 'move'
+    
     while game_loop:
         interaction = []
+        new_step = new_step_calculation(enemy_list, person)
         if not person.person_pass_step:
             mode_action = master_player_action(global_map, person, chunk_size, go_to_print, mode_action, interaction, activity_list, step)
         #start = time.time() #проверка времени выполнения
         all_pass_step_calculations(person, enemy_list, mode_action, interaction)
         if not person.enemy_pass_step:
-            master_game_events(global_map, enemy_list, person, go_to_print, step, activity_list, chunk_size, interaction)
+            master_game_events(global_map, enemy_list, person, go_to_print, step, activity_list, chunk_size, interaction, new_step)
             step += 1
         #test1 = time.time() #проверка времени выполнения
         master_draw(person, chunk_size, go_to_print, global_map, mode_action, enemy_list, activity_list)
