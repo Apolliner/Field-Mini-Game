@@ -125,13 +125,13 @@ class Person:
         if self.dynamic[0] < chank_size > self.dynamic[1]:  
             self.global_position = self.assemblage_point    
             self.number_chunk = 1
-        elif self.dynamic[0] > chank_size > self.dynamic[1]:
+        elif self.dynamic[0] >= chank_size > self.dynamic[1]:
             self.global_position = [self.assemblage_point[0] + 1, self.assemblage_point[1]]
             self.number_chunk = 3
-        elif self.dynamic[0] < chank_size < self.dynamic[1]:
+        elif self.dynamic[0] < chank_size <= self.dynamic[1]:
             self.global_position = [self.assemblage_point[0], self.assemblage_point[1] + 1]
             self.number_chunk = 2
-        elif self.dynamic[0] > chank_size < self.dynamic[1]:
+        elif self.dynamic[0] >= chank_size <= self.dynamic[1]:
             self.global_position = [self.assemblage_point[0] + 1, self.assemblage_point[1] + 1]
             self.number_chunk = 4
 
@@ -532,6 +532,17 @@ class Action_in_map:
         self.lifetime_description = ''
         self.description = f'{self.action_dict(1)} похоже на {self.caused}'
         self.visible = self.action_dict(3)
+
+    def local_position_calculation(self, dynamic_position, chunk_size):
+        """ Рассчитывает локальную позицию, при необходимости перерассчитывает глобальную позицию. """
+        if dynamic_position[0] == chunk_size:
+            self.global_position[0] += 1
+            print(f'global_position увеличился')
+        if dynamic_position[1] == chunk_size:
+            self.global_position[1] += 1
+            print(f'global_position увеличился 2')
+        return [dynamic_position[0]%chunk_size, dynamic_position[1]%chunk_size]
+        
 
     def all_description(self):
         self.description = f'{self.lifetime_description} {self.action_dict(1)} похоже на {self.caused}'
@@ -1467,10 +1478,10 @@ def master_player_action(global_map, person, chunk_size, go_to_print, mode_actio
     mode_action, pressed_button = request_press_button(global_map, person, chunk_size, go_to_print, mode_action, interaction)
     if pressed_button != 'none':
         if mode_action == 'move':
-            request_move(global_map, person, chunk_size, go_to_print, pressed_button)
             if random.randrange(21)//18 > 0: # Оставление персонажем следов
                 activity_list.append(Action_in_map('human_tracks', step, person.global_position, person.dynamic, chunk_size, person.name))
             activity_list.append(Action_in_map('faint_footprints', step, person.global_position, person.dynamic, chunk_size, person.name))
+            request_move(global_map, person, chunk_size, go_to_print, pressed_button)
     
         elif mode_action == 'test_move':
             test_request_move(global_map, person, chunk_size, go_to_print, pressed_button, interaction, activity_list, step)
@@ -1575,7 +1586,10 @@ def request_move(global_map:list, person, chunk_size:int, go_to_print, pressed_b
         
         if person.chunks_use_map[person.dynamic[0]][person.dynamic[1] + 1].icon != '▲':
             if person.dynamic[1] <= (chunk_size + chunk_size//2) and person.assemblage_point[1] != (len(global_map) - 2):
-                person.dynamic[1] += 1    
+                person.dynamic[1] += 1
+
+    person.global_position_calculation(chunk_size) #Рассчитывает глобальное положение и номер чанка через метод
+    person.check_encounter() #Рассчитывает порядок и координаты точек проверки
 
 def test_request_move(global_map:list, person, chunk_size:int, go_to_print, pressed_button, interaction, activity_list, step): #тестовый быстрый режим премещения
     """
@@ -1607,7 +1621,10 @@ def test_request_move(global_map:list, person, chunk_size:int, go_to_print, pres
         
     elif pressed_button == 'button_test_visible':
         person.test_visible = not person.test_visible
-        
+
+
+    person.global_position_calculation(chunk_size) #Рассчитывает глобальное положение и номер чанка через метод
+    person.check_encounter() #Рассчитывает порядок и координаты точек проверки
 
 def request_pointer(person, chunk_size:int, go_to_print, pressed_button):
     """
@@ -1669,9 +1686,6 @@ def calculation_assemblage_point(global_map:list, person, chunk_size:int):
         for chunk in range(len(assemblage_chunk)):
             assemblage_chunk[number_line][chunk] = assemblage_chunk[number_line][chunk].chunk
     person.chunks_use_map = gluing_location(assemblage_chunk, 2, chunk_size)
-
-    person.global_position_calculation(chunk_size) #Рассчитывает глобальное положение и номер чанка через метод
-    person.check_encounter() #Рассчитывает порядок и координаты точек проверки
 
         
 def request_processing(pressed_button):
@@ -1855,7 +1869,7 @@ def master_draw(person, chunk_size:int, go_to_print, global_map, mode_action, en
                     print_line += draw_field[line][tile].icon + ' '
         draw_box.append(print_line)
     go_to_print.game_field = draw_box
-    go_to_print.text1 = (f"{person.assemblage_point} - Позиция точки сборки | {person.dynamic} - динамическая позиция | под ногами: {ground}")
+    go_to_print.text1 = (f"{person.assemblage_point} - Позиция точки сборки | {person.global_position} - глобальная позиция | {person.dynamic} - динамическая позиция | под ногами: {ground}")
     go_to_print.text4 = pointer_vision.description
     
 """
@@ -1890,7 +1904,7 @@ def print_frame(go_to_print, frame_size, activity_list):
     raw_frame[6+len(go_to_print.game_field)] += '   Вы находитесь в ' + str(go_to_print.text2)
 
     if go_to_print.minimap_on:
-        raw_frame[7+len(go_to_print.game_field)] += '   Температура среды: ' + str(go_to_print.text3[0][0]) + ' градусов. Температура персонажа: ' + str(go_to_print.text3[1]) + ' градусов.'
+        raw_frame[7+len(go_to_print.game_field)] += f'   Температура среды: {str(go_to_print.text3[0][0])} градусов. Температура персонажа: {str(go_to_print.text3[1])} градусов'
     raw_frame[8+len(go_to_print.game_field)] += str(go_to_print.text5)
     raw_frame[8+len(go_to_print.game_field)] += 'на карте: ' + str(len(activity_list)) + ' активностей'
     
@@ -1978,11 +1992,12 @@ def game_loop(global_map:list, person:list, chunk_size:int, frame_size:list, ene
         #test1 = time.time() #проверка времени выполнения
         master_draw(person, chunk_size, go_to_print, global_map, mode_action, enemy_list, activity_list)
         #test2 = time.time() #проверка времени выполнения
+        print(f'На этом шаге была добавлена активность {activity_list[-1].name} | global - {activity_list[-1].global_position}| local - {activity_list[-1].local_position}')
         print_frame(go_to_print, frame_size, activity_list)
         print('step = ', step)
         #end = time.time() #проверка времени выполнения
         #print(test1 - start, ' - test1 ', test2 - start, ' - test2 ', end - start, ' - end ') #
-             
+    
 
 def main():
     """
