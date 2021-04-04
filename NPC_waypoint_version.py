@@ -1899,12 +1899,6 @@ class Interaction:
         self.type = type_interaction
         self.description = description
 
-class Pass_step:
-    """ Содержит информацию о том, сколько шагов должен сделать персонаж пред тем, как ход окончится """
-    def __init__(self, creature, step):
-        self.creature = creature
-        self.step = step
-
 def all_pass_step_calculations(person, enemy_list, mode_action, interaction):
     """
         Рассчитывает пропуск хода персонажа и NPC и кем он осуществляется.
@@ -1919,7 +1913,7 @@ def all_pass_step_calculations(person, enemy_list, mode_action, interaction):
         person.person_pass_step = 0
         person.enemy_pass_step = 1
 
-def new_step_calculation(enemy_list, person):
+def new_step_calculation(enemy_list, person, step):
     """
         Считает когда начинается новый шаг
     """
@@ -1929,6 +1923,9 @@ def new_step_calculation(enemy_list, person):
         if (enemy.on_the_screen and enemy.steps_to_new_step):
             new_step = False
             person.person_pass_step = True
+    if new_step:
+        step += 1
+            
     return new_step
 """
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1953,14 +1950,15 @@ def game_loop(global_map:list, person:list, chunk_size:int, frame_size:list, ene
     
     while game_loop:
         interaction = []
-        new_step = new_step_calculation(enemy_list, person)
+        new_step = new_step_calculation(enemy_list, person, step)
         if not person.person_pass_step:
             mode_action = master_player_action(global_map, person, chunk_size, go_to_print, mode_action, interaction, activity_list, step)
+        else:
+            calculation_assemblage_point(global_map, person, chunk_size)
         #start = time.time() #проверка времени выполнения
         all_pass_step_calculations(person, enemy_list, mode_action, interaction)
         if not person.enemy_pass_step:
             master_game_events(global_map, enemy_list, person, go_to_print, step, activity_list, chunk_size, interaction, new_step)
-            step += 1
         #test1 = time.time() #проверка времени выполнения
         master_draw(person, chunk_size, go_to_print, global_map, mode_action, enemy_list, activity_list)
         #test2 = time.time() #проверка времени выполнения
