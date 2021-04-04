@@ -76,9 +76,10 @@ garbage = ['░', '▒', '▓', '█', '☺']
 
 class Person:
     """ Содержит в себе глобальное местоположение персонажа, расположение в пределах загруженного участка карты и координаты используемых чанков """
-    __slots__ = ('assemblage_point', 'dynamic', 'chunks_use_map', 'pointer', 'gun', 'global_position', 'number_chunk',
-                 'check_encounter_position', 'environment_temperature', 'person_temperature', 'person_pass_step', 'enemy_pass_step', 'speed')
+    __slots__ = ('name', 'assemblage_point', 'dynamic', 'chunks_use_map', 'pointer', 'gun', 'global_position', 'number_chunk',
+                 'check_encounter_position', 'environment_temperature', 'person_temperature', 'person_pass_step', 'enemy_pass_step', 'speed', 'test_visible')
     def __init__(self, assemblage_point:list, dynamic:list, chunks_use_map:list, pointer:list, gun:list):
+        self.name = 'person'
         self.assemblage_point = assemblage_point
         self.dynamic = dynamic
         self.chunks_use_map = chunks_use_map
@@ -96,6 +97,7 @@ class Person:
         self.person_pass_step = 0
         self.enemy_pass_step = 0
         self.speed = 1
+        self.test_visible = False
 
 
         
@@ -518,7 +520,7 @@ def person_dict():
 
 class Action_in_map:
     """ Содержит в себе описание активности и срок её жизни """
-    __slots__ = ('name', 'icon', 'description', 'lifetime', 'birth', 'global_position', 'local_position', 'caused', 'lifetime_description')
+    __slots__ = ('name', 'icon', 'description', 'lifetime', 'birth', 'global_position', 'local_position', 'caused', 'lifetime_description', 'visible')
     def __init__(self, name, birth, position_npc, dynamic_position, chunk_size, caused):
         self.name = name
         self.icon = self.action_dict(0)
@@ -529,6 +531,7 @@ class Action_in_map:
         self.caused = caused
         self.lifetime_description = ''
         self.description = f'{self.action_dict(1)} похоже на {self.caused}'
+        self.visible = self.action_dict(3)
 
     def all_description(self):
         self.description = f'{self.lifetime_description} {self.action_dict(1)} похоже на {self.caused}'
@@ -538,18 +541,19 @@ class Action_in_map:
         """ Принимает название активности, возвращает её иконку, описание и срок жизни"""
 
         action_dict =   {
-                        'camp':             ['/', 'следы лагеря',               150],
-                        'bonfire':          ['+', 'следы костра',               150],
-                        'rest_stop':        ['№', 'следы остановки человека',   150],
-                        'horse_tracks':     ['%', 'следы лошади',               150],
-                        'human_tracks':     ['8', 'следы человека',             150],
-                        'animal_traces':    ['@', 'следы зверя',                150],
-                        'gnawed bones':     ['#', 'обглоданные зверем кости',   500],
-                        'defecate':         ['&', 'справленная нужда',          150],
-                        'animal_rest_stop': ['$', 'следы животной лежанки',     150],
-                        'dead_man':         ['D', 'мёртвый человек',           1000],
-                        'test_beacon':      ['B', 'маяк для теста',            1000],
-                        'unknown':          ['?', 'неизвестно',                 150],
+                        'camp':             ['/', 'следы лагеря',               150,        True],
+                        'bonfire':          ['+', 'следы костра',               150,        True],
+                        'rest_stop':        ['№', 'следы остановки человека',   150,        True],
+                        'horse_tracks':     ['%', 'следы лошади',               150,        True],
+                        'human_tracks':     ['8', 'следы человека',             150,        True],
+                        'animal_traces':    ['@', 'следы зверя',                150,        True],
+                        'gnawed bones':     ['#', 'обглоданные зверем кости',   500,        True],
+                        'defecate':         ['&', 'справленная нужда',          150,        True],
+                        'animal_rest_stop': ['$', 'следы животной лежанки',     150,        True],
+                        'dead_man':         ['D', 'мёртвый человек',           1000,        True],
+                        'test_beacon':      ['B', 'маяк для теста',            1000,        True],
+                        'unknown':          ['?', 'неизвестно',                 150,        True],
+                        'faint_footprints': ['=', 'слабые следы',                50,       False],
                         }
         if self.name in action_dict:
             return action_dict[self.name][number]
@@ -988,12 +992,16 @@ def enemy_in_dynamic_chunk(global_map, enemy, person, chunk_size, step, activity
                         enemy.dynamic_waypoints.pop(0)
                         if random.randrange(21)//18 > 0:
                             activity_list.append(Action_in_map(enemy.activity_map['move'][0][1], step, enemy.global_position, enemy.dynamic_chunk_position, chunk_size, enemy.name_npc))
+                        activity_list.append(Action_in_map('faint_footprints', step, enemy.global_position, enemy.dynamic_chunk_position, chunk_size, enemy.name_npc))
                         if random.randrange(101)//99 > 0:
                             action_in_dynamic_chank(global_map, enemy, activity_list, step, chunk_size)
                     else:
                         enemy.pass_step -= 1
                 else:
                     enemy_a_star_move_dynamic_calculations(global_map, enemy, chunk_size, 'moving_between_locations', [chunk_size//2, chunk_size//2])
+            else:
+                move_biom_enemy(global_map, enemy)
+                #print(f'{enemy.name} Посчитались новые вейпоинты {enemy.waypoints}')
             enemy.steps_to_new_step -= 1
         
     else:
@@ -1017,6 +1025,9 @@ def enemy_in_dynamic_chunk(global_map, enemy, person, chunk_size, step, activity
                         enemy.pass_step -= 1
                 else:
                     enemy_a_star_move_dynamic_calculations(global_map, enemy, chunk_size, 'moving_between_locations', [chunk_size//2, chunk_size//2])
+            else:
+                move_biom_enemy(global_map, enemy)
+                #print(f'{enemy.name} Посчитались новые вейпоинты {enemy.waypoints}')
     enemy_global_position_recalculation(global_map, enemy, person, chunk_size)
 
 def enemy_a_star_move_dynamic_calculations(global_map, enemy, chunk_size, mode, target_point):
@@ -1454,26 +1465,23 @@ def master_player_action(global_map, person, chunk_size, go_to_print, mode_actio
 
     pressed_button = ''
     mode_action, pressed_button = request_press_button(global_map, person, chunk_size, go_to_print, mode_action, interaction)
-
-    if mode_action == 'move':
-        request_move(global_map, person, chunk_size, go_to_print, pressed_button)
-        if random.randrange(21)//18 > 0: # Оставление персонажем следов
-            activity_list.append(Action_in_map('human_tracks', step, person.global_position, person.dynamic, chunk_size, 'ваши'))
+    if pressed_button != 'none':
+        if mode_action == 'move':
+            request_move(global_map, person, chunk_size, go_to_print, pressed_button)
+            if random.randrange(21)//18 > 0: # Оставление персонажем следов
+                activity_list.append(Action_in_map('human_tracks', step, person.global_position, person.dynamic, chunk_size, person.name))
+            activity_list.append(Action_in_map('faint_footprints', step, person.global_position, person.dynamic, chunk_size, person.name))
     
-    elif mode_action == 'test_move':
-        test_request_move(global_map, person, chunk_size, go_to_print, pressed_button, interaction)
-        if pressed_button == 'button_add_beacon':
-            activity_list.append(Action_in_map('test_beacon', step, person.global_position, person.dynamic, chunk_size, f'\n оставлен вами в локальной точке - {[person.dynamic[0]%chunk_size, person.dynamic[1]%chunk_size]}| динамической - {person.dynamic}| глобальной - {person.global_position}'))
-
-    elif mode_action == 'pointer':    
-        request_pointer(person, chunk_size, go_to_print, pressed_button)
-    elif mode_action == 'gun':
-        request_gun(global_map, person, chunk_size, go_to_print, pressed_button)
-    if pressed_button == 'button_map':
-        go_to_print.minimap_on = (go_to_print.minimap_on == False)
-    request_processing(pressed_button)
-
-    calculation_assemblage_point(global_map, person, chunk_size)
+        elif mode_action == 'test_move':
+            test_request_move(global_map, person, chunk_size, go_to_print, pressed_button, interaction, activity_list, step)
+        
+        elif mode_action == 'pointer':    
+            request_pointer(person, chunk_size, go_to_print, pressed_button)
+        elif mode_action == 'gun':
+            request_gun(global_map, person, chunk_size, go_to_print, pressed_button)
+        if pressed_button == 'button_map':
+            go_to_print.minimap_on = (go_to_print.minimap_on == False)
+        request_processing(pressed_button)
     
     return mode_action
 
@@ -1484,7 +1492,6 @@ def request_press_button(global_map, person, chunk_size, go_to_print, mode_actio
 
     """
     key = keyboard.read_key()
-    
     if key == 'w' or key == 'up' or key == 'ц':
         return (mode_action, 'up')
     elif key == 'a' or key == 'left' or key == 'ф':
@@ -1529,15 +1536,18 @@ def request_press_button(global_map, person, chunk_size, go_to_print, mode_actio
             return ('test_move', 'button_purpose_task')
         else:
             return (mode_action, 'none')
-    elif key == 'b' or 'и':
+    elif key == 'v' or key == 'м':
+        if mode_action == 'test_move':
+            return ('test_move', 'button_test_visible')
+        else:
+            return (mode_action, 'none')
+    elif key == 'b' or key == 'и':
         if mode_action == 'test_move':
             return ('test_move', 'button_add_beacon')
         else:
-            return (mode_action, 'none')
-            
+            return (mode_action, 'none')    
     else:
         return (mode_action, 'none')
-
 
 def request_move(global_map:list, person, chunk_size:int, go_to_print, pressed_button):
     """
@@ -1567,12 +1577,11 @@ def request_move(global_map:list, person, chunk_size:int, go_to_print, pressed_b
             if person.dynamic[1] <= (chunk_size + chunk_size//2) and person.assemblage_point[1] != (len(global_map) - 2):
                 person.dynamic[1] += 1    
 
-def test_request_move(global_map:list, person, chunk_size:int, go_to_print, pressed_button, interaction): #тестовый быстрый режим премещения
+def test_request_move(global_map:list, person, chunk_size:int, go_to_print, pressed_button, interaction, activity_list, step): #тестовый быстрый режим премещения
     """
         Меняет динамическое местоположение персонажа в тестовом режиме, без ограничений. По полчанка за раз.
         При нажатии на 'p' назначает всем NPC точку следования.
     """
-    
     if pressed_button == 'up':
         if person.dynamic[0] >= chunk_size//2 and person.assemblage_point[0] > 0:
             person.dynamic[0] -= chunk_size//2
@@ -1591,6 +1600,13 @@ def test_request_move(global_map:list, person, chunk_size:int, go_to_print, pres
 
     elif pressed_button == 'button_purpose_task':
         interaction.append(['task_point_all_enemies', person.global_position])
+
+    elif pressed_button == 'button_add_beacon':
+        activity_list.append(Action_in_map('test_beacon', step, person.global_position, person.dynamic, chunk_size,
+                f'\n оставлен вами в локальной точке - {[person.dynamic[0]%chunk_size, person.dynamic[1]%chunk_size]}| динамической - {person.dynamic}| глобальной - {person.global_position}'))
+        
+    elif pressed_button == 'button_test_visible':
+        person.test_visible = not person.test_visible
         
 
 def request_pointer(person, chunk_size:int, go_to_print, pressed_button):
@@ -1729,7 +1745,7 @@ def print_help(go_to_print):
                  '* t - ВКЛ/ВЫКЛ тестовый режим перемещения;       *',
                  '* p - назначение точки прибытия для hunter NPC;  *',
                  '* m - установка тестового маяка;                 *',
-                 '*                                                *',
+                 '* v - ВКЛ/ВЫКЛ отображение скрытых следов        *',
                  '*                                                *',
                  '*                                                *',
                  '*                                                *',
@@ -1772,25 +1788,26 @@ def draw_additional_entities(person, chunk_size:int, go_to_print, enemy_list, ac
     """
     
     for activity in activity_list:
-        if activity.global_position[0] == person.assemblage_point[0] and activity.global_position[1] == person.assemblage_point[1]:
-            person.chunks_use_map[activity.local_position[0]][activity.local_position[1]] = activity
-            if activity.icon == 'B':
-                print(f'Для тестового маяка сработало условие отображения 1')
+        if activity.visible or person.test_visible:
+            if activity.global_position[0] == person.assemblage_point[0] and activity.global_position[1] == person.assemblage_point[1]:
+                person.chunks_use_map[activity.local_position[0]][activity.local_position[1]] = activity
+                if activity.icon == 'B':
+                    print(f'Для тестового маяка сработало условие отображения 1')
             
-        elif activity.global_position[0] == person.assemblage_point[0] and activity.global_position[1] == person.assemblage_point[1] + 1:
-            person.chunks_use_map[activity.local_position[0]][activity.local_position[1] + chunk_size] = activity
-            if activity.icon == 'B':
-                print(f'Для тестового маяка сработало условие отображения 2')
+            elif activity.global_position[0] == person.assemblage_point[0] and activity.global_position[1] == person.assemblage_point[1] + 1:
+                person.chunks_use_map[activity.local_position[0]][activity.local_position[1] + chunk_size] = activity
+                if activity.icon == 'B':
+                    print(f'Для тестового маяка сработало условие отображения 2')
             
-        elif activity.global_position[0] == person.assemblage_point[0] + 1 and activity.global_position[1] == person.assemblage_point[1]:
-            person.chunks_use_map[activity.local_position[0] + chunk_size][activity.local_position[1]] = activity
-            if activity.icon == 'B':
-                print(f'Для тестового маяка сработало условие отображения 3')
+            elif activity.global_position[0] == person.assemblage_point[0] + 1 and activity.global_position[1] == person.assemblage_point[1]:
+                person.chunks_use_map[activity.local_position[0] + chunk_size][activity.local_position[1]] = activity
+                if activity.icon == 'B':
+                    print(f'Для тестового маяка сработало условие отображения 3')
             
-        elif activity.global_position[0] == person.assemblage_point[0] + 1 and activity.global_position[1] == person.assemblage_point[1] + 1:
-            person.chunks_use_map[activity.local_position[0] + chunk_size][activity.local_position[1] + chunk_size] = activity
-            if activity.icon == 'B':
-                print(f'Для тестового маяка сработало условие отображения 4')
+            elif activity.global_position[0] == person.assemblage_point[0] + 1 and activity.global_position[1] == person.assemblage_point[1] + 1:
+                person.chunks_use_map[activity.local_position[0] + chunk_size][activity.local_position[1] + chunk_size] = activity
+                if activity.icon == 'B':
+                    print(f'Для тестового маяка сработало условие отображения 4')
 
     for enemy in enemy_list:
         if enemy.global_position in person.check_encounter_position:
@@ -1926,7 +1943,7 @@ def new_step_calculation(enemy_list, person, step):
     if new_step:
         step += 1
             
-    return new_step
+    return new_step, step
 """
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -1950,11 +1967,10 @@ def game_loop(global_map:list, person:list, chunk_size:int, frame_size:list, ene
     
     while game_loop:
         interaction = []
-        new_step = new_step_calculation(enemy_list, person, step)
+        new_step, step = new_step_calculation(enemy_list, person, step)
         if not person.person_pass_step:
             mode_action = master_player_action(global_map, person, chunk_size, go_to_print, mode_action, interaction, activity_list, step)
-        else:
-            calculation_assemblage_point(global_map, person, chunk_size)
+        calculation_assemblage_point(global_map, person, chunk_size) # Рассчёт динамического чанка
         #start = time.time() #проверка времени выполнения
         all_pass_step_calculations(person, enemy_list, mode_action, interaction)
         if not person.enemy_pass_step:
@@ -1963,7 +1979,7 @@ def game_loop(global_map:list, person:list, chunk_size:int, frame_size:list, ene
         master_draw(person, chunk_size, go_to_print, global_map, mode_action, enemy_list, activity_list)
         #test2 = time.time() #проверка времени выполнения
         print_frame(go_to_print, frame_size, activity_list)
-        #print('step = ', step)
+        print('step = ', step)
         #end = time.time() #проверка времени выполнения
         #print(test1 - start, ' - test1 ', test2 - start, ' - test2 ', end - start, ' - end ') #
              
