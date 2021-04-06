@@ -866,7 +866,7 @@ def enemy_a_star_algorithm_move_calculation(calculation_map, start_point, finish
                     test_print += calculation_map[number_line][number_tile].icon + ' '
             test_print += '\n'
  
-       # print(test_print)
+        #print(test_print)
 
             
     return list(reversed(reversed_waypoints))
@@ -920,7 +920,7 @@ def path_straightener(calculation_map, waypoints, banned_list):
                         else:
                             not_ok = True
                             break
-        if not_ok:
+        if not_ok or new_waypoints == [start_point]:
             return []
         else:
             return new_waypoints
@@ -941,6 +941,7 @@ def path_straightener(calculation_map, waypoints, banned_list):
                 new_waypoints = straight_path(calculation_map, waypoints[number_check_waypoint], waypoints[number_check_waypoint + 1],
                                               waypoints[check_point], banned_list)
                 if new_waypoints:
+                    #print(f'new_waypoints - {new_waypoints}')
                     first_waypoints = waypoints[0: number_check_waypoint]
                     #print(f'first_waypoints - {first_waypoints}')
                     second_waypoints = waypoints[check_point: (len(waypoints) + 1)]
@@ -978,7 +979,7 @@ def enemy_in_dynamic_chunk(global_map, enemy, person, chunk_size, step, activity
     count_speed = enemy.speed
     if new_step:
         enemy.steps_to_new_step = enemy.speed
-    print(f"{enemy.name} имеет динамические вейпоинты - {enemy.dynamic_waypoints}")
+    #print(f"{enemy.name} имеет динамические вейпоинты - {enemy.dynamic_waypoints}")
 
     if enemy.on_the_screen or max_speed_enemy_visible:
         if enemy.steps_to_new_step:
@@ -1002,7 +1003,7 @@ def enemy_in_dynamic_chunk(global_map, enemy, person, chunk_size, step, activity
                     enemy_a_star_move_dynamic_calculations(global_map, enemy, chunk_size, 'moving_between_locations', [chunk_size//2, chunk_size//2])
             else:
                 move_biom_enemy(global_map, enemy)
-                print(f'{enemy.name} Посчитались новые вейпоинты {enemy.waypoints}')
+                #print(f'{enemy.name} Посчитались новые вейпоинты {enemy.waypoints}')
             enemy.steps_to_new_step -= 1
         
     else:
@@ -1076,9 +1077,9 @@ def enemy_a_star_move_dynamic_calculations(global_map, enemy, chunk_size, mode, 
             for number_line in range(len(use_calculation_map)):
                 if not(use_calculation_map[number_line][len(use_calculation_map) - 1].icon in banned_list) and not(paired_map[number_line][0].icon in banned_list):
                     if use_calculation_map[number_line][len(use_calculation_map) - 1].price_move <= 10:
-                        suitable_points.append([number_line, len(use_calculation_map[0])])
+                        suitable_points.append([number_line, len(use_calculation_map[0]) - 1])
                     else:
-                        reserve_points.append([number_line, len(use_calculation_map[0])])
+                        reserve_points.append([number_line, len(use_calculation_map[0]) - 1])
     else:
         finish_point = target_point
 
@@ -1122,7 +1123,7 @@ def enemy_a_star_move_dynamic_calculations(global_map, enemy, chunk_size, mode, 
             else:
                 test_print += use_calculation_map[number_line][number_tile].icon + ' '
         test_print += '\n'
-    print(test_print)
+    #print(test_print)
 
     raw_waypoints = path_straightener(use_calculation_map, raw_waypoints, banned_list)
 
@@ -1134,7 +1135,7 @@ def enemy_a_star_move_dynamic_calculations(global_map, enemy, chunk_size, mode, 
             else:
                 test_print += use_calculation_map[number_line][number_tile].icon + ' '
         test_print += '\n'
-    print(test_print)
+    #print(test_print)
     #print(raw_waypoints)
     enemy.dynamic_waypoints = []
     for waypoint in raw_waypoints:
@@ -1416,10 +1417,10 @@ def move_biom_enemy(global_map, enemy):
     if not(global_map[enemy.global_position[0]][enemy.global_position[1] + 1].icon in enemy.banned_biom) and enemy.global_position[1] + 1 < len(global_map) - 1:
         direction_moved.append([enemy.global_position[0], enemy.global_position[1] + 1])
     if len(direction_moved) != 0:
-        print(f"Нашлись подходящие направления")
+        #print(f"Нашлись подходящие направления")
         enemy.waypoints.append(random.choice(direction_moved))
     else:
-        print(f"Не нашлись подходящие направления")
+        #print(f"Не нашлись подходящие направления")
         direction_moved = []
         if enemy.global_position[0] - 1 > 0:
             direction_moved.append([enemy.global_position[0] - 1, enemy.global_position[1]])
