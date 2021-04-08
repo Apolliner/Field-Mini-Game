@@ -600,7 +600,7 @@ class Horseman(Enemy):
         self.name_npc = random.choice(['Малыш Билли', 'Буффало Билл', 'Маленькая Верная Рука Энни Окли', 'Дикий Билл Хикок'])
         self.priority_biom = [',', '„', 'P']
         self.banned_biom = ['▲']
-        self.icon = '☻'
+        self.icon = 'H'
         self.activity_map = {
                             'move': [['передвигается', 'horse_tracks', 0, 0]],
                             'hunger': [['перекусывает', 'rest_stop', 40, 5], ['готовит еду', 'bonfire', 80, 10]],
@@ -1481,6 +1481,14 @@ def wait_keyboard():
                     return 'w'
                 if event.key == pygame.K_DOWN:
                     return 's'
+                if event.key == pygame.K_SPACE:
+                    return 'space'
+                if event.key == pygame.K_t:
+                    return 't'
+                if event.key == pygame.K_p:
+                    return 'p'
+                if event.key == pygame.K_v:
+                    return 'v'
 
 def request_press_button(global_map, person, chunk_size, go_to_print, mode_action, interaction):
     """
@@ -1956,13 +1964,41 @@ def new_step_calculation(enemy_list, person, step):
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 """
+class Tiles_image_dict:
+    def __init__(self):
+        self.dune = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dune.png'))
+        self.sand = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_sand.png'))
+        self.dry_grass = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_grass.png'))
+        self.stones = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_stone.png'))
+        self.bump = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_bump.png'))
+        self.hills = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills.png'))
+        self.cactus = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_cactus.png'))
+        self.saline_1 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_saline_1.png'))
+        self.saline_2 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_saline_2.png'))
+        self.grass = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_grass.png'))
+        self.tall_grass = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_tall_grass.png'))
+        self.prickly_grass = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_prickly_grass.png'))
+        self.dry_tree = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_tree.png'))
+        self.live_tree = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_live_tree.png'))
+        self.water = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water.png'))
+        self.person = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_person.png'))
+        self.enemy_riffleman = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_enemy_riffleman.png'))
+        self.enemy_horseman = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_enemy_horseman.png'))
+        self.enemy_coyot = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_enemy_coyot.png'))
+        self.warning = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_warning.png'))
+        self.human_traces = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_human_traces.png'))
+        self.horse_traces = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_horse_traces.png'))
+        self.animal_traces = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_animal_traces.png'))
+        self.bonfire = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_bonfire.png'))
+        self.rest_stop = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_rest_stop.png'))
+        self.gnawed_bones = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_gnawed_bones.png'))
+        self.animal_rest_stop = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_animal_rest_stop.png'))
+        self.camp = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_camp.png'))
         
 class All_tiles(pygame.sprite.Sprite):
 
     def __init__(self, x, y, size_tile, icon):
         pygame.sprite.Sprite.__init__(self)
-        self.x = x
-        self.y = y
         self.image = pygame.Surface((size_tile, size_tile))
         self.image.fill(self.color_dict(icon))
         self.rect = self.image.get_rect()
@@ -1991,27 +2027,63 @@ class All_tiles(pygame.sprite.Sprite):
                         '☺': (255, 255, 255),
                         '☻': (235, 255, 255),
                         }
+
         if icon in color_dict:
             return color_dict[icon]
         else:
             return (0, 0, 0)
         
 class Image_tile(pygame.sprite.Sprite):
-    def __init__(self, x, y, size_tile, icon):
+    def __init__(self, x, y, size_tile, icon, tiles_image_dict):
         pygame.sprite.Sprite.__init__(self)
-        self.x = x
-        self.y = y
-        self.image = pygame.image.load('tile_person.png')
-        self.sized_image = pygame.transform.scale(self.image, (int(size_tile), int(size_tile)))
+        self.image = self.image_dict(icon, tiles_image_dict)
+        self.sized_image = pygame.transform.flip(self.image, True, False)
         self.rect = self.sized_image.get_rect()
         self.rect.left = x
         self.rect.top = y
         self.speed = 0
 
+    def image_dict(self, icon, tiles_image_dict):
 
-def master_pygame_render_display(go_to_print, screen):
+        image_dict =   {
+                        'j': tiles_image_dict.dune,
+                        '.': tiles_image_dict.sand,
+                        ',': tiles_image_dict.dry_grass,
+                        'o': tiles_image_dict.stones,
+                        'A': tiles_image_dict.bump,
+                        '▲': tiles_image_dict.hills,
+                        'i': tiles_image_dict.cactus,
+                        ':': tiles_image_dict.saline_1,
+                        ';': tiles_image_dict.saline_2,
+                        '„': tiles_image_dict.grass,
+                        'u': tiles_image_dict.tall_grass,
+                        'ü': tiles_image_dict.prickly_grass,
+                        'F': tiles_image_dict.dry_tree,
+                        'P': tiles_image_dict.live_tree,
+                        '~': tiles_image_dict.water,
+                        '☺': tiles_image_dict.person,
+                        '☻': tiles_image_dict.enemy_riffleman,
+                        'H': tiles_image_dict.enemy_horseman,
+                        'c': tiles_image_dict.enemy_coyot,
+                        '8': tiles_image_dict.human_traces,
+                        '%': tiles_image_dict.horse_traces,
+                        '@': tiles_image_dict.animal_traces,
+                        '/': tiles_image_dict.camp,
+                        '+': tiles_image_dict.bonfire,
+                        '№': tiles_image_dict.rest_stop,
+                        '#': tiles_image_dict.gnawed_bones,
+                        '$': tiles_image_dict.animal_rest_stop,
+                        }
+        if icon in image_dict:
+            return image_dict[icon]
+        else:
+            return tiles_image_dict.warning
+        
 
-    size_tile = 25
+
+def master_pygame_render_display(go_to_print, screen, tiles_image_dict):
+
+    size_tile = 30
     size_tile_minimap = 10
     
     print_map = []
@@ -2034,10 +2106,9 @@ def master_pygame_render_display(go_to_print, screen):
 
     for number_line in range(len(print_map)):
         for number_tile in range(len(print_map[0])):
-            if print_map[number_line][number_tile] == '☺':
-                all_sprites.add(Image_tile(number_tile*size_tile, number_line*size_tile, size_tile, print_map[number_line][number_tile]))
-            else:
-                all_sprites.add(All_tiles(number_tile*size_tile, number_line*size_tile, size_tile, print_map[number_line][number_tile]))
+
+            all_sprites.add(Image_tile(number_tile*size_tile, number_line*size_tile, size_tile, print_map[number_line][number_tile], tiles_image_dict))
+
 
     for number_line in range(len(print_minimap)):
         for number_tile in range(len(print_minimap[0])):
@@ -2092,11 +2163,13 @@ def game_loop(global_map:list, person:list, chunk_size:int, frame_size:list, ene
 
     pygame.init()
 
-    screen = pygame.display.set_mode((1200, 700))
+    screen = pygame.display.set_mode((1200, 750))
     pygame.display.set_caption("My Game")
     
     game_fps = 30
     clock = pygame.time.Clock()
+    tiles_image_dict = Tiles_image_dict()
+  
     while game_loop:
         clock.tick(game_fps)
         interaction = []
@@ -2106,14 +2179,14 @@ def game_loop(global_map:list, person:list, chunk_size:int, frame_size:list, ene
         calculation_assemblage_point(global_map, person, chunk_size) # Рассчёт динамического чанка
         #start = time.time() #проверка времени выполнения
         all_pass_step_calculations(person, enemy_list, mode_action, interaction)
-        #if not person.enemy_pass_step:
-            #master_game_events(global_map, enemy_list, person, go_to_print, step, activity_list, chunk_size, interaction, new_step)
+        if not person.enemy_pass_step:
+            master_game_events(global_map, enemy_list, person, go_to_print, step, activity_list, chunk_size, interaction, new_step)
         #test1 = time.time() #проверка времени выполнения
         master_draw(person, chunk_size, go_to_print, global_map, mode_action, enemy_list, activity_list)
         #test2 = time.time() #проверка времени выполнения
         #print(f'На этом шаге была добавлена активность {activity_list[-1].name} | global - {activity_list[-1].global_position}| local - {activity_list[-1].local_position}')
         #print_frame(go_to_print, frame_size, activity_list)
-        master_pygame_render_display(go_to_print, screen)
+        master_pygame_render_display(go_to_print, screen, tiles_image_dict)
         #print('step = ', step)
         #end = time.time() #проверка времени выполнения
         #print(test1 - start, ' - test1 ', test2 - start, ' - test2 ', end - start, ' - end ') #
