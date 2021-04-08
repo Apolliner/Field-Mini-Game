@@ -10,64 +10,14 @@ import pygame
 garbage = ['░', '▒', '▓', '█', '☺']
 
 """
-    ВЕРСИЯ ДЛЯ ОТРАБОТКИ ПЕРЕМЕЩЕНИЯ NPC
+    ВЕРСИЯ ДЛЯ ОТРАБОТКИ ВЫВОДА В PYGAME
 
-    ИЗВЕСТНЫЕ БАГИ:
-    1)Проверка доступности тайла для шага за пределами карты в стандартном алгоритме
-    2)Попытка отрисовки за пределами динамического чанка #ИСПРАВЛЕНО
-    3)Отталкивание наверх по глобальным координатам при попытке приблизиться #ИСПРАВЛЕНО
-    
 
     РЕАЛИЗОВАТЬ:
 
-    1)Перехват шага у игрока
-    2)Золотоискатели, находясь в горах начинают искать золото
-    3)Встречи NPC друг с другом на глобальной карте
-    4)Остановку при достижени NPC края карты #РЕАЛИЗОВАНО
-    5)NPC не должны появляться и передвигаться по тайлам, передвижение по которым невозможно 
-    6)Добавить необсчитываемых персонажей, являющихся мелкими зверьми. Например: змей и гремучих змей
-    7)Реализовать алгоритм поиска пути A* #РЕАЛИЗОВАНО
-    8)Перемещение NPC на динамическом чанке игрока в соответствии с просчитанным на глобальной карте путём #РЕАЛИЗОВАНО
-    9)"Стоимость" перемещения по разным тайлам #РЕАЛИЗОВАНО
-    10)Переделать алгоритм А* что бы он работал как на глобальной карте, так и на динамической #РЕАЛИЗОВАНО
-    11)Улучшить логику нахождения финишной точки при передвижении по динамическому чанку. Она должна определяться в зависимости от следующего
-    за ней вейпоинта, текущего положения персонажа и "стоимости" финишного вейпоинта.
-    12)Реализовать проверку на возможность пройти от одной динамической точки до другой напрямую, путём проверки нет ли на прямой линии х и у
-    путевой точки с бОльшим индексом. #РЕАЛИЗОВАНО
-    13)Разобраться с наследованим классов и привести код в соответствие с их правильным применением.
-    14)Добавить для NPC режим поиска, который включается когда NPC обнаруживает незнакомые следы или видит незнакомого NPC или персонажа.
-    15)Объединить всё что касается персонажа в класс Person
+    1)Разный вид тайлов в зависимости от их нахождения на краю однородного тайлового поля. Реализовать это на этапе генерации карты.
 
-    ЛОГИКА ПЕРЕМЕЩЕНИЯ NPC
-    NPC делятся на охотников и хаотичных.
     
-    Хаотичные NPC двигаются по старым правилам случайного выбора направления в рамках благоприятных биомов. К хаотичным NPC относятся животные и
-    золотоискатели. Предположительно, они обитают в одном месте и изображают свою деятельность.
-    
-    Перемещаясь по глобальной карте, NPC охотники получают задачу достигнуть точки на карте, и, они пытаются её достичь обходя неблагоприятные биомы
-    и стараясь перемещаться по благоприятным. Попутно они делают остановки, оставляющие свои следы.
-    Если достичь точки через благоприятные или нейтральные биомы невозможно, точка следования сменяется и так до конца игры или их гибели.
-    Появившись на динамическом чанке игрока, NPC продолжают следование выбранным курсом и так же делают короткие (а то и длинные) остановки
-    и совершают действия. NPC могут быть застигнуты врасплох во время сна, но это сложно сделать, потому что сон их чуток.
-
-    СИСТЕМА ВЕЙПОИНТОВ:
-    Персонажи получают точку прибытия и рассчитывают маршрут из точек (список), по которым им надо пройти. Они перемещаются в точку
-    с индексом 0 и удаляют её.
-
-    ПЕРЕМЕЩЕНИЕ NPC ПО ДИНАМИЧЕСКОМУ ЧАНКУ:
-    При составлении списка динамических вейпоинтов, NPC подгружает два чанка, по которым ему необходимо пройти и рассчитывает путь
-
-    СИСТЕМА ШУМА:
-    Находящиеся недалеко от стреляющего персонажа NPC слышат выстрелы, и, либо спешат посмотреть на того, кто стрелял, либо спешат убраться восвояси.
-
-    НЕОБЧИТЫВАЕМЫЕ СУЩНОСТИ:
-    Помимо NPC, жизнь имитируют появляющиеся в зависимости от биома существа. Ими могут быть птицы, скорпионы и змеи.
-    Они могут появиться из соответствующих им тайлов даже если они нахоятся в зоне видимости игрока.
-    Некоторые тайлы будут опасны возможностью появления из них необчитываемых противников.
-
-    РАЗНЫЕ РЕЖИМЫ СЛЕДОВАНИЯ:
-    Патруль, спешка, поиск. Разная скорость премещения по вейпоинтам и разные следы. Нужно придумать причины выбора и смены режимов.
-
     ТЕМАТИКА:
     Всё, что мне нравится. Персонажи как в хороший плохой злой, вяленое конское мясо и гремучие змеи!
 
@@ -179,12 +129,13 @@ class Interfase:
 
 class Tile:
     """ Содержит изображение, описание и особое содержание тайла """
-    __slots__ = ('icon', 'description', 'list_of_features', 'price_move')
+    __slots__ = ('icon', 'description', 'list_of_features', 'price_move', 'type')
     def __init__(self, icon):
         self.icon = icon
         self.description = self.getting_attributes(icon, 0)
         self.list_of_features = []
         self.price_move = self.getting_attributes(icon, 1)
+        self.type = '0'
 
     def getting_attributes(self, icon, number):
         ground_dict =   {
@@ -454,6 +405,81 @@ def gluing_location(raw_gluing_map, grid, count_block):
 """
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+    ПОСТОБРАБОТКА ГОТОВОЙ ИГРОВОЙ КАРТЫ
+    
+    Определяет какие тайлы находятся на краю однородного тайлового поля и изменяет их .type что бы в дальнейшем присвоить соответствующий тайлсет.
+    
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+"""
+
+def master_postgenerate_field_tiles(global_map, value_region_box, chunk_size):
+    """
+        Обрабатывает готовую карту мира
+    """
+    #detected_list = ['~', '▲', 'A', ';']
+    detected_list = ['~']
+
+    for number_global_line, global_line in enumerate(global_map):
+        for number_global_location, location in enumerate(global_line):
+            for number_line, line in enumerate(location.chunk):
+                for number_tile, tile in enumerate(line):
+                    if tile.icon in detected_list:
+                        direction = {
+                                    'up': False,
+                                    'down': False,
+                                    'left': False,
+                                    'right': False,
+                                    }
+                        if number_line > 0:
+                            if location.chunk[number_line][number_tile].icon == location.chunk[number_line - 1][number_tile].icon:
+                                direction['up'] = True
+                        if number_line < chunk_size - 1:
+                            if location.chunk[number_line][number_tile].icon == location.chunk[number_line + 1][number_tile].icon:
+                                direction['down'] = True
+                        if number_tile > 0:
+                            if location.chunk[number_line][number_tile].icon == location.chunk[number_line][number_tile - 1].icon:
+                                direction['left'] = True
+                        if number_tile < chunk_size - 1:
+                            if location.chunk[number_line][number_tile].icon == location.chunk[number_line][number_tile + 1].icon:
+                                direction['right'] = True
+                                
+                        if direction['up'] and direction['down'] and direction['left'] and direction['right']:
+                            tile.type = '1'
+                        elif direction['up'] and not(direction['down']) and direction['left'] and direction['right']:
+                            tile.type = '2'
+                        elif direction['up'] and direction['down'] and not(direction['left']) and direction['right']:
+                            tile.type = '3'
+                        elif not(direction['up']) and direction['down'] and direction['left'] and direction['right']:
+                            tile.type = '4'
+                        elif direction['up'] and direction['down'] and direction['left'] and not(direction['right']):
+                            tile.type = '5'
+                        elif direction['up'] and not(direction['down']) and direction['left'] and not(direction['right']):
+                            tile.type = '6'
+                        elif direction['up'] and not(direction['down']) and not(direction['left']) and direction['right']:
+                            tile.type = '7'
+                        elif not(direction['up']) and direction['down'] and not(direction['left']) and direction['right']:
+                            tile.type = '8'
+                        elif not(direction['up']) and direction['down'] and direction['left'] and not(direction['right']):
+                            tile.type = '9'
+                        elif not(direction['up']) and not(direction['down']) and direction['left'] and not(direction['right']):
+                            tile.type = 'A'
+                        elif direction['up'] and not(direction['down']) and not(direction['left']) and not(direction['right']):
+                            tile.type = 'B'
+                        elif not(direction['up']) and not(direction['down']) and not(direction['left']) and direction['right']:
+                            tile.type = 'C'
+                        elif not(direction['up']) and direction['down'] and not(direction['left']) and not(direction['right']):
+                            tile.type = 'D'
+                        elif not(direction['up']) and not(direction['down']) and direction['left'] and direction['right']:
+                            tile.type = 'E'
+                        elif direction['up'] and direction['down'] and not(direction['left']) and not(direction['right']):
+                            tile.type = 'F'
+                        else:
+                            tile.type = '0'
+
+"""
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
     ОБРАБОТКА ИГРОВЫХ СОБЫТИЙ
         
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -478,7 +504,7 @@ def interaction_processing(global_map, interaction, enemy_list):
                 for enemy in enemy_list:
                     #print(f"{enemy.name} получил задачу")
                     #print(f"interact[1] = {interact[1]}")
-                    if enemy.type == 'hunter':
+                    if enemy.type_npc == 'hunter':
                         enemy.waypoints = enemy_a_star_algorithm_move_calculation(global_map, enemy.global_position, interact[1], enemy.banned_biom)
 
 
@@ -521,7 +547,7 @@ def person_dict():
 
 class Action_in_map:
     """ Содержит в себе описание активности и срок её жизни """
-    __slots__ = ('name', 'icon', 'description', 'lifetime', 'birth', 'global_position', 'local_position', 'caused', 'lifetime_description', 'visible')
+    __slots__ = ('name', 'icon', 'description', 'lifetime', 'birth', 'global_position', 'local_position', 'caused', 'lifetime_description', 'visible', 'type')
     def __init__(self, name, birth, position_npc, dynamic_position, chunk_size, caused):
         self.name = name
         self.icon = self.action_dict(0)
@@ -533,6 +559,7 @@ class Action_in_map:
         self.lifetime_description = ''
         self.description = f'{self.action_dict(1)} похоже на {self.caused}'
         self.visible = self.action_dict(3)
+        self.type = ' '
 
     def all_description(self):
         self.description = f'{self.lifetime_description} {self.action_dict(1)} похоже на {self.caused}'
@@ -600,7 +627,7 @@ class Horseman(Enemy):
         self.name_npc = random.choice(['Малыш Билли', 'Буффало Билл', 'Маленькая Верная Рука Энни Окли', 'Дикий Билл Хикок'])
         self.priority_biom = [',', '„', 'P']
         self.banned_biom = ['▲']
-        self.icon = 'H'
+        self.icon = '☻h'
         self.activity_map = {
                             'move': [['передвигается', 'horse_tracks', 0, 0]],
                             'hunger': [['перекусывает', 'rest_stop', 40, 5], ['готовит еду', 'bonfire', 80, 10]],
@@ -612,7 +639,8 @@ class Horseman(Enemy):
         self.thirst = 100
         self.fatigue = 100
         self.reserves = 10
-        self.type = 'hunter'
+        self.type_npc = 'hunter'
+        self.type = ''
         self.pass_description = ''
         self.person_description = f"Знаменитый охотник за головами {self.name_npc}"
         self.description = ''
@@ -628,7 +656,7 @@ class Riffleman(Enemy):
         self.name_npc = random.choice(['Бедовая Джейн', 'Бутч Кэссиди', 'Сандэнс Кид', 'Черный Барт'])
         self.priority_biom = ['.', 'A', '▲']
         self.banned_biom = ['~']
-        self.icon = '☻'
+        self.icon = '☻r'
         self.activity_map = {
                             'move': [['передвигается', 'human_tracks', 0, 0]],
                             'hunger': [['перекусывает', 'rest_stop', 40, 5], ['готовит еду', 'bonfire', 80, 10]],
@@ -640,7 +668,8 @@ class Riffleman(Enemy):
         self.thirst = 100
         self.fatigue = 100
         self.reserves = 5
-        self.type = 'hunter'
+        self.type_npc = 'hunter'
+        self.type = ''
         self.pass_description = ''
         self.person_description = f"Шериф одного мрачного города {self.name_npc}"
         self.description = ''
@@ -656,7 +685,7 @@ class Gold_digger(Enemy):
         self.name_npc = random.choice(['Бедовая Джейн', 'Бутч Кэссиди', 'Сандэнс Кид', 'Черный Барт'])
         self.priority_biom = ['.', 'A', '▲']
         self.banned_biom = ['~']
-        self.icon = '☻'
+        self.icon = '☻-'
         self.activity_map = {
                             'move': [['передвигается', 'human_tracks', 0, 0]],
                             'hunger': [['перекусывает', 'rest_stop', 40, 5], ['готовит еду', 'bonfire', 80, 10]],
@@ -668,7 +697,8 @@ class Gold_digger(Enemy):
         self.thirst = 100
         self.fatigue = 100
         self.reserves = 5
-        self.type = 'chaotic'
+        self.type_npc = 'chaotic'
+        self.type = ''
         self.pass_description = ''
         self.person_description = f"Отчаяный золотоискатель {self.name_npc}"
         self.description = ''
@@ -684,7 +714,7 @@ class Horse(Enemy):
         self.name_npc = random.choice(['Стреноженая белая лошадь', 'Стреноженая гнедая лошадь', 'Стреноженая черная лошадь'])
         self.priority_biom = [',', '„', 'P']
         self.banned_biom = ['~', ';']
-        self.icon = 'h'
+        self.icon = 'ho'
         self.activity_map = {
                             'move': [['передвигается', 'horse_tracks', 0, 0]],
                             'hunger': [['ест траву', 'horse_tracks', 80, 5]],
@@ -696,7 +726,8 @@ class Horse(Enemy):
         self.thirst = 100
         self.fatigue = 100
         self.reserves = 0
-        self.type = 'chaotic'
+        self.type_npc = 'chaotic'
+        self.type = ''
         self.pass_description = ''
         self.person_description = f"{self.name_npc}"
         self.description = ''
@@ -712,7 +743,7 @@ class Coyot(Enemy):
         self.name_npc = random.choice(['плешивый койот', 'молодой койот', 'подраный койот'])
         self.priority_biom = ['.', ',', '„', 'P', 'A']
         self.banned_biom = ['~', ';']
-        self.icon = 'c'
+        self.icon = 'co'
         self.activity_map = {
                             'move': [['передвигается', 'animal_traces', 0, 0]],
                             'hunger': [['охотится', 'gnawed bones', 80, 15], ['ест', 'animal_traces', 30, 10]],
@@ -724,7 +755,8 @@ class Coyot(Enemy):
         self.thirst = 200
         self.fatigue = 200
         self.reserves = 0
-        self.type = 'chaotic'
+        self.type_npc = 'chaotic'
+        self.type = ''
         self.pass_description = ''
         self.person_description = f"Голодный и злой {self.name_npc}"
         self.description = ''
@@ -1842,31 +1874,17 @@ def master_draw(person, chunk_size:int, go_to_print, global_map, mode_action, en
     draw_box = []
     pointer_vision = Tile('??')
     for line in range(len(draw_field)):
-        print_line = ''
+        print_line = []
         for tile in range(len(draw_field)):
             if line == chunk_size//2 and tile == chunk_size//2:
                 ground = draw_field[line][tile].description
-                print_line += '☺'
-                if mode_action == 'pointer' and person.pointer == [chunk_size//2, chunk_size//2]:
-                    print_line += '<'
-                    pointer_vision = draw_field[line][tile]
-                elif mode_action == 'gun' and person.gun == [chunk_size//2, chunk_size//2]:
-                    print_line += '+'    
-                else:
-                    print_line += ''
-            elif line == person.pointer[0] and tile == person.pointer[1]:
-                print_line += draw_field[line][tile].icon + '<'
-                pointer_vision = draw_field[line][tile]
-            elif line == person.gun[0] and tile == person.gun[1]:
-                print_line += draw_field[line][tile].icon + '+'
+                print_line.append('☺ ')
             else:
-                if len(draw_field[line][tile].icon) == 2:
-                    print_line += draw_field[line][tile].icon
-                else:
-                    print_line += draw_field[line][tile].icon + ''
+                print_line.append(draw_field[line][tile].icon + draw_field[line][tile].type)
+                
         draw_box.append(print_line)
     go_to_print.game_field = draw_box
-    go_to_print.text1 = (f"{person.assemblage_point} - Позиция точки сборки | {person.global_position} - глобальная позиция | {person.dynamic} - динамическая позиция | под ногами: {ground}")
+    go_to_print.text1 = (f"{person.assemblage_point} - Позиция точки сборки \n {person.global_position} - глобальная позиция \n {person.dynamic} - динамическая позиция \n под ногами: {ground}")
     go_to_print.text4 = pointer_vision.description
     
 """
@@ -1980,7 +1998,6 @@ class Tiles_image_dict:
         self.prickly_grass = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_prickly_grass.png'))
         self.dry_tree = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_tree.png'))
         self.live_tree = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_live_tree.png'))
-        self.water = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water.png'))
         self.person = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_person.png'))
         self.enemy_riffleman = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_enemy_riffleman.png'))
         self.enemy_horseman = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_enemy_horseman.png'))
@@ -1994,45 +2011,23 @@ class Tiles_image_dict:
         self.gnawed_bones = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_gnawed_bones.png'))
         self.animal_rest_stop = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_animal_rest_stop.png'))
         self.camp = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_camp.png'))
-        
-class All_tiles(pygame.sprite.Sprite):
-
-    def __init__(self, x, y, size_tile, icon):
-        pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.Surface((size_tile, size_tile))
-        self.image.fill(self.color_dict(icon))
-        self.rect = self.image.get_rect()
-        self.rect.left = x
-        self.rect.top = y
-        self.speed = 0
-
-    def color_dict(self, icon):
-
-        color_dict =   {
-                        'j': (255, 255, 50),
-                        '.': (255, 255, 0),
-                        ',': (100, 255, 0),
-                        'o': (192, 192, 192),
-                        'A': (150, 150, 150),
-                        '▲': (50, 50, 50),
-                        'i': (128, 255, 0),
-                        ':': (100, 100, 100),
-                        ';': (128, 128, 128),
-                        '„': (0, 255, 0),
-                        'u': (0, 128, 0),
-                        'ü': (0, 100, 0),
-                        'F': (128, 128, 0),
-                        'P': (0, 200, 0),
-                        '~': (100, 100, 255),
-                        '☺': (255, 255, 255),
-                        '☻': (235, 255, 255),
-                        }
-
-        if icon in color_dict:
-            return color_dict[icon]
-        else:
-            return (0, 0, 0)
-        
+        self.water_0 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_0.png'))
+        self.water_1 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_1.png'))
+        self.water_2 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_2.png'))
+        self.water_3 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_3.png'))
+        self.water_4 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_4.png'))
+        self.water_5 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_5.png'))
+        self.water_6 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_6.png'))
+        self.water_7 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_7.png'))
+        self.water_8 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_8.png'))
+        self.water_9 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_9.png'))
+        self.water_A = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_A.png'))
+        self.water_B = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_B.png'))
+        self.water_C = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_C.png'))
+        self.water_D = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_D.png'))
+        self.water_E = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_E.png'))
+        self.water_F = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_F.png'))
+               
 class Image_tile(pygame.sprite.Sprite):
     def __init__(self, x, y, size_tile, icon, tiles_image_dict):
         pygame.sprite.Sprite.__init__(self)
@@ -2046,52 +2041,104 @@ class Image_tile(pygame.sprite.Sprite):
     def image_dict(self, icon, tiles_image_dict):
 
         image_dict =   {
-                        'j': tiles_image_dict.dune,
-                        '.': tiles_image_dict.sand,
-                        ',': tiles_image_dict.dry_grass,
-                        'o': tiles_image_dict.stones,
-                        'A': tiles_image_dict.bump,
-                        '▲': tiles_image_dict.hills,
-                        'i': tiles_image_dict.cactus,
-                        ':': tiles_image_dict.saline_1,
-                        ';': tiles_image_dict.saline_2,
-                        '„': tiles_image_dict.grass,
-                        'u': tiles_image_dict.tall_grass,
-                        'ü': tiles_image_dict.prickly_grass,
-                        'F': tiles_image_dict.dry_tree,
-                        'P': tiles_image_dict.live_tree,
-                        '~': tiles_image_dict.water,
-                        '☺': tiles_image_dict.person,
-                        '☻': tiles_image_dict.enemy_riffleman,
-                        'H': tiles_image_dict.enemy_horseman,
-                        'c': tiles_image_dict.enemy_coyot,
-                        '8': tiles_image_dict.human_traces,
-                        '%': tiles_image_dict.horse_traces,
-                        '@': tiles_image_dict.animal_traces,
-                        '/': tiles_image_dict.camp,
-                        '+': tiles_image_dict.bonfire,
-                        '№': tiles_image_dict.rest_stop,
-                        '#': tiles_image_dict.gnawed_bones,
-                        '$': tiles_image_dict.animal_rest_stop,
+                        'j0': tiles_image_dict.dune,
+                        '.0': tiles_image_dict.sand,
+                        ',0': tiles_image_dict.dry_grass,
+                        'o0': tiles_image_dict.stones,
+                        'A0': tiles_image_dict.bump,
+                        '▲0': tiles_image_dict.hills,
+                        'i0': tiles_image_dict.cactus,
+                        ':0': tiles_image_dict.saline_1,
+                        ';0': tiles_image_dict.saline_2,
+                        '„0': tiles_image_dict.grass,
+                        'u0': tiles_image_dict.tall_grass,
+                        'ü0': tiles_image_dict.prickly_grass,
+                        'F0': tiles_image_dict.dry_tree,
+                        'P0': tiles_image_dict.live_tree,
+                        '~0': tiles_image_dict.water_0,
+                        '~1': tiles_image_dict.water_1,
+                        '~2': tiles_image_dict.water_2,
+                        '~3': tiles_image_dict.water_3,
+                        '~4': tiles_image_dict.water_4,
+                        '~5': tiles_image_dict.water_5,
+                        '~6': tiles_image_dict.water_6,
+                        '~7': tiles_image_dict.water_7,
+                        '~8': tiles_image_dict.water_8,
+                        '~9': tiles_image_dict.water_9,
+                        '~A': tiles_image_dict.water_A,
+                        '~B': tiles_image_dict.water_B,
+                        '~C': tiles_image_dict.water_C,
+                        '~D': tiles_image_dict.water_D,
+                        '~E': tiles_image_dict.water_E,
+                        '~F': tiles_image_dict.water_F,
+                        '☺ ': tiles_image_dict.person,
+                        '☻r': tiles_image_dict.enemy_riffleman,
+                        '☻h': tiles_image_dict.enemy_horseman,
+                        'co': tiles_image_dict.enemy_coyot,
+                        '8 ': tiles_image_dict.human_traces,
+                        '% ': tiles_image_dict.horse_traces,
+                        '@ ': tiles_image_dict.animal_traces,
+                        '/ ': tiles_image_dict.camp,
+                        '+ ': tiles_image_dict.bonfire,
+                        '№ ': tiles_image_dict.rest_stop,
+                        '# ': tiles_image_dict.gnawed_bones,
+                        '$ ': tiles_image_dict.animal_rest_stop,
                         }
         if icon in image_dict:
             return image_dict[icon]
         else:
             return tiles_image_dict.warning
         
+class All_tiles(pygame.sprite.Sprite):
 
+    def __init__(self, x, y, size_tile, icon):
+        pygame.sprite.Sprite.__init__(self)
+        self.x = x
+        self.y = y
+        self.image = pygame.Surface((size_tile, size_tile))
+        self.image.fill(self.color_dict(icon))
+        self.rect = self.image.get_rect()
+        self.rect.left = x
+        self.rect.top = y
+        self.speed = 0
+    def color_dict(self, icon):
+        color_dict =   {
+                        '~': (100, 100, 255),
+                        'j': (255, 255, 50),
+                        '.': (255, 255, 0),
+                        ',': (100, 255, 0),
+                        'o': (192, 192, 192),
+                        'A': (150, 150, 150),
+                        '▲': (50, 50, 50),
+                        'i': (128, 255, 0),
+                        ':': (100, 100, 100),
+                        ';': (128, 128, 128),
+                        '„': (0, 255, 0),
+                        'u': (0, 128, 0),
+                        'ü': (0, 100, 0),
+                        'F': (128, 128, 0),
+                        'P': (128, 128, 0),
+                        '☺': (255, 255, 255),
+                        '☻': (235, 255, 255),
+                        'H': (200, 255, 255),
+                        }
+
+        if icon in color_dict:
+            return color_dict[icon]
+        else:
+            return (0, 0, 0)
 
 def master_pygame_render_display(go_to_print, screen, tiles_image_dict):
 
     size_tile = 30
     size_tile_minimap = 10
     
-    print_map = []
-    for number_line in range(len(go_to_print.game_field)):
-        line = []
-        for tile in go_to_print.game_field[number_line]:
-            line.append(tile)
-        print_map.append(line)
+    print_map = go_to_print.game_field
+    #for number_line in range(len(go_to_print.game_field)):
+        #line = []
+        #for tile in go_to_print.game_field[number_line]:
+            #line.append(tile)
+        #print_map.append(line)
         
     print_minimap = []
     for number_line in range(len(go_to_print.biom_map)):
@@ -2100,7 +2147,6 @@ def master_pygame_render_display(go_to_print, screen, tiles_image_dict):
             line.append(tile)
         print_minimap.append(line)
 
-    screen.fill((255, 255,   0))
     all_sprites = pygame.sprite.Group()
 
 
@@ -2116,13 +2162,13 @@ def master_pygame_render_display(go_to_print, screen, tiles_image_dict):
             all_sprites.add(All_tiles(number_tile*size_tile_minimap + (30*size_tile), number_line*size_tile_minimap, size_tile_minimap, print_minimap[number_line][number_tile]))
 
 
-    #fontObj = pygame.font.Font('freesansbold.ttf', 20)
-    #textSurfaceObj = fontObj.render('Hello world!', True, yellow, blue)
-    #textRectObj = textSurfaceObj.get_rect()
-    #textRectObj.center = (100, 100)
+    fontObj = pygame.font.Font('freesansbold.ttf', 10)
+    textSurfaceObj = fontObj.render(go_to_print.text1, True, (0, 0, 0), (255, 255, 255))
+    textRectObj = textSurfaceObj.get_rect()
+    textRectObj.center = (30*35, 400)
 
     screen.fill((255, 255, 255))
-    #screen.blit(textSurfaceObj, textRectObj)            
+    screen.blit(textSurfaceObj, textRectObj)            
                 
     all_sprites.draw(screen)
     pygame.display.flip()
@@ -2198,7 +2244,7 @@ def main():
         
     """
     chunk_size = 25         #Определяет размер одного игрового поля и окна просмотра. Рекоммендуемое значение 25.
-    value_region_box = 5    #Количество регионов в квадрате.
+    value_region_box = 5    #Размер стороны квадрата регионов и количество локаций в регионах.
     grid = 5                #Должно быть кратно размеру игрового экрана.
     frame_size = [35, 40]   #Размер одного кадра [высота, ширина].
 
@@ -2206,6 +2252,9 @@ def main():
     print('Подождите, генерируется локация для игры')
     #progress_bar(5, 'Запуск игры') 
     global_map = master_generate(value_region_box, chunk_size, grid)
+    print('Подождите, обрабатывается сгенерированная карта для игры')
+    master_postgenerate_field_tiles(global_map, value_region_box, chunk_size)
+    
     person = Person([value_region_box//2, value_region_box//2], [chunk_size//2, chunk_size//2], [], [chunk_size//2, chunk_size//2], [chunk_size//2, chunk_size//2])
     calculation_assemblage_point(global_map, person, chunk_size)
     enemy_list = [Horseman([len(global_map)//2, len(global_map)//2] , 5), Horseman([len(global_map)//3, len(global_map)//3] , 5),
