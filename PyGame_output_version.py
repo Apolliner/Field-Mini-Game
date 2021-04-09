@@ -19,6 +19,7 @@ garbage = ['░', '▒', '▓', '█', '☺']
     2)Добавить изменение .type активностям, что бы они отображали на тайле свою "свежесть"
     3)После пострасчёта полей тайлов, провести повторный расчёт, что бы выделить крайними те тайлы, которые были определены как внутренние.
     Реализовать это для имитации многоуровневости гор и водоёмов.
+    4)Изменить вывод изображения таим образом, что бы получить возможность плавного передвижения между тайлами.
 
     
     ТЕМАТИКА:
@@ -279,13 +280,14 @@ def selecting_generator(seed):
     seed_dict = {  
                     0: ['desert',             [40.0,60.0], ['.'],                 ['j'],            'j',        20],
                     1: ['semidesert',         [35.0,50.0], ['.', ','],            ['▲', 'o', 'i'],  '.',        10],
-                    2: ['cliff semidesert',   [35.0,50.0], ['▲', 'A', '.', ','],  ['o', 'i'],       'A',         7],
-                    3: ['saline land',        [40.0,50.0], [';'],                 [':'],            ';',        15],
-                    4: ['field',              [20.0,35.0], ['u', '„', ','],       ['ü', 'o'],       '„',         5],
-                    5: ['dried field',        [30.0,40.0], ['„', ','],            ['o', 'u'],       ',',         2],
-                    6: ['oasis',              [15.0,30.0], ['F', '„', '~'],       ['P', ','],       'P',         0],
-                    7: ['salty lake',         [25.0,40.0], ['~', ','],            ['„', '.'],       '~',        20],
-                    8: ['hills',              [20.0,35.0], ['▲', 'o'],            ['„', ','],       '▲',        20],
+                    2: ['cliff semi-desert',  [35.0,50.0], ['▲', 'A', '.', ','],  ['o', 'i'],       'A',         7],
+                    3: ['snake semi-desert',  [35.0,50.0], ['A', '.', ','],       ['▲','o', 'i'],   'S',         7],
+                    4: ['saline land',        [40.0,50.0], [';'],                 [':'],            ';',        15],
+                    5: ['field',              [20.0,35.0], ['u', '„', ','],       ['ü', 'o'],       '„',         5],
+                    6: ['dried field',        [30.0,40.0], ['„', ','],            ['o', 'u'],       ',',         2],
+                    7: ['oasis',              [15.0,30.0], ['F', '„', '~'],       ['P', ','],       'P',         0],
+                    8: ['salty lake',         [25.0,40.0], ['~', ','],            ['„', '.'],       '~',        20],
+                    9: ['hills',              [20.0,35.0], ['▲', 'o'],            ['„', ','],       '▲',        20],
                 }
     return seed_dict[seed]
 
@@ -381,7 +383,7 @@ def region_generate(size_region_box):
     """
     region_map = []
     for i in range(size_region_box):
-        region_map.append([random.randrange(9) for x in range(size_region_box)])
+        region_map.append([random.randrange(10) for x in range(size_region_box)])
     return region_map
 
 
@@ -551,12 +553,12 @@ def master_postgenerate_field_tiles(global_map, value_region_box, chunk_size):
                         if tile.icon == 'j':
                             tile.type = random.choice(['0', '1'])
 
-    multilevelness_calculation(global_map, chunk_size)
-    multilevelness_calculation(global_map, chunk_size)
+    multilevelness_calculation(global_map, chunk_size, '▲')
+    multilevelness_calculation(global_map, chunk_size, '~')
 
-def multilevelness_calculation(global_map, chunk_size):
+def multilevelness_calculation(global_map, chunk_size, search_tile):
     """
-        Делает горы многоуровневыми
+        Делает тайловые поля двухуровневыми
     """
     detected_list = ['1', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T']
 
@@ -565,7 +567,7 @@ def multilevelness_calculation(global_map, chunk_size):
         for number_global_location, location in enumerate(global_line):
             for number_line, line in enumerate(location.chunk):
                 for number_tile, tile in enumerate(line):
-                    if tile.icon == '▲' and tile.type == '1':
+                    if tile.icon == search_tile and tile.type == '1':
                         direction = {
                                     'up': False,
                                     'down': False,
@@ -924,7 +926,7 @@ class Horse(Enemy):
                             'hunger': [['ест траву', 'horse_tracks', 80, 5]],
                             'thirst': [['пьёт', 'horse_tracks', 80, 5]],
                             'fatigue': [['отдыхает', 'animal_rest_stop', 80, 20]],
-                            'other': [['пугатся и убегает', 'horse_trucks', 0, 0]],
+                            'other': [['пугатся и убегает', 'horse_tracks', 0, 0]],
                             }
         self.hunger = 100
         self.thirst = 100
@@ -2142,6 +2144,7 @@ def print_frame(go_to_print, frame_size, activity_list):
 
 """
 class Interaction:
+    """ Содержит описание взаимодействия. НЕ ИСПОЛЬЗУЕТСЯ"""
     
     def __init__(self, perform, whom, type_interaction, description):
         self.perform = perform
@@ -2187,6 +2190,7 @@ def new_step_calculation(enemy_list, person, step):
 
 """
 class Tiles_image_dict:
+    """ Загрузка спрайтов """
     def __init__(self):
         self.dune_0 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dune_0.png'))
         self.dune_1 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dune_1.png'))
@@ -2229,6 +2233,21 @@ class Tiles_image_dict:
         self.water_D = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_D.png'))
         self.water_E = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_E.png'))
         self.water_F = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_F.png'))
+        self.water_G = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_G.png'))
+        self.water_H = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_H.png'))
+        self.water_I = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_I.png'))
+        self.water_J = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_J.png'))
+        self.water_K = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_K.png'))
+        self.water_L = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_L.png'))
+        self.water_M = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_M.png'))
+        self.water_N = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_N.png'))
+        self.water_O = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_O.png'))
+        self.water_P = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_p.png'))
+        self.water_Q = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_Q.png'))
+        self.water_R = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_R.png'))
+        self.water_S = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_S.png'))
+        self.water_T = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_T.png'))
+        self.water_U = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_U.png'))
         self.hills_0 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_0.png'))
         self.hills_1 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_1.png'))
         self.hills_2 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_2.png'))
@@ -2278,6 +2297,7 @@ class Tiles_image_dict:
 
         
 class Image_tile(pygame.sprite.Sprite):
+    """ Содержит спрайт и его кординаты на экране """
     def __init__(self, x, y, size_tile, icon, tiles_image_dict):
         pygame.sprite.Sprite.__init__(self)
         self.image = self.image_dict(icon, tiles_image_dict)
@@ -2360,6 +2380,21 @@ class Image_tile(pygame.sprite.Sprite):
                         '~D': tiles_image_dict.water_D,
                         '~E': tiles_image_dict.water_E,
                         '~F': tiles_image_dict.water_F,
+                        '~G': tiles_image_dict.water_G,
+                        '~H': tiles_image_dict.water_H,
+                        '~I': tiles_image_dict.water_I,
+                        '~J': tiles_image_dict.water_J,
+                        '~K': tiles_image_dict.water_K,
+                        '~L': tiles_image_dict.water_L,
+                        '~M': tiles_image_dict.water_M,
+                        '~N': tiles_image_dict.water_N,
+                        '~O': tiles_image_dict.water_O,
+                        '~P': tiles_image_dict.water_P,
+                        '~Q': tiles_image_dict.water_Q,
+                        '~R': tiles_image_dict.water_R,
+                        '~S': tiles_image_dict.water_S,
+                        '~T': tiles_image_dict.water_T,
+                        '~U': tiles_image_dict.water_U,
                         '☺ ': tiles_image_dict.person,
                         '☻r': tiles_image_dict.enemy_riffleman,
                         '☻h': tiles_image_dict.enemy_horseman,
@@ -2379,6 +2414,7 @@ class Image_tile(pygame.sprite.Sprite):
             return tiles_image_dict.warning
         
 class All_tiles(pygame.sprite.Sprite):
+    """ Содержит спрайты миникарты """
 
     def __init__(self, x, y, size_tile, icon):
         pygame.sprite.Sprite.__init__(self)
@@ -2418,6 +2454,9 @@ class All_tiles(pygame.sprite.Sprite):
             return (0, 0, 0)
 
 def master_pygame_render_display(go_to_print, screen, tiles_image_dict):
+    """
+        Выводит изображение на экран через PyGame
+    """
 
     size_tile = 30
     size_tile_minimap = 10
@@ -2464,6 +2503,9 @@ def master_pygame_render_display(go_to_print, screen, tiles_image_dict):
 
 
 def load_tile_table(filename, width, height):
+    """
+        Режет боьшой тайлсет на спрайты тайлов
+    """
     image = pygame.image.load(filename).convert()
     image_width, image_height = image.get_size()
     tile_table = []
@@ -2535,7 +2577,7 @@ def main():
     chunk_size = 25         #Определяет размер одного игрового поля и окна просмотра. Рекоммендуемое значение 25.
     value_region_box = 5    #Размер стороны квадрата регионов и количество локаций в регионах.
     grid = 5                #На сколько делится размер чанка. Должно быть кратно размеру игрового экрана.
-    frame_size = [35, 40]   #Размер одного кадра [высота, ширина].
+    frame_size = [35, 40]   #Размер одного кадра [высота, ширина]. УСТАРЕЛО
 
 
     print('Подождите, генерируется локация для игры')
