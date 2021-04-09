@@ -15,7 +15,10 @@ garbage = ['░', '▒', '▓', '█', '☺']
 
     РЕАЛИЗОВАТЬ:
 
-    1)Разный вид тайлов в зависимости от их нахождения на краю однородного тайлового поля. Реализовать это на этапе генерации карты.
+    1)Разный вид тайлов в зависимости от их нахождения на краю однородного тайлового поля. Реализовать это на этапе генерации карты. #РЕАЛИЗОВАНО
+    2)Добавить изменение .type активностям, что бы они отображали на тайле свою "свежесть"
+    3)После пострасчёта полей тайлов, провести повторный расчёт, что бы выделить крайними те тайлы, которые были определены как внутренние.
+    Реализовать это для имитации многоуровневости гор и водоёмов.
 
     
     ТЕМАТИКА:
@@ -547,6 +550,136 @@ def master_postgenerate_field_tiles(global_map, value_region_box, chunk_size):
                             tile.type = random.choice(['0', '1'])
                         if tile.icon == 'j':
                             tile.type = random.choice(['0', '1'])
+
+    multilevelness_calculation(global_map, chunk_size)
+    multilevelness_calculation(global_map, chunk_size)
+
+def multilevelness_calculation(global_map, chunk_size):
+    """
+        Делает горы многоуровневыми
+    """
+    detected_list = ['1', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T']
+
+
+    for number_global_line, global_line in enumerate(global_map):
+        for number_global_location, location in enumerate(global_line):
+            for number_line, line in enumerate(location.chunk):
+                for number_tile, tile in enumerate(line):
+                    if tile.icon == '▲' and tile.type == '1':
+                        direction = {
+                                    'up': False,
+                                    'down': False,
+                                    'left': False,
+                                    'right': False,
+                                    }
+                        if 0 < number_global_line < len(global_map) - 1: # По оси Y
+                            if number_line > 0:
+                                if tile.icon == location.chunk[number_line - 1][number_tile].icon and location.chunk[number_line - 1][number_tile].type in detected_list:
+                                    direction['up'] = True
+                            else:
+                                if tile.icon == global_map[number_global_line - 1][number_global_location].chunk[chunk_size - 1][number_tile].icon and global_map[number_global_line - 1][number_global_location].chunk[chunk_size - 1][number_tile].type in detected_list:
+                                    direction['up'] = True
+
+                            if number_line < chunk_size - 1:
+                                if tile.icon == location.chunk[number_line + 1][number_tile].icon and location.chunk[number_line + 1][number_tile].type in detected_list:
+                                    direction['down'] = True
+                            else:
+                                if tile.icon == global_map[number_global_line + 1][number_global_location].chunk[0][number_tile].icon and global_map[number_global_line + 1][number_global_location].chunk[0][number_tile].type in detected_list:
+                                    direction['down'] = True
+
+                        elif number_global_line == 0:
+                            if number_line > 0:
+                                if tile.icon == location.chunk[number_line - 1][number_tile].icon and location.chunk[number_line - 1][number_tile].type in detected_list:
+                                    direction['up'] = True
+                            if number_line < chunk_size - 1:
+                                if tile.icon == location.chunk[number_line + 1][number_tile].icon and tile.icon == location.chunk[number_line + 1][number_tile].type in detected_list:
+                                    direction['down'] = True
+                            else:
+                                if tile.icon == global_map[number_global_line + 1][number_global_location].chunk[0][number_tile].icon and global_map[number_global_line + 1][number_global_location].chunk[0][number_tile].type in detected_list:
+                                    direction['down'] = True
+
+                        elif number_global_line == len(global_map) - 1:
+                            if number_line > 0:
+                                if tile.icon == location.chunk[number_line - 1][number_tile].icon and location.chunk[number_line - 1][number_tile].type in detected_list:
+                                    direction['up'] = True
+                            else:
+                                if tile.icon == global_map[number_global_line - 1][number_global_location].chunk[chunk_size - 1][number_tile].icon and global_map[number_global_line - 1][number_global_location].chunk[chunk_size - 1][number_tile].type in detected_list:
+                                    direction['up'] = True
+                            if number_line < chunk_size - 1:
+                                if tile.icon == location.chunk[number_line + 1][number_tile].icon and location.chunk[number_line + 1][number_tile].type in detected_list:
+                                    direction['down'] = True
+
+
+                        if 0 < number_global_location < len(global_map[0]) - 1: # По оси Х
+                            if number_tile > 0:
+                                if tile.icon == location.chunk[number_line][number_tile - 1].icon and location.chunk[number_line][number_tile - 1].type in detected_list:
+                                    direction['left'] = True
+                            else:
+                                if tile.icon == global_map[number_global_line][number_global_location - 1].chunk[number_line][chunk_size - 1].icon and global_map[number_global_line][number_global_location - 1].chunk[number_line][chunk_size - 1].type in detected_list:
+                                    direction['left'] = True
+
+                            if number_tile < chunk_size - 1:
+                                if tile.icon == location.chunk[number_line][number_tile + 1].icon and location.chunk[number_line][number_tile + 1].type in detected_list:
+                                    direction['right'] = True
+                            else:
+                                if tile.icon == global_map[number_global_line][number_global_location + 1].chunk[number_line][0].icon and global_map[number_global_line][number_global_location + 1].chunk[number_line][0].type in detected_list:
+                                    direction['right'] = True
+
+                        elif number_global_location == 0:
+                            if number_tile > 0:
+                                if tile.icon == location.chunk[number_line][number_tile - 1].icon and location.chunk[number_line][number_tile - 1].type in detected_list:
+                                    direction['left'] = True
+                            if number_tile < chunk_size - 1:
+                                if tile.icon == location.chunk[number_line][number_tile + 1].icon and location.chunk[number_line][number_tile + 1].type in detected_list:
+                                    direction['right'] = True
+                            else:
+                                if tile.icon == global_map[number_global_line][number_global_location + 1].chunk[number_line][0].icon and global_map[number_global_line][number_global_location + 1].chunk[number_line][0].type in detected_list:
+                                    direction['right'] = True
+
+                        elif number_global_location == len(global_map[0]) - 1:
+                            if number_tile > 0:
+                                if tile.icon == location.chunk[number_line][number_tile - 1].icon and location.chunk[number_line][number_tile - 1].type in detected_list:
+                                    direction['left'] = True
+                            else:
+                                if tile.icon == global_map[number_global_line][number_global_location - 1].chunk[number_line][chunk_size - 1].icon and global_map[number_global_line][number_global_location - 1].chunk[number_line][chunk_size - 1].type in detected_list:
+                                    direction['left'] = True
+                            if number_tile < chunk_size - 1:
+                                if tile.icon == location.chunk[number_line][number_tile + 1].icon and location.chunk[number_line][number_tile + 1].type in detected_list:
+                                    direction['right'] = True
+
+
+                        if direction['up'] and direction['down'] and direction['left'] and direction['right']:
+                            tile.type = '1'
+                        elif direction['up'] and not(direction['down']) and direction['left'] and direction['right']:
+                            tile.type = 'G'
+                        elif direction['up'] and direction['down'] and not(direction['left']) and direction['right']:
+                            tile.type = 'H'
+                        elif not(direction['up']) and direction['down'] and direction['left'] and direction['right']:
+                            tile.type = 'I'
+                        elif direction['up'] and direction['down'] and direction['left'] and not(direction['right']):
+                            tile.type = 'J'
+                        elif direction['up'] and not(direction['down']) and direction['left'] and not(direction['right']):
+                            tile.type = 'K'
+                        elif direction['up'] and not(direction['down']) and not(direction['left']) and direction['right']:
+                            tile.type = 'L'
+                        elif not(direction['up']) and direction['down'] and not(direction['left']) and direction['right']:
+                            tile.type = 'M'
+                        elif not(direction['up']) and direction['down'] and direction['left'] and not(direction['right']):
+                            tile.type = 'N'
+                        elif not(direction['up']) and not(direction['down']) and direction['left'] and not(direction['right']):
+                            tile.type = 'O'
+                        elif direction['up'] and not(direction['down']) and not(direction['left']) and not(direction['right']):
+                            tile.type = 'P'
+                        elif not(direction['up']) and not(direction['down']) and not(direction['left']) and direction['right']:
+                            tile.type = 'Q'
+                        elif not(direction['up']) and direction['down'] and not(direction['left']) and not(direction['right']):
+                            tile.type = 'R'
+                        elif not(direction['up']) and not(direction['down']) and direction['left'] and direction['right']:
+                            tile.type = 'S'
+                        elif direction['up'] and direction['down'] and not(direction['left']) and not(direction['right']):
+                            tile.type = 'T'
+                        else:
+                            tile.type = 'U'
 
 """
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -2112,6 +2245,21 @@ class Tiles_image_dict:
         self.hills_D = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_D.png'))
         self.hills_E = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_E.png'))
         self.hills_F = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_F.png'))
+        self.hills_G = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_G.png'))
+        self.hills_H = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_H.png'))
+        self.hills_I = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_I.png'))
+        self.hills_J = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_J.png'))
+        self.hills_K = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_K.png'))
+        self.hills_L = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_L.png'))
+        self.hills_M = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_M.png'))
+        self.hills_N = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_N.png'))
+        self.hills_O = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_O.png'))
+        self.hills_P = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_p.png'))
+        self.hills_Q = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_Q.png'))
+        self.hills_R = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_R.png'))
+        self.hills_S = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_S.png'))
+        self.hills_T = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_T.png'))
+        self.hills_U = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_U.png'))
         self.bump_0 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_bump_0.png'))
         self.bump_1 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_bump_1.png'))
         self.dry_tree_0 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_tree_0.png'))
@@ -2165,6 +2313,21 @@ class Image_tile(pygame.sprite.Sprite):
                         '▲D': tiles_image_dict.hills_D,
                         '▲E': tiles_image_dict.hills_E,
                         '▲F': tiles_image_dict.hills_F,
+                        '▲G': tiles_image_dict.hills_G,
+                        '▲H': tiles_image_dict.hills_H,
+                        '▲I': tiles_image_dict.hills_I,
+                        '▲J': tiles_image_dict.hills_J,
+                        '▲K': tiles_image_dict.hills_K,
+                        '▲L': tiles_image_dict.hills_L,
+                        '▲M': tiles_image_dict.hills_M,
+                        '▲N': tiles_image_dict.hills_N,
+                        '▲O': tiles_image_dict.hills_O,
+                        '▲P': tiles_image_dict.hills_P,
+                        '▲Q': tiles_image_dict.hills_Q,
+                        '▲R': tiles_image_dict.hills_R,
+                        '▲S': tiles_image_dict.hills_S,
+                        '▲T': tiles_image_dict.hills_T,
+                        '▲U': tiles_image_dict.hills_U,
                         'i0': tiles_image_dict.cactus,
                         ':0': tiles_image_dict.saline_1,
                         ';0': tiles_image_dict.saline_2,
