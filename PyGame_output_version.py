@@ -417,8 +417,8 @@ def master_postgenerate_field_tiles(global_map, value_region_box, chunk_size):
     """
         Обрабатывает готовую карту мира
     """
-    #detected_list = ['~', '▲', 'A', ';']
     detected_list = ['~', '▲']
+    detected_list_2 = ['F', 'u', 'j']
 
     for number_global_line, global_line in enumerate(global_map):
         for number_global_location, location in enumerate(global_line):
@@ -539,6 +539,14 @@ def master_postgenerate_field_tiles(global_map, value_region_box, chunk_size):
                             tile.type = 'F'
                         else:
                             tile.type = '0'
+                            
+                    elif tile.icon in detected_list_2:
+                        if tile.icon == 'F':
+                            tile.type = random.choice(['0', '1', '2', '3', '4', '5', '6', '7'])
+                        if tile.icon == 'u':
+                            tile.type = random.choice(['0', '1'])
+                        if tile.icon == 'j':
+                            tile.type = random.choice(['0', '1'])
 
 """
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -2047,19 +2055,17 @@ def new_step_calculation(enemy_list, person, step):
 """
 class Tiles_image_dict:
     def __init__(self):
-        self.dune = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dune.png'))
+        self.dune_0 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dune_0.png'))
+        self.dune_1 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dune_1.png'))
         self.sand = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_sand.png'))
         self.dry_grass = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_grass.png'))
         self.stones = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_stone.png'))
-        self.bump = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_bump.png'))
         self.hills = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills.png'))
         self.cactus = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_cactus.png'))
         self.saline_1 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_saline_1.png'))
         self.saline_2 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_saline_2.png'))
         self.grass = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_grass.png'))
-        self.tall_grass = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_tall_grass.png'))
         self.prickly_grass = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_prickly_grass.png'))
-        self.dry_tree = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_tree.png'))
         self.live_tree = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_live_tree.png'))
         self.person = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_person.png'))
         self.enemy_riffleman = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_enemy_riffleman.png'))
@@ -2106,7 +2112,23 @@ class Tiles_image_dict:
         self.hills_D = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_D.png'))
         self.hills_E = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_E.png'))
         self.hills_F = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_F.png'))
-               
+        self.bump_0 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_bump_0.png'))
+        self.bump_1 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_bump_1.png'))
+        self.dry_tree_0 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_tree_0.png'))
+        self.dry_tree_1 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_tree_1.png'))
+        self.dry_tree_2 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_tree_2.png'))
+        self.dry_tree_3 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_tree_3.png'))
+        self.dry_tree_4 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_tree_4.png'))
+        self.dry_tree_5 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_tree_5.png'))
+        self.dry_tree_6 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_tree_6.png'))
+        self.dry_tree_7 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_tree_7.png'))
+        self.tall_grass_0 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_tall_grass_0.png'))
+        self.tall_grass_1 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_tall_grass_1.png'))
+
+
+
+
+        
 class Image_tile(pygame.sprite.Sprite):
     def __init__(self, x, y, size_tile, icon, tiles_image_dict):
         pygame.sprite.Sprite.__init__(self)
@@ -2120,11 +2142,13 @@ class Image_tile(pygame.sprite.Sprite):
     def image_dict(self, icon, tiles_image_dict):
 
         image_dict =   {
-                        'j0': tiles_image_dict.dune,
+                        'j0': tiles_image_dict.dune_0,
+                        'j1': tiles_image_dict.dune_1,
                         '.0': tiles_image_dict.sand,
                         ',0': tiles_image_dict.dry_grass,
                         'o0': tiles_image_dict.stones,
-                        'A0': tiles_image_dict.bump,
+                        'A0': tiles_image_dict.bump_0,
+                        'A1': tiles_image_dict.bump_1,
                         '▲0': tiles_image_dict.hills_0,
                         '▲1': tiles_image_dict.hills_1,
                         '▲2': tiles_image_dict.hills_2,
@@ -2145,9 +2169,17 @@ class Image_tile(pygame.sprite.Sprite):
                         ':0': tiles_image_dict.saline_1,
                         ';0': tiles_image_dict.saline_2,
                         '„0': tiles_image_dict.grass,
-                        'u0': tiles_image_dict.tall_grass,
+                        'u0': tiles_image_dict.tall_grass_0,
+                        'u1': tiles_image_dict.tall_grass_1,
                         'ü0': tiles_image_dict.prickly_grass,
-                        'F0': tiles_image_dict.dry_tree,
+                        'F0': tiles_image_dict.dry_tree_0,
+                        'F1': tiles_image_dict.dry_tree_1,
+                        'F2': tiles_image_dict.dry_tree_2,
+                        'F3': tiles_image_dict.dry_tree_3,
+                        'F4': tiles_image_dict.dry_tree_4,
+                        'F5': tiles_image_dict.dry_tree_5,
+                        'F6': tiles_image_dict.dry_tree_6,
+                        'F7': tiles_image_dict.dry_tree_7,
                         'P0': tiles_image_dict.live_tree,
                         '~0': tiles_image_dict.water_0,
                         '~1': tiles_image_dict.water_1,
@@ -2339,7 +2371,7 @@ def main():
     """
     chunk_size = 25         #Определяет размер одного игрового поля и окна просмотра. Рекоммендуемое значение 25.
     value_region_box = 5    #Размер стороны квадрата регионов и количество локаций в регионах.
-    grid = 5                #Должно быть кратно размеру игрового экрана.
+    grid = 5                #На сколько делится размер чанка. Должно быть кратно размеру игрового экрана.
     frame_size = [35, 40]   #Размер одного кадра [высота, ширина].
 
 
