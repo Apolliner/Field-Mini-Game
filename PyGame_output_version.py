@@ -20,6 +20,13 @@ garbage = ['░', '▒', '▓', '█', '☺']
     3)После пострасчёта полей тайлов, провести повторный расчёт, что бы выделить крайними те тайлы, которые были определены как внутренние.
     Реализовать это для имитации многоуровневости гор и водоёмов.
     4)Изменить вывод изображения таим образом, что бы получить возможность плавного передвижения между тайлами.
+    5)Осмысленную генерацию гор и водоёмов. Горы должны иметь несколько пиков.
+
+
+    ТРЕБОВАНИЯ К ПОСТГЕНЕРАТОРУ, ОПРЕДЕЛЯЮЩЕМУ ОДНОРОДНОСТЬ ТАЙЛОВОГО ПОЛЯ И МУЛЬТИВЫСОТНОСТЬ:
+    1)Он должен поддерживать возможность того, что два разных тайла считаются одним тайловым полем.
+    2)Может как просчитывать однородность тайлового поля, так и его мультивысотность.
+    3)Приемлемая скорость выполнения.
 
     
     ТЕМАТИКА:
@@ -561,8 +568,14 @@ def master_postgenerate_field_tiles(global_map, value_region_box, chunk_size):
                         if tile.icon == 'j':
                             tile.type = random.choice(['0', '1'])
 
-    #multilevelness_calculation(global_map, chunk_size, '▲') #39.41
-    old_multilevelness_calculation(global_map, chunk_size) #1.41
+    old_multilevelness_calculation(global_map, chunk_size)
+    multilevelness_calculation(global_map, chunk_size, '▲') #39.41
+    multilevelness_calculation(global_map, chunk_size, '▲')
+    multilevelness_calculation(global_map, chunk_size, '▲')
+    multilevelness_calculation(global_map, chunk_size, '▲')
+    multilevelness_calculation(global_map, chunk_size, '▲')
+    #multilevelness_calculation(global_map, chunk_size, '▲') #16.26
+    #old_multilevelness_calculation(global_map, chunk_size) #1.41
     #multilevelness_calculation_alternative(global_map, chunk_size, '▲') #16.49
 
 def multilevelness_calculation(global_map, chunk_size, search_tile):
