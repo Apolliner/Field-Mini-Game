@@ -441,14 +441,16 @@ def master_postgenerate_field_tiles(global_map, value_region_box, chunk_size):
                                 if location.chunk[number_line][number_tile].icon == location.chunk[number_line - 1][number_tile].icon:
                                     direction['up'] = True
                             else:
-                                if location.chunk[number_line][number_tile].icon == global_map[number_global_line - 1][number_global_location].chunk[chunk_size - 1][number_tile].icon:
+                                if location.chunk[number_line][number_tile].icon == global_map[number_global_line - 1][
+                                    number_global_location].chunk[chunk_size - 1][number_tile].icon:
                                     direction['up'] = True
 
                             if number_line < chunk_size - 1:
                                 if location.chunk[number_line][number_tile].icon == location.chunk[number_line + 1][number_tile].icon:
                                     direction['down'] = True
                             else:
-                                if location.chunk[number_line][number_tile].icon == global_map[number_global_line + 1][number_global_location].chunk[0][number_tile].icon:
+                                if location.chunk[number_line][number_tile].icon == global_map[number_global_line + 1][
+                                        number_global_location].chunk[0][number_tile].icon:
                                     direction['down'] = True
 
                         elif number_global_line == 0:
@@ -459,7 +461,8 @@ def master_postgenerate_field_tiles(global_map, value_region_box, chunk_size):
                                 if location.chunk[number_line][number_tile].icon == location.chunk[number_line + 1][number_tile].icon:
                                     direction['down'] = True
                             else:
-                                if location.chunk[number_line][number_tile].icon == global_map[number_global_line + 1][number_global_location].chunk[0][number_tile].icon:
+                                if location.chunk[number_line][number_tile].icon == global_map[number_global_line + 1][
+                                        number_global_location].chunk[0][number_tile].icon:
                                     direction['down'] = True
 
                         elif number_global_line == len(global_map) - 1:
@@ -467,7 +470,8 @@ def master_postgenerate_field_tiles(global_map, value_region_box, chunk_size):
                                 if location.chunk[number_line][number_tile].icon == location.chunk[number_line - 1][number_tile].icon:
                                     direction['up'] = True
                             else:
-                                if location.chunk[number_line][number_tile].icon == global_map[number_global_line - 1][number_global_location].chunk[chunk_size - 1][number_tile].icon:
+                                if location.chunk[number_line][number_tile].icon == global_map[number_global_line - 1][
+                                        number_global_location].chunk[chunk_size - 1][number_tile].icon:
                                     direction['up'] = True
                             if number_line < chunk_size - 1:
                                 if location.chunk[number_line][number_tile].icon == location.chunk[number_line + 1][number_tile].icon:
@@ -479,14 +483,16 @@ def master_postgenerate_field_tiles(global_map, value_region_box, chunk_size):
                                 if location.chunk[number_line][number_tile].icon == location.chunk[number_line][number_tile - 1].icon:
                                     direction['left'] = True
                             else:
-                                if location.chunk[number_line][number_tile].icon == global_map[number_global_line][number_global_location - 1].chunk[number_line][chunk_size - 1].icon:
+                                if location.chunk[number_line][number_tile].icon == global_map[number_global_line][
+                                        number_global_location - 1].chunk[number_line][chunk_size - 1].icon:
                                     direction['left'] = True
 
                             if number_tile < chunk_size - 1:
                                 if location.chunk[number_line][number_tile].icon == location.chunk[number_line][number_tile + 1].icon:
                                     direction['right'] = True
                             else:
-                                if location.chunk[number_line][number_tile].icon == global_map[number_global_line][number_global_location + 1].chunk[number_line][0].icon:
+                                if location.chunk[number_line][number_tile].icon == global_map[number_global_line][
+                                        number_global_location + 1].chunk[number_line][0].icon:
                                     direction['right'] = True
 
                         elif number_global_location == 0:
@@ -497,7 +503,8 @@ def master_postgenerate_field_tiles(global_map, value_region_box, chunk_size):
                                 if location.chunk[number_line][number_tile].icon == location.chunk[number_line][number_tile + 1].icon:
                                     direction['right'] = True
                             else:
-                                if location.chunk[number_line][number_tile].icon == global_map[number_global_line][number_global_location + 1].chunk[number_line][0].icon:
+                                if location.chunk[number_line][number_tile].icon == global_map[number_global_line][
+                                        number_global_location + 1].chunk[number_line][0].icon:
                                     direction['right'] = True
 
                         elif number_global_location == len(global_map[0]) - 1:
@@ -505,7 +512,8 @@ def master_postgenerate_field_tiles(global_map, value_region_box, chunk_size):
                                 if location.chunk[number_line][number_tile].icon == location.chunk[number_line][number_tile - 1].icon:
                                     direction['left'] = True
                             else:
-                                if location.chunk[number_line][number_tile].icon == global_map[number_global_line][number_global_location - 1].chunk[number_line][chunk_size - 1].icon:
+                                if location.chunk[number_line][number_tile].icon == global_map[number_global_line][
+                                        number_global_location - 1].chunk[number_line][chunk_size - 1].icon:
                                     direction['left'] = True
                             if number_tile < chunk_size - 1:
                                 if location.chunk[number_line][number_tile].icon == location.chunk[number_line][number_tile + 1].icon:
@@ -553,12 +561,342 @@ def master_postgenerate_field_tiles(global_map, value_region_box, chunk_size):
                         if tile.icon == 'j':
                             tile.type = random.choice(['0', '1'])
 
-    multilevelness_calculation(global_map, chunk_size, '▲')
-    multilevelness_calculation(global_map, chunk_size, '~')
+    #multilevelness_calculation(global_map, chunk_size, '▲') #39.41
+    old_multilevelness_calculation(global_map, chunk_size) #1.41
+    #multilevelness_calculation_alternative(global_map, chunk_size, '▲') #16.49
 
 def multilevelness_calculation(global_map, chunk_size, search_tile):
     """
-        Делает тайловые поля двухуровневыми
+        Делает тайловые поля многоуровневыми 
+
+        Проверяет является ли соседний тайл в выбраном направлении похожим на него или находится ли соседний тайл в списке изменненных.
+
+        Скорость построения 1 уровня = 40 секунд
+        
+    """
+    detected_list = ['1', 'U']
+    list_of_verified_titles = []
+
+
+    for number_global_line, global_line in enumerate(global_map):
+        for number_global_location, location in enumerate(global_line):
+            for number_line, line in enumerate(location.chunk):
+                for number_tile, tile in enumerate(line):
+                    if tile.icon == search_tile and tile.type == '1' or tile.type == 'U':
+                        direction = {
+                                    'up': False,
+                                    'down': False,
+                                    'left': False,
+                                    'right': False,
+                                    }
+                        if 0 < number_global_line < len(global_map) - 1: # По оси Y
+                            if number_line > 0:
+                                if tile.icon == location.chunk[number_line - 1][number_tile].icon and ([number_global_line,
+                                        number_global_location, number_line - 1, number_tile] in list_of_verified_titles or location.chunk[number_line - 1][
+                                        number_tile].type in detected_list):
+                                    direction['up'] = True
+                            else:
+                                if tile.icon == global_map[number_global_line - 1][number_global_location].chunk[chunk_size - 1][
+                                        number_tile].icon and ([number_global_line - 1, number_global_location, chunk_size - 1, number_tile
+                                        ] in list_of_verified_titles or global_map[number_global_line - 1][number_global_location].chunk[
+                                        chunk_size - 1][number_tile].type in detected_list):
+                                    direction['up'] = True
+
+                            if number_line < chunk_size - 1:
+                                if tile.icon == location.chunk[number_line + 1][number_tile].icon and ([number_global_line, number_global_location,
+                                        number_line + 1, number_tile] in list_of_verified_titles or location.chunk[number_line + 1][number_tile].type in detected_list):
+                                    direction['down'] = True
+                            else:
+                                if tile.icon == global_map[number_global_line + 1][number_global_location].chunk[0][number_tile
+                                        ].icon and ([number_global_line + 1, number_global_location, 0, number_tile] in list_of_verified_titles or global_map[
+                                        number_global_line + 1][number_global_location].chunk[0][number_tile].type in detected_list):
+                                    direction['down'] = True
+
+                        elif number_global_line == 0:
+                            if number_line > 0:
+                                if tile.icon == location.chunk[number_line - 1][number_tile].icon and ([number_global_line, number_global_location,
+                                        number_line - 1, number_tile] in list_of_verified_titles or location.chunk[number_line - 1][number_tile].type in detected_list):
+                                    direction['up'] = True
+                            if number_line < chunk_size - 1:
+                                if tile.icon == location.chunk[number_line + 1][number_tile].icon and ([number_global_line, number_global_location,
+                                        number_line + 1, number_tile] in list_of_verified_titles or location.chunk[number_line + 1][number_tile].type in detected_list):
+                                    direction['down'] = True
+                            else:
+                                if tile.icon == global_map[number_global_line + 1][number_global_location].chunk[0][number_tile].icon and ([number_global_line + 1,
+                                        number_global_location, 0, number_tile] in list_of_verified_titles or global_map[number_global_line + 1][
+                                        number_global_location].chunk[0][number_tile].type in detected_list):
+                                    direction['down'] = True
+
+                        elif number_global_line == len(global_map) - 1:
+                            if number_line > 0:
+                                if tile.icon == location.chunk[number_line - 1][number_tile].icon and ([number_global_line, number_global_location,
+                                        number_line - 1, number_tile] in list_of_verified_titles or location.chunk[number_line - 1][number_tile
+                                        ].type in detected_list):
+                                    direction['up'] = True
+                            else:
+                                if tile.icon == global_map[number_global_line - 1][number_global_location].chunk[chunk_size - 1][number_tile].icon and ([
+                                        number_global_line - 1, number_global_location, chunk_size - 1, number_tile] in list_of_verified_titles or global_map[
+                                        number_global_line - 1][number_global_location].chunk[chunk_size - 1][number_tile].type in detected_list):
+                                    direction['up'] = True
+                            if number_line < chunk_size - 1:
+                                if tile.icon == location.chunk[number_line + 1][number_tile].icon and ([number_global_line, number_global_location,
+                                        number_line + 1, number_tile] in list_of_verified_titles or location.chunk[number_line + 1][number_tile].type in detected_list):
+                                    direction['down'] = True
+
+
+                        if 0 < number_global_location < len(global_map[0]) - 1: # По оси Х
+                            if number_tile > 0:
+                                if tile.icon == location.chunk[number_line][number_tile - 1].icon and ([number_global_line, number_global_location, number_line,
+                                        number_tile - 1] in list_of_verified_titles or location.chunk[number_line][number_tile - 1].type in detected_list):
+                                    direction['left'] = True
+                            else:
+                                if tile.icon == global_map[number_global_line][number_global_location - 1].chunk[number_line][chunk_size - 1
+                                        ].icon and ([number_global_line, number_global_location - 1, number_line, chunk_size - 1] in list_of_verified_titles or global_map[
+                                        number_global_line][number_global_location - 1].chunk[number_line][chunk_size - 1].type in detected_list):
+                                    direction['left'] = True
+
+                            if number_tile < chunk_size - 1:
+                                if tile.icon == location.chunk[number_line][number_tile + 1].icon and ([number_global_line, number_global_location, number_line,
+                                        number_tile + 1] in list_of_verified_titles or location.chunk[number_line][number_tile + 1].type in detected_list):
+                                    direction['right'] = True
+                            else:
+                                if tile.icon == global_map[number_global_line][number_global_location + 1].chunk[number_line][0].icon and ([number_global_line,
+                                        number_global_location + 1, number_line, 0] in list_of_verified_titles or global_map[number_global_line][
+                                        number_global_location + 1].chunk[number_line][0].type in detected_list):
+                                    direction['right'] = True
+
+                        elif number_global_location == 0:
+                            if number_tile > 0:
+                                if tile.icon == location.chunk[number_line][number_tile - 1].icon and ([number_global_line, number_global_location, number_line,
+                                        number_tile - 1] in list_of_verified_titles or location.chunk[number_line][number_tile - 1].type in detected_list):
+                                    direction['left'] = True
+                            if number_tile < chunk_size - 1:
+                                if tile.icon == location.chunk[number_line][number_tile + 1].icon and ([number_global_line, number_global_location, number_line,
+                                        number_tile + 1] in list_of_verified_titles or location.chunk[number_line][number_tile + 1].type in detected_list):
+                                    direction['right'] = True
+                            else:
+                                if tile.icon == global_map[number_global_line][number_global_location + 1].chunk[number_line][0].icon and ([number_global_line,
+                                        number_global_location + 1, number_line, 0] in list_of_verified_titles or global_map[number_global_line][
+                                        number_global_location + 1].chunk[number_line][0].type in detected_list):
+                                    direction['right'] = True
+
+                        elif number_global_location == len(global_map[0]) - 1:
+                            if number_tile > 0:
+                                if tile.icon == location.chunk[number_line][number_tile - 1].icon and ([number_global_line, number_global_location,
+                                        number_line, number_tile - 1] in list_of_verified_titles or location.chunk[number_line][number_tile - 1].type in detected_list):
+                                    direction['left'] = True
+                            else:
+                                if tile.icon == global_map[number_global_line][number_global_location - 1].chunk[number_line][chunk_size - 1
+                                        ].icon and ([number_global_line, number_global_location - 1, number_line, chunk_size - 1] in list_of_verified_titles or global_map[
+                                        number_global_line][number_global_location - 1].chunk[number_line][chunk_size - 1].type in detected_list):
+                                    direction['left'] = True
+                            if number_tile < chunk_size - 1:
+                                if tile.icon == location.chunk[number_line][number_tile + 1].icon and ([number_global_line, number_global_location, number_line,
+                                        number_tile + 1] in list_of_verified_titles or location.chunk[number_line][number_tile + 1].type in detected_list):
+                                    direction['right'] = True
+
+                        
+                        if direction['up'] and direction['down'] and direction['left'] and direction['right']:
+                            tile.type = '1'
+                        elif direction['up'] and not(direction['down']) and direction['left'] and direction['right']:
+                            tile.type = 'G'
+                        elif direction['up'] and direction['down'] and not(direction['left']) and direction['right']:
+                            tile.type = 'H'
+                        elif not(direction['up']) and direction['down'] and direction['left'] and direction['right']:
+                            tile.type = 'I'
+                        elif direction['up'] and direction['down'] and direction['left'] and not(direction['right']):
+                            tile.type = 'J'
+                        elif direction['up'] and not(direction['down']) and direction['left'] and not(direction['right']):
+                            tile.type = 'K'
+                        elif direction['up'] and not(direction['down']) and not(direction['left']) and direction['right']:
+                            tile.type = 'L'
+                        elif not(direction['up']) and direction['down'] and not(direction['left']) and direction['right']:
+                            tile.type = 'M'
+                        elif not(direction['up']) and direction['down'] and direction['left'] and not(direction['right']):
+                            tile.type = 'N'
+                        elif not(direction['up']) and not(direction['down']) and direction['left'] and not(direction['right']):
+                            tile.type = 'O'
+                        elif direction['up'] and not(direction['down']) and not(direction['left']) and not(direction['right']):
+                            tile.type = 'P'
+                        elif not(direction['up']) and not(direction['down']) and not(direction['left']) and direction['right']:
+                            tile.type = 'Q'
+                        elif not(direction['up']) and direction['down'] and not(direction['left']) and not(direction['right']):
+                            tile.type = 'R'
+                        elif not(direction['up']) and not(direction['down']) and direction['left'] and direction['right']:
+                            tile.type = 'S'
+                        elif direction['up'] and direction['down'] and not(direction['left']) and not(direction['right']):
+                            tile.type = 'T'
+                        else:
+                            tile.type = 'U'
+                        list_of_verified_titles.append([number_global_line, number_global_location, number_line, number_tile])
+
+
+
+def multilevelness_calculation_alternative(global_map, chunk_size, search_tile):
+    """
+        Делает тайловые поля многоуровневыми
+
+        Создает список подходящих тайлов, и для каждого из них проверяет находятся ли соседние тайлы в списке
+
+        Время выполнения для одного слоя 17 секунд
+        
+    """
+    list_of_verified_tiles = []
+
+
+    for number_global_line, global_line in enumerate(global_map):
+        for number_global_location, location in enumerate(global_line):
+            for number_line, line in enumerate(location.chunk):
+                for number_tile, tile in enumerate(line):
+                    if tile.icon == search_tile and tile.type == '1':
+                        list_of_verified_tiles.append([number_global_line, number_global_location, number_line, number_tile])
+                        
+    direction = {
+                 'up': False,
+                 'down': False,
+                 'left': False,
+                 'right': False,
+                }
+
+    for verified_tile in list_of_verified_tiles:
+
+        if 0 < verified_tile[0] < len(global_map) - 1: # По оси Y
+            print(f"0 < verified_tile[0] < len(global_map) - 1")
+            if verified_tile[2] > 0:
+                if [verified_tile[0], verified_tile[1], verified_tile[2] - 1, verified_tile[3]] in list_of_verified_tiles:
+                    direction['up'] = True
+            else:
+                if [verified_tile[0] - 1, verified_tile[1], chunk_size - 1, verified_tile[3]] in list_of_verified_tiles:
+                    direction['up'] = True
+
+            if verified_tile[2] < chunk_size - 1:
+                if [verified_tile[0], verified_tile[1], verified_tile[2] + 1, verified_tile[3]] in list_of_verified_tiles:
+                    direction['down'] = True
+            else:
+                if [verified_tile[0] + 1, verified_tile[1], 0, verified_tile[3]] in list_of_verified_tiles:
+                    direction['down'] = True
+
+        elif verified_tile[0] == 0:
+            print(f"verified_tile[0] == 0")
+            if verified_tile[2] > 0:
+                if [verified_tile[0], verified_tile[1], verified_tile[2] - 1, verified_tile[3]] in list_of_verified_tiles:
+                    direction['up'] = True
+            if verified_tile[2] < chunk_size - 1:
+                if [verified_tile[0], verified_tile[1], verified_tile[2] + 1, verified_tile[3]] in list_of_verified_tiles:
+                    direction['down'] = True
+            else:
+                if [verified_tile[0] + 1, verified_tile[1], 0, verified_tile[3]] in list_of_verified_tiles:
+                    direction['down'] = True
+
+        elif verified_tile[0] == len(global_map) - 1:
+            print(f"verified_tile[0] == len(global_map) - 1")
+            if verified_tile[2] > 0:
+                if [verified_tile[0], verified_tile[1], verified_tile[2] - 1, verified_tile[3]] in list_of_verified_tiles:
+                    direction['up'] = True
+            else:
+                if [verified_tile[0] - 1, verified_tile[1], chunk_size - 1, verified_tile[3]] in list_of_verified_tiles:
+                    direction['up'] = True
+            if verified_tile[2] < chunk_size - 1:
+                if [verified_tile[0], verified_tile[1], verified_tile[2] + 1, verified_tile[3]] in list_of_verified_tiles:
+                    direction['down'] = True
+
+
+        if 0 < verified_tile[1] < len(global_map[0]) - 1: # По оси Х
+            print(f"0 < verified_tile[1] < len(global_map[0]) - 1")
+            if verified_tile[3] > 0:
+                if [verified_tile[0], verified_tile[1], verified_tile[2], verified_tile[3] - 1] in list_of_verified_tiles:
+                    direction['left'] = True
+            else:
+                if [verified_tile[0], verified_tile[1] - 1, verified_tile[2], chunk_size - 1] in list_of_verified_tiles:
+                    direction['left'] = True
+
+            if verified_tile[3] < chunk_size - 1:
+                if [verified_tile[0], verified_tile[1], verified_tile[2], verified_tile[3] + 1] in list_of_verified_tiles:
+                    direction['right'] = True
+            else:
+                if [verified_tile[0], verified_tile[1] + 1, verified_tile[2], 0] in list_of_verified_tiles:
+                    direction['right'] = True
+
+        elif verified_tile[1] == 0:
+            print(f"verified_tile[1] == 0")
+            if verified_tile[3] > 0:
+                if [verified_tile[0], verified_tile[1], verified_tile[2], verified_tile[3] - 1] in list_of_verified_tiles:
+                    direction['left'] = True
+            if verified_tile[3] < chunk_size - 1:
+                if [verified_tile[0], verified_tile[1], verified_tile[2], verified_tile[3] + 1] in list_of_verified_tiles:
+                    direction['right'] = True
+            else:
+                if [verified_tile[0], verified_tile[1] + 1, verified_tile[2], 0] in list_of_verified_tiles:
+                    direction['right'] = True
+
+        elif verified_tile[1] == len(global_map[0]) - 1:
+            print(f"verified_tile[1] == len(global_map[0]) - 1")
+            if verified_tile[3] > 0:
+                if [verified_tile[0], verified_tile[1], verified_tile[2], verified_tile[3] - 1] in list_of_verified_tiles:
+                    direction['left'] = True
+            else:
+                if [verified_tile[0], verified_tile[1] - 1, verified_tile[2], chunk_size - 1] in list_of_verified_tiles:
+                    direction['left'] = True
+            if verified_tile[3] < chunk_size - 1:
+                if [verified_tile[0], verified_tile[1], verified_tile[2], verified_tile[3] + 1] in list_of_verified_tiles:
+                    direction['right'] = True
+        print(direction)
+                        
+        if direction['up'] and direction['down'] and direction['left'] and direction['right']:
+            print(f'{verified_tile} изменился 1')
+            global_map[verified_tile[0]][verified_tile[1]].chunk[verified_tile[2]][verified_tile[3]].type = '1'
+        elif direction['up'] and not(direction['down']) and direction['left'] and direction['right']:
+            print(f'{verified_tile} изменился G')
+            global_map[verified_tile[0]][verified_tile[1]].chunk[verified_tile[2]][verified_tile[3]].type = 'G'
+        elif direction['up'] and direction['down'] and not(direction['left']) and direction['right']:
+            print(f'{verified_tile} изменился H')
+            global_map[verified_tile[0]][verified_tile[1]].chunk[verified_tile[2]][verified_tile[3]].type = 'H'
+        elif not(direction['up']) and direction['down'] and direction['left'] and direction['right']:
+            print(f'{verified_tile} изменился I')
+            global_map[verified_tile[0]][verified_tile[1]].chunk[verified_tile[2]][verified_tile[3]].type = 'I'
+        elif direction['up'] and direction['down'] and direction['left'] and not(direction['right']):
+            print(f'{verified_tile} изменился J')
+            global_map[verified_tile[0]][verified_tile[1]].chunk[verified_tile[2]][verified_tile[3]].type = 'J'
+        elif direction['up'] and not(direction['down']) and direction['left'] and not(direction['right']):
+            print(f'{verified_tile} изменился K')
+            global_map[verified_tile[0]][verified_tile[1]].chunk[verified_tile[2]][verified_tile[3]].type = 'K'
+        elif direction['up'] and not(direction['down']) and not(direction['left']) and direction['right']:
+            print(f'{verified_tile} изменился L')
+            global_map[verified_tile[0]][verified_tile[1]].chunk[verified_tile[2]][verified_tile[3]].type = 'L'
+        elif not(direction['up']) and direction['down'] and not(direction['left']) and direction['right']:
+            print(f'{verified_tile} изменился M')
+            global_map[verified_tile[0]][verified_tile[1]].chunk[verified_tile[2]][verified_tile[3]].type = 'M'
+        elif not(direction['up']) and direction['down'] and direction['left'] and not(direction['right']):
+            print(f'{verified_tile} изменился N')
+            global_map[verified_tile[0]][verified_tile[1]].chunk[verified_tile[2]][verified_tile[3]].type = 'N'
+        elif not(direction['up']) and not(direction['down']) and direction['left'] and not(direction['right']):
+            print(f'{verified_tile} изменился O')
+            global_map[verified_tile[0]][verified_tile[1]].chunk[verified_tile[2]][verified_tile[3]].type = 'O'
+        elif direction['up'] and not(direction['down']) and not(direction['left']) and not(direction['right']):
+            print(f'{verified_tile} изменился P')
+            global_map[verified_tile[0]][verified_tile[1]].chunk[verified_tile[2]][verified_tile[3]].type = 'P'
+        elif not(direction['up']) and not(direction['down']) and not(direction['left']) and direction['right']:
+            print(f'{verified_tile} изменился Q')
+            global_map[verified_tile[0]][verified_tile[1]].chunk[verified_tile[2]][verified_tile[3]].type = 'Q'
+        elif not(direction['up']) and direction['down'] and not(direction['left']) and not(direction['right']):
+            print(f'{verified_tile} изменился R')
+            global_map[verified_tile[0]][verified_tile[1]].chunk[verified_tile[2]][verified_tile[3]].type = 'R'
+        elif not(direction['up']) and not(direction['down']) and direction['left'] and direction['right']:
+            print(f'{verified_tile} изменился S')
+            global_map[verified_tile[0]][verified_tile[1]].chunk[verified_tile[2]][verified_tile[3]].type = 'S'
+        elif direction['up'] and direction['down'] and not(direction['left']) and not(direction['right']):
+            print(f'{verified_tile} изменился T')
+            global_map[verified_tile[0]][verified_tile[1]].chunk[verified_tile[2]][verified_tile[3]].type = 'T'
+        else:
+            print(f'{verified_tile} не изменился')
+            global_map[verified_tile[0]][verified_tile[1]].chunk[verified_tile[2]][verified_tile[3]].type = 'U'
+
+
+
+
+def old_multilevelness_calculation(global_map, chunk_size):
+    """
+        Делает горы двухуровневыми
     """
     detected_list = ['1', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T']
 
@@ -567,7 +905,7 @@ def multilevelness_calculation(global_map, chunk_size, search_tile):
         for number_global_location, location in enumerate(global_line):
             for number_line, line in enumerate(location.chunk):
                 for number_tile, tile in enumerate(line):
-                    if tile.icon == search_tile and tile.type == '1':
+                    if (tile.icon == '▲' or tile.icon == '~')and tile.type == '1':
                         direction = {
                                     'up': False,
                                     'down': False,
@@ -682,7 +1020,7 @@ def multilevelness_calculation(global_map, chunk_size, search_tile):
                             tile.type = 'T'
                         else:
                             tile.type = 'U'
-
+            
 """
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
