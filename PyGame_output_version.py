@@ -21,6 +21,8 @@ garbage = ['░', '▒', '▓', '█', '☺']
     Реализовать это для имитации многоуровневости гор и водоёмов.
     4)Изменить вывод изображения таим образом, что бы получить возможность плавного передвижения между тайлами.
     5)Осмысленную генерацию гор и водоёмов. Горы должны иметь несколько пиков.
+    6)Добавить уровни высоты. Переходить по уровням высоты можно только по определённым тайлам.
+    7)ПОпробовать генерировать горы от обратного. Сначала определять пики и их высоту, а потом опускать вниз, добавляя случайные тайлы.
 
 
     ТРЕБОВАНИЯ К ПОСТГЕНЕРАТОРУ, ОПРЕДЕЛЯЮЩЕМУ ОДНОРОДНОСТЬ ТАЙЛОВОГО ПОЛЯ И МУЛЬТИВЫСОТНОСТЬ:
@@ -147,6 +149,7 @@ class Tile:
         self.list_of_features = []
         self.price_move = self.getting_attributes(icon, 1)
         self.type = '0'
+        self.level = 0
 
     def getting_attributes(self, icon, number):
         ground_dict =   {
@@ -165,6 +168,7 @@ class Tile:
                         'F': ['чахлое дерево', 1],
                         'P': ['раскидистое дерево', 1],
                         '~': ['солёная вода', 20],
+                        'C': ['каньон', 20],
                         '??': ['ничего', 10],
                         }
         return ground_dict[icon][number]       
@@ -221,7 +225,7 @@ def random_location_post_generate(location:list, description:list):
     """
         Случайно заполняет готовую локацию из списка случайных тайлов
     """
-    banned_list = ['~', '▲']
+    banned_list = ['~']
     for line in range(len(location)):
         for tile in range(len(location)):
             if random.randrange(10)//9 and not(location[line][tile].icon in banned_list):
@@ -295,6 +299,8 @@ def selecting_generator(seed):
                     7: ['oasis',              [15.0,30.0], ['F', '„', '~'],       ['P', ','],       'P',         0],
                     8: ['salty lake',         [25.0,40.0], ['~', ','],            ['„', '.'],       '~',        20],
                     9: ['hills',              [20.0,35.0], ['▲', 'o'],            ['„', ','],       '▲',        20],
+                    10:['canyons',            [20.0,35.0], ['C', '.', ','],       ['C'],            'C',        20],
+                    11:['big canyons',        [20.0,35.0], ['C'],                 ['.', 'o', '▲'],  'R',        20],
                 }
     return seed_dict[seed]
 
@@ -390,7 +396,7 @@ def region_generate(size_region_box):
     """
     region_map = []
     for i in range(size_region_box):
-        region_map.append([random.randrange(10) for x in range(size_region_box)])
+        region_map.append([random.randrange(12) for x in range(size_region_box)])
     return region_map
 
 
@@ -429,7 +435,7 @@ def master_postgenerate_field_tiles(global_map, value_region_box, chunk_size):
     """
         Обрабатывает готовую карту мира
     """
-    detected_list = ['~', '▲']
+    detected_list = ['~', '▲', 'C']
     detected_list_2 = ['F', 'u', 'j']
 
     for number_global_line, global_line in enumerate(global_map):
@@ -569,22 +575,33 @@ def master_postgenerate_field_tiles(global_map, value_region_box, chunk_size):
                             tile.type = random.choice(['0', '1'])
 
     old_multilevelness_calculation(global_map, chunk_size)
-    multilevelness_calculation(global_map, chunk_size, '▲') #39.41
+    multilevelness_calculation(global_map, chunk_size, '▲') 
     multilevelness_calculation(global_map, chunk_size, '▲')
     multilevelness_calculation(global_map, chunk_size, '▲')
     multilevelness_calculation(global_map, chunk_size, '▲')
     multilevelness_calculation(global_map, chunk_size, '▲')
+    multilevelness_calculation(global_map, chunk_size, 'C')
     #multilevelness_calculation(global_map, chunk_size, '▲') #16.26
     #old_multilevelness_calculation(global_map, chunk_size) #1.41
     #multilevelness_calculation_alternative(global_map, chunk_size, '▲') #16.49
 
+def timeit(func):
+    def inner(*args, **kwargs):
+        start = time.time()
+        result = func(*args, **kwargs)
+        print(time.time() - start)
+        return result
+    return inner
+
+
+
+@timeit
 def multilevelness_calculation(global_map, chunk_size, search_tile):
     """
         Делает тайловые поля многоуровневыми 
 
         Проверяет является ли соседний тайл в выбраном направлении похожим на него или находится ли соседний тайл в списке изменненных.
 
-        Скорость построения 1 уровня = 40 секунд
         
     """
     detected_list = ['1', 'U']
@@ -909,7 +926,7 @@ def multilevelness_calculation_alternative(global_map, chunk_size, search_tile):
 
 def old_multilevelness_calculation(global_map, chunk_size):
     """
-        Делает горы двухуровневыми
+        Делает горы и водоёмы двухуровневыми
     """
     detected_list = ['1', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T']
 
@@ -2642,7 +2659,37 @@ class Tiles_image_dict:
         self.dry_tree_7 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_tree_7.png'))
         self.tall_grass_0 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_tall_grass_0.png'))
         self.tall_grass_1 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_tall_grass_1.png'))
-
+        self.canyons_0 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_0.png'))
+        self.canyons_1 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_1.png'))
+        self.canyons_2 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_2.png'))
+        self.canyons_3 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_3.png'))
+        self.canyons_4 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_4.png'))
+        self.canyons_5 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_5.png'))
+        self.canyons_6 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_6.png'))
+        self.canyons_7 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_7.png'))
+        self.canyons_8 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_8.png'))
+        self.canyons_9 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_9.png'))
+        self.canyons_A = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_A.png'))
+        self.canyons_B = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_B.png'))
+        self.canyons_C = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_C.png'))
+        self.canyons_D = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_D.png'))
+        self.canyons_E = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_E.png'))
+        self.canyons_F = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_F.png'))
+        self.canyons_G = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_G.png'))
+        self.canyons_H = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_H.png'))
+        self.canyons_I = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_I.png'))
+        self.canyons_J = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_J.png'))
+        self.canyons_K = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_K.png'))
+        self.canyons_L = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_L.png'))
+        self.canyons_M = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_M.png'))
+        self.canyons_N = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_N.png'))
+        self.canyons_O = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_O.png'))
+        self.canyons_P = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_p.png'))
+        self.canyons_Q = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_Q.png'))
+        self.canyons_R = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_R.png'))
+        self.canyons_S = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_S.png'))
+        self.canyons_T = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_T.png'))
+        self.canyons_U = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_U.png'))
 
 
 
@@ -2746,6 +2793,37 @@ class Image_tile(pygame.sprite.Sprite):
                         '~S': tiles_image_dict.water_S,
                         '~T': tiles_image_dict.water_T,
                         '~U': tiles_image_dict.water_U,
+                        'C0': tiles_image_dict.canyons_0,
+                        'C1': tiles_image_dict.canyons_1,
+                        'C2': tiles_image_dict.canyons_2,
+                        'C3': tiles_image_dict.canyons_3,
+                        'C4': tiles_image_dict.canyons_4,
+                        'C5': tiles_image_dict.canyons_5,
+                        'C6': tiles_image_dict.canyons_6,
+                        'C7': tiles_image_dict.canyons_7,
+                        'C8': tiles_image_dict.canyons_8,
+                        'C9': tiles_image_dict.canyons_9,
+                        'CA': tiles_image_dict.canyons_A,
+                        'CB': tiles_image_dict.canyons_B,
+                        'CC': tiles_image_dict.canyons_C,
+                        'CD': tiles_image_dict.canyons_D,
+                        'CE': tiles_image_dict.canyons_E,
+                        'CF': tiles_image_dict.canyons_F,
+                        'CG': tiles_image_dict.canyons_G,
+                        'CH': tiles_image_dict.canyons_H,
+                        'CI': tiles_image_dict.canyons_I,
+                        'CJ': tiles_image_dict.canyons_J,
+                        'CK': tiles_image_dict.canyons_K,
+                        'CL': tiles_image_dict.canyons_L,
+                        'CM': tiles_image_dict.canyons_M,
+                        'CN': tiles_image_dict.canyons_N,
+                        'CO': tiles_image_dict.canyons_O,
+                        'CP': tiles_image_dict.canyons_P,
+                        'CQ': tiles_image_dict.canyons_Q,
+                        'CR': tiles_image_dict.canyons_R,
+                        'CS': tiles_image_dict.canyons_S,
+                        'CT': tiles_image_dict.canyons_T,
+                        'CU': tiles_image_dict.canyons_U,
                         '☺ ': tiles_image_dict.person,
                         '☻r': tiles_image_dict.enemy_riffleman,
                         '☻h': tiles_image_dict.enemy_horseman,
@@ -2797,6 +2875,8 @@ class All_tiles(pygame.sprite.Sprite):
                         '☺': (255, 255, 255),
                         '☻': (235, 255, 255),
                         'H': (200, 255, 255),
+                        'C': (200, 200, 100),
+                        'R': (255, 100, 100),
                         }
 
         if icon in color_dict:
