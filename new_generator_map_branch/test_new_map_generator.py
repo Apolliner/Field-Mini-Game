@@ -22,7 +22,7 @@ def timeit(func):
     return inner
 
 
-def master_map_generate(global_region_grid, region_grid, chunk_grid, chunk_size, mini_grid):
+def master_map_generate(global_region_grid, region_grid, chunks_grid, chunk_size, mini_grid):
     """
         Новый генератор игровой карты, изначально учитывающий все особенности, определенные при создании и расширении предыдущего генератора.
 
@@ -36,21 +36,23 @@ def master_map_generate(global_region_grid, region_grid, chunk_grid, chunk_size,
     """
     global_region_map = global_region_generate(global_region_grid)
 
-    print(global_region_map)
+    print(f"global_region_map \n {global_region_map}")
 
     region_map = region_generate(global_region_map, global_region_grid, region_grid)
 
-    print(region_map)
+    print(f"region_map \n {region_map}")
+    
+    chunks_map = chunks_map_generate(region_map, (global_region_grid*region_grid), chunks_grid)
 
-    chunks_map = chunks_map_generate(region_map, global_region_grid*region_grid, chunk_grid)
+    print(f"chunks_map \n {chunks_map}")
+    
+    mini_region_map = mini_region_map_generate(chunks_map, (global_region_grid*region_grid*chunks_grid), mini_grid)
 
-    print(chunks_map)
-    mini_region_map = mini_region_map_generate(chunks_map, global_region_grid*chunk_grid*region_grid, mini_grid)
+    print(f"mini_region_map \n {mini_region_map}")
 
-    print(mini_region_map)
+    #all_tiles_map = tiles_map_generate(mini_region_map, (global_region_grid*region_grid*chunks_grid*mini_grid), chunk_size)
 
-    #tiles_map = tiles_map_generate(mini_region_map, mini_grid, chunk_size)
-
+    #print(f"all_tiles_map \n {all_tiles_map}")
     #ready_global_map = cutting_tiles_map(tiles_map)
 
 @timeit
@@ -132,15 +134,43 @@ def mini_region_map_generate(chunks_map, initial_size, mini_grid):
                 }
 
     raw_mini_region_map = all_map_master_generate(chunks_map, mini_grid, True, seed_list)
+    #print(raw_mini_region_map)
+    mini_region_map = all_gluing_map(raw_mini_region_map, initial_size, mini_grid)
 
-    mini_region_map = all_gluing_map(chunks_map, initial_size, mini_grid)
+    return mini_region_map
 
-    return chunks_map
-def tiles_map_generate(mini_region_map, chunk_size):
+@timeit
+def tiles_map_generate(mini_region_map, initial_size, chunk_size):
     """
         генерирует полную тайловую карту
     """
+    
+    seed_list = {  
+                    '.': ['.'],
+                    ',': [','],
+                    '„': ['„'],
+                    'A': ['A'],
+                    '▲': ['▲'],
+                    'C': ['C'],
+                    ';': [';'],
+                    'S': ['S'],
+                    'o': ['o'],
+                    'F': ['F'],
+                    '~': ['~'],
+                    'u': ['u'],
+                }
+
+    raw_all_tiles_map = all_map_master_generate(mini_region_map, chunk_size, True, seed_list)
+    all_tiles_map = all_gluing_map(raw_all_tiles_map, initial_size, chunk_size)
+
+    return all_tiles_map
+
+def chunks_map_generate(global_region_map, chunk_size):
+    """
+        на основании карты глобальных регионов генерирует карту локаций
+    """
     pass
+
 
 def cutting_tiles_map(tiles_map):
     """
@@ -152,6 +182,7 @@ def all_gluing_map(raw_gluing_map, grid, count_block):
     """
         Склеивает чанки и локации в единое поле из "сырых" карт
     """
+    
     value_region_box = grid * count_block
     gluing_map = []
     for empry_line in range(grid * count_block):
@@ -163,7 +194,12 @@ def all_gluing_map(raw_gluing_map, grid, count_block):
             for number_location_line in range(count_block):
                 for number_location in range(count_block):
                     gluing_index = (number_region_line + number_location_line) + (count_location//(grid*(count_block**2))*(count_block-1)) #определяет индекс
-                    gluing_map[gluing_index].append(raw_gluing_map[number_region_line][number_region][number_location_line][number_location])
+                    try:
+                        gluing_map[gluing_index].append(raw_gluing_map[number_region_line][number_region][number_location_line][number_location])
+                    except IndexError:
+                        print(f"len(gluing_map) = {len(gluing_map)} ||| gluing_index = {gluing_index}")
+                        print(f"number_region_line - {number_region_line} | number_region - {number_region}, number_location_line - {number_location_line}, number_location - {number_location}")
+                        print(gluing_map[gluing_index])
                     count_location += 1
     return gluing_map
 
@@ -204,7 +240,7 @@ def all_map_master_generate(previous_map, grid, merge, seed_list):
 
 
 
-master_map_generate(2, 2, 3, 4, 5)
+master_map_generate(2, 2, 2, 2, 2)
 
 
 def selecting_seed(seed_list, seed):
