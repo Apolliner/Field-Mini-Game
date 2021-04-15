@@ -22,7 +22,7 @@ def timeit(func):
     return inner
 
 
-def master_map_generate(global_region_grid, region_grid, chunks_grid, chunk_size, mini_grid):
+def master_map_generate(global_region_grid, region_grid, chunks_grid, mini_grid, tiles_field_size):
     """
         Новый генератор игровой карты, изначально учитывающий все особенности, определенные при создании и расширении предыдущего генератора.
 
@@ -50,9 +50,9 @@ def master_map_generate(global_region_grid, region_grid, chunks_grid, chunk_size
 
     print(f"mini_region_map \n {mini_region_map}")
 
-    #all_tiles_map = tiles_map_generate(mini_region_map, (global_region_grid*region_grid*chunks_grid*mini_grid), chunk_size)
+    all_tiles_map = tiles_map_generate(mini_region_map, (global_region_grid*region_grid*chunks_grid*mini_grid), tiles_field_size)
 
-    #print(f"all_tiles_map \n {all_tiles_map}")
+    print(f"all_tiles_map \n {all_tiles_map}")
     #ready_global_map = cutting_tiles_map(tiles_map)
 
 @timeit
@@ -125,7 +125,7 @@ def mini_region_map_generate(chunks_map, initial_size, mini_grid):
                     'S': ['A', '.', ','],         # snake semi-desert
                     '▲': ['▲', 'o'],              # hills
                     'C': ['C', '.', ','],         # canyons
-                    'R': ['C'],                   # big canyons
+                    'R': ['C', 'o', '.'],         # big canyons
                     '„': ['u', '„', ','],         # field
                     ',': ['„', ','],              # dried field
                     'P': ['F', '„', '~'],         # oasis
@@ -164,13 +164,6 @@ def tiles_map_generate(mini_region_map, initial_size, chunk_size):
     all_tiles_map = all_gluing_map(raw_all_tiles_map, initial_size, chunk_size)
 
     return all_tiles_map
-
-def chunks_map_generate(global_region_map, chunk_size):
-    """
-        на основании карты глобальных регионов генерирует карту локаций
-    """
-    pass
-
 
 def cutting_tiles_map(tiles_map):
     """
@@ -218,18 +211,20 @@ def all_map_master_generate(previous_map, grid, merge, seed_list):
                 for number_point_map in range(grid): #Создаём значения линий
                     number_new_seed = random.choice(seed_list[previous_map[number_line][number_region]])
                     if merge:
-                        top_down_seed = []
-                        left_right_seed = []                  
+                        top_down_seed = ''
+                        left_right_seed = ''                  
                         if number_point_map_line == 0 and number_line != 0:                                             #Обрабатываем верхний край региона
-                            top_down_description = random.choice(seed_list[previous_map[number_line - 1][number_region]])
+                            top_down_seed = random.choice(seed_list[previous_map[number_line - 1][number_region]])
                         elif number_point_map_line == (len(previous_map) - 1) and number_line != (len(previous_map) - 1):   #Обрабатываем нижний край региона
-                            top_down_description = random.choice(seed_list[previous_map[number_line + 1][number_region]])
+                            top_down_seed = random.choice(seed_list[previous_map[number_line + 1][number_region]])
                         if number_point_map == 0 and number_region != 0:                                                  #Обрабатываем левый край региона
-                            left_right_description = random.choice(seed_list[previous_map[number_line][number_region - 1]])
+                            left_right_seed = random.choice(seed_list[previous_map[number_line][number_region - 1]])
                         elif number_point_map != (len(previous_map) - 1) and number_region != (len(previous_map) - 1):        #Обрабатываем правый край региона
-                            left_right_description = random.choice(seed_list[previous_map[number_line][number_region + 1]])
-                        random.choice([number_new_seed, top_down_seed])
-                        random.choice([number_new_seed, left_right_seed])
+                            left_right_seed = random.choice(seed_list[previous_map[number_line][number_region + 1]])
+                        if random.randrange(11)//5 > 0:
+                            number_new_seed = merge_description_for_generator(number_new_seed, top_down_seed)
+                        if random.randrange(11)//5 > 0:
+                            number_new_seed = merge_description_for_generator(number_new_seed, left_right_seed)
 
                     point_map_line.append(number_new_seed)
                 region.append(point_map_line)
@@ -238,9 +233,18 @@ def all_map_master_generate(previous_map, grid, merge, seed_list):
     
     return raw_generated_map
 
+def merge_description_for_generator(description_one, description_two):
+    """
+        Соединяет два описания для генератора
+    """
+    if description_two:
+        #print(f'{description_one}')
+        description_one = random.choice([description_one, description_two])
+        #print(f'стало {description_one}')
+    return description_one
 
 
-master_map_generate(2, 2, 2, 2, 2)
+master_map_generate(1, 1, 2, 2, 4)
 
 
 def selecting_seed(seed_list, seed):
