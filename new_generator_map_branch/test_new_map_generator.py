@@ -8,6 +8,10 @@ import time
     НОВЫЙ ГЕНЕРАТОР ИГРОВОЙ КАРТЫ
     
     На выходе выдаёт класс Location
+
+
+    ИЗВЕСТНЫЕ ОШИБКИ:
+    1)Ошибка при попытке соединить два описания при генерации полной тайловой карты. Выбирается вариант с соединением полного описания которого нет.
     
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -21,6 +25,13 @@ def timeit(func):
         return result
     return inner
 
+def print_map(printing_map):
+    test_print = ''
+    for number_line in range(len(printing_map)):
+        for number_tile in range(len(printing_map[number_line])):
+            test_print += printing_map[number_line][number_tile] + ' '
+        test_print += '\n'
+    print(test_print)
 
 def master_map_generate(global_region_grid, region_grid, chunks_grid, mini_grid, tiles_field_size):
     """
@@ -58,18 +69,51 @@ def master_map_generate(global_region_grid, region_grid, chunks_grid, mini_grid,
 
     print(f"region_map \n {region_map}")
     
-    chunks_map = chunks_map_generate(region_map, (global_region_grid*region_grid), chunks_grid, seed_dict)
+    #Содержит в себе описание локации
+    chunks_map = chunks_map_generate(region_map, (global_region_grid*region_grid), chunks_grid, seed_dict) 
 
     #print(f"chunks_map \n {chunks_map}")
     
     mini_region_map = mini_region_map_generate(chunks_map, (global_region_grid*region_grid*chunks_grid), mini_grid, seed_dict)
 
-    print(f"mini_region_map \n {mini_region_map}")
+    print(f"mini_region_map")
+    print_map(mini_region_map)
+    
+    #Готовая глобальная тайловая карта
+    all_tiles_map = tiles_map_generate(mini_region_map, (global_region_grid*region_grid*chunks_grid*mini_grid), tiles_field_size) 
 
-    all_tiles_map = tiles_map_generate(mini_region_map, (global_region_grid*region_grid*chunks_grid*mini_grid), tiles_field_size)
+    print(f"all_tiles_map")
+    print_map(all_tiles_map)
+    
+    #Добавление тайлов из списка рандомного заполнения
+    add_random_all_tiles_map = add_random_tiles(all_tiles_map, chunks_map, chunks_grid*mini_grid)
 
-    print(f"all_tiles_map \n {all_tiles_map}")
+    print(f"add_random_all_tiles_map")
+    print_map(add_random_all_tiles_map)
+
+
+    
     #ready_global_map = cutting_tiles_map(tiles_map)
+
+
+@timeit
+def add_random_tiles(processed_map, chunks_map, chunk_size1):
+    """
+        Добавляет случайные тайлы на готовую тайловую карту, основываясь на информации из карты локаций
+    """
+    chunk_size = len(processed_map)//len(chunks_map)
+
+    banned_list = ['~']
+    
+    for number_seed_line in range(len(chunks_map)):
+        for number_seed in range(len(chunks_map[number_seed_line])):
+            for number_line in range((number_seed_line)*chunk_size, (number_seed_line)*chunk_size + chunk_size):
+                for number_tile in range((number_seed)*chunk_size, (number_seed)*chunk_size + chunk_size):
+                    if random.randrange(10)//9 and not(processed_map[number_line][number_tile] in banned_list):
+                        processed_map[number_line][number_tile] = random.choice(chunks_map[number_seed_line][number_seed][3])
+            
+    return processed_map
+
 
 @timeit
 def global_region_generate(global_grid):
@@ -207,9 +251,9 @@ def all_map_master_generate(previous_map, grid, merge, seed_dict, number_in_list
                                 left_right_description = seed_dict[previous_map[number_line][number_region - 1]]
                             elif number_point_map != (len(previous_map) - 1) and number_region != (len(previous_map) - 1):        #Обрабатываем правый край региона
                                 left_right_description = seed_dict[previous_map[number_line][number_region + 1]]
-                            if random.randrange(11)//4 > 0: # Настройка шанса смешения
+                            if random.randrange(11)//2 > 0: # Настройка шанса смешения
                                 packed_all_description = merge_all_description_for_generator(packed_all_description, top_down_description)
-                            if random.randrange(11)//4 > 0: # Настройка шанса смешения
+                            if random.randrange(11)//2 > 0: # Настройка шанса смешения
                                 packed_all_description = merge_all_description_for_generator(packed_all_description, left_right_description)
                                 
                         point_map_line.append(packed_all_description)
@@ -228,9 +272,9 @@ def all_map_master_generate(previous_map, grid, merge, seed_dict, number_in_list
                                     left_right_seed = random.choice(seed_dict[previous_map[number_line][number_region - 1]][number_in_list])
                                 elif number_point_map != (len(previous_map) - 1) and number_region != (len(previous_map) - 1): 
                                     left_right_seed = random.choice(seed_dict[previous_map[number_line][number_region + 1]][number_in_list])
-                                if random.randrange(11)//4 > 0: # Настройка шанса смешения
+                                if random.randrange(11)//2 > 0: # Настройка шанса смешения
                                     number_new_seed = merge_description_for_generator(number_new_seed, top_down_seed)
-                                if random.randrange(11)//4 > 0: # Настройка шанса смешения
+                                if random.randrange(11)//2 > 0: # Настройка шанса смешения
                                     number_new_seed = merge_description_for_generator(number_new_seed, left_right_seed)
                         else: # Описание из предыдущей карты
                             number_new_seed = random.choice(previous_map[number_line][number_region][number_in_list])
@@ -245,9 +289,9 @@ def all_map_master_generate(previous_map, grid, merge, seed_dict, number_in_list
                                     left_right_seed = random.choice(previous_map[number_line][number_region - 1][number_in_list])
                                 elif number_point_map != (len(previous_map) - 1) and number_region != (len(previous_map) - 1):
                                     left_right_seed = random.choice(previous_map[number_line][number_region + 1][number_in_list])
-                                if random.randrange(11)//4 > 0: # Настройка шанса смешения
+                                if random.randrange(11)//2 > 0: # Настройка шанса смешения
                                     number_new_seed = merge_description_for_generator(number_new_seed, top_down_seed)
-                                if random.randrange(11)//4 > 0: # Настройка шанса смешения
+                                if random.randrange(11)//2 > 0: # Настройка шанса смешения
                                     number_new_seed = merge_description_for_generator(number_new_seed, left_right_seed)
                         point_map_line.append(number_new_seed)
                             
@@ -260,14 +304,23 @@ def all_map_master_generate(previous_map, grid, merge, seed_dict, number_in_list
 
 def merge_all_description_for_generator(description_one, description_two):
     """
-        Соединяет два описания для генератора
+        Принимает два описания локаций, склеивает их, сохраняя значение в первое.
     """
     if description_two:
         description_one[0] = random.choice([description_one[0], description_two[0]])
         description_one[1] = description_one[1] + ' - ' + description_two[1]
         description_one[2].append(random.choice(description_two[2]))
         description_one[3].append(random.choice(description_two[3]))
-        #Здесь надо объединить описание стоимости передвижения и температуры
+        if description_one[4] < description_two[4]:
+            description_one[4] = random.randrange(description_one[4], description_two[4])
+        elif description_one[4] > description_two[4]:
+            description_one[4] = random.randrange(description_two[4], description_one[4])
+        if description_one[5] < description_two[5]:
+            description_one[5] = [random.randrange(description_one[5][0], description_two[5][0]),
+                                  random.randrange(description_one[5][1], description_two[5][1])]
+        elif description_one[5] > description_two[5]:
+            description_one[5] = [random.randrange(description_two[5][0], description_one[5][0]),
+                                  random.randrange(description_two[5][1], description_one[5][1])]  
     return description_one
 
 def merge_description_for_generator(description_one, description_two):
@@ -279,5 +332,7 @@ def merge_description_for_generator(description_one, description_two):
     return description_one
 
 
-master_map_generate(1, 2, 2, 2, 3)
+
+
+master_map_generate(1, 2, 2, 4, 4)
 
