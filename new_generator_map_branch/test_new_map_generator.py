@@ -1,5 +1,6 @@
 import random
 import time
+import copy
 
 
 """
@@ -11,13 +12,17 @@ import time
 
 
     ИЗВЕСТНЫЕ ОШИБКИ:
-    1)Ошибка при попытке соединить два описания при генерации полной тайловой карты. Выбирается вариант с соединением полного описания которого нет.
+    1)Ошибка при попытке соединить два описания при генерации полной тайловой карты. Выбирается вариант с соединением полного описания которого нет. #ИСПРАВЛЕНО
+    2)Ошибка мерджа вообще всех локаций. #ИСПРАВЛЕНО
     
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 """ 
 
 def timeit(func):
+    """
+    Декоратор. Считает время выполнения функции.
+    """
     def inner(*args, **kwargs):
         start = time.time()
         result = func(*args, **kwargs)
@@ -26,6 +31,9 @@ def timeit(func):
     return inner
 
 def print_map(printing_map):
+    """
+    Инструмент на время разработки, для наглядного отображения получившейся карты.
+    """
     
     if type(printing_map[0][0]) == list:
         test_print = ''
@@ -47,45 +55,16 @@ def master_map_generate(global_region_grid, region_grid, chunks_grid, mini_grid,
     """
         Новый генератор игровой карты, изначально учитывающий все особенности, определенные при создании и расширении предыдущего генератора.
 
-        1) генерирует карту супер регионов, отвечающих за однородность и логичность содержащихся в них и объединяемых друг с другом биомов;
+        1) генерирует карту глобальных регионов, отвечающих за однородность и логичность содержащихся в них и объединяемых друг с другом биомов;
         2) на основании карты глобальных регионов, генерирует карту регионов содержащих информацию о возможных к появлению в них локаций;
-        3) на основании карты регионов генерирует карту локаций;
+        3) на основании карты регионов генерирует карту локаций, которая содержит полную информацию о локациях;
         4) на основании карты локаций, генерирует карту минирегионов, являющихся однородными тайловыми полями;
         5) генерирует полную тайловую карту;
-        6) режет тайловую карту на отдельные локации.
+        6) на основании информации из карты локаций, наносит на полную тайловую карту тайлы из списка случайного заполнения.
+        6) режет полную тайловую карту на отдельные локации.
         
     """
 
-    seed_dict1 = {# seed  |icon  | name                 |tileset               |random tileset   |price_move |temperature
-                    'j': ['j',  'desert',              ['.'],                 ['j'],             20,        [40.0,60.0]],
-                    '.': ['.',  'semidesert',          ['.', ','],            ['▲', 'o', 'i'],   10,        [35.0,50.0]],
-                    'A': ['A',  'cliff semi-desert',   ['▲', 'A', '.', ','],  ['o', 'i'],         7,        [35.0,50.0]],
-                    'S': ['S',  'snake semi-desert',   ['A', '.', ','],       ['▲','o', 'i'],     7,        [35.0,50.0]],
-                    '▲': ['▲',  'hills',               ['▲', 'o'],            ['„', ','],        20,        [20.0,35.0]],
-                    'C': ['C',  'canyons',             ['C', '.', ','],       ['C'],             20,        [20.0,35.0]],
-                    'R': ['R',  'big canyons',         ['C'],                 ['.', 'o', '▲'],   20,        [20.0,35.0]],
-                    '„': ['„',  'field',               ['u', '„', ','],       ['ü', 'o'],         5,        [20.0,35.0]],
-                    ',': [',',  'dried field',         ['„', ','],            ['o', 'u'],         2,        [30.0,40.0]],
-                    'P': ['P',  'oasis',               ['F', '„', '~'],       ['P', ','],         0,        [15.0,30.0]],
-                    '~': ['~',  'salty lake',          ['~', ','],            ['„', '.'],        20,        [25.0,40.0]],
-                    ';': [';',  'saline land',         [';'],                 [':'],             15,        [40.0,50.0]],
-                }
-
-    seed_dict = {# seed  |icon  | name                 |tileset               |random tileset   |price_move |temperature
-                    'j': ['j',  'desert',              ['j'],                 ['j'],             20,        [40.0,60.0]],
-                    '.': ['.',  'semidesert',          ['.'],                 ['▲', 'o', 'i'],   10,        [35.0,50.0]],
-                    'A': ['A',  'cliff semi-desert',   ['A'],                 ['o', 'i'],         7,        [35.0,50.0]],
-                    'S': ['S',  'snake semi-desert',   ['A'],                 ['▲','o', 'i'],     7,        [35.0,50.0]],
-                    '▲': ['▲',  'hills',               ['▲'],                 ['„', ','],        20,        [20.0,35.0]],
-                    'C': ['C',  'canyons',             ['C'],                 ['C'],             20,        [20.0,35.0]],
-                    'R': ['R',  'big canyons',         ['C'],                 ['.', 'o', '▲'],   20,        [20.0,35.0]],
-                    '„': ['„',  'field',               ['„'],                 ['ü', 'o'],         5,        [20.0,35.0]],
-                    ',': [',',  'dried field',         [','],                 ['o', 'u'],         2,        [30.0,40.0]],
-                    'P': ['P',  'oasis',               ['F'],                 ['P', ','],         0,        [15.0,30.0]],
-                    '~': ['~',  'salty lake',          ['~'],                 ['„', '.'],        20,        [25.0,40.0]],
-                    ';': [';',  'saline land',         [';'],                 [':'],             15,        [40.0,50.0]],
-                }
-    
     global_region_map = global_region_generate(global_region_grid)
 
     print(f"global_region_map")
@@ -97,12 +76,12 @@ def master_map_generate(global_region_grid, region_grid, chunks_grid, mini_grid,
     print_map(region_map)
     
     #Содержит в себе описание локации
-    chunks_map = chunks_map_generate(region_map, (global_region_grid*region_grid), chunks_grid, seed_dict) 
+    chunks_map = chunks_map_generate(region_map, (global_region_grid*region_grid), chunks_grid) 
     
     print(f"chunks_map")
     print_map(chunks_map)
     
-    mini_region_map = mini_region_map_generate(chunks_map, (global_region_grid*region_grid*chunks_grid), mini_grid, seed_dict)
+    mini_region_map = mini_region_map_generate(chunks_map, (global_region_grid*region_grid*chunks_grid), mini_grid)
 
     print(f"mini_region_map")
     print_map(mini_region_map)
@@ -118,8 +97,6 @@ def master_map_generate(global_region_grid, region_grid, chunks_grid, mini_grid,
 
     print(f"add_random_all_tiles_map")
     print_map(add_random_all_tiles_map)
-    
-
 
     
     #ready_global_map = cutting_tiles_map(tiles_map)
@@ -165,19 +142,12 @@ def region_generate(global_region_map, global_region_grid, region_grid):
     """
         На основании карты глобальных регионов, генерирует карту регионов содержащих зёрна возможных локаций
     """
-    seed_dict1 = {  
+    seed_dict = {  
                     0: [['j', '.', 'S']], # Пустынный
                     1: [['A', '▲']], # Горный
                     2: [['„', ',', 'P', '~']], # Влажный
                     3: [['~', ';']], # Солёный
                     4: [['C', 'R', ]], # Каньонный
-                }
-    seed_dict = {  
-                    0: [['j']], # Пустынный
-                    1: [['A']], # Горный
-                    2: [['„']], # Влажный
-                    3: [['~']], # Солёный
-                    4: [['C']], # Каньонный
                 }
 
     raw_region_map = all_map_master_generate(global_region_map, region_grid, False, seed_dict, 0, False)
@@ -186,22 +156,36 @@ def region_generate(global_region_map, global_region_grid, region_grid):
     return region_map
 
 @timeit
-def chunks_map_generate(region_map, initial_size, chunks_grid, seed_dict):
+def chunks_map_generate(region_map, initial_size, chunks_grid):
     """
         на основании карты глобальных регионов генерирует карту локаций
     """
+    seed_dict = {# seed  |icon  | name                 |tileset               |random tileset   |price_move |temperature
+                    'j': ['j',  'desert',              ['.'],                 ['j'],             20,        [40.0,60.0]],
+                    '.': ['.',  'semidesert',          ['.', ','],            ['▲', 'o', 'i'],   10,        [35.0,50.0]],
+                    'A': ['A',  'cliff semi-desert',   ['▲', 'A', '.', ','],  ['o', 'i'],         7,        [35.0,50.0]],
+                    'S': ['S',  'snake semi-desert',   ['A', '.', ','],       ['▲','o', 'i'],     7,        [35.0,50.0]],
+                    '▲': ['▲',  'hills',               ['▲', 'o'],            ['„', ','],        20,        [20.0,35.0]],
+                    'C': ['C',  'canyons',             ['C', '.', ','],       ['C'],             20,        [20.0,35.0]],
+                    'R': ['R',  'big canyons',         ['C'],                 ['.', 'o', '▲'],   20,        [20.0,35.0]],
+                    '„': ['„',  'field',               ['u', '„', ','],       ['ü', 'o'],         5,        [20.0,35.0]],
+                    ',': [',',  'dried field',         ['„', ','],            ['o', 'u'],         2,        [30.0,40.0]],
+                    'P': ['P',  'oasis',               ['F', '„', '~'],       ['P', ','],         0,        [15.0,30.0]],
+                    '~': ['~',  'salty lake',          ['~', ','],            ['„', '.'],        20,        [25.0,40.0]],
+                    ';': [';',  'saline land',         [';'],                 [':'],             15,        [40.0,50.0]],
+                }
     raw_chunks_map = all_map_master_generate(region_map, chunks_grid, True, seed_dict, 0, True)
     chunks_map = all_gluing_map(raw_chunks_map, initial_size, chunks_grid)
 
     return chunks_map
 
 @timeit
-def mini_region_map_generate(chunks_map, initial_size, mini_grid, seed_dict):
+def mini_region_map_generate(chunks_map, initial_size, mini_grid):
     """
         на основании карты локаций, генерирует карту минирегионов, являющихся однородными тайловыми полями
     """
 
-    raw_mini_region_map = all_map_master_generate(chunks_map, mini_grid, False, seed_dict, 2, False)
+    raw_mini_region_map = all_map_master_generate(chunks_map, mini_grid, False, {}, 2, False)
     mini_region_map = all_gluing_map(raw_mini_region_map, initial_size, mini_grid)
 
     return mini_region_map
@@ -212,7 +196,7 @@ def tiles_map_generate(mini_region_map, initial_size, chunk_size):
         генерирует полную тайловую карту
     """
     
-    seed_dict1 = {  
+    seed_dict = {  
                     '.': ['.'],
                     ',': [','],
                     '„': ['„'],
@@ -225,20 +209,6 @@ def tiles_map_generate(mini_region_map, initial_size, chunk_size):
                     'F': ['F'],
                     '~': ['~'],
                     'u': ['u'],
-                }
-    seed_dict = {  
-                    'j': ['j'],
-                    '.': ['.'],
-                    'A': ['A'],
-                    'S': ['S'],
-                    '▲': ['▲'],
-                    'C': ['C'],
-                    'R': ['R'],
-                    '„': ['„'],
-                    ',': [','],
-                    'P': ['P'],
-                    '~': ['~'],
-                    ';': [';'],
                 }
 
     raw_all_tiles_map = all_map_master_generate(mini_region_map, chunk_size, False, seed_dict, 0, False)
@@ -291,20 +261,20 @@ def all_map_master_generate(previous_map, grid, merge, seed_dict, number_in_list
                 point_map_line = []
                 for number_point_map in range(grid): #Создаём значения линий
                     if all_description: #Работа с полным описанием (Для локаций)
-                        packed_all_description = seed_dict[previous_map[number_line][number_region]]
+                        packed_all_description = copy.deepcopy(seed_dict[previous_map[number_line][number_region]])
                         if merge:
                             top_down_description = ''
                             left_right_description = ''                  
                             if number_point_map_line == 0 and number_line > 0:                                             #Обрабатываем верхний край региона
                                 if packed_all_description[0] != seed_dict[previous_map[number_line - 1][number_region]][0]:
                                     top_down_description = seed_dict[previous_map[number_line - 1][number_region]]
-                            elif number_point_map_line == (len(previous_map) - 1) and number_line < (len(previous_map) - 1):   #Обрабатываем нижний край региона
+                            elif number_point_map_line == (grid - 1) and number_line < (len(previous_map) - 1):   #Обрабатываем нижний край региона
                                 if packed_all_description[0] != seed_dict[previous_map[number_line + 1][number_region]][0]:
                                     top_down_description = seed_dict[previous_map[number_line + 1][number_region]]
                             if number_point_map == 0 and number_region > 0:                                                  #Обрабатываем левый край региона
                                 if packed_all_description[0] != seed_dict[previous_map[number_line][number_region - 1]][0]:
                                     left_right_description = seed_dict[previous_map[number_line][number_region - 1]]
-                            elif number_point_map == (len(previous_map) - 1) and number_region < (len(previous_map) - 1):        #Обрабатываем правый край региона
+                            elif number_point_map == (grid - 1) and number_region < (len(previous_map) - 1):        #Обрабатываем правый край региона
                                 if packed_all_description[0] != seed_dict[previous_map[number_line][number_region + 1]][0]:
                                     left_right_description = seed_dict[previous_map[number_line][number_region + 1]]
 
@@ -365,27 +335,24 @@ def merge_all_description_for_generator(description_one, description_two):
         Принимает два описания локаций, склеивает их, сохраняя значение в первое.
     """
     if description_two:
-        #description_one[0] = random.choice([description_one[0], description_two[0]])
-        description_one[0] = '8'
-        #description_one[1] = description_one[1] + ' - ' + description_two[1]
+        description_one[0] = random.choice([description_one[0], description_two[0]])
+        description_one[1] = description_one[1] + ' - ' + description_two[1]
         description_one[2].append(random.choice(description_two[2]))
         description_one[3].append(random.choice(description_two[3]))
         if description_one[4] < description_two[4]:
             description_one[4] = random.randrange(description_one[4], description_two[4])
         elif description_one[4] > description_two[4]:
             description_one[4] = random.randrange(description_two[4], description_one[4])
-        #if description_one[5] < description_two[5]:
-            #try:
-                #description_one[5] = [random.randrange(description_one[5][0], description_two[5][0]),
-                                  #random.randrange(description_one[5][1], description_two[5][1])]
-            #except ValueError:
-                #print(F"description_one - {description_one} | description_two - {description_two}")
-        #elif description_one[5] > description_two[5]:
-            #try:
-                #description_one[5] = [random.randrange(description_two[5][0], description_one[5][0]),
-                                  #random.randrange(description_two[5][1], description_one[5][1])]
-            #except ValueError:
-                #print(F"description_one - {description_one} | description_two - {description_two}")
+        if description_one[5][0] < description_two[5][0]:
+            description_one[5][0] = random.randrange(description_one[5][0], description_two[5][0])
+        elif description_one[5][0] > description_two[5][0]:
+            description_one[5][0] = random.randrange(description_two[5][0], description_one[5][0])
+        if description_one[5][1] < description_two[5][1]:
+            description_one[5][1] = random.randrange(description_one[5][1], description_two[5][1])
+        elif description_one[5][1] > description_two[5][1]:
+            description_one[5][1] = random.randrange(description_two[5][1], description_one[5][1])
+        
+
     return description_one
 
 def merge_description_for_generator(description_one, description_two):
