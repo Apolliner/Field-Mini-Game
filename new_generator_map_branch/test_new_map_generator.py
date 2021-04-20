@@ -42,6 +42,16 @@ def print_map(printing_map):
                 test_print += str(printing_map[number_line][number_tile][0]) + ' '
             test_print += '\n'
         print(test_print)
+
+    elif isinstance(printing_map[0][0], Tile):
+        test_print = ''
+        for number_line in range(len(printing_map)):
+            for number_tile in range(len(printing_map[number_line])):
+                #test_print += str(printing_map[number_line][number_tile].icon) + str(printing_map[number_line][number_tile].type)
+                test_print += str(printing_map[number_line][number_tile].icon) + str(abs(printing_map[number_line][number_tile].level))
+                #test_print += ' ' + str(abs(printing_map[number_line][number_tile].level))
+            test_print += '\n'
+        print(test_print)
     else:
         test_print = ''
         for number_line in range(len(printing_map)):
@@ -49,7 +59,40 @@ def print_map(printing_map):
                 test_print += str(printing_map[number_line][number_tile]) + ' '
             test_print += '\n'
         print(test_print)
-    
+        
+class Tile:
+    """ Содержит изображение, описание, особое содержание тайла, стоимость передвижения, тип, высоту и лестницу """
+    __slots__ = ('icon', 'description', 'list_of_features', 'price_move', 'type', 'level', 'stairs')
+    def __init__(self, icon):
+        self.icon = icon
+        self.description = self.getting_attributes(icon, 0)
+        self.list_of_features = []
+        self.price_move = self.getting_attributes(icon, 1)
+        self.type = '0'
+        self.level = 0
+        self.stairs = False
+        
+    def getting_attributes(self, icon, number):
+        ground_dict =   {
+                        'j': ['бархан', 1],
+                        '.': ['горячий песок', 1],
+                        ',': ['жухлая трава', 1],
+                        'o': ['валун', 15],
+                        'A': ['холм', 15],
+                        '▲': ['скала', 20],
+                        'i': ['кактус', 1],
+                        ':': ['солончак', 1],
+                        ';': ['солончак', 1],
+                        '„': ['трава', 1],
+                        'u': ['высокая трава', 1],
+                        'ü': ['колючая трава', 10],
+                        'F': ['чахлое дерево', 1],
+                        'P': ['раскидистое дерево', 1],
+                        '~': ['солёная вода', 20],
+                        'C': ['каньон', 20],
+                        '??': ['ничего', 10],
+                        }
+        return ground_dict[icon][number]  
 
 def master_map_generate(global_region_grid, region_grid, chunks_grid, mini_grid, tiles_field_size):
     """
@@ -61,49 +104,188 @@ def master_map_generate(global_region_grid, region_grid, chunks_grid, mini_grid,
         4) на основании карты локаций, генерирует карту минирегионов, являющихся однородными тайловыми полями;
         5) генерирует полную тайловую карту;
         6) на основании информации из карты локаций, наносит на полную тайловую карту тайлы из списка случайного заполнения.
+        7) на полной тайловой карте вычисляет однородные тайловые поля, их высоты, склоны и лестницы. Возвращает полную тайловую карту высот
         6) режет полную тайловую карту на отдельные локации.
         
     """
 
     global_region_map = global_region_generate(global_region_grid)
-
     print(f"global_region_map")
     print_map(global_region_map)
     
     region_map = region_generate(global_region_map, global_region_grid, region_grid)
-
     print(f"region_map")
     print_map(region_map)
     
     #Содержит в себе описание локации
     chunks_map = chunks_map_generate(region_map, (global_region_grid*region_grid), chunks_grid) 
-    
     print(f"chunks_map")
     print_map(chunks_map)
     
     mini_region_map = mini_region_map_generate(chunks_map, (global_region_grid*region_grid*chunks_grid), mini_grid)
-
     print(f"mini_region_map")
     print_map(mini_region_map)
     
     #Готовая глобальная тайловая карта
     all_tiles_map = tiles_map_generate(mini_region_map, (global_region_grid*region_grid*chunks_grid*mini_grid), tiles_field_size) 
-
     print(f"all_tiles_map")
     print_map(all_tiles_map)
     
     #Добавление тайлов из списка рандомного заполнения
-    add_random_all_tiles_map = add_random_tiles(all_tiles_map, chunks_map, chunks_grid*mini_grid)
-
+    add_random_all_tiles_map = add_random_tiles(all_tiles_map, chunks_map)
     print(f"add_random_all_tiles_map")
     print_map(add_random_all_tiles_map)
-
+    
+    #Конвертирование тайлов в класс
+    all_class_tiles_map = convert_tiles_to_class(add_random_all_tiles_map, chunks_map)
+    
+    #Рассчёт уровней, склонов и лестниц
+    levelness_all_tiles_map = levelness_calculation(all_class_tiles_map, 4)
+    print(f"levelness_all_tiles_map")
+    print_map(levelness_all_tiles_map)
     
     #ready_global_map = cutting_tiles_map(tiles_map)
 
+def levelness_calculation(processed_map, levelness):
+    """
+        Рассчёт уровней, склонов и лестниц. levelness - количество уровней.
+    """
+    minus_level_list = ['~', 'C']
+    plus_level_list = ['▲']
+    stairs_list = ['O', 'A', 'P', 'B', 'Q', 'C', 'R', 'D']
+    for level in range(levelness):
+        # Поднимание\опускание расчётного слоя на свою высоту.
+        detection = ['0']
+        if level != 0:
+            detection = ['1']
+        for number_line, line in enumerate(processed_map):
+            for number_tile, tile in enumerate(line):
+                if (tile.icon in ['▲', '~', 'C']) and tile.type in detection and random.randrange(50)//5 > 0: #Добавлена случайность срабатывания
+                    if tile.icon in plus_level_list:
+                        tile.level += 1
+                    elif tile.icon in minus_level_list:
+                        tile.level -= 1
+        # На рассчитанной высоте, определяются склоны.
+        for number_line, line in enumerate(processed_map):
+            for number_tile, tile in enumerate(line):
+                if (tile.icon in ['▲', '~', 'C']) and tile.type in ['0', '1']:
+                    change = False
+                    direction = {
+                                    'up'   : False,
+                                    'down' : False,
+                                    'left' : False,
+                                    'right': False,
+                                }
+                    if 0 < number_line < len(processed_map) - 1:
+                        if tile.icon == processed_map[number_line - 1][number_tile].icon and tile.level == processed_map[number_line - 1][number_tile].level:
+                                direction['up'] = True
+                        if tile.icon == processed_map[number_line + 1][number_tile].icon and tile.level == processed_map[number_line + 1][number_tile].level:
+                                direction['down'] = True
+                    if 0 < number_tile < len(line) - 1:
+                        if tile.icon == processed_map[number_line][number_tile - 1].icon and tile.level == processed_map[number_line][number_tile - 1].level:
+                                direction['left'] = True
+                        if tile.icon == processed_map[number_line][number_tile + 1].icon and tile.level == processed_map[number_line][number_tile + 1].level:
+                                direction['right'] = True
+
+                    if direction['up'] and direction['down'] and direction['left'] and direction['right']:
+                        tile.type = '1'
+                    elif direction['up'] and not(direction['down']) and direction['left'] and direction['right']:
+                        if tile.type == '1':
+                            tile.type = 'G'
+                        else:
+                            tile.type = '2'
+                    elif direction['up'] and direction['down'] and not(direction['left']) and direction['right']:
+                        if tile.type == '1':
+                            tile.type = 'H'
+                        else:
+                            tile.type = '3'
+                    elif not(direction['up']) and direction['down'] and direction['left'] and direction['right']:
+                        if tile.type == '1':
+                            tile.type = 'I'
+                        else:
+                            tile.type = '4'
+                    elif direction['up'] and direction['down'] and direction['left'] and not(direction['right']):
+                        if tile.type == '1':
+                            tile.type = 'J'
+                        else:
+                            tile.type = '5'
+                    elif direction['up'] and not(direction['down']) and direction['left'] and not(direction['right']):
+                        if tile.type == '1':
+                            tile.type = 'K'
+                        else:
+                            tile.type = '6'
+                    elif direction['up'] and not(direction['down']) and not(direction['left']) and direction['right']:
+                        if tile.type == '1':
+                            tile.type = 'L'
+                        else:
+                            tile.type = '7'
+                    elif not(direction['up']) and direction['down'] and not(direction['left']) and direction['right']:
+                        if tile.type == '1':
+                            tile.type = 'M'
+                        else:
+                            tile.type = '8'
+                    elif not(direction['up']) and direction['down'] and direction['left'] and not(direction['right']):
+                        if tile.type == '1':
+                            tile.type = 'N'
+                        else:
+                            tile.type = '9'
+                    elif not(direction['up']) and not(direction['down']) and direction['left'] and not(direction['right']):
+                        if tile.type == '1':
+                            tile.type = 'O'
+                        else:
+                            tile.type = 'A'
+                    elif direction['up'] and not(direction['down']) and not(direction['left']) and not(direction['right']):
+                        if tile.type == '1':
+                            tile.type = 'P'
+                        else:
+                            tile.type = 'B'
+                    elif not(direction['up']) and not(direction['down']) and not(direction['left']) and direction['right']:
+                        if tile.type == '1':
+                            tile.type = 'Q'
+                        else:
+                            tile.type = 'C'
+                    elif not(direction['up']) and direction['down'] and not(direction['left']) and not(direction['right']):
+                        if tile.type == '1':
+                            tile.type = 'R'
+                        else:
+                            tile.type = 'D'
+                    elif not(direction['up']) and not(direction['down']) and direction['left'] and direction['right']:
+                        if tile.type == '1':
+                            tile.type = 'S'
+                        else:
+                            tile.type = 'E'
+                    elif direction['up'] and direction['down'] and not(direction['left']) and not(direction['right']):
+                        if tile.type == '1':
+                            tile.type = 'T'
+                        else:
+                            tile.type = 'F'
+                    else:
+                        if tile.type == '1':
+                            tile.type = 'U'
+                        else:
+                            tile.type = '0'
+
+                    if tile.type in stairs_list:
+                        tile.stairs = True
+    return processed_map
 
 @timeit
-def add_random_tiles(processed_map, chunks_map, chunk_size1):
+def convert_tiles_to_class(processed_map, chunks_map):
+    """
+        Конвертирование тайлов в класс Tile
+    """
+    chunk_size = len(processed_map)//len(chunks_map) #Для дальнейшей возможности поместить в тайл сущность или предмет
+    
+    new_class_tiles_map = []
+    for number_line in range(len(processed_map)):
+        new_line = []
+        for number_tile in range(len(processed_map[number_line])):
+            new_line.append(Tile(processed_map[number_line][number_tile]))
+        new_class_tiles_map.append(new_line)
+    return new_class_tiles_map
+
+@timeit
+def add_random_tiles(processed_map, chunks_map):
     """
         Добавляет случайные тайлы на готовую тайловую карту, основываясь на информации из карты локаций
     """
