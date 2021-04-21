@@ -14,52 +14,21 @@ import copy
     ИЗВЕСТНЫЕ ОШИБКИ:
     1)Ошибка при попытке соединить два описания при генерации полной тайловой карты. Выбирается вариант с соединением полного описания которого нет. #ИСПРАВЛЕНО
     2)Ошибка мерджа вообще всех локаций. #ИСПРАВЛЕНО
+
+
+    РЕАЛИЗОВАТЬ:
+    1)Для разных тайлов - разные списки типов, являющихся лестницами
+    2)Тайловые поля, не изменяющие свою высоту
+    3)Возможность того, что два разных тайла являются одним тайловым полем (хотя надо ли оно, можно то же самое реализовать рандомным выбором иконки)
+    4)Генерация разных типов тайлов в одном тайловом поле без учёта краёв.
+    5)Адекватность генерации супер биомов друг рядом с другом. Возможно, сначала должен идти выбор главных, не соприкасающихся друг с другом
+      супер биомов, а ведомые супер биомы подстраиваются под них.
+    6)Настройку количества слоёв для каждого типа тайла
     
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 """ 
 
-def timeit(func):
-    """
-    Декоратор. Считает время выполнения функции.
-    """
-    def inner(*args, **kwargs):
-        start = time.time()
-        result = func(*args, **kwargs)
-        print(time.time() - start)
-        return result
-    return inner
-
-def print_map(printing_map):
-    """
-    Инструмент на время разработки, для наглядного отображения получившейся карты.
-    """
-    
-    if type(printing_map[0][0]) == list:
-        test_print = ''
-        for number_line in range(len(printing_map)):
-            for number_tile in range(len(printing_map[number_line])):
-                test_print += str(printing_map[number_line][number_tile][0]) + ' '
-            test_print += '\n'
-        print(test_print)
-
-    elif isinstance(printing_map[0][0], Tile):
-        test_print = ''
-        for number_line in range(len(printing_map)):
-            for number_tile in range(len(printing_map[number_line])):
-                #test_print += str(printing_map[number_line][number_tile].icon) + str(printing_map[number_line][number_tile].type)
-                test_print += str(printing_map[number_line][number_tile].icon) + str(abs(printing_map[number_line][number_tile].level))
-                #test_print += ' ' + str(abs(printing_map[number_line][number_tile].level))
-            test_print += '\n'
-        print(test_print)
-    else:
-        test_print = ''
-        for number_line in range(len(printing_map)):
-            for number_tile in range(len(printing_map[number_line])):
-                test_print += str(printing_map[number_line][number_tile]) + ' '
-            test_print += '\n'
-        print(test_print)
-        
 class Tile:
     """ Содержит изображение, описание, особое содержание тайла, стоимость передвижения, тип, высоту и лестницу """
     __slots__ = ('icon', 'description', 'list_of_features', 'price_move', 'type', 'level', 'stairs')
@@ -92,8 +61,35 @@ class Tile:
                         'C': ['каньон', 20],
                         '??': ['ничего', 10],
                         }
-        return ground_dict[icon][number]  
+        try:
+            return ground_dict[icon][number]
+        except TypeError:
+            print(f"icon - {icon}, number - {number}")
 
+class Location:
+    """ Содержит описание локации """
+    __slots__ = ('name', 'temperature', 'chunk', 'icon', 'price_move')
+    def __init__(self, name:str, temperature:float, chunk:list, icon:str, price_move:int):
+        self.name = name
+        self.temperature = temperature
+        self.chunk = chunk
+        self.icon = icon
+        self.price_move = price_move
+
+
+def timeit(func):
+    """
+    Декоратор. Считает время выполнения функции.
+    """
+    def inner(*args, **kwargs):
+        start = time.time()
+        result = func(*args, **kwargs)
+        print(time.time() - start)
+        return result
+    return inner
+
+
+@timeit
 def master_map_generate(global_region_grid, region_grid, chunks_grid, mini_grid, tiles_field_size):
     """
         Новый генератор игровой карты, изначально учитывающий все особенности, определенные при создании и расширении предыдущего генератора.
@@ -110,42 +106,165 @@ def master_map_generate(global_region_grid, region_grid, chunks_grid, mini_grid,
     """
 
     global_region_map = global_region_generate(global_region_grid)
-    print(f"global_region_map")
-    print_map(global_region_map)
     
     region_map = region_generate(global_region_map, global_region_grid, region_grid)
-    print(f"region_map")
-    print_map(region_map)
-    
+
     #Содержит в себе описание локации
     chunks_map = chunks_map_generate(region_map, (global_region_grid*region_grid), chunks_grid) 
-    print(f"chunks_map")
-    print_map(chunks_map)
-    
+
     mini_region_map = mini_region_map_generate(chunks_map, (global_region_grid*region_grid*chunks_grid), mini_grid)
-    print(f"mini_region_map")
-    print_map(mini_region_map)
+
     
     #Готовая глобальная тайловая карта
     all_tiles_map = tiles_map_generate(mini_region_map, (global_region_grid*region_grid*chunks_grid*mini_grid), tiles_field_size) 
-    print(f"all_tiles_map")
-    print_map(all_tiles_map)
     
     #Добавление тайлов из списка рандомного заполнения
     add_random_all_tiles_map = add_random_tiles(all_tiles_map, chunks_map)
-    print(f"add_random_all_tiles_map")
-    print_map(add_random_all_tiles_map)
     
     #Конвертирование тайлов в класс
     all_class_tiles_map = convert_tiles_to_class(add_random_all_tiles_map, chunks_map)
     
     #Рассчёт уровней, склонов и лестниц
-    levelness_all_tiles_map = levelness_calculation(all_class_tiles_map, 4)
-    print(f"levelness_all_tiles_map")
-    print_map(levelness_all_tiles_map)
-    
-    #ready_global_map = cutting_tiles_map(tiles_map)
+    levelness_all_tiles_map = levelness_calculation(all_class_tiles_map, 2)
 
+    #Разрезание глобальной карты на карту классов Location
+    ready_global_map = cutting_tiles_map(levelness_all_tiles_map, chunks_map)
+
+    return ready_global_map
+
+
+@timeit
+def global_region_generate(global_grid):
+    """
+        Генерирует карту глобальных регионов
+
+        Типы глобальных регионов:   0 - пустынный
+                                    1 - горный
+                                    2 - живой
+                                    3 - солёный
+                                    4 - каньонный
+                                    5 - водяной
+    """
+    global_region_map = []
+    for i in range(global_grid):
+        global_region_map.append([random.randrange(6) for x in range(global_grid)])
+    return global_region_map
+
+@timeit
+def region_generate(global_region_map, global_region_grid, region_grid):
+    """
+        На основании карты глобальных регионов, генерирует карту регионов содержащих зёрна возможных локаций
+    """
+    seed_dict = {  
+                    0: [['j', '.', 'S']],   # Пустынный
+                    1: [['A', '▲', 'B']],   # Горный
+                    2: [['„', ',', 'P']],   # Живой
+                    3: [[';', '.']],        # Солёный
+                    4: [['C', 'R', ]],      # Каньонный
+                    5: [['~']]              # Водяной
+                }
+
+    raw_region_map = all_map_master_generate(global_region_map, region_grid, False, seed_dict, 0, False)
+    region_map = all_gluing_map(raw_region_map, global_region_grid, region_grid)
+
+    return region_map
+
+@timeit
+def chunks_map_generate(region_map, initial_size, chunks_grid):
+    """
+        на основании карты глобальных регионов генерирует карту локаций
+    """
+    seed_dict = {# seed  |icon  | name                 |tileset               |random tileset   |price_move |temperature
+                    'j': ['j',  'desert',              ['.'],                 ['j'],             20,        [40.0,60.0]],
+                    '.': ['.',  'semi-desert',         ['.', ','],            ['▲', 'o', 'i'],   10,        [35.0,50.0]],
+                    'A': ['A',  'cliff semi-desert',   ['▲', 'A', '.', ','],  ['o', 'i'],         7,        [35.0,50.0]],
+                    'S': ['S',  'snake semi-desert',   ['A', '.', ','],       ['▲','o', 'i'],     7,        [35.0,50.0]],
+                    '▲': ['▲',  'hills',               ['▲', 'o'],            ['„', ','],        20,        [20.0,35.0]],
+                    'B': ['▲',  'big hills',           ['▲'],                 ['o'],             20,        [20.0,35.0]],
+                    'C': ['C',  'canyons',             ['C', '.', ','],       ['C'],             20,        [20.0,35.0]],
+                    'R': ['R',  'big canyons',         ['C'],                 ['.', 'o', '▲'],   20,        [20.0,35.0]],
+                    '„': ['„',  'field',               ['u', '„', ','],       ['ü', 'o'],         5,        [20.0,35.0]],
+                    ',': [',',  'dried field',         ['„', ','],            ['o', 'u'],         2,        [30.0,40.0]],
+                    'P': ['P',  'oasis',               ['F', '„', '~'],       ['P', ','],         0,        [15.0,30.0]],
+                    '~': ['~',  'salty lake',          ['~'],                 ['„', '.'],        20,        [25.0,40.0]],
+                    ';': [';',  'saline land',         [';'],                 [':'],             15,        [40.0,50.0]],
+                }
+    raw_chunks_map = all_map_master_generate(region_map, chunks_grid, True, seed_dict, 0, True)
+    chunks_map = all_gluing_map(raw_chunks_map, initial_size, chunks_grid)
+
+    return chunks_map
+
+@timeit
+def mini_region_map_generate(chunks_map, initial_size, mini_grid):
+    """
+        на основании карты локаций, генерирует карту минирегионов, являющихся однородными тайловыми полями
+    """
+
+    raw_mini_region_map = all_map_master_generate(chunks_map, mini_grid, True, {}, 2, False)
+    mini_region_map = all_gluing_map(raw_mini_region_map, initial_size, mini_grid)
+
+    return mini_region_map
+
+@timeit
+def tiles_map_generate(mini_region_map, initial_size, chunk_size):
+    """
+        генерирует полную тайловую карту
+    """
+    
+    seed_dict = {  
+                    '.': '.',
+                    ',': ',',
+                    '„': '„',
+                    'A': 'A',
+                    '▲': '▲',
+                    'C': 'C',
+                    ';': ';',
+                    'S': 'S',
+                    'o': 'o',
+                    'F': 'F',
+                    '~': '~',
+                    'u': 'u',
+                }
+
+    raw_all_tiles_map = all_map_master_generate(mini_region_map, chunk_size, True, seed_dict, 0, False)
+    all_tiles_map = all_gluing_map(raw_all_tiles_map, initial_size, chunk_size)
+
+    return all_tiles_map
+
+@timeit
+def add_random_tiles(processed_map, chunks_map):
+    """
+        Добавляет случайные тайлы на готовую тайловую карту, основываясь на информации из карты локаций
+    """
+    chunk_size = len(processed_map)//len(chunks_map)
+
+    banned_list = ['~']
+    
+    for number_seed_line in range(len(chunks_map)):
+        for number_seed in range(len(chunks_map[number_seed_line])):
+            for number_line in range((number_seed_line)*chunk_size, (number_seed_line)*chunk_size + chunk_size):
+                for number_tile in range((number_seed)*chunk_size, (number_seed)*chunk_size + chunk_size):
+                    if random.randrange(10)//9 and not(processed_map[number_line][number_tile] in banned_list):
+                        processed_map[number_line][number_tile] = random.choice(chunks_map[number_seed_line][number_seed][3])
+            
+    return processed_map
+
+@timeit
+def convert_tiles_to_class(processed_map, chunks_map):
+    """
+        Конвертирование тайлов в класс Tile
+    """
+    chunk_size = len(processed_map)//len(chunks_map) #Для дальнейшей возможности поместить в тайл сущность или предмет
+    
+    new_class_tiles_map = []
+    for number_line in range(len(processed_map)):
+        new_line = []
+        for number_tile in range(len(processed_map[number_line])):
+            new_line.append(Tile(processed_map[number_line][number_tile]))
+        new_class_tiles_map.append(new_line)
+    return new_class_tiles_map
+
+@timeit
 def levelness_calculation(processed_map, levelness):
     """
         Рассчёт уровней, склонов и лестниц. levelness - количество уровней.
@@ -160,7 +279,7 @@ def levelness_calculation(processed_map, levelness):
             detection = ['1']
         for number_line, line in enumerate(processed_map):
             for number_tile, tile in enumerate(line):
-                if (tile.icon in ['▲', '~', 'C']) and tile.type in detection and random.randrange(50)//5 > 0: #Добавлена случайность срабатывания
+                if (tile.icon in ['▲', '~', 'C']) and tile.type in detection: #and random.randrange(500)//5 > 0: #Добавлена случайность срабатывания
                     if tile.icon in plus_level_list:
                         tile.level += 1
                     elif tile.icon in minus_level_list:
@@ -269,144 +388,32 @@ def levelness_calculation(processed_map, levelness):
                         tile.stairs = True
     return processed_map
 
-@timeit
-def convert_tiles_to_class(processed_map, chunks_map):
-    """
-        Конвертирование тайлов в класс Tile
-    """
-    chunk_size = len(processed_map)//len(chunks_map) #Для дальнейшей возможности поместить в тайл сущность или предмет
-    
-    new_class_tiles_map = []
-    for number_line in range(len(processed_map)):
-        new_line = []
-        for number_tile in range(len(processed_map[number_line])):
-            new_line.append(Tile(processed_map[number_line][number_tile]))
-        new_class_tiles_map.append(new_line)
-    return new_class_tiles_map
-
-@timeit
-def add_random_tiles(processed_map, chunks_map):
-    """
-        Добавляет случайные тайлы на готовую тайловую карту, основываясь на информации из карты локаций
-    """
-    chunk_size = len(processed_map)//len(chunks_map)
-
-    banned_list = ['~']
-    
-    for number_seed_line in range(len(chunks_map)):
-        for number_seed in range(len(chunks_map[number_seed_line])):
-            for number_line in range((number_seed_line)*chunk_size, (number_seed_line)*chunk_size + chunk_size):
-                for number_tile in range((number_seed)*chunk_size, (number_seed)*chunk_size + chunk_size):
-                    if random.randrange(10)//9 and not(processed_map[number_line][number_tile] in banned_list):
-                        processed_map[number_line][number_tile] = random.choice(chunks_map[number_seed_line][number_seed][3])
-            
-    return processed_map
-
-
-@timeit
-def global_region_generate(global_grid):
-    """
-        Генерирует карту глобальных регионов
-
-        Типы глобальных регионов:   0 - пустынный
-                                    1 - горный
-                                    2 - влажный
-                                    3 - солёный
-                                    4 - каньонный
-    """
-    global_region_map = []
-    for i in range(global_grid):
-        global_region_map.append([random.randrange(5) for x in range(global_grid)])
-    return global_region_map
-
-@timeit
-def region_generate(global_region_map, global_region_grid, region_grid):
-    """
-        На основании карты глобальных регионов, генерирует карту регионов содержащих зёрна возможных локаций
-    """
-    seed_dict = {  
-                    0: [['j', '.', 'S']], # Пустынный
-                    1: [['A', '▲']], # Горный
-                    2: [['„', ',', 'P', '~']], # Влажный
-                    3: [['~', ';']], # Солёный
-                    4: [['C', 'R', ]], # Каньонный
-                }
-
-    raw_region_map = all_map_master_generate(global_region_map, region_grid, False, seed_dict, 0, False)
-    region_map = all_gluing_map(raw_region_map, global_region_grid, region_grid)
-
-    return region_map
-
-@timeit
-def chunks_map_generate(region_map, initial_size, chunks_grid):
-    """
-        на основании карты глобальных регионов генерирует карту локаций
-    """
-    seed_dict = {# seed  |icon  | name                 |tileset               |random tileset   |price_move |temperature
-                    'j': ['j',  'desert',              ['.'],                 ['j'],             20,        [40.0,60.0]],
-                    '.': ['.',  'semidesert',          ['.', ','],            ['▲', 'o', 'i'],   10,        [35.0,50.0]],
-                    'A': ['A',  'cliff semi-desert',   ['▲', 'A', '.', ','],  ['o', 'i'],         7,        [35.0,50.0]],
-                    'S': ['S',  'snake semi-desert',   ['A', '.', ','],       ['▲','o', 'i'],     7,        [35.0,50.0]],
-                    '▲': ['▲',  'hills',               ['▲', 'o'],            ['„', ','],        20,        [20.0,35.0]],
-                    'C': ['C',  'canyons',             ['C', '.', ','],       ['C'],             20,        [20.0,35.0]],
-                    'R': ['R',  'big canyons',         ['C'],                 ['.', 'o', '▲'],   20,        [20.0,35.0]],
-                    '„': ['„',  'field',               ['u', '„', ','],       ['ü', 'o'],         5,        [20.0,35.0]],
-                    ',': [',',  'dried field',         ['„', ','],            ['o', 'u'],         2,        [30.0,40.0]],
-                    'P': ['P',  'oasis',               ['F', '„', '~'],       ['P', ','],         0,        [15.0,30.0]],
-                    '~': ['~',  'salty lake',          ['~', ','],            ['„', '.'],        20,        [25.0,40.0]],
-                    ';': [';',  'saline land',         [';'],                 [':'],             15,        [40.0,50.0]],
-                }
-    raw_chunks_map = all_map_master_generate(region_map, chunks_grid, True, seed_dict, 0, True)
-    chunks_map = all_gluing_map(raw_chunks_map, initial_size, chunks_grid)
-
-    return chunks_map
-
-@timeit
-def mini_region_map_generate(chunks_map, initial_size, mini_grid):
-    """
-        на основании карты локаций, генерирует карту минирегионов, являющихся однородными тайловыми полями
-    """
-
-    raw_mini_region_map = all_map_master_generate(chunks_map, mini_grid, False, {}, 2, False)
-    mini_region_map = all_gluing_map(raw_mini_region_map, initial_size, mini_grid)
-
-    return mini_region_map
-
-@timeit
-def tiles_map_generate(mini_region_map, initial_size, chunk_size):
-    """
-        генерирует полную тайловую карту
-    """
-    
-    seed_dict = {  
-                    '.': ['.'],
-                    ',': [','],
-                    '„': ['„'],
-                    'A': ['A'],
-                    '▲': ['▲'],
-                    'C': ['C'],
-                    ';': [';'],
-                    'S': ['S'],
-                    'o': ['o'],
-                    'F': ['F'],
-                    '~': ['~'],
-                    'u': ['u'],
-                }
-
-    raw_all_tiles_map = all_map_master_generate(mini_region_map, chunk_size, False, seed_dict, 0, False)
-    all_tiles_map = all_gluing_map(raw_all_tiles_map, initial_size, chunk_size)
-
-    return all_tiles_map
-
-def cutting_tiles_map(tiles_map):
+def cutting_tiles_map(processed_map, chunks_map):
     """
         Режет готовую тайловую карту
     """
-    pass
+    chunk_size = len(processed_map)//len(chunks_map)
+    global_map = []
+    for number_seed_line, seed_line in enumerate(chunks_map):
+        new_global_line = []
+        for number_seed, seed in enumerate(seed_line):
+            new_global_location = Location(seed[1], random.uniform(min(seed[5][0], seed[5][1]), max(seed[5][0], seed[5][1])), [], seed[0], seed[4])
+            for number_line in range((number_seed_line)*chunk_size, (number_seed_line)*chunk_size + chunk_size):
+                location_line = []
+                for number_tile in range((number_seed)*chunk_size, (number_seed)*chunk_size + chunk_size):
+                    location_line.append(processed_map[number_line][number_tile])
+                new_global_location.chunk.append(location_line) 
+            new_global_line.append(new_global_location)
+        global_map.append(new_global_line)
+            
+    return global_map
 
 def all_gluing_map(raw_gluing_map, grid, count_block):
     """
         Склеивает чанки и локации в единое поле из "сырых" карт
+
+        grid - количество кластеров в одной стороне квадратной склеиваемой карты
+        count_block - количество сущностей на одной стороне квадратного кластера
     """
     
     value_region_box = grid * count_block
@@ -481,11 +488,11 @@ def all_map_master_generate(previous_map, grid, merge, seed_dict, number_in_list
                                     left_right_seed = random.choice(seed_dict[previous_map[number_line][number_region - 1]][number_in_list])
                                 elif number_point_map == (len(previous_map) - 1) and number_region < (len(previous_map) - 1): 
                                     left_right_seed = random.choice(seed_dict[previous_map[number_line][number_region + 1]][number_in_list])
-
                                 if random.randrange(11)//2 > 0: # Настройка шанса смешения
                                     number_new_seed = merge_description_for_generator(number_new_seed, top_down_seed)
                                 if random.randrange(11)//2 > 0: # Настройка шанса смешения
                                     number_new_seed = merge_description_for_generator(number_new_seed, left_right_seed)
+                                
                         else: # Описание из предыдущей карты
                             number_new_seed = random.choice(previous_map[number_line][number_region][number_in_list])
                             if merge:
@@ -503,6 +510,8 @@ def all_map_master_generate(previous_map, grid, merge, seed_dict, number_in_list
                                     number_new_seed = merge_description_for_generator(number_new_seed, top_down_seed)
                                 if random.randrange(11)//2 > 0: # Настройка шанса смешения
                                     number_new_seed = merge_description_for_generator(number_new_seed, left_right_seed)
+                                if type(number_new_seed) == list:
+                                    print(number_new_seed)
                         point_map_line.append(number_new_seed)
                             
                         
@@ -545,8 +554,41 @@ def merge_description_for_generator(description_one, description_two):
         description_one = random.choice([description_one, description_two])
     return description_one
 
+def print_map(printing_map):
+    """
+    Инструмент на время разработки, для наглядного отображения получившейся карты.
+    """
+    
+    if type(printing_map[0][0]) == list:
+        test_print = ''
+        for number_line in range(len(printing_map)):
+            for number_tile in range(len(printing_map[number_line])):
+                test_print += str(printing_map[number_line][number_tile][0]) + ' '
+            test_print += '\n'
+        print(test_print)
+
+    elif isinstance(printing_map[0][0], Tile):
+        test_print = ''
+        for number_line in range(len(printing_map)):
+            for number_tile in range(len(printing_map[number_line])):
+                #test_print += str(printing_map[number_line][number_tile].icon) + str(printing_map[number_line][number_tile].type)
+                test_print += str(printing_map[number_line][number_tile].icon) + str(abs(printing_map[number_line][number_tile].level))
+                #test_print += ' ' + str(abs(printing_map[number_line][number_tile].level))
+            test_print += '\n'
+        print(test_print)
+    else:
+        test_print = ''
+        for number_line in range(len(printing_map)):
+            for number_tile in range(len(printing_map[number_line])):
+                test_print += str(printing_map[number_line][number_tile]) + ' '
+            test_print += '\n'
+        print(test_print)
 
 
-#                   global_region_grid | region_grid | chunks_grid | mini_region_grid | tile_field_grid
-master_map_generate(        3,                4,            3,            2,                 1)
+"""
+=========================================================================================================================================================
+"""
+
+#                                global_region_grid | region_grid | chunks_grid | mini_region_grid | tile_field_grid
+#global_map = master_map_generate(        2,                2,            2,            2,                 2)
 
