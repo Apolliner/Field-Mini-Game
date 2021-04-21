@@ -125,10 +125,17 @@ def master_map_generate(global_region_grid, region_grid, chunks_grid, mini_grid,
     all_class_tiles_map = convert_tiles_to_class(add_random_all_tiles_map, chunks_map)
     
     #Рассчёт уровней, склонов и лестниц
-    levelness_all_tiles_map = levelness_calculation(all_class_tiles_map, 2)
+    levelness_calculation(all_class_tiles_map, ('~', '▲', 'C'), False, False)
+    levelness_calculation(all_class_tiles_map, ('~', 'C'), True, False)
+    levelness_calculation(all_class_tiles_map, ('▲'), True, True)
+    levelness_calculation(all_class_tiles_map, ('▲'), True, False)
+    levelness_calculation(all_class_tiles_map, ('▲'), True, True)
+    levelness_calculation(all_class_tiles_map, ('▲'), True, False)
+    levelness_calculation(all_class_tiles_map, ('▲'), True, True)
+    levelness_calculation(all_class_tiles_map, ('▲'), True, True)
 
     #Разрезание глобальной карты на карту классов Location
-    ready_global_map = cutting_tiles_map(levelness_all_tiles_map, chunks_map)
+    ready_global_map = cutting_tiles_map(all_class_tiles_map, chunks_map)
 
     return ready_global_map
 
@@ -238,7 +245,7 @@ def add_random_tiles(processed_map, chunks_map):
     """
     chunk_size = len(processed_map)//len(chunks_map)
 
-    banned_list = ['~']
+    banned_list = ['~', '▲']
     
     for number_seed_line in range(len(chunks_map)):
         for number_seed in range(len(chunks_map[number_seed_line])):
@@ -265,128 +272,136 @@ def convert_tiles_to_class(processed_map, chunks_map):
     return new_class_tiles_map
 
 @timeit
-def levelness_calculation(processed_map, levelness):
+def levelness_calculation(processed_map, field_tiles_tuple, not_the_first_layer, random_pass):
     """
         Рассчёт уровней, склонов и лестниц. levelness - количество уровней.
+
+        not_the_first_layer кортеж тайлов, по которым производится рассчёт
+
+        not_the_first_layer - False если слой первый и единственный. True если слой расчитывается на предыдущем слое.
+
+        random_pass - При включении случайным образом пропускается повышение уровня тайлов
     """
     minus_level_list = ['~', 'C']
     plus_level_list = ['▲']
     stairs_list = ['O', 'A', 'P', 'B', 'Q', 'C', 'R', 'D']
-    for level in range(levelness):
-        # Поднимание\опускание расчётного слоя на свою высоту.
-        detection = ['0']
-        if level != 0:
-            detection = ['1']
-        for number_line, line in enumerate(processed_map):
-            for number_tile, tile in enumerate(line):
-                if (tile.icon in ['▲', '~', 'C']) and tile.type in detection: #and random.randrange(500)//5 > 0: #Добавлена случайность срабатывания
-                    if tile.icon in plus_level_list:
-                        tile.level += 1
-                    elif tile.icon in minus_level_list:
-                        tile.level -= 1
-        # На рассчитанной высоте, определяются склоны.
-        for number_line, line in enumerate(processed_map):
-            for number_tile, tile in enumerate(line):
-                if (tile.icon in ['▲', '~', 'C']) and tile.type in ['0', '1']:
-                    change = False
-                    direction = {
+
+    # Поднимание\опускание расчётного слоя на свою высоту.
+    detection = ['0']
+    if not_the_first_layer:
+        detection = ['1']  
+    for number_line, line in enumerate(processed_map):
+        for number_tile, tile in enumerate(line):
+            not_pass = True
+            if random_pass and random.randrange(500)//490 > 0: #Добавлена случайность срабатывания
+                not_pass = False
+            if (tile.icon in field_tiles_tuple) and tile.type in detection and not_pass:
+                if tile.icon in plus_level_list:
+                    tile.level += 1
+                elif tile.icon in minus_level_list:
+                    tile.level -= 1
+    # На рассчитанной высоте, определяются склоны.
+    for number_line, line in enumerate(processed_map):
+        for number_tile, tile in enumerate(line):
+            if (tile.icon in field_tiles_tuple) and tile.type in ['0', '1']:
+                change = False
+                direction = {
                                     'up'   : False,
                                     'down' : False,
                                     'left' : False,
                                     'right': False,
-                                }
-                    if 0 < number_line < len(processed_map) - 1:
-                        if tile.icon == processed_map[number_line - 1][number_tile].icon and tile.level == processed_map[number_line - 1][number_tile].level:
-                                direction['up'] = True
-                        if tile.icon == processed_map[number_line + 1][number_tile].icon and tile.level == processed_map[number_line + 1][number_tile].level:
-                                direction['down'] = True
-                    if 0 < number_tile < len(line) - 1:
-                        if tile.icon == processed_map[number_line][number_tile - 1].icon and tile.level == processed_map[number_line][number_tile - 1].level:
-                                direction['left'] = True
-                        if tile.icon == processed_map[number_line][number_tile + 1].icon and tile.level == processed_map[number_line][number_tile + 1].level:
-                                direction['right'] = True
+                            }
+                if 0 < number_line < len(processed_map) - 1:
+                    if tile.icon == processed_map[number_line - 1][number_tile].icon and tile.level == processed_map[number_line - 1][number_tile].level:
+                        direction['up'] = True
+                    if tile.icon == processed_map[number_line + 1][number_tile].icon and tile.level == processed_map[number_line + 1][number_tile].level:
+                        direction['down'] = True
+                if 0 < number_tile < len(line) - 1:
+                    if tile.icon == processed_map[number_line][number_tile - 1].icon and tile.level == processed_map[number_line][number_tile - 1].level:
+                        direction['left'] = True
+                    if tile.icon == processed_map[number_line][number_tile + 1].icon and tile.level == processed_map[number_line][number_tile + 1].level:
+                        direction['right'] = True
 
-                    if direction['up'] and direction['down'] and direction['left'] and direction['right']:
-                        tile.type = '1'
-                    elif direction['up'] and not(direction['down']) and direction['left'] and direction['right']:
-                        if tile.type == '1':
-                            tile.type = 'G'
-                        else:
-                            tile.type = '2'
-                    elif direction['up'] and direction['down'] and not(direction['left']) and direction['right']:
-                        if tile.type == '1':
-                            tile.type = 'H'
-                        else:
-                            tile.type = '3'
-                    elif not(direction['up']) and direction['down'] and direction['left'] and direction['right']:
-                        if tile.type == '1':
-                            tile.type = 'I'
-                        else:
-                            tile.type = '4'
-                    elif direction['up'] and direction['down'] and direction['left'] and not(direction['right']):
-                        if tile.type == '1':
-                            tile.type = 'J'
-                        else:
-                            tile.type = '5'
-                    elif direction['up'] and not(direction['down']) and direction['left'] and not(direction['right']):
-                        if tile.type == '1':
-                            tile.type = 'K'
-                        else:
-                            tile.type = '6'
-                    elif direction['up'] and not(direction['down']) and not(direction['left']) and direction['right']:
-                        if tile.type == '1':
-                            tile.type = 'L'
-                        else:
-                            tile.type = '7'
-                    elif not(direction['up']) and direction['down'] and not(direction['left']) and direction['right']:
-                        if tile.type == '1':
-                            tile.type = 'M'
-                        else:
-                            tile.type = '8'
-                    elif not(direction['up']) and direction['down'] and direction['left'] and not(direction['right']):
-                        if tile.type == '1':
-                            tile.type = 'N'
-                        else:
-                            tile.type = '9'
-                    elif not(direction['up']) and not(direction['down']) and direction['left'] and not(direction['right']):
-                        if tile.type == '1':
-                            tile.type = 'O'
-                        else:
-                            tile.type = 'A'
-                    elif direction['up'] and not(direction['down']) and not(direction['left']) and not(direction['right']):
-                        if tile.type == '1':
-                            tile.type = 'P'
-                        else:
-                            tile.type = 'B'
-                    elif not(direction['up']) and not(direction['down']) and not(direction['left']) and direction['right']:
-                        if tile.type == '1':
-                            tile.type = 'Q'
-                        else:
-                            tile.type = 'C'
-                    elif not(direction['up']) and direction['down'] and not(direction['left']) and not(direction['right']):
-                        if tile.type == '1':
-                            tile.type = 'R'
-                        else:
-                            tile.type = 'D'
-                    elif not(direction['up']) and not(direction['down']) and direction['left'] and direction['right']:
-                        if tile.type == '1':
-                            tile.type = 'S'
-                        else:
-                            tile.type = 'E'
-                    elif direction['up'] and direction['down'] and not(direction['left']) and not(direction['right']):
-                        if tile.type == '1':
-                            tile.type = 'T'
-                        else:
-                            tile.type = 'F'
+                if direction['up'] and direction['down'] and direction['left'] and direction['right']:
+                    tile.type = '1'
+                elif direction['up'] and not(direction['down']) and direction['left'] and direction['right']:
+                    if tile.type == '1':
+                        tile.type = 'G'
                     else:
-                        if tile.type == '1':
-                            tile.type = 'U'
-                        else:
-                            tile.type = '0'
+                        tile.type = '2'
+                elif direction['up'] and direction['down'] and not(direction['left']) and direction['right']:
+                    if tile.type == '1':
+                        tile.type = 'H'
+                    else:
+                        tile.type = '3'
+                elif not(direction['up']) and direction['down'] and direction['left'] and direction['right']:
+                    if tile.type == '1':
+                        tile.type = 'I'
+                    else:
+                        tile.type = '4'
+                elif direction['up'] and direction['down'] and direction['left'] and not(direction['right']):
+                    if tile.type == '1':
+                        tile.type = 'J'
+                    else:
+                        tile.type = '5'
+                elif direction['up'] and not(direction['down']) and direction['left'] and not(direction['right']):
+                    if tile.type == '1':
+                        tile.type = 'K'
+                    else:
+                        tile.type = '6'
+                elif direction['up'] and not(direction['down']) and not(direction['left']) and direction['right']:
+                    if tile.type == '1':
+                        tile.type = 'L'
+                    else:
+                        tile.type = '7'
+                elif not(direction['up']) and direction['down'] and not(direction['left']) and direction['right']:
+                    if tile.type == '1':
+                        tile.type = 'M'
+                    else:
+                        tile.type = '8'
+                elif not(direction['up']) and direction['down'] and direction['left'] and not(direction['right']):
+                    if tile.type == '1':
+                        tile.type = 'N'
+                    else:
+                        tile.type = '9'
+                elif not(direction['up']) and not(direction['down']) and direction['left'] and not(direction['right']):
+                    if tile.type == '1':
+                        tile.type = 'O'
+                    else:
+                        tile.type = 'A'
+                elif direction['up'] and not(direction['down']) and not(direction['left']) and not(direction['right']):
+                    if tile.type == '1':
+                        tile.type = 'P'
+                    else:
+                        tile.type = 'B'
+                elif not(direction['up']) and not(direction['down']) and not(direction['left']) and direction['right']:
+                    if tile.type == '1':
+                        tile.type = 'Q'
+                    else:
+                        tile.type = 'C'
+                elif not(direction['up']) and direction['down'] and not(direction['left']) and not(direction['right']):
+                    if tile.type == '1':
+                        tile.type = 'R'
+                    else:
+                        tile.type = 'D'
+                elif not(direction['up']) and not(direction['down']) and direction['left'] and direction['right']:
+                    if tile.type == '1':
+                        tile.type = 'S'
+                    else:
+                        tile.type = 'E'
+                elif direction['up'] and direction['down'] and not(direction['left']) and not(direction['right']):
+                    if tile.type == '1':
+                        tile.type = 'T'
+                    else:
+                        tile.type = 'F'
+                else:
+                    if tile.type == '1':
+                        tile.type = 'U'
+                    else:
+                        tile.type = '0'
 
-                    if tile.type in stairs_list:
-                        tile.stairs = True
-    return processed_map
+                if tile.type in stairs_list:
+                    tile.stairs = True
 
 def cutting_tiles_map(processed_map, chunks_map):
     """
