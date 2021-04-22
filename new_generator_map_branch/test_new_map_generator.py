@@ -24,10 +24,12 @@ import copy
     5)Адекватность генерации супер биомов друг рядом с другом. Возможно, сначала должен идти выбор главных, не соприкасающихся друг с другом
       супер биомов, а ведомые супер биомы подстраиваются под них.
     6)Настройку количества слоёв для каждого типа тайла
+    7)Добавление нарисованых заранее кусков карт
     
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-""" 
+"""
+
 
 class Tile:
     """ Содержит изображение, описание, особое содержание тайла, стоимость передвижения, тип, высоту и лестницу """
@@ -120,6 +122,8 @@ def master_map_generate(global_region_grid, region_grid, chunks_grid, mini_grid,
     
     #Добавление тайлов из списка рандомного заполнения
     add_random_all_tiles_map = add_random_tiles(all_tiles_map, chunks_map)
+
+    add_draw_location(add_random_all_tiles_map, chunks_map)
     
     #Конвертирование тайлов в класс
     all_class_tiles_map = convert_tiles_to_class(add_random_all_tiles_map, chunks_map)
@@ -139,6 +143,32 @@ def master_map_generate(global_region_grid, region_grid, chunks_grid, mini_grid,
 
     return ready_global_map
 
+
+def add_draw_location(processed_map, chunks_map):
+    """
+        Добавляет заранее нарисованную локацию на карту
+    """
+    chunk_size = len(processed_map)//len(chunks_map)
+    draw_number_line = 100
+    draw_number_tile = 100
+    
+    file_draw_map = open("new_generator_map_branch\draw_map\hills_1.txt", encoding="utf-8") #new_generator_map_branch\
+    raw_draw_map = file_draw_map.read().splitlines()
+    draw_map = []
+
+    for line in raw_draw_map:
+        map_line = []
+        for tile in line:
+            map_line.append(tile)
+        draw_map.append(map_line)
+
+
+    for number_line in range(draw_number_line, (draw_number_line + len(draw_map))):
+        for number_tile in range(draw_number_line, (draw_number_tile + len(draw_map) - 4)):
+            try:
+                processed_map[number_line][number_tile] = draw_map[number_line - draw_number_line - 1][number_tile - draw_number_tile - 1]
+            except IndexError:
+                print(F"len(draw_map) - {len(draw_map)}, len(processed_map) - {len(processed_map)}, number_line - {number_line}, number_tile - {number_line}")
 
 @timeit
 def global_region_generate(global_grid):
