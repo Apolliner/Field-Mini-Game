@@ -12,7 +12,7 @@ from new_generator_map_branch import old_map_generator
 garbage = ['░', '▒', '▓', '█', '☺']
 
 """
-    ВЕРСИЯ ДЛЯ ОТРАБОТКИ ВЫВОДА В PYGAME
+    ВЕРСИЯ ДЛЯ ОТРАБОТКИ ВЫВОДА В PYGAME С ПОДКЛЮЧЕНИЕМ КАК СТАРОГО ТАК И НОВОГО ГЕНЕРАТОРА
 
 
     РЕАЛИЗОВАТЬ:
@@ -24,7 +24,9 @@ garbage = ['░', '▒', '▓', '█', '☺']
     4)Изменить вывод изображения таим образом, что бы получить возможность плавного передвижения между тайлами.
     5)Осмысленную генерацию гор и водоёмов. Горы должны иметь несколько пиков.
     6)Добавить уровни высоты. Переходить по уровням высоты можно только по определённым тайлам.
-    7)ПОпробовать генерировать горы от обратного. Сначала определять пики и их высоту, а потом опускать вниз, добавляя случайные тайлы.
+    7)Попробовать генерировать горы от обратного. Сначала определять пики и их высоту, а потом опускать вниз, добавляя случайные тайлы.
+    8)Изменение оттенка тайла в зависимости от высоты
+    9)Попробовать добавить нарисованные самостоятельно горы
 
 
     ТРЕБОВАНИЯ К ПОСТГЕНЕРАТОРУ, ОПРЕДЕЛЯЮЩЕМУ ОДНОРОДНОСТЬ ТАЙЛОВОГО ПОЛЯ И МУЛЬТИВЫСОТНОСТЬ:
@@ -164,7 +166,9 @@ class Tile:
                         'P': ['раскидистое дерево', 1],
                         '~': ['солёная вода', 20],
                         'C': ['каньон', 20],
-                        '??': ['ничего', 10],
+                        '??':['ничего', 10],
+                        '0': ['пусто', 0],
+                        '☺': ['персонаж', 0],
                         }
         return ground_dict[icon][number]
 
@@ -190,6 +194,139 @@ def gluing_location(raw_gluing_map, grid, count_block):
                     count_location += 1
     return gluing_map
 
+class Tiles_image_dict:
+    """ Загрузка спрайтов """
+    def __init__(self):
+        self.dune_0 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dune_0.png'))
+        self.dune_1 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dune_1.png'))
+        self.sand = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_sand.png'))
+        self.dry_grass = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_grass.png'))
+        self.stones = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_stone.png'))
+        self.hills = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills.png'))
+        self.cactus = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_cactus.png'))
+        self.saline_1 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_saline_1.png'))
+        self.saline_2 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_saline_2.png'))
+        self.grass = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_grass.png'))
+        self.prickly_grass = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_prickly_grass.png'))
+        self.live_tree = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_live_tree.png'))
+        self.person = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_person.png'))
+        self.enemy_riffleman = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_enemy_riffleman.png'))
+        self.enemy_horseman = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_enemy_horseman.png'))
+        self.enemy_coyot = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_enemy_coyot.png'))
+        self.warning = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_warning.png'))
+        self.human_traces = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_human_traces.png'))
+        self.horse_traces = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_horse_traces.png'))
+        self.animal_traces = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_animal_traces.png'))
+        self.bonfire = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_bonfire.png'))
+        self.rest_stop = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_rest_stop.png'))
+        self.gnawed_bones = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_gnawed_bones.png'))
+        self.animal_rest_stop = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_animal_rest_stop.png'))
+        self.camp = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_camp.png'))
+        self.water_0 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_0.png'))
+        self.water_1 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_1.png'))
+        self.water_2 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_2.png'))
+        self.water_3 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_3.png'))
+        self.water_4 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_4.png'))
+        self.water_5 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_5.png'))
+        self.water_6 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_6.png'))
+        self.water_7 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_7.png'))
+        self.water_8 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_8.png'))
+        self.water_9 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_9.png'))
+        self.water_A = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_A.png'))
+        self.water_B = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_B.png'))
+        self.water_C = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_C.png'))
+        self.water_D = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_D.png'))
+        self.water_E = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_E.png'))
+        self.water_F = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_F.png'))
+        self.water_G = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_G.png'))
+        self.water_H = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_H.png'))
+        self.water_I = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_I.png'))
+        self.water_J = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_J.png'))
+        self.water_K = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_K.png'))
+        self.water_L = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_L.png'))
+        self.water_M = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_M.png'))
+        self.water_N = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_N.png'))
+        self.water_O = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_O.png'))
+        self.water_P = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_p.png'))
+        self.water_Q = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_Q.png'))
+        self.water_R = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_R.png'))
+        self.water_S = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_S.png'))
+        self.water_T = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_T.png'))
+        self.water_U = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_U.png'))
+        self.hills_0 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_0.png'))
+        self.hills_1 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_1.png'))
+        self.hills_2 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_2.png'))
+        self.hills_3 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_3.png'))
+        self.hills_4 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_4.png'))
+        self.hills_5 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_5.png'))
+        self.hills_6 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_6.png'))
+        self.hills_7 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_7.png'))
+        self.hills_8 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_8.png'))
+        self.hills_9 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_9.png'))
+        self.hills_A = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_A.png'))
+        self.hills_B = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_B.png'))
+        self.hills_C = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_C.png'))
+        self.hills_D = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_D.png'))
+        self.hills_E = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_E.png'))
+        self.hills_F = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_F.png'))
+        self.hills_G = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_G.png'))
+        self.hills_H = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_H.png'))
+        self.hills_I = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_I.png'))
+        self.hills_J = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_J.png'))
+        self.hills_K = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_K.png'))
+        self.hills_L = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_L.png'))
+        self.hills_M = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_M.png'))
+        self.hills_N = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_N.png'))
+        self.hills_O = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_O.png'))
+        self.hills_P = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_p.png'))
+        self.hills_Q = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_Q.png'))
+        self.hills_R = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_R.png'))
+        self.hills_S = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_S.png'))
+        self.hills_T = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_T.png'))
+        self.hills_U = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_U.png'))
+        self.bump_0 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_bump_0.png'))
+        self.bump_1 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_bump_1.png'))
+        self.dry_tree_0 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_tree_0.png'))
+        self.dry_tree_1 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_tree_1.png'))
+        self.dry_tree_2 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_tree_2.png'))
+        self.dry_tree_3 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_tree_3.png'))
+        self.dry_tree_4 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_tree_4.png'))
+        self.dry_tree_5 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_tree_5.png'))
+        self.dry_tree_6 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_tree_6.png'))
+        self.dry_tree_7 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_tree_7.png'))
+        self.tall_grass_0 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_tall_grass_0.png'))
+        self.tall_grass_1 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_tall_grass_1.png'))
+        self.canyons_0 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_0.png'))
+        self.canyons_1 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_1.png'))
+        self.canyons_2 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_2.png'))
+        self.canyons_3 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_3.png'))
+        self.canyons_4 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_4.png'))
+        self.canyons_5 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_5.png'))
+        self.canyons_6 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_6.png'))
+        self.canyons_7 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_7.png'))
+        self.canyons_8 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_8.png'))
+        self.canyons_9 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_9.png'))
+        self.canyons_A = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_A.png'))
+        self.canyons_B = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_B.png'))
+        self.canyons_C = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_C.png'))
+        self.canyons_D = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_D.png'))
+        self.canyons_E = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_E.png'))
+        self.canyons_F = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_F.png'))
+        self.canyons_G = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_G.png'))
+        self.canyons_H = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_H.png'))
+        self.canyons_I = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_I.png'))
+        self.canyons_J = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_J.png'))
+        self.canyons_K = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_K.png'))
+        self.canyons_L = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_L.png'))
+        self.canyons_M = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_M.png'))
+        self.canyons_N = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_N.png'))
+        self.canyons_O = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_O.png'))
+        self.canyons_P = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_p.png'))
+        self.canyons_Q = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_Q.png'))
+        self.canyons_R = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_R.png'))
+        self.canyons_S = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_S.png'))
+        self.canyons_T = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_T.png'))
+        self.canyons_U = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_U.png'))
             
 """
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -273,7 +410,7 @@ class Action_in_map:
         self.lifetime_description = ''
         self.description = f'{self.action_dict(1)} похоже на {self.caused}'
         self.visible = self.action_dict(3)
-        self.type = ' '
+        self.type = '0'
 
     def all_description(self):
         self.description = f'{self.lifetime_description} {self.action_dict(1)} похоже на {self.caused}'
@@ -341,7 +478,7 @@ class Horseman(Enemy):
         self.name_npc = random.choice(['Малыш Билли', 'Буффало Билл', 'Маленькая Верная Рука Энни Окли', 'Дикий Билл Хикок'])
         self.priority_biom = [',', '„', 'P']
         self.banned_biom = ['▲']
-        self.icon = '☻h'
+        self.icon = '☻'
         self.activity_map = {
                             'move': [['передвигается', 'horse_tracks', 0, 0]],
                             'hunger': [['перекусывает', 'rest_stop', 40, 5], ['готовит еду', 'bonfire', 80, 10]],
@@ -354,7 +491,7 @@ class Horseman(Enemy):
         self.fatigue = 100
         self.reserves = 10
         self.type_npc = 'hunter'
-        self.type = ''
+        self.type = 'h'
         self.pass_description = ''
         self.person_description = f"Знаменитый охотник за головами {self.name_npc}"
         self.description = ''
@@ -370,7 +507,7 @@ class Riffleman(Enemy):
         self.name_npc = random.choice(['Бедовая Джейн', 'Бутч Кэссиди', 'Сандэнс Кид', 'Черный Барт'])
         self.priority_biom = ['.', 'A', '▲']
         self.banned_biom = ['~']
-        self.icon = '☻r'
+        self.icon = '☻'
         self.activity_map = {
                             'move': [['передвигается', 'human_tracks', 0, 0]],
                             'hunger': [['перекусывает', 'rest_stop', 40, 5], ['готовит еду', 'bonfire', 80, 10]],
@@ -383,7 +520,7 @@ class Riffleman(Enemy):
         self.fatigue = 100
         self.reserves = 5
         self.type_npc = 'hunter'
-        self.type = ''
+        self.type = 'r'
         self.pass_description = ''
         self.person_description = f"Шериф одного мрачного города {self.name_npc}"
         self.description = ''
@@ -399,7 +536,7 @@ class Gold_digger(Enemy):
         self.name_npc = random.choice(['Бедовая Джейн', 'Бутч Кэссиди', 'Сандэнс Кид', 'Черный Барт'])
         self.priority_biom = ['.', 'A', '▲']
         self.banned_biom = ['~']
-        self.icon = '☻-'
+        self.icon = '☻'
         self.activity_map = {
                             'move': [['передвигается', 'human_tracks', 0, 0]],
                             'hunger': [['перекусывает', 'rest_stop', 40, 5], ['готовит еду', 'bonfire', 80, 10]],
@@ -412,7 +549,7 @@ class Gold_digger(Enemy):
         self.fatigue = 100
         self.reserves = 5
         self.type_npc = 'chaotic'
-        self.type = ''
+        self.type = '-'
         self.pass_description = ''
         self.person_description = f"Отчаяный золотоискатель {self.name_npc}"
         self.description = ''
@@ -428,7 +565,7 @@ class Horse(Enemy):
         self.name_npc = random.choice(['Стреноженая белая лошадь', 'Стреноженая гнедая лошадь', 'Стреноженая черная лошадь'])
         self.priority_biom = [',', '„', 'P']
         self.banned_biom = ['~', ';']
-        self.icon = 'ho'
+        self.icon = 'h'
         self.activity_map = {
                             'move': [['передвигается', 'horse_tracks', 0, 0]],
                             'hunger': [['ест траву', 'horse_tracks', 80, 5]],
@@ -441,7 +578,7 @@ class Horse(Enemy):
         self.fatigue = 100
         self.reserves = 0
         self.type_npc = 'chaotic'
-        self.type = ''
+        self.type = '0'
         self.pass_description = ''
         self.person_description = f"{self.name_npc}"
         self.description = ''
@@ -457,7 +594,7 @@ class Coyot(Enemy):
         self.name_npc = random.choice(['плешивый койот', 'молодой койот', 'подраный койот'])
         self.priority_biom = ['.', ',', '„', 'P', 'A']
         self.banned_biom = ['~', ';']
-        self.icon = 'co'
+        self.icon = 'c'
         self.activity_map = {
                             'move': [['передвигается', 'animal_traces', 0, 0]],
                             'hunger': [['охотится', 'gnawed bones', 80, 15], ['ест', 'animal_traces', 30, 10]],
@@ -470,7 +607,7 @@ class Coyot(Enemy):
         self.fatigue = 200
         self.reserves = 0
         self.type_npc = 'chaotic'
-        self.type = ''
+        self.type = '0'
         self.pass_description = ''
         self.person_description = f"Голодный и злой {self.name_npc}"
         self.description = ''
@@ -1437,211 +1574,6 @@ def request_processing(pressed_button):
     """
     pass
 
-"""
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-    ФОРМИРОВАНИЕ БЛОКОВ ДЛЯ ВЫВОДА НА ЭКРАН
-
-    Работает с классом Interfase, содержащимся в go_to_print
-        
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-"""      
-
-def progress_bar(percent, description):
-    """
-        Отображает вывод на экран прогресс бара
-    """
-    os.system('cls' if os.name == 'nt' else 'clear')
-    progress = description + '\n['
-    for five_percent in range(percent//2):
-        progress += '█'
-    for empty_percent in range((50 - percent//2)):
-        progress += '░'
-    progress += ']'
-
-    print(progress)
-
-
-def print_minimap(global_map, person, go_to_print, enemy_list):
-    """
-        Печатает упрощенную схему глобальной карты по биомам
-    """
-
-    minimap = []
-    for number_line in range(len(global_map)):
-        print_line = ''
-        for biom in range(len(global_map[number_line])):
-            enemy_here = '--'
-            for enemy in range(len(enemy_list)):
-                if number_line == enemy_list[enemy].global_position[0] and biom == enemy_list[enemy].global_position[1]:
-                    enemy_here = enemy_list[enemy].icon
-            if number_line == person.global_position[0] and biom == person.global_position[1]:
-                go_to_print.text2 = global_map[number_line][biom].name
-                go_to_print.text3 = [global_map[number_line][biom].temperature, 36.6]
-                print_line += '☺'
-            elif enemy_here != '--':
-                print_line += enemy_here
-            else:
-                print_line += global_map[number_line][biom].icon + ''
-        minimap.append((print_line))
-    go_to_print.biom_map = minimap
-
-def print_help(go_to_print):
-    help_dict = ['**************************************************',
-                 '*                 ОБЫЧНЫЙ РЕЖИМ                  *',
-                 '*                                                *',
-                 '* wasd - управление персонажем;                  *',
-                 '* m - ВКЛ/ВЫКЛ миникарта биомов;                 *',
-                 '* k - ВКЛ/ВЫКЛ режим курсора;                    *',
-                 '* g - ВКЛ/ВЫКЛ режим прицеливания;               *',
-                 '*                                                *',
-                 '*                                                *',
-                 '*                ТЕСТОВЫЙ РЕЖИМ                  *',
-                 '*                                                *',
-                 '* t - ВКЛ/ВЫКЛ тестовый режим перемещения;       *',
-                 '* p - назначение точки прибытия для hunter NPC;  *',
-                 '* m - установка тестового маяка;                 *',
-                 '* v - ВКЛ/ВЫКЛ отображение скрытых следов        *',
-                 '*                                                *',
-                 '*                                                *',
-                 '*                                                *',
-                 '*                                                *',
-                 '*                                                *',
-                 '*                                                *',
-                 '*                                                *',
-                 '*                                                *',
-                 '*                                                *',
-                 '**************************************************'
-                 ]
-
-    go_to_print.biom_map = help_dict
-
-
-def draw_field_calculations(person:list, views_field_size:int, go_to_print):
-    """
-        Формирует изображение игрового поля на печать
-    """
-    
-    half_views = (views_field_size//2)
-    start_stop = [(person.dynamic[0] - half_views), (person.dynamic[1] - half_views),
-                  (person.dynamic[0] + half_views + 1),(person.dynamic[1] + half_views + 1)]
-    line_views = person.chunks_use_map[start_stop[0]:start_stop[2]]
-
-    go_to_print.point_to_draw = [(person.dynamic[0] - half_views), (person.dynamic[1] - half_views)]
-    
-    draw_field = []
-    for line in line_views:
-        line_icon = []
-        line = line[start_stop[1]:start_stop[3]]
-        for tile in line:
-            line_icon.append(tile)
-        draw_field.append(line_icon)
-    return draw_field
-
-def draw_additional_entities(person, chunk_size:int, go_to_print, enemy_list, activity_list):
-    """
-        Отрисовывает на динамическом чанке дополнительные статические сущности
-    """
-    
-    for activity in activity_list:
-        if activity.visible or person.test_visible:
-            if activity.global_position[0] == person.assemblage_point[0] and activity.global_position[1] == person.assemblage_point[1]:
-                person.chunks_use_map[activity.local_position[0]][activity.local_position[1]] = activity
-                if activity.icon == 'B':
-                    print(f'Для тестового маяка сработало условие отображения 1')
-            
-            elif activity.global_position[0] == person.assemblage_point[0] and activity.global_position[1] == person.assemblage_point[1] + 1:
-                person.chunks_use_map[activity.local_position[0]][activity.local_position[1] + chunk_size] = activity
-                if activity.icon == 'B':
-                    print(f'Для тестового маяка сработало условие отображения 2')
-            
-            elif activity.global_position[0] == person.assemblage_point[0] + 1 and activity.global_position[1] == person.assemblage_point[1]:
-                person.chunks_use_map[activity.local_position[0] + chunk_size][activity.local_position[1]] = activity
-                if activity.icon == 'B':
-                    print(f'Для тестового маяка сработало условие отображения 3')
-            
-            elif activity.global_position[0] == person.assemblage_point[0] + 1 and activity.global_position[1] == person.assemblage_point[1] + 1:
-                person.chunks_use_map[activity.local_position[0] + chunk_size][activity.local_position[1] + chunk_size] = activity
-                if activity.icon == 'B':
-                    print(f'Для тестового маяка сработало условие отображения 4')
-
-    for enemy in enemy_list:
-        if enemy.global_position in person.check_encounter_position:
-            if (0 <= enemy.dynamic_chunk_position[0] < chunk_size * 2) and (0 <= enemy.dynamic_chunk_position[1] < chunk_size * 2 - 2):
-                person.chunks_use_map[enemy.dynamic_chunk_position[0]][enemy.dynamic_chunk_position[1]] = enemy
-                               
-
-def master_draw(person, chunk_size:int, go_to_print, global_map, mode_action, enemy_list, activity_list):
-    """
-        Формирует итоговое изображение игрового поля для вывода на экран
-    """
-    if go_to_print.minimap_on:
-        print_minimap(global_map, person, go_to_print, enemy_list)
-    else:
-        print_help(go_to_print)
-
-    draw_additional_entities(person, chunk_size, go_to_print, enemy_list, activity_list)
-
-    draw_field = draw_field_calculations(person, chunk_size, go_to_print)
-
-    draw_box = []
-    pointer_vision = Tile('??')
-    for line in range(len(draw_field)):
-        print_line = []
-        for tile in range(len(draw_field)):
-            if line == chunk_size//2 and tile == chunk_size//2:
-                ground = draw_field[line][tile].description
-                print_line.append('☺ ')
-            else:
-                print_line.append(draw_field[line][tile].icon + draw_field[line][tile].type)
-                
-        draw_box.append(print_line)
-    go_to_print.game_field = draw_box
-    go_to_print.text1 = (f"{person.assemblage_point} - Позиция точки сборки \n {person.global_position} - глобальная позиция \n {person.dynamic} - динамическая позиция \n под ногами: {ground}")
-    go_to_print.text4 = pointer_vision.description
-    
-"""
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-    ИНТЕРФЕЙС И ВЫВОД ИТОГОВОГО ИЗОБРАЖЕНИЯ НА ЭКРАН
-        
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-"""
-
-def print_frame(go_to_print, frame_size, activity_list):
-    """
-        Отвечает за итоговый вывод содержимого на экран
-    """
-
-    raw_frame = []
-    
-    for line in range(frame_size[0]):
-        raw_frame.append('')
-    
-    for line in range(len(go_to_print.game_field)): #Добавление изображения с игрового экрана
-        raw_frame[(line + 3)] += '      ' + go_to_print.game_field[line]
-
-    for line in range(len(go_to_print.biom_map)): #Добавление изображения миникарты или помощи
-        raw_frame[(line + 3)] += '      ' + go_to_print.biom_map[line]
-
-    raw_frame[4+len(go_to_print.game_field)] += '   ' + str(go_to_print.text1)
-
-    raw_frame[5+len(go_to_print.game_field)] += '   Вы видите ' + str(go_to_print.text4)
-
-    raw_frame[6+len(go_to_print.game_field)] += '   Вы находитесь в ' + str(go_to_print.text2)
-
-    if go_to_print.minimap_on:
-        raw_frame[7+len(go_to_print.game_field)] += f'   Температура среды: {str(go_to_print.text3[0][0])} градусов. Температура персонажа: {str(go_to_print.text3[1])} градусов'
-    raw_frame[8+len(go_to_print.game_field)] += str(go_to_print.text5)
-    raw_frame[8+len(go_to_print.game_field)] += 'на карте: ' + str(len(activity_list)) + ' активностей'
-    
-    frame = ''
-    for line in raw_frame:
-        frame += line + '\n'
-    os.system('cls' if os.name == 'nt' else 'clear')
-    print(frame)
 
 """
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1692,293 +1624,350 @@ def new_step_calculation(enemy_list, person, step):
 """
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-    Обработка PyGame
+    ФОРМИРОВАНИЕ БЛОКОВ ДЛЯ ВЫВОДА НА ЭКРАН ЧЕРЕЗ PYGAME
+
         
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 """
-class Tiles_image_dict:
-    """ Загрузка спрайтов """
-    def __init__(self):
-        self.dune_0 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dune_0.png'))
-        self.dune_1 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dune_1.png'))
-        self.sand = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_sand.png'))
-        self.dry_grass = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_grass.png'))
-        self.stones = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_stone.png'))
-        self.hills = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills.png'))
-        self.cactus = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_cactus.png'))
-        self.saline_1 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_saline_1.png'))
-        self.saline_2 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_saline_2.png'))
-        self.grass = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_grass.png'))
-        self.prickly_grass = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_prickly_grass.png'))
-        self.live_tree = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_live_tree.png'))
-        self.person = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_person.png'))
-        self.enemy_riffleman = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_enemy_riffleman.png'))
-        self.enemy_horseman = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_enemy_horseman.png'))
-        self.enemy_coyot = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_enemy_coyot.png'))
-        self.warning = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_warning.png'))
-        self.human_traces = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_human_traces.png'))
-        self.horse_traces = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_horse_traces.png'))
-        self.animal_traces = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_animal_traces.png'))
-        self.bonfire = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_bonfire.png'))
-        self.rest_stop = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_rest_stop.png'))
-        self.gnawed_bones = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_gnawed_bones.png'))
-        self.animal_rest_stop = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_animal_rest_stop.png'))
-        self.camp = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_camp.png'))
-        self.water_0 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_0.png'))
-        self.water_1 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_1.png'))
-        self.water_2 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_2.png'))
-        self.water_3 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_3.png'))
-        self.water_4 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_4.png'))
-        self.water_5 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_5.png'))
-        self.water_6 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_6.png'))
-        self.water_7 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_7.png'))
-        self.water_8 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_8.png'))
-        self.water_9 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_9.png'))
-        self.water_A = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_A.png'))
-        self.water_B = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_B.png'))
-        self.water_C = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_C.png'))
-        self.water_D = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_D.png'))
-        self.water_E = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_E.png'))
-        self.water_F = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_F.png'))
-        self.water_G = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_G.png'))
-        self.water_H = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_H.png'))
-        self.water_I = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_I.png'))
-        self.water_J = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_J.png'))
-        self.water_K = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_K.png'))
-        self.water_L = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_L.png'))
-        self.water_M = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_M.png'))
-        self.water_N = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_N.png'))
-        self.water_O = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_O.png'))
-        self.water_P = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_p.png'))
-        self.water_Q = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_Q.png'))
-        self.water_R = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_R.png'))
-        self.water_S = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_S.png'))
-        self.water_T = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_T.png'))
-        self.water_U = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_U.png'))
-        self.hills_0 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_0.png'))
-        self.hills_1 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_1.png'))
-        self.hills_2 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_2.png'))
-        self.hills_3 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_3.png'))
-        self.hills_4 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_4.png'))
-        self.hills_5 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_5.png'))
-        self.hills_6 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_6.png'))
-        self.hills_7 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_7.png'))
-        self.hills_8 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_8.png'))
-        self.hills_9 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_9.png'))
-        self.hills_A = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_A.png'))
-        self.hills_B = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_B.png'))
-        self.hills_C = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_C.png'))
-        self.hills_D = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_D.png'))
-        self.hills_E = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_E.png'))
-        self.hills_F = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_F.png'))
-        self.hills_G = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_G.png'))
-        self.hills_H = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_H.png'))
-        self.hills_I = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_I.png'))
-        self.hills_J = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_J.png'))
-        self.hills_K = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_K.png'))
-        self.hills_L = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_L.png'))
-        self.hills_M = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_M.png'))
-        self.hills_N = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_N.png'))
-        self.hills_O = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_O.png'))
-        self.hills_P = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_p.png'))
-        self.hills_Q = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_Q.png'))
-        self.hills_R = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_R.png'))
-        self.hills_S = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_S.png'))
-        self.hills_T = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_T.png'))
-        self.hills_U = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_U.png'))
-        self.bump_0 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_bump_0.png'))
-        self.bump_1 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_bump_1.png'))
-        self.dry_tree_0 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_tree_0.png'))
-        self.dry_tree_1 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_tree_1.png'))
-        self.dry_tree_2 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_tree_2.png'))
-        self.dry_tree_3 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_tree_3.png'))
-        self.dry_tree_4 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_tree_4.png'))
-        self.dry_tree_5 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_tree_5.png'))
-        self.dry_tree_6 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_tree_6.png'))
-        self.dry_tree_7 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_tree_7.png'))
-        self.tall_grass_0 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_tall_grass_0.png'))
-        self.tall_grass_1 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_tall_grass_1.png'))
-        self.canyons_0 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_0.png'))
-        self.canyons_1 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_1.png'))
-        self.canyons_2 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_2.png'))
-        self.canyons_3 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_3.png'))
-        self.canyons_4 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_4.png'))
-        self.canyons_5 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_5.png'))
-        self.canyons_6 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_6.png'))
-        self.canyons_7 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_7.png'))
-        self.canyons_8 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_8.png'))
-        self.canyons_9 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_9.png'))
-        self.canyons_A = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_A.png'))
-        self.canyons_B = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_B.png'))
-        self.canyons_C = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_C.png'))
-        self.canyons_D = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_D.png'))
-        self.canyons_E = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_E.png'))
-        self.canyons_F = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_F.png'))
-        self.canyons_G = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_G.png'))
-        self.canyons_H = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_H.png'))
-        self.canyons_I = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_I.png'))
-        self.canyons_J = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_J.png'))
-        self.canyons_K = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_K.png'))
-        self.canyons_L = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_L.png'))
-        self.canyons_M = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_M.png'))
-        self.canyons_N = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_N.png'))
-        self.canyons_O = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_O.png'))
-        self.canyons_P = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_p.png'))
-        self.canyons_Q = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_Q.png'))
-        self.canyons_R = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_R.png'))
-        self.canyons_S = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_S.png'))
-        self.canyons_T = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_T.png'))
-        self.canyons_U = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_U.png'))
+def test_print(layer):
+    """
+        Печатает слои
+    """
+    print_map = ''
+    for line in layer:
+        for tile in line:
+            print_map += tile.icon + ' '
+        print_map += '\n'
+    print(print_map)
+            
+
+def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action, enemy_list, activity_list, screen, tiles_image_dict):
+    """
+        Работает с классом Interfase, содержащимся в go_to_print
+
+        Формирует 4 слоя итогового изображения:
+            1) Ландшафт
+            2) Следы активностей
+            3) Персонажи
+            4) Небо (опционально)
+
+        Отрисовывает в следующем порядке:
+            1) Ландшафт
+            2) Следы активностей
+            3) Персонажи
+            4) Персонаж игрока
+            5) Небо (опционально)
+    """
+    landscape_layer = landscape_layer_calculations(person, chunk_size, go_to_print)
+    activity_layer = activity_layer_calculations(person, chunk_size, go_to_print, enemy_list, activity_list)
+    entities_layer = entities_layer_calculations(person, chunk_size, go_to_print, enemy_list, activity_list)
+    sky_layer = sky_layer_calculations(chunk_size)
+
+
+    test_print(landscape_layer)
+    test_print(activity_layer)
+    test_print(entities_layer)
+    test_print(sky_layer)
+
+
+    
+    size_tile = 30 # Настройка размера тайлов игрового окна
+    #size_tile_minimap = 10 # Настройка размера тайлов миникаты
+    
+    all_sprites = pygame.sprite.Group()
+
+
+    for number_line in range(chunk_size):
+        for number_tile in range(chunk_size):
+            all_sprites.add(Image_tile(number_tile*size_tile, number_line*size_tile, size_tile, landscape_layer[number_line][number_tile], tiles_image_dict))
+
+    for number_line in range(chunk_size):
+        for number_tile in range(chunk_size):
+            if activity_layer[number_line][number_tile].icon != '0':
+                all_sprites.add(Image_tile(number_tile*size_tile, number_line*size_tile, size_tile, activity_layer[number_line][number_tile], tiles_image_dict))
+
+    for number_line in range(chunk_size):
+        for number_tile in range(chunk_size):
+            if activity_layer[number_line][number_tile].icon != '0':
+                all_sprites.add(Image_tile(number_tile*size_tile, number_line*size_tile, size_tile, entities_layer[number_line][number_tile], tiles_image_dict))
+
+    all_sprites.add(Image_tile(chunk_size//2*size_tile, chunk_size//2*size_tile, size_tile, Tile('☺'), tiles_image_dict))
+
+
+    for number_line in range(chunk_size):
+        for number_tile in range(chunk_size):
+            if activity_layer[number_line][number_tile].icon != '0':
+                all_sprites.add(Image_tile(number_tile*size_tile, number_line*size_tile, size_tile, sky_layer[number_line][number_tile], tiles_image_dict))       
+                
+    all_sprites.draw(screen)
+    pygame.display.flip()
+
+def landscape_layer_calculations(person, chunk_size, go_to_print):
+    """
+        Формирует изображение ландшафта на печать
+    """
+    
+    half_views = (chunk_size//2)
+    start_stop = [(person.dynamic[0] - half_views), (person.dynamic[1] - half_views),
+                  (person.dynamic[0] + half_views + 1),(person.dynamic[1] + half_views + 1)]
+    line_views = person.chunks_use_map[start_stop[0]:start_stop[2]]
+
+    go_to_print.point_to_draw = [(person.dynamic[0] - half_views), (person.dynamic[1] - half_views)]
+    
+    landscape_layer = []
+    for line in line_views:
+        new_line = []
+        line = line[start_stop[1]:start_stop[3]]
+        for tile in line:
+            new_line.append(tile)
+        landscape_layer.append(new_line)
+    return landscape_layer
+
+def activity_layer_calculations(person, chunk_size:int, go_to_print, enemy_list, activity_list):
+    """
+        Отрисовывает слой активностей
+    """
+    go_draw_activity = []
+    for activity in activity_list:
+        if activity.visible or person.test_visible:
+            if activity.global_position[0] == person.assemblage_point[0] and activity.global_position[1] == person.assemblage_point[1]:
+                go_draw_activity.append([activity.local_position[0], activity.local_position[1], activity])
+
+            elif activity.global_position[0] == person.assemblage_point[0] and activity.global_position[1] == person.assemblage_point[1] + 1:
+                go_draw_activity.append([activity.local_position[0], activity.local_position[1] + chunk_size, activity])
+
+            elif activity.global_position[0] == person.assemblage_point[0] + 1 and activity.global_position[1] == person.assemblage_point[1]:
+                go_draw_activity.append([activity.local_position[0] + chunk_size, activity.local_position[1], activity])
+
+            elif activity.global_position[0] == person.assemblage_point[0] + 1 and activity.global_position[1] == person.assemblage_point[1] + 1:
+                go_draw_activity.append([activity.local_position[0] + chunk_size, activity.local_position[1] + chunk_size, activity])
+
+    activity_layer = []
+    for number_line in range(chunk_size):
+        new_line = []
+        for number_tile in range(chunk_size):
+            no_changes = True
+            for activity in go_draw_activity:
+                if number_line == activity[0] and number_tile == activity[1]:
+                    new_line.append(activity[2])
+                    no_changes = False
+                    break
+            if no_changes:
+                new_line.append(Tile('0'))
+        activity_layer.append(new_line)
+
+    return activity_layer
+                
+
+
+def entities_layer_calculations(person, chunk_size, go_to_print, enemy_list, activity_list):
+    """
+        Отрисовывает персонажей
+    """
+    go_draw_entities = []
+    for enemy in enemy_list:
+        if enemy.global_position in person.check_encounter_position:
+            if (0 <= enemy.dynamic_chunk_position[0] < chunk_size * 2) and (0 <= enemy.dynamic_chunk_position[1] < chunk_size * 2 - 2):
+                go_draw_entities.append([enemy.dynamic_chunk_position[0], enemy.dynamic_chunk_position[1], enemy])
+
+    entities_layer = []
+    for number_line in range(chunk_size):
+        new_line = []
+        for number_tile in range(chunk_size):
+            no_changes = True
+            for entitie in go_draw_entities:
+                if number_line == entitie[0] and number_tile == entitie[1]:
+                    new_line.append(entitie[2])
+                    no_changes = False
+                    break
+            if no_changes:
+                new_line.append(Tile('0'))
+        entities_layer.append(new_line)
+
+    return entities_layer
 
 
 
+def sky_layer_calculations(chunk_size):
+    """
+        Отрисовывает сущности на небе. Пока что создаёт карту-пустышку.
+    """
+    sky_layer = []
+    for number_line in range(chunk_size):
+        new_line = []
+        for number_tile in range(chunk_size):
+            new_line.append(Tile('0'))
+        sky_layer.append(new_line)
+    return sky_layer
         
+
+
+
+
+
+
 class Image_tile(pygame.sprite.Sprite):
     """ Содержит спрайт и его кординаты на экране """
-    def __init__(self, x, y, size_tile, icon, tiles_image_dict):
+    def __init__(self, x, y, size_tile, tile, tiles_image_dict):
         pygame.sprite.Sprite.__init__(self)
-        self.image = self.image_dict(icon, tiles_image_dict)
+        self.image = self.image_dict(tile, tiles_image_dict)
         self.sized_image = pygame.transform.flip(self.image, True, False)
         self.rect = self.sized_image.get_rect()
         self.rect.left = x
         self.rect.top = y
         self.speed = 0
 
-    def image_dict(self, icon, tiles_image_dict):
+    def image_dict(self, tile, tiles_image_dict):
 
         image_dict =   {
-                        'j0': tiles_image_dict.dune_0,
-                        'j1': tiles_image_dict.dune_1,
-                        '.0': tiles_image_dict.sand,
-                        ',0': tiles_image_dict.dry_grass,
-                        'o0': tiles_image_dict.stones,
-                        'A0': tiles_image_dict.bump_0,
-                        'A1': tiles_image_dict.bump_1,
-                        '▲0': tiles_image_dict.hills_0,
-                        '▲1': tiles_image_dict.hills_1,
-                        '▲2': tiles_image_dict.hills_2,
-                        '▲3': tiles_image_dict.hills_3,
-                        '▲4': tiles_image_dict.hills_4,
-                        '▲5': tiles_image_dict.hills_5,
-                        '▲6': tiles_image_dict.hills_6,
-                        '▲7': tiles_image_dict.hills_7,
-                        '▲8': tiles_image_dict.hills_8,
-                        '▲9': tiles_image_dict.hills_9,
-                        '▲A': tiles_image_dict.hills_A,
-                        '▲B': tiles_image_dict.hills_B,
-                        '▲C': tiles_image_dict.hills_C,
-                        '▲D': tiles_image_dict.hills_D,
-                        '▲E': tiles_image_dict.hills_E,
-                        '▲F': tiles_image_dict.hills_F,
-                        '▲G': tiles_image_dict.hills_G,
-                        '▲H': tiles_image_dict.hills_H,
-                        '▲I': tiles_image_dict.hills_I,
-                        '▲J': tiles_image_dict.hills_J,
-                        '▲K': tiles_image_dict.hills_K,
-                        '▲L': tiles_image_dict.hills_L,
-                        '▲M': tiles_image_dict.hills_M,
-                        '▲N': tiles_image_dict.hills_N,
-                        '▲O': tiles_image_dict.hills_O,
-                        '▲P': tiles_image_dict.hills_P,
-                        '▲Q': tiles_image_dict.hills_Q,
-                        '▲R': tiles_image_dict.hills_R,
-                        '▲S': tiles_image_dict.hills_S,
-                        '▲T': tiles_image_dict.hills_T,
-                        '▲U': tiles_image_dict.hills_U,
-                        'i0': tiles_image_dict.cactus,
-                        ':0': tiles_image_dict.saline_1,
-                        ';0': tiles_image_dict.saline_2,
-                        '„0': tiles_image_dict.grass,
-                        'u0': tiles_image_dict.tall_grass_0,
-                        'u1': tiles_image_dict.tall_grass_1,
-                        'ü0': tiles_image_dict.prickly_grass,
-                        'F0': tiles_image_dict.dry_tree_0,
-                        'F1': tiles_image_dict.dry_tree_1,
-                        'F2': tiles_image_dict.dry_tree_2,
-                        'F3': tiles_image_dict.dry_tree_3,
-                        'F4': tiles_image_dict.dry_tree_4,
-                        'F5': tiles_image_dict.dry_tree_5,
-                        'F6': tiles_image_dict.dry_tree_6,
-                        'F7': tiles_image_dict.dry_tree_7,
-                        'P0': tiles_image_dict.live_tree,
-                        '~0': tiles_image_dict.water_0,
-                        '~1': tiles_image_dict.water_1,
-                        '~2': tiles_image_dict.water_2,
-                        '~3': tiles_image_dict.water_3,
-                        '~4': tiles_image_dict.water_4,
-                        '~5': tiles_image_dict.water_5,
-                        '~6': tiles_image_dict.water_6,
-                        '~7': tiles_image_dict.water_7,
-                        '~8': tiles_image_dict.water_8,
-                        '~9': tiles_image_dict.water_9,
-                        '~A': tiles_image_dict.water_A,
-                        '~B': tiles_image_dict.water_B,
-                        '~C': tiles_image_dict.water_C,
-                        '~D': tiles_image_dict.water_D,
-                        '~E': tiles_image_dict.water_E,
-                        '~F': tiles_image_dict.water_F,
-                        '~G': tiles_image_dict.water_G,
-                        '~H': tiles_image_dict.water_H,
-                        '~I': tiles_image_dict.water_I,
-                        '~J': tiles_image_dict.water_J,
-                        '~K': tiles_image_dict.water_K,
-                        '~L': tiles_image_dict.water_L,
-                        '~M': tiles_image_dict.water_M,
-                        '~N': tiles_image_dict.water_N,
-                        '~O': tiles_image_dict.water_O,
-                        '~P': tiles_image_dict.water_P,
-                        '~Q': tiles_image_dict.water_Q,
-                        '~R': tiles_image_dict.water_R,
-                        '~S': tiles_image_dict.water_S,
-                        '~T': tiles_image_dict.water_T,
-                        '~U': tiles_image_dict.water_U,
-                        'C0': tiles_image_dict.canyons_0,
-                        'C1': tiles_image_dict.canyons_1,
-                        'C2': tiles_image_dict.canyons_2,
-                        'C3': tiles_image_dict.canyons_3,
-                        'C4': tiles_image_dict.canyons_4,
-                        'C5': tiles_image_dict.canyons_5,
-                        'C6': tiles_image_dict.canyons_6,
-                        'C7': tiles_image_dict.canyons_7,
-                        'C8': tiles_image_dict.canyons_8,
-                        'C9': tiles_image_dict.canyons_9,
-                        'CA': tiles_image_dict.canyons_A,
-                        'CB': tiles_image_dict.canyons_B,
-                        'CC': tiles_image_dict.canyons_C,
-                        'CD': tiles_image_dict.canyons_D,
-                        'CE': tiles_image_dict.canyons_E,
-                        'CF': tiles_image_dict.canyons_F,
-                        'CG': tiles_image_dict.canyons_G,
-                        'CH': tiles_image_dict.canyons_H,
-                        'CI': tiles_image_dict.canyons_I,
-                        'CJ': tiles_image_dict.canyons_J,
-                        'CK': tiles_image_dict.canyons_K,
-                        'CL': tiles_image_dict.canyons_L,
-                        'CM': tiles_image_dict.canyons_M,
-                        'CN': tiles_image_dict.canyons_N,
-                        'CO': tiles_image_dict.canyons_O,
-                        'CP': tiles_image_dict.canyons_P,
-                        'CQ': tiles_image_dict.canyons_Q,
-                        'CR': tiles_image_dict.canyons_R,
-                        'CS': tiles_image_dict.canyons_S,
-                        'CT': tiles_image_dict.canyons_T,
-                        'CU': tiles_image_dict.canyons_U,
-                        '☺ ': tiles_image_dict.person,
-                        '☻r': tiles_image_dict.enemy_riffleman,
-                        '☻h': tiles_image_dict.enemy_horseman,
-                        'co': tiles_image_dict.enemy_coyot,
-                        '8 ': tiles_image_dict.human_traces,
-                        '% ': tiles_image_dict.horse_traces,
-                        '@ ': tiles_image_dict.animal_traces,
-                        '/ ': tiles_image_dict.camp,
-                        '+ ': tiles_image_dict.bonfire,
-                        '№ ': tiles_image_dict.rest_stop,
-                        '# ': tiles_image_dict.gnawed_bones,
-                        '$ ': tiles_image_dict.animal_rest_stop,
+                        'j': {
+                                '0': tiles_image_dict.dune_0,
+                                '1': tiles_image_dict.dune_1,
+                             },
+                        '.': {'0': tiles_image_dict.sand,},
+                        ',': {'0': tiles_image_dict.dry_grass,},
+                        'o': {'0': tiles_image_dict.stones,},
+                        'A': {
+                                '0': tiles_image_dict.bump_0,
+                                '1': tiles_image_dict.bump_1,
+                             },
+                        '▲': {
+                                '0': tiles_image_dict.hills_0,
+                                '1': tiles_image_dict.hills_1,
+                                '2': tiles_image_dict.hills_2,
+                                '3': tiles_image_dict.hills_3,
+                                '4': tiles_image_dict.hills_4,
+                                '5': tiles_image_dict.hills_5,
+                                '6': tiles_image_dict.hills_6,
+                                '7': tiles_image_dict.hills_7,
+                                '8': tiles_image_dict.hills_8,
+                                '9': tiles_image_dict.hills_9,
+                                'A': tiles_image_dict.hills_A,
+                                'B': tiles_image_dict.hills_B,
+                                'C': tiles_image_dict.hills_C,
+                                'D': tiles_image_dict.hills_D,
+                                'E': tiles_image_dict.hills_E,
+                                'F': tiles_image_dict.hills_F,
+                                'G': tiles_image_dict.hills_G,
+                                'H': tiles_image_dict.hills_H,
+                                'I': tiles_image_dict.hills_I,
+                                'J': tiles_image_dict.hills_J,
+                                'K': tiles_image_dict.hills_K,
+                                'L': tiles_image_dict.hills_L,
+                                'M': tiles_image_dict.hills_M,
+                                'N': tiles_image_dict.hills_N,
+                                'O': tiles_image_dict.hills_O,
+                                'P': tiles_image_dict.hills_P,
+                                'Q': tiles_image_dict.hills_Q,
+                                'R': tiles_image_dict.hills_R,
+                                'S': tiles_image_dict.hills_S,
+                                'T': tiles_image_dict.hills_T,
+                                'U': tiles_image_dict.hills_U,
+                             },
+                        'i': {'0': tiles_image_dict.cactus,},
+                        ':': {'0': tiles_image_dict.saline_1,},
+                        ';': {'0': tiles_image_dict.saline_2,},
+                        '„': {'0': tiles_image_dict.grass,},
+                        'u': {
+                                '0': tiles_image_dict.tall_grass_0,
+                                '1': tiles_image_dict.tall_grass_1,
+                             },
+                        'ü': {'0': tiles_image_dict.prickly_grass,},
+                        'F': {
+                                '0': tiles_image_dict.dry_tree_0,
+                                '1': tiles_image_dict.dry_tree_1,
+                                '2': tiles_image_dict.dry_tree_2,
+                                '3': tiles_image_dict.dry_tree_3,
+                                '4': tiles_image_dict.dry_tree_4,
+                                '5': tiles_image_dict.dry_tree_5,
+                                '6': tiles_image_dict.dry_tree_6,
+                                '7': tiles_image_dict.dry_tree_7,
+                             },
+                        'P': {'0': tiles_image_dict.live_tree,},
+                        '~': {
+                                '0': tiles_image_dict.water_0,
+                                '1': tiles_image_dict.water_1,
+                                '2': tiles_image_dict.water_2,
+                                '3': tiles_image_dict.water_3,
+                                '4': tiles_image_dict.water_4,
+                                '5': tiles_image_dict.water_5,
+                                '6': tiles_image_dict.water_6,
+                                '7': tiles_image_dict.water_7,
+                                '8': tiles_image_dict.water_8,
+                                '9': tiles_image_dict.water_9,
+                                'A': tiles_image_dict.water_A,
+                                'B': tiles_image_dict.water_B,
+                                'C': tiles_image_dict.water_C,
+                                'D': tiles_image_dict.water_D,
+                                'E': tiles_image_dict.water_E,
+                                'F': tiles_image_dict.water_F,
+                                'G': tiles_image_dict.water_G,
+                                'H': tiles_image_dict.water_H,
+                                'I': tiles_image_dict.water_I,
+                                'J': tiles_image_dict.water_J,
+                                'K': tiles_image_dict.water_K,
+                                'L': tiles_image_dict.water_L,
+                                'M': tiles_image_dict.water_M,
+                                'N': tiles_image_dict.water_N,
+                                'O': tiles_image_dict.water_O,
+                                'P': tiles_image_dict.water_P,
+                                'Q': tiles_image_dict.water_Q,
+                                'R': tiles_image_dict.water_R,
+                                'S': tiles_image_dict.water_S,
+                                'T': tiles_image_dict.water_T,
+                                'U': tiles_image_dict.water_U,
+                             },
+                        'C': {
+                                '0': tiles_image_dict.canyons_0,
+                                '1': tiles_image_dict.canyons_1,
+                                '2': tiles_image_dict.canyons_2,
+                                '3': tiles_image_dict.canyons_3,
+                                '4': tiles_image_dict.canyons_4,
+                                '5': tiles_image_dict.canyons_5,
+                                '6': tiles_image_dict.canyons_6,
+                                '7': tiles_image_dict.canyons_7,
+                                '8': tiles_image_dict.canyons_8,
+                                '9': tiles_image_dict.canyons_9,
+                                'A': tiles_image_dict.canyons_A,
+                                'B': tiles_image_dict.canyons_B,
+                                'C': tiles_image_dict.canyons_C,
+                                'D': tiles_image_dict.canyons_D,
+                                'E': tiles_image_dict.canyons_E,
+                                'F': tiles_image_dict.canyons_F,
+                                'G': tiles_image_dict.canyons_G,
+                                'H': tiles_image_dict.canyons_H,
+                                'I': tiles_image_dict.canyons_I,
+                                'J': tiles_image_dict.canyons_J,
+                                'K': tiles_image_dict.canyons_K,
+                                'L': tiles_image_dict.canyons_L,
+                                'M': tiles_image_dict.canyons_M,
+                                'N': tiles_image_dict.canyons_N,
+                                'O': tiles_image_dict.canyons_O,
+                                'P': tiles_image_dict.canyons_P,
+                                'Q': tiles_image_dict.canyons_Q,
+                                'R': tiles_image_dict.canyons_R,
+                                'S': tiles_image_dict.canyons_S,
+                                'T': tiles_image_dict.canyons_T,
+                                'U': tiles_image_dict.canyons_U,
+                             },
+                        '☺': {'0': tiles_image_dict.person,},
+                        '☻': {
+                                'r': tiles_image_dict.enemy_riffleman,
+                                'h': tiles_image_dict.enemy_horseman,
+                             },
+                        'c': {'0': tiles_image_dict.enemy_coyot,},
+                        '8': {'0': tiles_image_dict.human_traces,},
+                        '%': {'0': tiles_image_dict.horse_traces,},
+                        '@': {'0': tiles_image_dict.animal_traces,},
+                        '/': {'0': tiles_image_dict.camp,},
+                        '+': {'0': tiles_image_dict.bonfire,},
+                        '№': {'0': tiles_image_dict.rest_stop,},
+                        '#': {'0': tiles_image_dict.gnawed_bones,},
+                        '$': {'0': tiles_image_dict.animal_rest_stop,},
                         }
-        if icon in image_dict:
-            return image_dict[icon]
+        if tile.icon in image_dict and tile.type in image_dict[tile.icon] :
+            return image_dict[tile.icon][tile.type]
         else:
             return tiles_image_dict.warning
         
@@ -2088,6 +2077,30 @@ def load_tile_table(filename, width, height):
             line.append(image.subsurface(rect))
     return tile_table
 
+def print_minimap(global_map, person, go_to_print, enemy_list):
+    """
+        Печатает упрощенную схему глобальной карты по биомам
+    """
+
+    minimap = []
+    for number_line in range(len(global_map)):
+        print_line = ''
+        for biom in range(len(global_map[number_line])):
+            enemy_here = '--'
+            for enemy in range(len(enemy_list)):
+                if number_line == enemy_list[enemy].global_position[0] and biom == enemy_list[enemy].global_position[1]:
+                    enemy_here = enemy_list[enemy].icon
+            if number_line == person.global_position[0] and biom == person.global_position[1]:
+                go_to_print.text2 = global_map[number_line][biom].name
+                go_to_print.text3 = [global_map[number_line][biom].temperature, 36.6]
+                print_line += '☺'
+            elif enemy_here != '--':
+                print_line += enemy_here
+            else:
+                print_line += global_map[number_line][biom].icon + ''
+        minimap.append((print_line))
+    go_to_print.biom_map = minimap
+
 """
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -2130,11 +2143,8 @@ def game_loop(global_map:list, person:list, chunk_size:int, frame_size:list, ene
         if not person.enemy_pass_step:
             master_game_events(global_map, enemy_list, person, go_to_print, step, activity_list, chunk_size, interaction, new_step)
         #test1 = time.time() #проверка времени выполнения
-        master_draw(person, chunk_size, go_to_print, global_map, mode_action, enemy_list, activity_list)
+        master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action, enemy_list, activity_list, screen, tiles_image_dict)
         #test2 = time.time() #проверка времени выполнения
-        #print(f'На этом шаге была добавлена активность {activity_list[-1].name} | global - {activity_list[-1].global_position}| local - {activity_list[-1].local_position}')
-        #print_frame(go_to_print, frame_size, activity_list)
-        master_pygame_render_display(go_to_print, screen, tiles_image_dict)
         #print('step = ', step)
         #end = time.time() #проверка времени выполнения
         #print(test1 - start, ' - test1 ', test2 - start, ' - test2 ', end - start, ' - end ') #
@@ -2151,10 +2161,10 @@ def main():
     frame_size = [35, 40]   #Размер одного кадра [высота, ширина]. УСТАРЕЛО
 
     print('Подождите, генерируется локация для игры')
-    global_map = old_map_generator.master_generate(value_region_box, chunk_size, grid)
+    #global_map = old_map_generator.master_generate(value_region_box, chunk_size, grid)
 
     #                                              global_region_grid | region_grid | chunks_grid | mini_region_grid | tile_field_grid
-    #global_map = map_generator.master_map_generate(       3,                  3,          3,              5,                  5)
+    global_map = map_generator.master_map_generate(       3,                  3,          3,              5,                  5)
     
     person = Person([value_region_box//2, value_region_box//2], [chunk_size//2, chunk_size//2], [], [chunk_size//2, chunk_size//2], [chunk_size//2, chunk_size//2])
     calculation_assemblage_point(global_map, person, chunk_size)
