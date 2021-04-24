@@ -1637,7 +1637,10 @@ def test_print(layer):
     print_map = ''
     for line in layer:
         for tile in line:
-            print_map += tile.icon + ' '
+            if tile.icon == '0':
+                print_map += tile.icon + ' '
+            else:
+                print_map += tile.icon + 'v'
         print_map += '\n'
     print(print_map)
             
@@ -1659,16 +1662,21 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
             4) Персонаж игрока
             5) Небо (опционально)
     """
+    start = time.time()
+    
     landscape_layer = landscape_layer_calculations(person, chunk_size, go_to_print)
+    test1_1 = time.time()
     activity_layer = activity_layer_calculations(person, chunk_size, go_to_print, enemy_list, activity_list)
+    test1_2 = time.time()
     entities_layer = entities_layer_calculations(person, chunk_size, go_to_print, enemy_list, activity_list)
+    test1_3 = time.time()
     sky_layer = sky_layer_calculations(chunk_size)
 
-
+    test1 = time.time()
     test_print(landscape_layer)
     test_print(activity_layer)
     test_print(entities_layer)
-    test_print(sky_layer)
+    #test_print(sky_layer)
 
 
     
@@ -1681,17 +1689,17 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
     for number_line in range(chunk_size):
         for number_tile in range(chunk_size):
             all_sprites.add(Image_tile(number_tile*size_tile, number_line*size_tile, size_tile, landscape_layer[number_line][number_tile], tiles_image_dict))
-
+    test2_1 = time.time()
     for number_line in range(chunk_size):
         for number_tile in range(chunk_size):
             if activity_layer[number_line][number_tile].icon != '0':
                 all_sprites.add(Image_tile(number_tile*size_tile, number_line*size_tile, size_tile, activity_layer[number_line][number_tile], tiles_image_dict))
-
+    test2_2 = time.time()
     for number_line in range(chunk_size):
         for number_tile in range(chunk_size):
             if activity_layer[number_line][number_tile].icon != '0':
                 all_sprites.add(Image_tile(number_tile*size_tile, number_line*size_tile, size_tile, entities_layer[number_line][number_tile], tiles_image_dict))
-
+    test2_3 = time.time()
     all_sprites.add(Image_tile(chunk_size//2*size_tile, chunk_size//2*size_tile, size_tile, Tile('☺'), tiles_image_dict))
 
 
@@ -1699,10 +1707,14 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
         for number_tile in range(chunk_size):
             if activity_layer[number_line][number_tile].icon != '0':
                 all_sprites.add(Image_tile(number_tile*size_tile, number_line*size_tile, size_tile, sky_layer[number_line][number_tile], tiles_image_dict))       
-                
+    test2 = time.time()
     all_sprites.draw(screen)
     pygame.display.flip()
+    
+    end = time.time() #проверка времени выполнения
 
+    #print(f"{test1_1 - start} - test1_1 \n{test1_2 - test1_1} - test1_2 \n{test1_3 - test1_2} - test1_3 \n{test1 - test1_3} - test1")
+    #print(F"{test2_1 - test1} - test2_1 \n{test2_2 - test2_1} - test2_2 \n{test2_3 - test2_2} - test2_3 \n{test2 - test2_3} - test2 \n{end - test2} - end \n")
 def landscape_layer_calculations(person, chunk_size, go_to_print):
     """
         Формирует изображение ландшафта на печать
@@ -2138,16 +2150,17 @@ def game_loop(global_map:list, person:list, chunk_size:int, frame_size:list, ene
         if not person.person_pass_step:
             mode_action = master_player_action(global_map, person, chunk_size, go_to_print, mode_action, interaction, activity_list, step)
         calculation_assemblage_point(global_map, person, chunk_size) # Рассчёт динамического чанка
-        #start = time.time() #проверка времени выполнения
+        start = time.time() #проверка времени выполнения
         all_pass_step_calculations(person, enemy_list, mode_action, interaction)
         if not person.enemy_pass_step:
             master_game_events(global_map, enemy_list, person, go_to_print, step, activity_list, chunk_size, interaction, new_step)
-        #test1 = time.time() #проверка времени выполнения
+        test1 = time.time() #проверка времени выполнения
         master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action, enemy_list, activity_list, screen, tiles_image_dict)
-        #test2 = time.time() #проверка времени выполнения
-        #print('step = ', step)
-        #end = time.time() #проверка времени выполнения
-        #print(test1 - start, ' - test1 ', test2 - start, ' - test2 ', end - start, ' - end ') #
+        test2 = time.time() #проверка времени выполнения
+        print('step = ', step)
+        end = time.time() #проверка времени выполнения
+        #print(f"{end - start} - end ")
+        #print(f"{test1 - start} - test1 \n {test2 - test1} - test2 \n {end - test2} - end \n ")
     
 
 def main():
