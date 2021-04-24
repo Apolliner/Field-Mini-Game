@@ -1673,13 +1673,7 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
     sky_layer = sky_layer_calculations(chunk_size)
 
     test1 = time.time()
-    test_print(landscape_layer)
-    test_print(activity_layer)
-    test_print(entities_layer)
-    #test_print(sky_layer)
 
-
-    
     size_tile = 30 # Настройка размера тайлов игрового окна
     #size_tile_minimap = 10 # Настройка размера тайлов миникаты
     
@@ -1688,25 +1682,33 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
 
     for number_line in range(chunk_size):
         for number_tile in range(chunk_size):
-            all_sprites.add(Image_tile(number_tile*size_tile, number_line*size_tile, size_tile, landscape_layer[number_line][number_tile], tiles_image_dict))
+            all_sprites.add(Image_tile(number_tile*size_tile, number_line*size_tile, size_tile, tiles_image_dict,
+                                       landscape_layer[number_line][number_tile].icon,
+                                       landscape_layer[number_line][number_tile].type))
     test2_1 = time.time()
     for number_line in range(chunk_size):
         for number_tile in range(chunk_size):
             if activity_layer[number_line][number_tile].icon != '0':
-                all_sprites.add(Image_tile(number_tile*size_tile, number_line*size_tile, size_tile, activity_layer[number_line][number_tile], tiles_image_dict))
+                all_sprites.add(Image_tile(number_tile*size_tile, number_line*size_tile, size_tile, tiles_image_dict,
+                                       activity_layer[number_line][number_tile].icon,
+                                       activity_layer[number_line][number_tile].type))
     test2_2 = time.time()
     for number_line in range(chunk_size):
         for number_tile in range(chunk_size):
-            if activity_layer[number_line][number_tile].icon != '0':
-                all_sprites.add(Image_tile(number_tile*size_tile, number_line*size_tile, size_tile, entities_layer[number_line][number_tile], tiles_image_dict))
+            if entities_layer[number_line][number_tile].icon != '0':
+                all_sprites.add(Image_tile(number_tile*size_tile, number_line*size_tile, size_tile, tiles_image_dict,
+                                       entities_layer[number_line][number_tile].icon,
+                                       entities_layer[number_line][number_tile].type))
     test2_3 = time.time()
-    all_sprites.add(Image_tile(chunk_size//2*size_tile, chunk_size//2*size_tile, size_tile, Tile('☺'), tiles_image_dict))
+    all_sprites.add(Image_tile(chunk_size//2*size_tile, chunk_size//2*size_tile, size_tile, tiles_image_dict, '☺', '0'))
 
 
     for number_line in range(chunk_size):
         for number_tile in range(chunk_size):
-            if activity_layer[number_line][number_tile].icon != '0':
-                all_sprites.add(Image_tile(number_tile*size_tile, number_line*size_tile, size_tile, sky_layer[number_line][number_tile], tiles_image_dict))       
+            if sky_layer[number_line][number_tile].icon != '0':
+                all_sprites.add(Image_tile(number_tile*size_tile, number_line*size_tile, size_tile, tiles_image_dict,
+                                       sky_layer[number_line][number_tile].icon,
+                                       sky_layer[number_line][number_tile].type))      
     test2 = time.time()
     all_sprites.draw(screen)
     pygame.display.flip()
@@ -1740,6 +1742,8 @@ def activity_layer_calculations(person, chunk_size:int, go_to_print, enemy_list,
     """
         Отрисовывает слой активностей
     """
+    start_stop = [(person.dynamic[0] - chunk_size//2), (person.dynamic[1] - chunk_size//2),
+                  (person.dynamic[0] + chunk_size//2 + 1),(person.dynamic[1] + chunk_size//2 + 1)]
     go_draw_activity = []
     for activity in activity_list:
         if activity.visible or person.test_visible:
@@ -1756,9 +1760,9 @@ def activity_layer_calculations(person, chunk_size:int, go_to_print, enemy_list,
                 go_draw_activity.append([activity.local_position[0] + chunk_size, activity.local_position[1] + chunk_size, activity])
 
     activity_layer = []
-    for number_line in range(chunk_size):
+    for number_line in range(start_stop[0], start_stop[2]):
         new_line = []
-        for number_tile in range(chunk_size):
+        for number_tile in range(start_stop[1], start_stop[3]):
             no_changes = True
             for activity in go_draw_activity:
                 if number_line == activity[0] and number_tile == activity[1]:
@@ -1770,13 +1774,14 @@ def activity_layer_calculations(person, chunk_size:int, go_to_print, enemy_list,
         activity_layer.append(new_line)
 
     return activity_layer
-                
-
+            
 
 def entities_layer_calculations(person, chunk_size, go_to_print, enemy_list, activity_list):
     """
         Отрисовывает персонажей
     """
+    start_stop = [(person.dynamic[0] - chunk_size//2), (person.dynamic[1] - chunk_size//2),
+                  (person.dynamic[0] + chunk_size//2 + 1),(person.dynamic[1] + chunk_size//2 + 1)]
     go_draw_entities = []
     for enemy in enemy_list:
         if enemy.global_position in person.check_encounter_position:
@@ -1784,9 +1789,9 @@ def entities_layer_calculations(person, chunk_size, go_to_print, enemy_list, act
                 go_draw_entities.append([enemy.dynamic_chunk_position[0], enemy.dynamic_chunk_position[1], enemy])
 
     entities_layer = []
-    for number_line in range(chunk_size):
+    for number_line in range(start_stop[0], start_stop[2]):
         new_line = []
-        for number_tile in range(chunk_size):
+        for number_tile in range(start_stop[1], start_stop[3]):
             no_changes = True
             for entitie in go_draw_entities:
                 if number_line == entitie[0] and number_tile == entitie[1]:
@@ -1798,7 +1803,6 @@ def entities_layer_calculations(person, chunk_size, go_to_print, enemy_list, act
         entities_layer.append(new_line)
 
     return entities_layer
-
 
 
 def sky_layer_calculations(chunk_size):
@@ -1814,23 +1818,18 @@ def sky_layer_calculations(chunk_size):
     return sky_layer
         
 
-
-
-
-
-
 class Image_tile(pygame.sprite.Sprite):
     """ Содержит спрайт и его кординаты на экране """
-    def __init__(self, x, y, size_tile, tile, tiles_image_dict):
+    def __init__(self, x, y, size_tile, tiles_image_dict, icon_tile, type_tile):
         pygame.sprite.Sprite.__init__(self)
-        self.image = self.image_dict(tile, tiles_image_dict)
+        self.image = self.image_dict(icon_tile, type_tile, tiles_image_dict)
         self.sized_image = pygame.transform.flip(self.image, True, False)
         self.rect = self.sized_image.get_rect()
         self.rect.left = x
         self.rect.top = y
         self.speed = 0
 
-    def image_dict(self, tile, tiles_image_dict):
+    def image_dict(self, icon_tile, type_tile, tiles_image_dict):
 
         image_dict =   {
                         'j': {
@@ -1978,8 +1977,9 @@ class Image_tile(pygame.sprite.Sprite):
                         '#': {'0': tiles_image_dict.gnawed_bones,},
                         '$': {'0': tiles_image_dict.animal_rest_stop,},
                         }
-        if tile.icon in image_dict and tile.type in image_dict[tile.icon] :
-            return image_dict[tile.icon][tile.type]
+        if icon_tile in image_dict and type_tile in image_dict[icon_tile]:
+            return image_dict[icon_tile][type_tile]
+
         else:
             return tiles_image_dict.warning
         
