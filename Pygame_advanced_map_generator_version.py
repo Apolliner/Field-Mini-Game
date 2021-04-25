@@ -44,7 +44,8 @@ garbage = ['░', '▒', '▓', '█', '☺']
 class Person:
     """ Содержит в себе глобальное местоположение персонажа, расположение в пределах загруженного участка карты и координаты используемых чанков """
     __slots__ = ('name', 'assemblage_point', 'dynamic', 'chunks_use_map', 'pointer', 'gun', 'global_position', 'number_chunk',
-                 'check_encounter_position', 'environment_temperature', 'person_temperature', 'person_pass_step', 'enemy_pass_step', 'speed', 'test_visible')
+                 'check_encounter_position', 'environment_temperature', 'person_temperature', 'person_pass_step', 'enemy_pass_step',
+                 'speed', 'test_visible', 'level')
     def __init__(self, assemblage_point:list, dynamic:list, chunks_use_map:list, pointer:list, gun:list):
         self.name = 'person'
         self.assemblage_point = assemblage_point
@@ -65,6 +66,7 @@ class Person:
         self.enemy_pass_step = 0
         self.speed = 1
         self.test_visible = False
+        self.level = 0
 
 
         
@@ -1332,7 +1334,7 @@ def move_biom_enemy(global_map, enemy):
 
 def master_player_action(global_map, person, chunk_size, go_to_print, mode_action, interaction, activity_list, step):
 
-
+    person.level = person.chunks_use_map[person.dynamic[0]][person.dynamic[1]].level # Определение высоты прсонажа
     pressed_button = ''
     mode_action, pressed_button = request_press_button(global_map, person, chunk_size, go_to_print, mode_action, interaction)
     if pressed_button != 'none':
@@ -1446,28 +1448,41 @@ def request_press_button(global_map, person, chunk_size, go_to_print, mode_actio
 def request_move(global_map:list, person, chunk_size:int, go_to_print, pressed_button):
     """
         Меняет динамическое местоположение персонажа
+
+
+        Сначала происходит проверка не является ли следующий по пути тайл скалой, затем проверяется не находится ли он на другом уровне
+        или лестницей или персонаж сейчас стоит на лестнице.
     """
     if pressed_button == 'up':
         
-        if person.chunks_use_map[person.dynamic[0] - 1][person.dynamic[1]].icon != '▲':
+        if person.chunks_use_map[person.dynamic[0] - 1][person.dynamic[1]].icon != '▲' and (person.level == person.chunks_use_map[
+            person.dynamic[0] - 1][person.dynamic[1]].level or person.chunks_use_map[person.dynamic[0] - 1][
+                person.dynamic[1]].stairs or person.chunks_use_map[person.dynamic[0]][person.dynamic[1]].stairs):
             if person.dynamic[0] >= chunk_size//2 and person.assemblage_point[0] > 0:
                 person.dynamic[0] -= 1
             
     elif pressed_button == 'left':
         
-        if person.chunks_use_map[person.dynamic[0]][person.dynamic[1] - 1].icon != '▲':
+        if person.chunks_use_map[person.dynamic[0]][person.dynamic[1] - 1].icon != '▲'and (person.level == person.chunks_use_map[
+            person.dynamic[0]][person.dynamic[1] - 1].level or person.chunks_use_map[person.dynamic[0]][
+                person.dynamic[1] - 1].stairs or person.chunks_use_map[person.dynamic[0]][person.dynamic[1]].stairs):
             if person.dynamic[1] >= chunk_size//2 and person.assemblage_point[1] > 0:
                 person.dynamic[1] -= 1
+
             
     elif pressed_button == 'down':
         
-        if person.chunks_use_map[person.dynamic[0] + 1][person.dynamic[1]].icon != '▲':
+        if person.chunks_use_map[person.dynamic[0] + 1][person.dynamic[1]].icon != '▲'and (person.level == person.chunks_use_map[
+            person.dynamic[0] + 1][person.dynamic[1]].level or person.chunks_use_map[person.dynamic[0] + 1][
+                person.dynamic[1]].stairs or person.chunks_use_map[person.dynamic[0]][person.dynamic[1]].stairs):
             if person.dynamic[0] <= (chunk_size + chunk_size//2) and person.assemblage_point[0] != (len(global_map) - 2):
                 person.dynamic[0] += 1
             
     elif pressed_button == 'right':
         
-        if person.chunks_use_map[person.dynamic[0]][person.dynamic[1] + 1].icon != '▲':
+        if person.chunks_use_map[person.dynamic[0]][person.dynamic[1] + 1].icon != '▲' and (person.level == person.chunks_use_map[
+            person.dynamic[0]][person.dynamic[1] + 1].level or person.chunks_use_map[person.dynamic[0]][
+                person.dynamic[1] + 1].stairs or person.chunks_use_map[person.dynamic[0]][person.dynamic[1]].stairs):
             if person.dynamic[1] <= (chunk_size + chunk_size//2) and person.assemblage_point[1] != (len(global_map) - 2):
                 person.dynamic[1] += 1
 
@@ -1678,7 +1693,7 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
     test1 = time.time()
 
     size_tile = 30 # Настройка размера тайлов игрового окна
-    #size_tile_minimap = 10 # Настройка размера тайлов миникаты
+    size_tile_minimap = 10 # Настройка размера тайлов миникаты
     
     all_sprites = pygame.sprite.Group()
 
@@ -1688,7 +1703,8 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
             all_sprites.add(Image_tile(number_tile*size_tile, number_line*size_tile, size_tile, tiles_image_dict,
                                        landscape_layer[number_line][number_tile].icon,
                                        landscape_layer[number_line][number_tile].type))
-            all_sprites.add(Level_tiles(number_tile*size_tile, number_line*size_tile, size_tile, landscape_layer[number_line][number_tile].level))
+            if landscape_layer[number_line][number_tile].level > 1:
+                all_sprites.add(Level_tiles(number_tile*size_tile, number_line*size_tile, size_tile, landscape_layer[number_line][number_tile].level - 1))
     test2_1 = time.time()
     for number_line in range(chunk_size):
         for number_tile in range(chunk_size):
@@ -1714,6 +1730,19 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
                                        sky_layer[number_line][number_tile].icon,
                                        sky_layer[number_line][number_tile].type))      
     test2 = time.time()
+
+    # Печать миникарты
+
+    for number_line in range(len(global_map)):
+        for number_tile in range(len(global_map[0])):
+
+            all_sprites.add(All_tiles(number_tile*size_tile_minimap + (30*size_tile), number_line*size_tile_minimap, size_tile_minimap,
+                                      global_map[number_line][number_tile].icon))
+
+
+
+
+    screen.fill((255, 255, 255))
     all_sprites.draw(screen)
     pygame.display.flip()
     
