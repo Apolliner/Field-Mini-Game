@@ -398,7 +398,8 @@ def person_dict():
 
 class Action_in_map:
     """ Содержит в себе описание активности и срок её жизни """
-    __slots__ = ('name', 'icon', 'description', 'lifetime', 'birth', 'global_position', 'local_position', 'caused', 'lifetime_description', 'visible', 'type')
+    __slots__ = ('name', 'icon', 'description', 'lifetime', 'birth', 'global_position', 'local_position', 'caused',
+                 'lifetime_description', 'visible', 'type', 'level')
     def __init__(self, name, birth, position_npc, dynamic_position, chunk_size, caused):
         self.name = name
         self.icon = self.action_dict(0)
@@ -411,6 +412,7 @@ class Action_in_map:
         self.description = f'{self.action_dict(1)} похоже на {self.caused}'
         self.visible = self.action_dict(3)
         self.type = '0'
+        self.level = 0
 
     def all_description(self):
         self.description = f'{self.lifetime_description} {self.action_dict(1)} похоже на {self.caused}'
@@ -464,6 +466,7 @@ class Enemy:
         self.pass_step = 0
         self.on_the_screen = False
         self.steps_to_new_step = 1
+        self.level = 0
 
     def all_description_calculation(self):
         self.description = f"{self.pass_description} {self.person_description}"
@@ -1685,6 +1688,7 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
             all_sprites.add(Image_tile(number_tile*size_tile, number_line*size_tile, size_tile, tiles_image_dict,
                                        landscape_layer[number_line][number_tile].icon,
                                        landscape_layer[number_line][number_tile].type))
+            all_sprites.add(Level_tiles(number_tile*size_tile, number_line*size_tile, size_tile, landscape_layer[number_line][number_tile].level))
     test2_1 = time.time()
     for number_line in range(chunk_size):
         for number_tile in range(chunk_size):
@@ -1816,6 +1820,21 @@ def sky_layer_calculations(chunk_size):
             new_line.append(Tile('0'))
         sky_layer.append(new_line)
     return sky_layer
+
+class Level_tiles(pygame.sprite.Sprite):
+    """ Содержит спрайты миникарты """
+
+    def __init__(self, x, y, size_tile, level):
+        pygame.sprite.Sprite.__init__(self)
+        self.x = x
+        self.y = y
+        self.image = pygame.Surface((size_tile, size_tile))
+        self.image.fill((255, 255, 255))
+        self.image.set_alpha(25*level)
+        self.rect = self.image.get_rect()
+        self.rect.left = x
+        self.rect.top = y
+        self.speed = 0
         
 
 class Image_tile(pygame.sprite.Sprite):
@@ -1823,8 +1842,14 @@ class Image_tile(pygame.sprite.Sprite):
     def __init__(self, x, y, size_tile, tiles_image_dict, icon_tile, type_tile):
         pygame.sprite.Sprite.__init__(self)
         self.image = self.image_dict(icon_tile, type_tile, tiles_image_dict)
-        self.sized_image = pygame.transform.flip(self.image, True, False)
-        self.rect = self.sized_image.get_rect()
+        self.rect = self.image.get_rect()
+        
+
+        #colorImage = pygame.Surface(self.image.get_size()).convert_alpha()
+        #colorImage.fill((1*level_tile, 1*level_tile, 1*level_tile))
+        #self.image.blit(colorImage, (0,0), special_flags = pygame.BLEND_RGBA_ADD)
+
+        
         self.rect.left = x
         self.rect.top = y
         self.speed = 0
