@@ -1679,6 +1679,16 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
             3) Персонажи
             4) Персонаж игрока
             5) Небо (опционально)
+
+
+
+
+        ОПРЕДЕЛЕНИЕ ТОРМОЗОВ
+        Проскакивают значения:
+        2.2022461891174316 - test1
+        1.058335542678833 - test1_2
+        2.0575599670410156 - end
+        1.0473484992980957 - test1_2 
     """
     start = time.time()
     
@@ -1688,7 +1698,7 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
     test1_2 = time.time()
     entities_layer = entities_layer_calculations(person, chunk_size, go_to_print, enemy_list, activity_list)
     test1_3 = time.time()
-    sky_layer = sky_layer_calculations(chunk_size)
+    #sky_layer = sky_layer_calculations(chunk_size)
 
     test1 = time.time()
 
@@ -1697,7 +1707,8 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
     
     all_sprites = pygame.sprite.Group()
 
-
+    test_control_1 = time.time() #
+    
     for number_line in range(chunk_size):
         for number_tile in range(chunk_size):
             all_sprites.add(Image_tile(number_tile*size_tile, number_line*size_tile, size_tile, tiles_image_dict,
@@ -1705,31 +1716,35 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
                                        landscape_layer[number_line][number_tile].type))
             if landscape_layer[number_line][number_tile].level > 1:
                 all_sprites.add(Level_tiles(number_tile*size_tile, number_line*size_tile, size_tile, landscape_layer[number_line][number_tile].level - 1))
-    test2_1 = time.time()
+
+    test2_1 = time.time() #
+    
     for number_line in range(chunk_size):
         for number_tile in range(chunk_size):
             if activity_layer[number_line][number_tile].icon != '0':
                 all_sprites.add(Image_tile(number_tile*size_tile, number_line*size_tile, size_tile, tiles_image_dict,
                                        activity_layer[number_line][number_tile].icon,
                                        activity_layer[number_line][number_tile].type))
-    test2_2 = time.time()
+    test2_2 = time.time() #
+    
     for number_line in range(chunk_size):
         for number_tile in range(chunk_size):
             if entities_layer[number_line][number_tile].icon != '0':
                 all_sprites.add(Image_tile(number_tile*size_tile, number_line*size_tile, size_tile, tiles_image_dict,
                                        entities_layer[number_line][number_tile].icon,
                                        entities_layer[number_line][number_tile].type))
-    test2_3 = time.time()
+    test2_3 = time.time() #
+    
     all_sprites.add(Image_tile(chunk_size//2*size_tile, chunk_size//2*size_tile, size_tile, tiles_image_dict, '☺', '0'))
 
 
-    for number_line in range(chunk_size):
-        for number_tile in range(chunk_size):
-            if sky_layer[number_line][number_tile].icon != '0':
-                all_sprites.add(Image_tile(number_tile*size_tile, number_line*size_tile, size_tile, tiles_image_dict,
-                                       sky_layer[number_line][number_tile].icon,
-                                       sky_layer[number_line][number_tile].type))      
-    test2 = time.time()
+    #for number_line in range(chunk_size):
+    #    for number_tile in range(chunk_size):
+    #        if sky_layer[number_line][number_tile].icon != '0':
+    #            all_sprites.add(Image_tile(number_tile*size_tile, number_line*size_tile, size_tile, tiles_image_dict,
+    #                                   sky_layer[number_line][number_tile].icon,
+    #                                   sky_layer[number_line][number_tile].type))      
+    test2 = time.time() #
 
     # Печать миникарты
 
@@ -1740,16 +1755,23 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
                                       global_map[number_line][number_tile].icon))
 
 
-
-
+    test_1_end = time.time() #
+    
     screen.fill((255, 255, 255))
+
+    test_2_end = time.time() #
+    
     all_sprites.draw(screen)
+
+    test_3_end = time.time() #
+    
     pygame.display.flip()
     
     end = time.time() #проверка времени выполнения
 
-    #print(f"{test1_1 - start} - test1_1 \n{test1_2 - test1_1} - test1_2 \n{test1_3 - test1_2} - test1_3 \n{test1 - test1_3} - test1")
-    #print(F"{test2_1 - test1} - test2_1 \n{test2_2 - test2_1} - test2_2 \n{test2_3 - test2_2} - test2_3 \n{test2 - test2_3} - test2 \n{end - test2} - end \n")
+    print(f"{test1_1 - start} - test1_1 \n{test1_2 - test1_1} - test1_2 \n{test1_3 - test1_2} - test1_3 \n{test1 - test1_3} - test1")
+    print(F"{test_control_1 - test1} - test_control_1 \n{test2_1 - test_control_1} - test2_1 \n{test2_2 - test2_1} - test2_2 \n{test2_3 - test2_2} - test2_3")
+    print(F"{test2 - test2_3} - test2 \n{test_1_end - test2} - test_1_end \n{test_2_end - test_1_end} - test_2_end \n{test_3_end - test_2_end} - test_3_end \n{end - test_3_end} - end \n")
 def landscape_layer_calculations(person, chunk_size, go_to_print):
     """
         Формирует изображение ландшафта на печать
@@ -1865,20 +1887,12 @@ class Level_tiles(pygame.sprite.Sprite):
         self.rect.top = y
         self.speed = 0
         
-
 class Image_tile(pygame.sprite.Sprite):
     """ Содержит спрайт и его кординаты на экране """
     def __init__(self, x, y, size_tile, tiles_image_dict, icon_tile, type_tile):
         pygame.sprite.Sprite.__init__(self)
         self.image = self.image_dict(icon_tile, type_tile, tiles_image_dict)
         self.rect = self.image.get_rect()
-        
-
-        #colorImage = pygame.Surface(self.image.get_size()).convert_alpha()
-        #colorImage.fill((1*level_tile, 1*level_tile, 1*level_tile))
-        #self.image.blit(colorImage, (0,0), special_flags = pygame.BLEND_RGBA_ADD)
-
-        
         self.rect.left = x
         self.rect.top = y
         self.speed = 0
@@ -2079,58 +2093,9 @@ class All_tiles(pygame.sprite.Sprite):
         else:
             return (0, 0, 0)
 
-def master_pygame_render_display(go_to_print, screen, tiles_image_dict):
-    """
-        Выводит изображение на экран через PyGame
-    """
-
-    size_tile = 30
-    size_tile_minimap = 10
-    
-    print_map = go_to_print.game_field
-    #for number_line in range(len(go_to_print.game_field)):
-        #line = []
-        #for tile in go_to_print.game_field[number_line]:
-            #line.append(tile)
-        #print_map.append(line)
-        
-    print_minimap = []
-    for number_line in range(len(go_to_print.biom_map)):
-        line = []
-        for tile in go_to_print.biom_map[number_line]:
-            line.append(tile)
-        print_minimap.append(line)
-
-    all_sprites = pygame.sprite.Group()
-
-
-    for number_line in range(len(print_map)):
-        for number_tile in range(len(print_map[0])):
-
-            all_sprites.add(Image_tile(number_tile*size_tile, number_line*size_tile, size_tile, print_map[number_line][number_tile], tiles_image_dict))
-
-
-    for number_line in range(len(print_minimap)):
-        for number_tile in range(len(print_minimap[0])):
-
-            all_sprites.add(All_tiles(number_tile*size_tile_minimap + (30*size_tile), number_line*size_tile_minimap, size_tile_minimap, print_minimap[number_line][number_tile]))
-
-
-    fontObj = pygame.font.Font('freesansbold.ttf', 10)
-    textSurfaceObj = fontObj.render(go_to_print.text1, True, (0, 0, 0), (255, 255, 255))
-    textRectObj = textSurfaceObj.get_rect()
-    textRectObj.center = (30*35, 400)
-
-    screen.fill((255, 255, 255))
-    screen.blit(textSurfaceObj, textRectObj)            
-                
-    all_sprites.draw(screen)
-    pygame.display.flip()
-
-
 def load_tile_table(filename, width, height):
     """
-        Режет боьшой тайлсет на спрайты тайлов
+        Режет большой тайлсет на спрайты тайлов
     """
     image = pygame.image.load(filename).convert()
     image_width, image_height = image.get_size()
@@ -2193,7 +2158,7 @@ def game_loop(global_map:list, person:list, chunk_size:int, frame_size:list, ene
     screen = pygame.display.set_mode((1200, 750))
     pygame.display.set_caption("My Game")
     
-    game_fps = 30
+    game_fps = 100
     clock = pygame.time.Clock()
     tiles_image_dict = Tiles_image_dict()
   
@@ -2206,8 +2171,8 @@ def game_loop(global_map:list, person:list, chunk_size:int, frame_size:list, ene
         calculation_assemblage_point(global_map, person, chunk_size) # Рассчёт динамического чанка
         start = time.time() #проверка времени выполнения
         all_pass_step_calculations(person, enemy_list, mode_action, interaction)
-        if not person.enemy_pass_step:
-            master_game_events(global_map, enemy_list, person, go_to_print, step, activity_list, chunk_size, interaction, new_step)
+        #if not person.enemy_pass_step:
+        #    master_game_events(global_map, enemy_list, person, go_to_print, step, activity_list, chunk_size, interaction, new_step)
         test1 = time.time() #проверка времени выполнения
         master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action, enemy_list, activity_list, screen, tiles_image_dict)
         test2 = time.time() #проверка времени выполнения
