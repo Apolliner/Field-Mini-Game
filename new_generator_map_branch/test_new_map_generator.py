@@ -31,6 +31,9 @@ import copy
 """
 
 
+
+
+
 class Tile:
     """ Содержит изображение, описание, особое содержание тайла, стоимость передвижения, тип, высоту и лестницу """
     __slots__ = ('icon', 'description', 'list_of_features', 'price_move', 'type', 'level', 'stairs')
@@ -91,6 +94,44 @@ def timeit(func):
     return inner
 
 
+def print_map(printing_map):
+    """
+    Инструмент на время разработки, для наглядного отображения получившейся карты.
+    """
+    
+    if type(printing_map[0][0]) == list:
+        test_print = ''
+        for number_line in range(len(printing_map)):
+            for number_tile in range(len(printing_map[number_line])):
+                test_print += str(printing_map[number_line][number_tile][0]) + ' '
+            test_print += '\n'
+        print(test_print)
+
+    elif isinstance(printing_map[0][0], Tile):
+        test_print = ''
+        for number_line in range(len(printing_map)):
+            for number_tile in range(len(printing_map[number_line])):
+                #test_print += str(printing_map[number_line][number_tile].icon) + str(printing_map[number_line][number_tile].type)
+                test_print += str(printing_map[number_line][number_tile].icon) + str(abs(printing_map[number_line][number_tile].level))
+                #test_print += ' ' + str(abs(printing_map[number_line][number_tile].level))
+            test_print += '\n'
+        print(test_print)
+    else:
+        test_print = ''
+        for number_line in range(len(printing_map)):
+            for number_tile in range(len(printing_map[number_line])):
+                test_print += str(printing_map[number_line][number_tile]) + ' '
+            test_print += '\n'
+        print(test_print)
+
+def river_method_generation(size_location):
+    """
+        Генерация рек/перевалов
+    """
+    pass
+
+    
+
 @timeit
 def master_map_generate(global_region_grid, region_grid, chunks_grid, mini_grid, tiles_field_size):
     """
@@ -124,6 +165,9 @@ def master_map_generate(global_region_grid, region_grid, chunks_grid, mini_grid,
     add_random_all_tiles_map = add_random_tiles(all_tiles_map, chunks_map)
 
     add_draw_location(add_random_all_tiles_map, chunks_map)
+
+    #Рисование реки
+    river_map_generation(add_random_all_tiles_map)
     
     #Конвертирование тайлов в класс
     all_class_tiles_map = convert_tiles_to_class(add_random_all_tiles_map, chunks_map)
@@ -142,6 +186,25 @@ def master_map_generate(global_region_grid, region_grid, chunks_grid, mini_grid,
     ready_global_map = cutting_tiles_map(all_class_tiles_map, chunks_map)
 
     return ready_global_map
+
+def river_map_generation(processed_map):
+    """
+        Генерирует реки
+    """
+    position_y = 0
+    position_x = random.randrange(len(processed_map))
+    print(f"position_x - {position_x}")
+    for number_line in range(len(processed_map)):
+        position_y = number_line
+        processed_map[position_y][position_x] = '~'
+        if random.randrange(50)//30 > 0:
+            if 0 < position_x < len(processed_map) - 1:
+                position_x += random.randrange(-1, 2)
+            elif position_x == 0:
+                position_x += random.randrange(2)
+            elif position_x == len(processed_map) - 1:
+                position_x += random.randrange(-1, 1)
+            processed_map[position_y][position_x] = '~'
 
 
 def add_draw_location(processed_map, chunks_map):
