@@ -167,7 +167,7 @@ def master_map_generate(global_region_grid, region_grid, chunks_grid, mini_grid,
     add_draw_location(add_random_all_tiles_map, chunks_map)
 
     #Рисование реки
-    river_map_generation(add_random_all_tiles_map)
+    river_map_generation(add_random_all_tiles_map, 5)
     
     #Конвертирование тайлов в класс
     all_class_tiles_map = convert_tiles_to_class(add_random_all_tiles_map, chunks_map)
@@ -181,32 +181,74 @@ def master_map_generate(global_region_grid, region_grid, chunks_grid, mini_grid,
     levelness_calculation(all_class_tiles_map, ('▲'), True, False)
     levelness_calculation(all_class_tiles_map, ('▲'), True, True)
     levelness_calculation(all_class_tiles_map, ('▲'), True, True)
+    levelness_calculation(all_class_tiles_map, ('▲'), True, True)
+    levelness_calculation(all_class_tiles_map, ('▲'), True, True)
 
     #Разрезание глобальной карты на карту классов Location
     ready_global_map = cutting_tiles_map(all_class_tiles_map, chunks_map)
 
     return ready_global_map
 
-def river_map_generation(processed_map):
+def river_map_generation(processed_map, number_of_rivers):
     """
         Генерирует реки
     """
-    position_y = 0
-    position_x = random.randrange(len(processed_map))
-    print(f"position_x - {position_x}")
-    for number_line in range(len(processed_map)):
-        position_y = number_line
-        processed_map[position_y][position_x] = '~'
-        if random.randrange(50)//30 > 0:
-            if 0 < position_x < len(processed_map) - 1:
-                position_x += random.randrange(-1, 2)
-            elif position_x == 0:
-                position_x += random.randrange(2)
-            elif position_x == len(processed_map) - 1:
-                position_x += random.randrange(-1, 1)
+    minirivers = []
+    for river in range(number_of_rivers):
+        position_y = 1
+        position_x = random.randrange(25, len(processed_map) - 25)
+        print(f"position_x - {position_x}")
+        for number_line in range(len(processed_map)):
+            position_y = number_line
+            if processed_map[position_y][position_x - 1] != '~':
+                processed_map[position_y][position_x - 1] = random.choice([',', '„', '.', 'u', 'ü'])
             processed_map[position_y][position_x] = '~'
+            processed_map[position_y - 1][position_x] = '~'
+            processed_map[position_y][position_x + 1] = '~'
+            processed_map[position_y][position_x + 2] = '~'
+            processed_map[position_y][position_x + 3] = '~'
+            processed_map[position_y - 1][position_x + 3] = '~'
+            if processed_map[position_y][position_x + 4] != '~':
+                processed_map[position_y][position_x + 4] = random.choice([',', '„', '.', 'u', 'ü'])
+            if random.randrange(50)//30 > 0:
+                if 4 < position_x < len(processed_map) - 10:
+                    position_x += random.randrange(-1, 2)
+                elif position_x == 10:
+                    position_x += random.randrange(2)
+                elif position_x == len(processed_map) - 10:
+                    position_x += random.randrange(-1, 1)
+            if random.randrange(500)//495 > 0:
+                minirivers.append([position_y, position_x])
+    for miniriver in minirivers:
+        position_y = miniriver[0]
+        position_x = miniriver[1]
+        direction = random.choice(['left', 'right'])
+        step = 0
+        for number_line in range(position_y, len(processed_map)):
+            position_y = number_line
+            if processed_map[position_y][position_x] == '~' and step > 25:
+                break
+            if random.randrange(500)//495 > 0:
+                break
+            processed_map[position_y][position_x] = '~'
+            processed_map[position_y - 1][position_x] = '~'
+            if random.randrange(50)//30 > 0:
+                if direction == 'left':
+                    if 4 < position_x < len(processed_map) - 10:
+                        position_x += random.randrange(-1, 2)
+                    elif position_x == 10:
+                        pass
+                    elif position_x == len(processed_map) - 10:
+                        position_x += random.randrange(-1, 1)
+                if direction == 'right':
+                    if 4 < position_x < len(processed_map) - 10:
+                        position_x += random.randrange(2)
+                    elif position_x == len(processed_map) - 10:
+                        pass
+            step += 1
+            
 
-
+                    
 def add_draw_location(processed_map, chunks_map):
     """
         Добавляет заранее нарисованную локацию на карту
@@ -490,6 +532,10 @@ def levelness_calculation(processed_map, field_tiles_tuple, not_the_first_layer,
                 else:
                     if tile.type == '1':
                         tile.type = 'U'
+                        if 1 < number_line < len(processed_map) and 1 < number_tile < len(processed_map):
+                            if processed_map[number_line - 1][number_tile] == 'G' and processed_map[number_line + 1][number_tile
+                                ] == 'I' and processed_map[number_line][number_tile - 1] == 'J' and processed_map[number_line][number_tile + 1] == 'H':
+                                tile.level -= 1
                     else:
                         tile.type = '0'
 
