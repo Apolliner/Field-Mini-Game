@@ -157,6 +157,8 @@ def master_map_generate(global_region_grid, region_grid, chunks_grid, mini_grid,
     #Добавление тайлов из списка рандомного заполнения
     add_random_all_tiles_map = add_random_tiles(all_tiles_map, chunks_map)
 
+
+    #Добавление заранее нарисованной карты
     add_draw_location(add_random_all_tiles_map, chunks_map)
     
     #Создание перевалов
@@ -203,9 +205,9 @@ def mountain_method_generation(processed_map, chunks_map):
             position_x = step*number_mountain_passes
             for number_line in range(len(processed_map)):
                 position_y = number_line
-                processed_map[position_y][position_x] = 'o'
-                processed_map[position_y - 1][position_x] = 'o'
-                processed_map[position_y][position_x + 1] = 'o'
+                processed_map[position_y][position_x] = random.choice(['0', 'o', ',', 'A'])
+                processed_map[position_y - 1][position_x] = random.choice(['0', 'o', ',', 'A'])
+                processed_map[position_y][position_x + 1] = random.choice(['0', 'o', ',', 'A'])
                 if random.randrange(50)//10 > 0:
                     if 0 < position_x < len(processed_map) - 2:
                         position_x += random.randrange(-1, 2)
@@ -223,7 +225,27 @@ def mountain_method_generation(processed_map, chunks_map):
                 mountain_map_line.append('▲')
             mountain_map.append(mountain_map_line)
         return mountain_map
-    
+    def mountain_lake(processed_map, position_y, position_x, size):
+        """
+            Генерация горных озёр
+        """
+        for step in range(size):
+            quantity_step = 0
+            processed_map[position_y][position_x] = '~'
+            for i in range(quantity_step + 1):
+                processed_map[position_y][position_x + i] = '~'
+            
+            if size//2 > step:
+                position_x -= 1
+                quantity_step += 4
+            elif size//2 < step:
+                position_x += 1
+                quantity_step -= 2
+            position_y += 1
+                
+                
+                    
+
     chunk_size = len(processed_map)//len(chunks_map)
 
     for number_chunks_line, chunks_line in enumerate(chunks_map):
@@ -232,13 +254,16 @@ def mountain_method_generation(processed_map, chunks_map):
                 for line in range(chunk_size):
                     for tile in range(chunk_size):
                         mountain_map = mountain_map_generate(chunk_size)
-                        mountain_passes = mountain_passes_generate(mountain_map, 5)
+                        mountain_passes = mountain_passes_generate(mountain_map, 2)
+                        if random.randrange(10)//5 > 0:
+                            mountain_lake(mountain_passes, chunk_size//3, chunk_size//3, random.randrange(2, 9))
                         for number_all_line in range(chunk_size):
                             for number_all_tile in range(chunk_size):
-                                try:
-                                    processed_map[number_chunks_line*chunk_size + number_all_line][number_chunks_tile*chunk_size + number_all_tile] = mountain_passes[number_all_line][number_all_tile]
-                                except IndexError:
-                                    print(F"{processed_map[number_chunks_line*chunk_size + number_all_line][number_chunks_tile*chunk_size + number_all_tile]}")
+                                if not (mountain_passes[number_all_line][number_all_tile] in ('0')):
+                                    try:
+                                        processed_map[number_chunks_line*chunk_size + number_all_line][number_chunks_tile*chunk_size + number_all_tile] = mountain_passes[number_all_line][number_all_tile]
+                                    except IndexError:
+                                        print(F"{processed_map[number_chunks_line*chunk_size + number_all_line][number_chunks_tile*chunk_size + number_all_tile]}")
 def river_map_generation(processed_map, number_of_rivers):
     """
         Генерирует реки
@@ -282,6 +307,8 @@ def river_map_generation(processed_map, number_of_rivers):
                 break
             processed_map[position_y][position_x] = '~'
             processed_map[position_y - 1][position_x] = '~'
+            if random.randrange(500)//495 > 0:
+                minirivers.append([position_y, position_x])
             if random.randrange(50)//30 > 0:
                 if direction == 'left':
                     if 4 < position_x < len(processed_map) - 10:
@@ -369,7 +396,7 @@ def chunks_map_generate(region_map, initial_size, chunks_grid):
                     '.': ['.',  'semi-desert',         ['.', ','],            ['▲', 'o', 'i'],   10,        [35.0,50.0]],
                     'A': ['A',  'cliff semi-desert',   ['▲', 'A', '.', ','],  ['o', 'i'],         7,        [35.0,50.0]],
                     'S': ['S',  'snake semi-desert',   ['A', '.', ','],       ['▲','o', 'i'],     7,        [35.0,50.0]],
-                    '▲': ['▲',  'hills',               ['▲', 'o'],            ['„', ','],        20,        [20.0,35.0]],
+                    '▲': ['▲',  'hills',               ['▲', 'o', ','],       ['„', ','],        20,        [20.0,35.0]],
                     'B': ['▲',  'big hills',           ['▲'],                 ['o'],             20,        [20.0,35.0]],
                     'C': ['C',  'canyons',             ['C', '.', ','],       ['C'],             20,        [20.0,35.0]],
                     'R': ['R',  'big canyons',         ['C'],                 ['.', 'o', '▲'],   20,        [20.0,35.0]],
