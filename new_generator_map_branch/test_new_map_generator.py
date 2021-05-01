@@ -230,23 +230,45 @@ def mountain_method_generation(processed_map, chunks_map):
             Генерация горных озёр
         """
         quantity_step = 2
+        type_generate = 'evenly'
         for step in range(size):
             processed_map[position_y][position_x - 1] = 'o'
-            processed_map[position_y][position_x] = '~'
             for i in range(quantity_step + 1):
                 processed_map[position_y][position_x + i] = '~'
                 processed_map[position_y][position_x + i + 1] = 'o'
-            
-            if size//2 > step + 1:
-                position_x -= 1
-                quantity_step += 2
-            elif size//2 < step + 1:
-                position_x += 1
-                quantity_step -= 2
-            position_y += 1
+                if step == 0:
+                    processed_map[position_y - 1][position_x + i] = 'o'
+                if step == size - 1:
+                    processed_map[position_y + 1][position_x + i] = 'o'
+
+            if random.randrange(20)//15 > 0:
+                type_generate = 'left'
+            if random.randrange(20)//15 > 0:
+                type_generate = 'right'
                 
-                
-                    
+            if type_generate == 'evenly':
+                if size//2 > step + 1:
+                    position_x -= 1
+                    quantity_step += 2
+                elif size//2 < step + 1:
+                    position_x += 1
+                    quantity_step -= 2
+                position_y += 1
+            if type_generate == 'left':
+                if size//2 > step + 1:
+                    position_x -= 2
+                    quantity_step += 2
+                elif size//2 < step + 1:
+                    position_x += 1
+                    quantity_step -= 2
+                position_y += 1
+            if type_generate == 'right':
+                if size//2 > step + 1:
+                    quantity_step += 2
+                elif size//2 < step + 1:
+                    quantity_step -= 2
+                position_y += 1
+         
 
     chunk_size = len(processed_map)//len(chunks_map)
 
@@ -258,7 +280,7 @@ def mountain_method_generation(processed_map, chunks_map):
                         mountain_map = mountain_map_generate(chunk_size)
                         mountain_passes = mountain_passes_generate(mountain_map, 2)
                         if random.randrange(10)//5 > 0:
-                            mountain_lake(mountain_passes, chunk_size//3, chunk_size//3, random.randrange(2, 9))
+                            mountain_lake(mountain_passes, 1, chunk_size//2, random.randrange(6, 11, 2))
                         for number_all_line in range(chunk_size):
                             for number_all_tile in range(chunk_size):
                                 if not (mountain_passes[number_all_line][number_all_tile] in ('0')):
