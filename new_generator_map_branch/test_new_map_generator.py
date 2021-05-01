@@ -162,7 +162,10 @@ def master_map_generate(global_region_grid, region_grid, chunks_grid, mini_grid,
     add_draw_location(add_random_all_tiles_map, chunks_map)
     
     #Создание перевалов
-    mountain_method_generation(add_random_all_tiles_map, chunks_map)
+    #mountain_method_generation(add_random_all_tiles_map, chunks_map)
+
+    #Генерация гор по методу горных озёр
+    mountains_generate(add_random_all_tiles_map, chunks_map)
 
     #Рисование реки
     river_map_generation(add_random_all_tiles_map, 5)
@@ -187,8 +190,75 @@ def master_map_generate(global_region_grid, region_grid, chunks_grid, mini_grid,
 
     return ready_global_map
 
+def mountains_generate(all_tiles_map, chunks_map):
+    """
+        Генерация гор по методу горных озёр
+    """
+    def mountain_gen(processed_map, position_y, position_x, size, add_position_y_to_step, start_quantity_step, add_icon, filling_icon):
+        """
+            Генерация гор
+        """
+        quantity_step = start_quantity_step
+        type_generate = 'evenly'
+        for step in range(size):
+            processed_map[position_y][position_x - 1] = filling_icon
+            processed_map[position_y][position_x - 2] = filling_icon
+            if add_position_y_to_step == 2:
+                processed_map[position_y + 1][position_x - 1] = filling_icon
+                processed_map[position_y + 1][position_x - 2] = filling_icon
+            for i in range(quantity_step + 1):
+                processed_map[position_y][position_x + i] = add_icon
+                processed_map[position_y][position_x + i + 1] = filling_icon
+                processed_map[position_y][position_x + i + 2] = filling_icon
+                if add_position_y_to_step == 2:
+                    processed_map[position_y + 1][position_x + i] = add_icon
+                    processed_map[position_y + 1][position_x + i + 1] = filling_icon
+                    processed_map[position_y + 1][position_x + i + 2] = filling_icon
+                if step == 0:
+                    processed_map[position_y - 1][position_x + i] = filling_icon
+                if step == size - 1:
+                    processed_map[position_y + 1][position_x + i] = filling_icon
+
+            if random.randrange(20)//15 > 0:
+                type_generate = 'left'
+            elif random.randrange(20)//15 > 0:
+                type_generate = 'right'
+                
+            if type_generate == 'evenly':
+                if size//2 > step + 1:
+                    position_x -= 1
+                    quantity_step += 2
+                elif size//2 < step + 1:
+                    position_x += 1
+                    quantity_step -= 2
+                position_y += add_position_y_to_step
+            if type_generate == 'left':
+                if size//2 > step + 1:
+                    position_x -= 2
+                    quantity_step += 2
+                elif size//2 < step + 1:
+                    position_x += 2
+                    quantity_step -= 2
+                position_y += add_position_y_to_step
+            if type_generate == 'right':
+                if size//2 > step + 1:
+                    quantity_step += 2
+                elif size//2 < step + 1:
+                    quantity_step -= 2
+                position_y += add_position_y_to_step
+
+    
+    chunk_size = len(all_tiles_map)//len(chunks_map)
+    for number_line in range(len(chunks_map) - 1):
+        for number_tile in range(len(chunks_map[number_line]) - 1):
+            if chunks_map[number_line][number_tile][0] == '▲':
+                mountain_gen(all_tiles_map, number_line*chunk_size, number_tile*chunk_size, random.randrange(10, 20), 2, 0, '▲', 'o')
+            elif chunks_map[number_line][number_tile][0] == 'P' and random.randrange(20)//10 > 0:
+                mountain_gen(all_tiles_map, number_line*chunk_size, number_tile*chunk_size, random.randrange(10, 20), 1, 2, '~', 'u')
+            
 
 
+    
 @timeit
 def mountain_method_generation(processed_map, chunks_map):
     """
@@ -426,7 +496,7 @@ def chunks_map_generate(region_map, initial_size, chunks_grid):
                     'R': ['R',  'big canyons',         ['C'],                 ['.', 'o', '▲'],   20,        [20.0,35.0]],
                     '„': ['„',  'field',               ['u', '„', ','],       ['ü', 'o'],         5,        [20.0,35.0]],
                     ',': [',',  'dried field',         ['„', ','],            ['o', 'u'],         2,        [30.0,40.0]],
-                    'P': ['P',  'oasis',               ['F', '„', '~'],       ['P', ','],         0,        [15.0,30.0]],
+                    'P': ['P',  'oasis',               ['F', '„'],       ['P', ','],         0,        [15.0,30.0]],
                     '~': ['~',  'salty lake',          ['~'],                 ['„', '.'],        20,        [25.0,40.0]],
                     ';': [';',  'saline land',         [';'],                 [':'],             15,        [40.0,50.0]],
                 }
