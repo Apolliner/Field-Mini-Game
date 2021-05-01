@@ -229,16 +229,18 @@ def mountain_method_generation(processed_map, chunks_map):
         """
             Генерация горных озёр
         """
+        quantity_step = 2
         for step in range(size):
-            quantity_step = 0
+            processed_map[position_y][position_x - 1] = 'o'
             processed_map[position_y][position_x] = '~'
             for i in range(quantity_step + 1):
                 processed_map[position_y][position_x + i] = '~'
+                processed_map[position_y][position_x + i + 1] = 'o'
             
-            if size//2 > step:
+            if size//2 > step + 1:
                 position_x -= 1
-                quantity_step += 4
-            elif size//2 < step:
+                quantity_step += 2
+            elif size//2 < step + 1:
                 position_x += 1
                 quantity_step -= 2
             position_y += 1
