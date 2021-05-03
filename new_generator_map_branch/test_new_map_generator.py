@@ -159,7 +159,7 @@ def master_map_generate(global_region_grid, region_grid, chunks_grid, mini_grid,
 
 
     #Добавление заранее нарисованной карты
-    add_draw_location(add_random_all_tiles_map, chunks_map)
+    #add_draw_location(add_random_all_tiles_map, chunks_map)
     
     #Создание перевалов
     #mountain_method_generation(add_random_all_tiles_map, chunks_map)
@@ -189,6 +189,33 @@ def master_map_generate(global_region_grid, region_grid, chunks_grid, mini_grid,
     ready_global_map = cutting_tiles_map(all_class_tiles_map, chunks_map)
 
     return ready_global_map
+
+def add_draw_location(processed_map, chunks_map):
+    """
+        Добавляет заранее нарисованную локацию на карту
+    """
+    chunk_size = len(processed_map)//len(chunks_map)
+    draw_number_line = 100
+    draw_number_tile = 100
+    
+    file_draw_map = open("new_generator_map_branch\draw_map\hills_1.txt", encoding="utf-8") #new_generator_map_branch\
+    raw_draw_map = file_draw_map.read().splitlines()
+    draw_map = []
+
+    for line in raw_draw_map:
+        map_line = []
+        for tile in line:
+            map_line.append(tile)
+        draw_map.append(map_line)
+
+
+    for number_line in range(draw_number_line, (draw_number_line + len(draw_map))):
+        for number_tile in range(draw_number_line, (draw_number_tile + len(draw_map) - 4)):
+            try:
+                processed_map[number_line][number_tile] = draw_map[number_line - draw_number_line - 1][number_tile - draw_number_tile - 1]
+            except IndexError:
+                print(F"len(draw_map) - {len(draw_map)}, len(processed_map) - {len(processed_map)}, number_line - {number_line}, number_tile - {number_line}")
+
 
 def mountains_generate(all_tiles_map, chunks_map):
     """
@@ -261,17 +288,34 @@ def mountains_generate(all_tiles_map, chunks_map):
                 elif size//2 < step + 1:
                     quantity_step -= 2
                 position_y += add_position_y_to_step
-
+                
+    def draw_ready_map(processed_map, file_draw_map, number_line, number_tile, chunk_size):
+        """
+            Рисует готовую карту на указанном чанке.
+        """
+        draw_map = file_draw_map.read().splitlines()
+        for number_all_line in range(len(draw_map)):
+            for number_all_tile in range(len(draw_map[number_all_line])):
+                if draw_map[number_all_line][number_all_tile] != '0':
+                    processed_map[number_line*chunk_size + number_all_line][number_tile*chunk_size + number_all_tile] = draw_map[number_all_line][number_all_tile]
     
     chunk_size = len(all_tiles_map)//len(chunks_map)
     for number_line in range(len(chunks_map) - 1):
         for number_tile in range(len(chunks_map[number_line]) - 1):
             if chunks_map[number_line][number_tile][0] == '▲':
                 mountain_gen(all_tiles_map, number_line*chunk_size + random.randrange(chunk_size//2),
-                             number_tile*chunk_size + random.randrange(chunk_size//2), random.randrange(10, 20), 2, 0, '▲', ('o', '.', ','))
+                             number_tile*chunk_size + random.randrange(chunk_size//2), random.randrange(10, 25), 2, 0, '▲', ('o', '.', ','))
+            elif chunks_map[number_line][number_tile][0] == 'A':
+                mountain_gen(all_tiles_map, number_line*chunk_size + random.randrange(chunk_size//2),
+                             number_tile*chunk_size + random.randrange(chunk_size//2), random.randrange(5, 10), 2, 0, '▲', ('o', '.', ','))
             elif chunks_map[number_line][number_tile][0] == 'P' and random.randrange(20)//10 > 0:
                 mountain_gen(all_tiles_map, number_line*chunk_size + random.randrange(chunk_size//2),
                              number_tile*chunk_size + random.randrange(chunk_size//2), random.randrange(10, 20), 1, 2, '~', ('u'))
+            elif chunks_map[number_line][number_tile][0] == '~' and random.randrange(20)//18 > 0:
+                file_draw_map = open("new_generator_map_branch\draw_map\island_1.txt", encoding="utf-8") #new_generator_map_branch\
+                draw_ready_map(all_tiles_map, file_draw_map, number_line, number_tile, chunk_size)
+    
+                            
     
 @timeit
 def mountain_method_generation(processed_map, chunks_map):
@@ -432,31 +476,6 @@ def river_map_generation(processed_map, number_of_rivers):
                         pass
             step += 1
               
-def add_draw_location(processed_map, chunks_map):
-    """
-        Добавляет заранее нарисованную локацию на карту
-    """
-    chunk_size = len(processed_map)//len(chunks_map)
-    draw_number_line = 100
-    draw_number_tile = 100
-    
-    file_draw_map = open("new_generator_map_branch\draw_map\hills_1.txt", encoding="utf-8") #new_generator_map_branch\
-    raw_draw_map = file_draw_map.read().splitlines()
-    draw_map = []
-
-    for line in raw_draw_map:
-        map_line = []
-        for tile in line:
-            map_line.append(tile)
-        draw_map.append(map_line)
-
-
-    for number_line in range(draw_number_line, (draw_number_line + len(draw_map))):
-        for number_tile in range(draw_number_line, (draw_number_tile + len(draw_map) - 4)):
-            try:
-                processed_map[number_line][number_tile] = draw_map[number_line - draw_number_line - 1][number_tile - draw_number_tile - 1]
-            except IndexError:
-                print(F"len(draw_map) - {len(draw_map)}, len(processed_map) - {len(processed_map)}, number_line - {number_line}, number_tile - {number_line}")
 
 @timeit
 def global_region_generate(global_grid):
@@ -482,7 +501,7 @@ def region_generate(global_region_map, global_region_grid, region_grid):
     """
     seed_dict = {  
                     0: [['j', '.', 'S']],   # Пустынный
-                    1: [['A', '▲', 'B']],   # Горный
+                    1: [['A', '▲']],        # Горный
                     2: [['„', ',', 'P']],   # Живой
                     3: [[';', '.']],        # Солёный
                     4: [['C', 'R', ]],      # Каньонный
@@ -502,9 +521,9 @@ def chunks_map_generate(region_map, initial_size, chunks_grid):
     seed_dict = {# seed  |icon  | name                 |tileset               |random tileset   |price_move |temperature
                     'j': ['j',  'desert',              ['.'],                 ['j'],             20,        [40.0,60.0]],
                     '.': ['.',  'semi-desert',         ['.', ','],            ['▲', 'o', 'i'],   10,        [35.0,50.0]],
-                    'A': ['A',  'cliff semi-desert',   ['▲', 'A', '.', ','],  ['o', 'i'],         7,        [35.0,50.0]],
+                    'A': ['A',  'cliff semi-desert',   ['A', '.', ','],       ['▲', 'o', 'i'],    7,        [35.0,50.0]],
                     'S': ['S',  'snake semi-desert',   ['A', '.', ','],       ['▲','o', 'i'],     7,        [35.0,50.0]],
-                    '▲': ['▲',  'hills',               ['▲', 'o', ','],       ['„', ','],        20,        [20.0,35.0]],
+                    '▲': ['▲',  'hills',               ['o', ','],            ['▲', '„', ','],   20,        [20.0,35.0]],
                     'B': ['▲',  'big hills',           ['▲', 'o'],            ['o'],             20,        [20.0,35.0]],
                     'C': ['C',  'canyons',             ['C', '.', ','],       ['C'],             20,        [20.0,35.0]],
                     'R': ['R',  'big canyons',         ['C'],                 ['.', 'o', '▲'],   20,        [20.0,35.0]],
@@ -866,7 +885,9 @@ def merge_all_description_for_generator(description_one, description_two):
     if description_two:
         description_one[0] = random.choice([description_one[0], description_two[0]])
         description_one[1] = description_one[1] + ' - ' + description_two[1]
-        description_one[2].append(random.choice(description_two[2]))
+        add_descripion_2 = random.choice(description_two[2])
+        if add_descripion_2 != '~':
+            description_one[2].append(add_descripion_2)
         description_one[3].append(random.choice(description_two[3]))
         if description_one[4] < description_two[4]:
             description_one[4] = random.randrange(description_one[4], description_two[4])
