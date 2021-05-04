@@ -49,6 +49,7 @@ class Tile:
     def getting_attributes(self, icon, number):
         ground_dict =   {
                         'j': ['бархан', 1],
+                        's': ['ракушка', 1],
                         '.': ['горячий песок', 1],
                         ',': ['жухлая трава', 1],
                         'o': ['валун', 15],
@@ -157,14 +158,7 @@ def master_map_generate(global_region_grid, region_grid, chunks_grid, mini_grid,
     #Добавление тайлов из списка рандомного заполнения
     add_random_all_tiles_map = add_random_tiles(all_tiles_map, chunks_map)
 
-
-    #Добавление заранее нарисованной карты
-    #add_draw_location(add_random_all_tiles_map, chunks_map)
-    
-    #Создание перевалов
-    #mountain_method_generation(add_random_all_tiles_map, chunks_map)
-
-    #Генерация гор по методу горных озёр
+    #Генерация гор и озёр по методу горных озёр
     mountains_generate(add_random_all_tiles_map, chunks_map)
 
     #Рисование реки
@@ -185,37 +179,29 @@ def master_map_generate(global_region_grid, region_grid, chunks_grid, mini_grid,
     levelness_calculation(all_class_tiles_map, ('▲'), True, True)
     levelness_calculation(all_class_tiles_map, ('▲'), True, True)
 
+    #Разнообразие тайловых полей, не требующих границ
+    diversity_field_tiles(all_class_tiles_map)
+
     #Разрезание глобальной карты на карту классов Location
     ready_global_map = cutting_tiles_map(all_class_tiles_map, chunks_map)
 
     return ready_global_map
 
-def add_draw_location(processed_map, chunks_map):
+def diversity_field_tiles(processed_map):
     """
-        Добавляет заранее нарисованную локацию на карту
+        Делает тайлы разнообразными в тайловых полях, не требующих определения краёв.
     """
-    chunk_size = len(processed_map)//len(chunks_map)
-    draw_number_line = 100
-    draw_number_tile = 100
-    
-    file_draw_map = open("new_generator_map_branch\draw_map\hills_1.txt", encoding="utf-8") #new_generator_map_branch\
-    raw_draw_map = file_draw_map.read().splitlines()
-    draw_map = []
-
-    for line in raw_draw_map:
-        map_line = []
-        for tile in line:
-            map_line.append(tile)
-        draw_map.append(map_line)
-
-
-    for number_line in range(draw_number_line, (draw_number_line + len(draw_map))):
-        for number_tile in range(draw_number_line, (draw_number_tile + len(draw_map) - 4)):
-            try:
-                processed_map[number_line][number_tile] = draw_map[number_line - draw_number_line - 1][number_tile - draw_number_tile - 1]
-            except IndexError:
-                print(F"len(draw_map) - {len(draw_map)}, len(processed_map) - {len(processed_map)}, number_line - {number_line}, number_tile - {number_line}")
-
+    tiles_dict =    {
+                    'F': ('0', '1', '2', '3', '4', '5', '6', '7'),
+                    'u': ('0', '1'),
+                    'j': ('0', '1'),
+                    'A': ('0', '1')
+                    }
+    for number_line in range(len(processed_map)):
+        for number_tile in range(len(processed_map[number_line])):
+            if processed_map[number_line][number_tile].icon in tiles_dict:
+                processed_map[number_line][number_tile].type = random.choice(tiles_dict[processed_map[number_line][number_tile].icon])
+                
 
 def mountains_generate(all_tiles_map, chunks_map):
     """
@@ -315,107 +301,6 @@ def mountains_generate(all_tiles_map, chunks_map):
                 file_draw_map = open("new_generator_map_branch\draw_map\island_1.txt", encoding="utf-8") #new_generator_map_branch\
                 draw_ready_map(all_tiles_map, file_draw_map, number_line, number_tile, chunk_size)
     
-                            
-    
-@timeit
-def mountain_method_generation(processed_map, chunks_map):
-    """
-        Генерация гор
-    """
-    def mountain_passes_generate(processed_map, quantity):
-        """
-            Генерация перевалов
-        """
-        step = len(processed_map)//quantity
-        for number_mountain_passes in range(quantity):
-        
-            position_y = 1
-            position_x = step*number_mountain_passes
-            for number_line in range(len(processed_map)):
-                position_y = number_line
-                processed_map[position_y][position_x] = random.choice(['0', 'o', ',', 'A'])
-                processed_map[position_y - 1][position_x] = random.choice(['0', 'o', ',', 'A'])
-                processed_map[position_y][position_x + 1] = random.choice(['0', 'o', ',', 'A'])
-                if random.randrange(50)//10 > 0:
-                    if 0 < position_x < len(processed_map) - 2:
-                        position_x += random.randrange(-1, 2)
-                    elif position_x == 0:
-                        position_x += random.randrange(2)
-                    elif position_x == len(processed_map) - 2:
-                        position_x += random.randrange(-1, 1)
-        return processed_map
-                        
-    def mountain_map_generate(chunk_size):
-        mountain_map = []
-        for line in range(chunk_size):
-            mountain_map_line = []
-            for tile in range(chunk_size):
-                mountain_map_line.append('▲')
-            mountain_map.append(mountain_map_line)
-        return mountain_map
-    def mountain_lake(processed_map, position_y, position_x, size):
-        """
-            Генерация горных озёр
-        """
-        quantity_step = 2
-        type_generate = 'evenly'
-        for step in range(size):
-            processed_map[position_y][position_x - 1] = 'o'
-            for i in range(quantity_step + 1):
-                processed_map[position_y][position_x + i] = '~'
-                processed_map[position_y][position_x + i + 1] = 'o'
-                if step == 0:
-                    processed_map[position_y - 1][position_x + i] = 'o'
-                if step == size - 1:
-                    processed_map[position_y + 1][position_x + i] = 'o'
-
-            if random.randrange(20)//15 > 0:
-                type_generate = 'left'
-            if random.randrange(20)//15 > 0:
-                type_generate = 'right'
-                
-            if type_generate == 'evenly':
-                if size//2 > step + 1:
-                    position_x -= 1
-                    quantity_step += 2
-                elif size//2 < step + 1:
-                    position_x += 1
-                    quantity_step -= 2
-                position_y += 1
-            if type_generate == 'left':
-                if size//2 > step + 1:
-                    position_x -= 2
-                    quantity_step += 2
-                elif size//2 < step + 1:
-                    position_x += 1
-                    quantity_step -= 2
-                position_y += 1
-            if type_generate == 'right':
-                if size//2 > step + 1:
-                    quantity_step += 2
-                elif size//2 < step + 1:
-                    quantity_step -= 2
-                position_y += 1
-         
-
-    chunk_size = len(processed_map)//len(chunks_map)
-
-    for number_chunks_line, chunks_line in enumerate(chunks_map):
-        for number_chunks_tile, chunks_tile in enumerate(chunks_line):
-            if chunks_tile[0] == '▲':
-                for line in range(chunk_size):
-                    for tile in range(chunk_size):
-                        mountain_map = mountain_map_generate(chunk_size)
-                        mountain_passes = mountain_passes_generate(mountain_map, 2)
-                        if random.randrange(10)//5 > 0:
-                            mountain_lake(mountain_passes, 1, chunk_size//2, random.randrange(6, 11, 2))
-                        for number_all_line in range(chunk_size):
-                            for number_all_tile in range(chunk_size):
-                                if not (mountain_passes[number_all_line][number_all_tile] in ('0')):
-                                    try:
-                                        processed_map[number_chunks_line*chunk_size + number_all_line][number_chunks_tile*chunk_size + number_all_tile] = mountain_passes[number_all_line][number_all_tile]
-                                    except IndexError:
-                                        print(F"{processed_map[number_chunks_line*chunk_size + number_all_line][number_chunks_tile*chunk_size + number_all_tile]}")
 def river_map_generation(processed_map, number_of_rivers):
     """
         Генерирует реки

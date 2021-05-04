@@ -153,6 +153,7 @@ class Tile:
     def getting_attributes(self, icon, number):
         ground_dict =   {
                         'j': ['бархан', 1],
+                        's': ['ракушка', 1],
                         '.': ['горячий песок', 1],
                         ',': ['жухлая трава', 1],
                         'o': ['валун', 15],
@@ -329,6 +330,7 @@ class Tiles_image_dict:
         self.canyons_S = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_S.png'))
         self.canyons_T = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_T.png'))
         self.canyons_U = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_U.png'))
+        self.seashell_0 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_seashell_0.png'))
             
 """
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1681,14 +1683,14 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
             5) Небо (опционально)
 
 
-
-
         ОПРЕДЕЛЕНИЕ ТОРМОЗОВ
         Проскакивают значения:
         2.2022461891174316 - test1
         1.058335542678833 - test1_2
         2.0575599670410156 - end
-        1.0473484992980957 - test1_2 
+        1.0473484992980957 - test1_2
+        3.0611751079559326 - test_1_end
+        4.554834604263306 - test2_1
     """
     start = time.time()
     
@@ -1904,6 +1906,7 @@ class Image_tile(pygame.sprite.Sprite):
                                 '0': tiles_image_dict.dune_0,
                                 '1': tiles_image_dict.dune_1,
                              },
+                        's': {'0': tiles_image_dict.seashell_0},
                         '.': {'0': tiles_image_dict.sand,},
                         ',': {'0': tiles_image_dict.dry_grass,},
                         'o': {'0': tiles_image_dict.stones,},
@@ -2171,8 +2174,8 @@ def game_loop(global_map:list, person:list, chunk_size:int, frame_size:list, ene
         calculation_assemblage_point(global_map, person, chunk_size) # Рассчёт динамического чанка
         start = time.time() #проверка времени выполнения
         all_pass_step_calculations(person, enemy_list, mode_action, interaction)
-        #if not person.enemy_pass_step:
-        #    master_game_events(global_map, enemy_list, person, go_to_print, step, activity_list, chunk_size, interaction, new_step)
+        if not person.enemy_pass_step:
+            master_game_events(global_map, enemy_list, person, go_to_print, step, activity_list, chunk_size, interaction, new_step)
         test1 = time.time() #проверка времени выполнения
         master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action, enemy_list, activity_list, screen, tiles_image_dict)
         test2 = time.time() #проверка времени выполнения
