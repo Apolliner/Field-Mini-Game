@@ -168,7 +168,7 @@ def master_map_generate(global_region_grid, region_grid, chunks_grid, mini_grid,
     all_class_tiles_map = convert_tiles_to_class(add_random_all_tiles_map, chunks_map)
     
     #Рассчёт уровней, склонов и лестниц
-    levelness_calculation(all_class_tiles_map, ('~', '▲', 'C'), False, False)
+    levelness_calculation(all_class_tiles_map, ('~', '▲', 'C', ':'), False, False)
     levelness_calculation(all_class_tiles_map, ('~', 'C'), True, False)
     levelness_calculation(all_class_tiles_map, ('▲'), True, True)
     levelness_calculation(all_class_tiles_map, ('▲'), True, False)
@@ -195,7 +195,9 @@ def diversity_field_tiles(processed_map):
                     'F': ('0', '1', '2', '3', '4', '5', '6', '7'),
                     'u': ('0', '1'),
                     'j': ('0', '1'),
-                    'A': ('0', '1')
+                    'A': ('0', '1'),
+                    'o': ('0', '1', '2', '3', '4'),
+                    'i': ('0', '1', '2', '3'),
                     }
     for number_line in range(len(processed_map)):
         for number_tile in range(len(processed_map[number_line])):
@@ -205,7 +207,7 @@ def diversity_field_tiles(processed_map):
 
 def mountains_generate(all_tiles_map, chunks_map):
     """
-        Генерация гор по методу горных озёр
+        Генерация гор и озёр по методу горных озёр
     """
     def mountain_gen(processed_map, position_y, position_x, size, add_position_y_to_step, start_quantity_step, add_icon, filling_icon):
         """
@@ -294,6 +296,11 @@ def mountains_generate(all_tiles_map, chunks_map):
             elif chunks_map[number_line][number_tile][0] == 'A':
                 mountain_gen(all_tiles_map, number_line*chunk_size + random.randrange(chunk_size//2),
                              number_tile*chunk_size + random.randrange(chunk_size//2), random.randrange(5, 10), 2, 0, '▲', ('o', '.', ','))
+
+            elif chunks_map[number_line][number_tile][0] in ('A', '.', 'S') and random.randrange(20)//18 > 0:
+                mountain_gen(all_tiles_map, number_line*chunk_size + random.randrange(chunk_size//2),
+                             number_tile*chunk_size + random.randrange(chunk_size//2), random.randrange(2, 6), 2, 0, 'i', ('i'))
+                
             elif chunks_map[number_line][number_tile][0] == 'P' and random.randrange(20)//10 > 0:
                 mountain_gen(all_tiles_map, number_line*chunk_size + random.randrange(chunk_size//2),
                              number_tile*chunk_size + random.randrange(chunk_size//2), random.randrange(10, 20), 1, 2, '~', ('u'))
@@ -416,7 +423,7 @@ def chunks_map_generate(region_map, initial_size, chunks_grid):
                     ',': [',',  'dried field',         ['„', ','],            ['o', 'u'],         2,        [30.0,40.0]],
                     'P': ['P',  'oasis',               ['P', '„'],            ['F', ','],         0,        [15.0,30.0]],
                     '~': ['~',  'salty lake',          ['~'],                 ['„', '.'],        20,        [25.0,40.0]],
-                    ';': [';',  'saline land',         [';'],                 [':'],             15,        [40.0,50.0]],
+                    ';': [';',  'saline land',         [':'],                 [':'],             15,        [40.0,50.0]],
                 }
     raw_chunks_map = all_map_master_generate(region_map, chunks_grid, True, seed_dict, 0, True)
     chunks_map = all_gluing_map(raw_chunks_map, initial_size, chunks_grid)
@@ -447,7 +454,7 @@ def tiles_map_generate(mini_region_map, initial_size, chunk_size):
                     'A': 'A',
                     '▲': '▲',
                     'C': 'C',
-                    ';': ';',
+                    ':': ':',
                     'S': 'S',
                     'o': 'o',
                     'F': 'F',
@@ -475,8 +482,12 @@ def add_random_tiles(processed_map, chunks_map):
             for number_line in range((number_seed_line)*chunk_size, (number_seed_line)*chunk_size + chunk_size):
                 for number_tile in range((number_seed)*chunk_size, (number_seed)*chunk_size + chunk_size):
                     if random.randrange(10)//9 and not(processed_map[number_line][number_tile] in banned_list):
-                        processed_map[number_line][number_tile] = random.choice(chunks_map[number_seed_line][number_seed][3])
-            
+                        add_tile = random.choice(chunks_map[number_seed_line][number_seed][3])
+                        if add_tile != ';' or (add_tile == ';' and processed_map[number_line][number_tile] == ':'):
+                            processed_map[number_line][number_tile] = add_tile
+                        elif add_tile == ';' and processed_map[number_line][number_tile] != ':':
+                            processed_map[number_line][number_tile] = ':'
+
     return processed_map
 
 @timeit

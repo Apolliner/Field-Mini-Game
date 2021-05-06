@@ -204,10 +204,32 @@ class Tiles_image_dict:
         self.dune_1 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dune_1.png'))
         self.sand = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_sand.png'))
         self.dry_grass = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_grass.png'))
-        self.stones = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_stone.png'))
+        self.stones_0 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_stone_0.png'))
+        self.stones_1 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_stone_1.png'))
+        self.stones_2 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_stone_2.png'))
+        self.stones_3 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_stone_3.png'))
+        self.stones_4 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_stone_4.png'))
         self.hills = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills.png'))
-        self.cactus = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_cactus.png'))
-        self.saline_1 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_saline_1.png'))
+        self.cactus_0 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_cactus_0.png'))
+        self.cactus_1 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_cactus_1.png'))
+        self.cactus_2 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_cactus_2.png'))
+        self.cactus_3 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_cactus_3.png'))
+        self.saline_1_0 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_saline_1_0.png'))
+        self.saline_1_1 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_saline_1_1.png'))
+        self.saline_1_2 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_saline_1_2.png'))
+        self.saline_1_3 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_saline_1_3.png'))
+        self.saline_1_4 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_saline_1_4.png'))
+        self.saline_1_5 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_saline_1_5.png'))
+        self.saline_1_6 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_saline_1_6.png'))
+        self.saline_1_7 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_saline_1_7.png'))
+        self.saline_1_8 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_saline_1_8.png'))
+        self.saline_1_9 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_saline_1_9.png'))
+        self.saline_1_A = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_saline_1_A.png'))
+        self.saline_1_B = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_saline_1_B.png'))
+        self.saline_1_C = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_saline_1_C.png'))
+        self.saline_1_D = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_saline_1_D.png'))
+        self.saline_1_E = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_saline_1_E.png'))
+        self.saline_1_F = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_saline_1_F.png'))
         self.saline_2 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_saline_2.png'))
         self.grass = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_grass.png'))
         self.prickly_grass = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_prickly_grass.png'))
@@ -1882,7 +1904,7 @@ class Level_tiles(pygame.sprite.Sprite):
         self.x = x
         self.y = y
         self.image = pygame.Surface((size_tile, size_tile))
-        self.image.fill((255, 255, 255))
+        self.image.fill((239, 228, 176))
         self.image.set_alpha(25*level)
         self.rect = self.image.get_rect()
         self.rect.left = x
@@ -1909,7 +1931,13 @@ class Image_tile(pygame.sprite.Sprite):
                         's': {'0': tiles_image_dict.seashell_0},
                         '.': {'0': tiles_image_dict.sand,},
                         ',': {'0': tiles_image_dict.dry_grass,},
-                        'o': {'0': tiles_image_dict.stones,},
+                        'o': {
+                                '0': tiles_image_dict.stones_0,
+                                '1': tiles_image_dict.stones_1,
+                                '2': tiles_image_dict.stones_2,
+                                '3': tiles_image_dict.stones_3,
+                                '4': tiles_image_dict.stones_4,
+                              },
                         'A': {
                                 '0': tiles_image_dict.bump_0,
                                 '1': tiles_image_dict.bump_1,
@@ -1947,8 +1975,30 @@ class Image_tile(pygame.sprite.Sprite):
                                 'T': tiles_image_dict.hills_T,
                                 'U': tiles_image_dict.hills_U,
                              },
-                        'i': {'0': tiles_image_dict.cactus,},
-                        ':': {'0': tiles_image_dict.saline_1,},
+                        'i': {
+                                '0': tiles_image_dict.cactus_0,
+                                '1': tiles_image_dict.cactus_1,
+                                '2': tiles_image_dict.cactus_2,
+                                '3': tiles_image_dict.cactus_3,
+                              },
+                        ':': {
+                                '0': tiles_image_dict.saline_1_0,
+                                '1': tiles_image_dict.saline_1_1,
+                                '2': tiles_image_dict.saline_1_2,
+                                '3': tiles_image_dict.saline_1_3,
+                                '4': tiles_image_dict.saline_1_4,
+                                '5': tiles_image_dict.saline_1_5,
+                                '6': tiles_image_dict.saline_1_6,
+                                '7': tiles_image_dict.saline_1_7,
+                                '8': tiles_image_dict.saline_1_8,
+                                '9': tiles_image_dict.saline_1_9,
+                                'A': tiles_image_dict.saline_1_A,
+                                'B': tiles_image_dict.saline_1_B,
+                                'C': tiles_image_dict.saline_1_C,
+                                'D': tiles_image_dict.saline_1_D,
+                                'E': tiles_image_dict.saline_1_E,
+                                'F': tiles_image_dict.saline_1_F,
+                             },
                         ';': {'0': tiles_image_dict.saline_2,},
                         '„': {'0': tiles_image_dict.grass,},
                         'u': {
