@@ -203,7 +203,12 @@ class Tiles_image_dict:
         self.dune_0 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dune_0.png'))
         self.dune_1 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dune_1.png'))
         self.sand = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_sand.png'))
-        self.dry_grass = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_grass.png'))
+        self.dry_grass_0 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_grass_0.png'))
+        self.dry_grass_1 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_grass_1.png'))
+        self.dry_grass_2 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_grass_2.png'))
+        self.dry_grass_3 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_grass_3.png'))
+        self.dry_grass_4 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_grass_4.png'))
+        self.dry_grass_5 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_grass_5.png'))       
         self.stones_0 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_stone_0.png'))
         self.stones_1 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_stone_1.png'))
         self.stones_2 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_stone_2.png'))
@@ -231,7 +236,11 @@ class Tiles_image_dict:
         self.saline_1_E = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_saline_1_E.png'))
         self.saline_1_F = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_saline_1_F.png'))
         self.saline_2 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_saline_2.png'))
-        self.grass = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_grass.png'))
+        self.grass_0 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_grass_0.png'))
+        self.grass_1 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_grass_1.png'))
+        self.grass_2 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_grass_2.png'))
+        self.grass_3 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_grass_3.png'))
+        self.grass_4 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_grass_4.png'))
         self.prickly_grass = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_prickly_grass.png'))
         self.live_tree = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_live_tree.png'))
         self.person = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_person.png'))
@@ -1930,7 +1939,24 @@ class Image_tile(pygame.sprite.Sprite):
                              },
                         's': {'0': tiles_image_dict.seashell_0},
                         '.': {'0': tiles_image_dict.sand,},
-                        ',': {'0': tiles_image_dict.dry_grass,},
+                        ',': {
+                                '0': tiles_image_dict.dry_grass_5,
+                                '1': tiles_image_dict.dry_grass_0,
+                                '2': tiles_image_dict.dry_grass_2,
+                                '3': tiles_image_dict.dry_grass_1,
+                                '4': tiles_image_dict.dry_grass_2,
+                                '5': tiles_image_dict.dry_grass_2,
+                                '6': tiles_image_dict.dry_grass_4,
+                                '7': tiles_image_dict.dry_grass_3,
+                                '8': tiles_image_dict.dry_grass_2,
+                                '9': tiles_image_dict.dry_grass_3,
+                                'A': tiles_image_dict.dry_grass_4,
+                                'B': tiles_image_dict.dry_grass_4,
+                                'C': tiles_image_dict.dry_grass_5,
+                                'D': tiles_image_dict.dry_grass_2,
+                                'E': tiles_image_dict.dry_grass_3,
+                                'F': tiles_image_dict.dry_grass_4,
+                              },
                         'o': {
                                 '0': tiles_image_dict.stones_4,
                                 '1': tiles_image_dict.stones_0,
@@ -2011,7 +2037,24 @@ class Image_tile(pygame.sprite.Sprite):
                                 'F': tiles_image_dict.saline_1_F,
                              },
                         ';': {'0': tiles_image_dict.saline_2,},
-                        '„': {'0': tiles_image_dict.grass,},
+                        '„': {
+                                '0': tiles_image_dict.grass_4,
+                                '1': tiles_image_dict.grass_0,
+                                '2': tiles_image_dict.grass_2,
+                                '3': tiles_image_dict.grass_3,
+                                '4': tiles_image_dict.grass_4,
+                                '5': tiles_image_dict.grass_2,
+                                '6': tiles_image_dict.grass_3,
+                                '7': tiles_image_dict.grass_4,
+                                '8': tiles_image_dict.grass_2,
+                                '9': tiles_image_dict.grass_3,
+                                'A': tiles_image_dict.grass_4,
+                                'B': tiles_image_dict.grass_2,
+                                'C': tiles_image_dict.grass_3,
+                                'D': tiles_image_dict.grass_4,
+                                'E': tiles_image_dict.grass_2,
+                                'F': tiles_image_dict.grass_3,
+                              },
                         'u': {
                                 '0': tiles_image_dict.tall_grass_0,
                                 '1': tiles_image_dict.tall_grass_1,

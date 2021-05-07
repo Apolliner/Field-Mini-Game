@@ -168,7 +168,7 @@ def master_map_generate(global_region_grid, region_grid, chunks_grid, mini_grid,
     all_class_tiles_map = convert_tiles_to_class(add_random_all_tiles_map, chunks_map)
     
     #Рассчёт уровней, склонов и лестниц
-    levelness_calculation(all_class_tiles_map, ('~', '▲', 'C', ':', 'o'), False, False)
+    levelness_calculation(all_class_tiles_map, ('~', '▲', 'C', ':', 'o', ',', '„'), False, False)
     levelness_calculation(all_class_tiles_map, ('~', 'C'), True, False)
     levelness_calculation(all_class_tiles_map, ('▲'), True, True)
     levelness_calculation(all_class_tiles_map, ('▲'), True, False)
