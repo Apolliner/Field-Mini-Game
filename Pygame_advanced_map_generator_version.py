@@ -1904,7 +1904,7 @@ class Level_tiles(pygame.sprite.Sprite):
         self.x = x
         self.y = y
         self.image = pygame.Surface((size_tile, size_tile))
-        self.image.fill((239, 228, 176))
+        self.image.fill((239, 228, 176), special_flags=pygame.BLEND_RGB_ADD)
         self.image.set_alpha(25*level)
         self.rect = self.image.get_rect()
         self.rect.left = x
@@ -1932,11 +1932,22 @@ class Image_tile(pygame.sprite.Sprite):
                         '.': {'0': tiles_image_dict.sand,},
                         ',': {'0': tiles_image_dict.dry_grass,},
                         'o': {
-                                '0': tiles_image_dict.stones_0,
-                                '1': tiles_image_dict.stones_1,
+                                '0': tiles_image_dict.stones_4,
+                                '1': tiles_image_dict.stones_0,
                                 '2': tiles_image_dict.stones_2,
                                 '3': tiles_image_dict.stones_3,
                                 '4': tiles_image_dict.stones_4,
+                                '5': tiles_image_dict.stones_2,
+                                '6': tiles_image_dict.stones_3,
+                                '7': tiles_image_dict.stones_4,
+                                '8': tiles_image_dict.stones_2,
+                                '9': tiles_image_dict.stones_3,
+                                'A': tiles_image_dict.stones_4,
+                                'B': tiles_image_dict.stones_2,
+                                'C': tiles_image_dict.stones_3,
+                                'D': tiles_image_dict.stones_4,
+                                'E': tiles_image_dict.stones_2,
+                                'F': tiles_image_dict.stones_3,
                               },
                         'A': {
                                 '0': tiles_image_dict.bump_0,

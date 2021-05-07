@@ -168,7 +168,7 @@ def master_map_generate(global_region_grid, region_grid, chunks_grid, mini_grid,
     all_class_tiles_map = convert_tiles_to_class(add_random_all_tiles_map, chunks_map)
     
     #Рассчёт уровней, склонов и лестниц
-    levelness_calculation(all_class_tiles_map, ('~', '▲', 'C', ':'), False, False)
+    levelness_calculation(all_class_tiles_map, ('~', '▲', 'C', ':', 'o'), False, False)
     levelness_calculation(all_class_tiles_map, ('~', 'C'), True, False)
     levelness_calculation(all_class_tiles_map, ('▲'), True, True)
     levelness_calculation(all_class_tiles_map, ('▲'), True, False)
@@ -196,8 +196,7 @@ def diversity_field_tiles(processed_map):
                     'u': ('0', '1'),
                     'j': ('0', '1'),
                     'A': ('0', '1'),
-                    'o': ('0', '1', '2', '3', '4'),
-                    'i': ('0', '1', '2', '3'),
+                    'i': ('0', '1', '2', '3'), #'o': ('0', '1', '2', '3', '4'),
                     }
     for number_line in range(len(processed_map)):
         for number_tile in range(len(processed_map[number_line])):
@@ -288,8 +287,8 @@ def mountains_generate(all_tiles_map, chunks_map):
                     processed_map[number_line*chunk_size + number_all_line][number_tile*chunk_size + number_all_tile] = draw_map[number_all_line][number_all_tile]
     
     chunk_size = len(all_tiles_map)//len(chunks_map)
-    for number_line in range(len(chunks_map) - 1):
-        for number_tile in range(len(chunks_map[number_line]) - 1):
+    for number_line in range(len(chunks_map) - 2):
+        for number_tile in range(len(chunks_map[number_line]) - 2):
             if chunks_map[number_line][number_tile][0] == '▲':
                 mountain_gen(all_tiles_map, number_line*chunk_size + random.randrange(chunk_size//2),
                              number_tile*chunk_size + random.randrange(chunk_size//2), random.randrange(10, 25), 2, 0, '▲', ('o', '.', ','))
