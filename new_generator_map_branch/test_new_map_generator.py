@@ -141,16 +141,20 @@ def master_map_generate(global_region_grid, region_grid, chunks_grid, mini_grid,
         6) режет полную тайловую карту на отдельные локации.
         
     """
-
+    #Глобальные регионы
     global_region_map = global_region_generate(global_region_grid)
-    
+
+    #Регионы
     region_map = region_generate(global_region_map, global_region_grid, region_grid)
 
-    #Содержит в себе описание локации
+    #Карта локаций. Содержит в себе описание локации
     chunks_map = chunks_map_generate(region_map, (global_region_grid*region_grid), chunks_grid) 
 
+    #Карта мини-регионов
     mini_region_map = mini_region_map_generate(chunks_map, (global_region_grid*region_grid*chunks_grid), mini_grid)
 
+    #Генерация морей по методу горных озёр
+    sea_generate(mini_region_map, global_region_map, chunks_map)
     
     #Готовая глобальная тайловая карта
     all_tiles_map = tiles_map_generate(mini_region_map, (global_region_grid*region_grid*chunks_grid*mini_grid), tiles_field_size) 
@@ -202,79 +206,92 @@ def diversity_field_tiles(processed_map):
         for number_tile in range(len(processed_map[number_line])):
             if processed_map[number_line][number_tile].icon in tiles_dict:
                 processed_map[number_line][number_tile].type = random.choice(tiles_dict[processed_map[number_line][number_tile].icon])
-                
 
-def mountains_generate(all_tiles_map, chunks_map):
+def sea_generate(processed_map, managing_map, changing_map):
     """
-        Генерация гор и озёр по методу горных озёр
+        Генерирует моря по методу горных озёр
     """
-    def mountain_gen(processed_map, position_y, position_x, size, add_position_y_to_step, start_quantity_step, add_icon, filling_icon):
-        """
-            Генерация гор и водоёмов
-        """
-        quantity_step = start_quantity_step
-        type_generate = 'evenly'
-        direction = random.randrange(2)
-        for step in range(size):
+    chunk_size = len(processed_map)//len(managing_map)
+    for managing_line in range(len(managing_map)):
+        for managing_tile in range(len(managing_map[managing_line])):
+            if managing_map[managing_line][managing_tile] == 5:
+                mountain_gen(processed_map, managing_line*chunk_size, managing_tile*chunk_size,
+                             random.randrange(chunk_size//2, chunk_size), 2, 1, '~', ('~'))
+                
+def mountain_gen(processed_map, position_y, position_x, size, add_position_y_to_step, start_quantity_step, add_icon, filling_icon):
+    """
+        Генерация гор и водоёмов
+    """
+    quantity_step = start_quantity_step
+    type_generate = 'evenly'
+    direction = random.randrange(2)
+    for step in range(size):
+        if len(processed_map) - 2 > position_y >= 1 and len(processed_map[0]) - 2 > position_x >= 1:
             processed_map[position_y][position_x - 1] = random.choice(filling_icon)
             processed_map[position_y][position_x - 2] = random.choice(filling_icon)
             if add_position_y_to_step == 2:
                 processed_map[position_y + 1][position_x - 1] = random.choice(filling_icon)
                 processed_map[position_y + 1][position_x - 2] = random.choice(filling_icon)
             for i in range(quantity_step + 1):
-                processed_map[position_y][position_x + i] = add_icon
-                processed_map[position_y][position_x + i + 1] = random.choice(filling_icon)
-                processed_map[position_y][position_x + i + 2] = random.choice(filling_icon)
-                if type_generate == 'left' and random.randrange(10)//9 > 0:
-                    position_x -= 1
-                if type_generate == 'right' and random.randrange(10)//9 > 0:
-                    position_x += 1
-                if add_position_y_to_step == 2:
-                    processed_map[position_y + 1][position_x + i] = add_icon
-                    processed_map[position_y + 1][position_x + i + 1] = random.choice(filling_icon)
-                    processed_map[position_y + 1][position_x + i + 2] = random.choice(filling_icon)
-                if step == 0:
-                    processed_map[position_y - 1][position_x + i] = random.choice(filling_icon)
-                if step == size - 1:
-                    processed_map[position_y + 1][position_x + i] = random.choice(filling_icon)
+                if position_x + i + 2 < len(processed_map[0]) - 2 - i:
+                    processed_map[position_y][position_x + i] = add_icon
+                    processed_map[position_y][position_x + i + 1] = random.choice(filling_icon)
+                    processed_map[position_y][position_x + i + 2] = random.choice(filling_icon)
+                    if type_generate == 'left' and random.randrange(10)//9 > 0:
+                        position_x -= 1
+                    if type_generate == 'right' and random.randrange(10)//9 > 0:
+                        position_x += 1
+                    if add_position_y_to_step == 2:
+                        processed_map[position_y + 1][position_x + i] = add_icon
+                        processed_map[position_y + 1][position_x + i + 1] = random.choice(filling_icon)
+                        processed_map[position_y + 1][position_x + i + 2] = random.choice(filling_icon)
+                    if step == 0:
+                        processed_map[position_y - 1][position_x + i] = random.choice(filling_icon)
+                    if step == size - 1:
+                        processed_map[position_y + 1][position_x + i] = random.choice(filling_icon)
 
-            if direction == 0:
-                if random.randrange(20)//15 > 0:
-                    type_generate = 'left'
-                elif random.randrange(20)//15 > 0:
-                    type_generate = 'right'
-                elif random.randrange(20)//15 > 0:
-                    type_generate = 'evenly'
-            elif direction == 1:
-                if random.randrange(20)//15 > 0:
-                    type_generate = 'right'
-                elif random.randrange(20)//15 > 0:
-                    type_generate = 'left'
-                elif random.randrange(20)//15 > 0:
-                    type_generate = 'evenly'
+        if direction == 0:
+            if random.randrange(20)//15 > 0:
+                type_generate = 'left'
+            elif random.randrange(20)//15 > 0:
+                type_generate = 'right'
+            elif random.randrange(20)//15 > 0:
+                type_generate = 'evenly'
+        elif direction == 1:
+            if random.randrange(20)//15 > 0:
+                type_generate = 'right'
+            elif random.randrange(20)//15 > 0:
+                type_generate = 'left'
+            elif random.randrange(20)//15 > 0:
+                type_generate = 'evenly'
                 
-            if type_generate == 'evenly':
-                if size//2 > step + 1:
-                    position_x -= 1
-                    quantity_step += 2
-                elif size//2 < step + 1:
-                    position_x += 1
-                    quantity_step -= 2
-                position_y += add_position_y_to_step
-            if type_generate == 'left':
-                if size//2 > step + 1:
-                    position_x -= 2
-                    quantity_step += 2
-                elif size//2 < step + 1:
-                    position_x += 2
-                    quantity_step -= 2
-                position_y += add_position_y_to_step
-            if type_generate == 'right':
-                if size//2 > step + 1:
-                    quantity_step += 2
-                elif size//2 < step + 1:
-                    quantity_step -= 2
-                position_y += add_position_y_to_step
+        if type_generate == 'evenly':
+            if size//2 > step + 1:
+                position_x -= 1
+                quantity_step += 2
+            elif size//2 < step + 1:
+                position_x += 1
+                quantity_step -= 2
+            position_y += add_position_y_to_step
+        if type_generate == 'left':
+            if size//2 > step + 1:
+                position_x -= 2
+                quantity_step += 2
+            elif size//2 < step + 1:
+                position_x += 2
+                quantity_step -= 2
+            position_y += add_position_y_to_step
+        if type_generate == 'right':
+            if size//2 > step + 1:
+                quantity_step += 2
+            elif size//2 < step + 1:
+                quantity_step -= 2
+            position_y += add_position_y_to_step                
+
+def mountains_generate(all_tiles_map, chunks_map):
+    """
+        Генерация гор и озёр по методу горных озёр
+    """
                 
     def draw_ready_map(processed_map, file_draw_map, number_line, number_tile, chunk_size):
         """
@@ -287,8 +304,8 @@ def mountains_generate(all_tiles_map, chunks_map):
                     processed_map[number_line*chunk_size + number_all_line][number_tile*chunk_size + number_all_tile] = draw_map[number_all_line][number_all_tile]
     
     chunk_size = len(all_tiles_map)//len(chunks_map)
-    for number_line in range(len(chunks_map) - 2):
-        for number_tile in range(len(chunks_map[number_line]) - 2):
+    for number_line in range(len(chunks_map)):
+        for number_tile in range(len(chunks_map[number_line])):
             if chunks_map[number_line][number_tile][0] == '▲':
                 mountain_gen(all_tiles_map, number_line*chunk_size + random.randrange(chunk_size//2),
                              number_tile*chunk_size + random.randrange(chunk_size//2), random.randrange(10, 25), 2, 0, '▲', ('o', '.', ','))
@@ -396,7 +413,7 @@ def region_generate(global_region_map, global_region_grid, region_grid):
                     2: [['„', ',', 'P']],   # Живой
                     3: [[';', '.']],        # Солёный
                     4: [['C', 'R', ]],      # Каньонный
-                    5: [['~']]              # Водяной
+                    5: [['S']]              # Водяной
                 }
 
     raw_region_map = all_map_master_generate(global_region_map, region_grid, False, seed_dict, 0, False)
