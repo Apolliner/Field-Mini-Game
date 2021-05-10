@@ -63,7 +63,8 @@ class Tile:
                         'ü': ['колючая трава', 10],
                         'F': ['чахлое дерево', 1],
                         'P': ['раскидистое дерево', 1],
-                        '~': ['солёная вода', 20],
+                        '~': ['вода', 20],
+                        '`': ['солёная вода', 50],
                         'C': ['каньон', 20],
                         '??': ['ничего', 10],
                         }
@@ -154,7 +155,7 @@ def master_map_generate(global_region_grid, region_grid, chunks_grid, mini_grid,
     mini_region_map = mini_region_map_generate(chunks_map, (global_region_grid*region_grid*chunks_grid), mini_grid)
 
     #Генерация морей по методу горных озёр
-    sea_generate(mini_region_map, global_region_map, chunks_map)
+    sea_generate(mini_region_map, global_region_map)
     
     #Готовая глобальная тайловая карта
     all_tiles_map = tiles_map_generate(mini_region_map, (global_region_grid*region_grid*chunks_grid*mini_grid), tiles_field_size) 
@@ -168,12 +169,15 @@ def master_map_generate(global_region_grid, region_grid, chunks_grid, mini_grid,
     #Рисование реки
     river_map_generation(add_random_all_tiles_map, 5)
     
+    #Отрисовка морей на карте локаций
+    sea_writer(chunks_map, mini_region_map)
+    
     #Конвертирование тайлов в класс
     all_class_tiles_map = convert_tiles_to_class(add_random_all_tiles_map, chunks_map)
     
     #Рассчёт уровней, склонов и лестниц
-    levelness_calculation(all_class_tiles_map, ('~', '▲', 'C', ':', 'o', ',', '„'), False, False)
-    levelness_calculation(all_class_tiles_map, ('~', 'C'), True, False)
+    levelness_calculation(all_class_tiles_map, ('~', '▲', 'C', ':', 'o', ',', '„', '`'), False, False)
+    levelness_calculation(all_class_tiles_map, ('~', 'C', '`'), True, False)
     levelness_calculation(all_class_tiles_map, ('▲'), True, True)
     levelness_calculation(all_class_tiles_map, ('▲'), True, False)
     levelness_calculation(all_class_tiles_map, ('▲'), True, True)
@@ -200,14 +204,15 @@ def diversity_field_tiles(processed_map):
                     'u': ('0', '1'),
                     'j': ('0', '1'),
                     'A': ('0', '1'),
-                    'i': ('0', '1', '2', '3'), #'o': ('0', '1', '2', '3', '4'),
+                    'i': ('0', '1', '2', '3'),
+                    #'o': ('0', '1', '2', '3', '4'),
                     }
     for number_line in range(len(processed_map)):
         for number_tile in range(len(processed_map[number_line])):
             if processed_map[number_line][number_tile].icon in tiles_dict:
                 processed_map[number_line][number_tile].type = random.choice(tiles_dict[processed_map[number_line][number_tile].icon])
 
-def sea_generate(processed_map, managing_map, changing_map):
+def sea_generate(processed_map, managing_map):
     """
         Генерирует моря по методу горных озёр
     """
@@ -215,8 +220,21 @@ def sea_generate(processed_map, managing_map, changing_map):
     for managing_line in range(len(managing_map)):
         for managing_tile in range(len(managing_map[managing_line])):
             if managing_map[managing_line][managing_tile] == 5:
-                mountain_gen(processed_map, managing_line*chunk_size, managing_tile*chunk_size,
-                             random.randrange(chunk_size//2, chunk_size), 2, 1, '~', ('~'))
+                mountain_gen(processed_map, managing_line*chunk_size + chunk_size//3, managing_tile*chunk_size + chunk_size//3,
+                             random.randrange(chunk_size//2, chunk_size), 1, 2, '`', ('.'))
+
+def sea_writer(processed_map, managing_map):
+    """
+        Отрисовывает моря на карте локаций
+    """
+    chunk_size = len(managing_map)//len(processed_map)
+    for number_line in range(len(managing_map)):
+        for number_tile in range(len(managing_map[number_line])):
+            if managing_map[number_line][number_tile] == '`':
+                #print(f"processed_map[number_line//chunk_size][number_tile//chunk_size] - {processed_map[number_line//chunk_size][number_tile//chunk_size]}")
+                processed_map[number_line//chunk_size][number_tile//chunk_size] = ['~', 'sea', ['`'], ['`'], 50, [12.0, 18.0]]
+                
+    
                 
 def mountain_gen(processed_map, position_y, position_x, size, add_position_y_to_step, start_quantity_step, add_icon, filling_icon):
     """
@@ -335,7 +353,7 @@ def river_map_generation(processed_map, number_of_rivers):
         print(f"position_x - {position_x}")
         for number_line in range(len(processed_map)):
             position_y = number_line
-            if processed_map[position_y][position_x - 1] != '~':
+            if not(processed_map[position_y][position_x - 1] in ('~', '`')):
                 processed_map[position_y][position_x - 1] = random.choice([',', '„', '.', 'u', 'ü'])
             processed_map[position_y][position_x] = '~'
             processed_map[position_y - 1][position_x] = '~'
@@ -343,7 +361,7 @@ def river_map_generation(processed_map, number_of_rivers):
             processed_map[position_y][position_x + 2] = '~'
             processed_map[position_y][position_x + 3] = '~'
             processed_map[position_y - 1][position_x + 3] = '~'
-            if processed_map[position_y][position_x + 4] != '~':
+            if not(processed_map[position_y][position_x + 4] in ('~', '`')):
                 processed_map[position_y][position_x + 4] = random.choice([',', '„', '.', 'u', 'ü'])
             if random.randrange(50)//30 > 0:
                 if 4 < position_x < len(processed_map) - 10:
@@ -476,6 +494,7 @@ def tiles_map_generate(mini_region_map, initial_size, chunk_size):
                     'F': 'F',
                     'P': 'P',
                     '~': '~',
+                    '`': '`',
                     'u': 'u',
                 }
 
@@ -491,7 +510,7 @@ def add_random_tiles(processed_map, chunks_map):
     """
     chunk_size = len(processed_map)//len(chunks_map)
 
-    banned_list = ['~', '▲']
+    banned_list = ['~', '▲', '`']
     
     for number_seed_line in range(len(chunks_map)):
         for number_seed in range(len(chunks_map[number_seed_line])):
@@ -532,7 +551,7 @@ def levelness_calculation(processed_map, field_tiles_tuple, not_the_first_layer,
 
         random_pass - При включении случайным образом пропускается повышение уровня тайлов
     """
-    minus_level_list = ['~', 'C']
+    minus_level_list = ['~', 'C', '`']
     plus_level_list = ['▲']
     stairs_list = ['O', 'A', 'P', 'B', 'Q', 'C', 'R', 'D']
 

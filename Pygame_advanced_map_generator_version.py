@@ -167,7 +167,8 @@ class Tile:
                         'ü': ['колючая трава', 10],
                         'F': ['чахлое дерево', 1],
                         'P': ['раскидистое дерево', 1],
-                        '~': ['солёная вода', 20],
+                        '~': ['вода', 20],
+                        '`': ['солёная вода', 50],
                         'C': ['каньон', 20],
                         '??':['ничего', 10],
                         '0': ['пусто', 0],
@@ -287,6 +288,39 @@ class Tiles_image_dict:
         self.water_S = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_S.png'))
         self.water_T = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_T.png'))
         self.water_U = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_U.png'))
+
+        self.salty_water_0 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_0.png'))
+        self.salty_water_1 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_1.png'))
+        self.salty_water_2 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_2.png'))
+        self.salty_water_3 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_3.png'))
+        self.salty_water_4 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_4.png'))
+        self.salty_water_5 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_5.png'))
+        self.salty_water_6 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_6.png'))
+        self.salty_water_7 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_7.png'))
+        self.salty_water_8 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_8.png'))
+        self.salty_water_9 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_9.png'))
+        self.salty_water_A = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_A.png'))
+        self.salty_water_B = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_B.png'))
+        self.salty_water_C = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_C.png'))
+        self.salty_water_D = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_D.png'))
+        self.salty_water_E = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_E.png'))
+        self.salty_water_F = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_F.png'))
+        self.salty_water_G = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_G.png'))
+        self.salty_water_H = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_H.png'))
+        self.salty_water_I = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_I.png'))
+        self.salty_water_J = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_J.png'))
+        self.salty_water_K = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_K.png'))
+        self.salty_water_L = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_L.png'))
+        self.salty_water_M = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_M.png'))
+        self.salty_water_N = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_N.png'))
+        self.salty_water_O = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_O.png'))
+        self.salty_water_P = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_p.png'))
+        self.salty_water_Q = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_Q.png'))
+        self.salty_water_R = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_R.png'))
+        self.salty_water_S = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_S.png'))
+        self.salty_water_T = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_T.png'))
+        self.salty_water_U = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_U.png'))
+
         self.hills_0 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_0.png'))
         self.hills_1 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_1.png'))
         self.hills_2 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_2.png'))
@@ -1784,7 +1818,11 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
     for number_line in range(len(global_map)):
         for number_tile in range(len(global_map[0])):
 
-            all_sprites.add(All_tiles(number_tile*size_tile_minimap + (30*size_tile), number_line*size_tile_minimap, size_tile_minimap,
+            if person.global_position == [number_line, number_tile]:
+                all_sprites.add(All_tiles(number_tile*size_tile_minimap + (30*size_tile), number_line*size_tile_minimap, size_tile_minimap,
+                                      '☺'))
+            else:
+                all_sprites.add(All_tiles(number_tile*size_tile_minimap + (30*size_tile), number_line*size_tile_minimap, size_tile_minimap,
                                       global_map[number_line][number_tile].icon))
 
 
@@ -2103,6 +2141,39 @@ class Image_tile(pygame.sprite.Sprite):
                                 'S': tiles_image_dict.water_S,
                                 'T': tiles_image_dict.water_T,
                                 'U': tiles_image_dict.water_U,
+                             },
+                        '`': {
+                                '0': tiles_image_dict.salty_water_0,
+                                '1': tiles_image_dict.salty_water_1,
+                                '2': tiles_image_dict.salty_water_2,
+                                '3': tiles_image_dict.salty_water_3,
+                                '4': tiles_image_dict.salty_water_4,
+                                '5': tiles_image_dict.salty_water_5,
+                                '6': tiles_image_dict.salty_water_6,
+                                '7': tiles_image_dict.salty_water_7,
+                                '8': tiles_image_dict.salty_water_8,
+                                '9': tiles_image_dict.salty_water_9,
+                                'A': tiles_image_dict.salty_water_A,
+                                'B': tiles_image_dict.salty_water_B,
+                                'C': tiles_image_dict.salty_water_C,
+                                'D': tiles_image_dict.salty_water_D,
+                                'E': tiles_image_dict.salty_water_E,
+                                'F': tiles_image_dict.salty_water_F,
+                                'G': tiles_image_dict.salty_water_G,
+                                'H': tiles_image_dict.salty_water_H,
+                                'I': tiles_image_dict.salty_water_I,
+                                'J': tiles_image_dict.salty_water_J,
+                                'K': tiles_image_dict.salty_water_K,
+                                'L': tiles_image_dict.salty_water_L,
+                                'M': tiles_image_dict.salty_water_M,
+                                'N': tiles_image_dict.salty_water_N,
+                                'O': tiles_image_dict.salty_water_O,
+                                'P': tiles_image_dict.salty_water_P,
+                                'Q': tiles_image_dict.salty_water_Q,
+                                'R': tiles_image_dict.salty_water_R,
+                                'S': tiles_image_dict.salty_water_S,
+                                'T': tiles_image_dict.salty_water_T,
+                                'U': tiles_image_dict.salty_water_U,
                              },
                         'C': {
                                 '0': tiles_image_dict.canyons_0,
