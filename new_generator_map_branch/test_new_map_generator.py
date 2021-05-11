@@ -18,13 +18,13 @@ import copy
 
     РЕАЛИЗОВАТЬ:
     1)Для разных тайлов - разные списки типов, являющихся лестницами
-    2)Тайловые поля, не изменяющие свою высоту
+    2)Тайловые поля, не изменяющие свою высоту #РЕАЛИЗОВАНО
     3)Возможность того, что два разных тайла являются одним тайловым полем (хотя надо ли оно, можно то же самое реализовать рандомным выбором иконки)
     4)Генерация разных типов тайлов в одном тайловом поле без учёта краёв.
     5)Адекватность генерации супер биомов друг рядом с другом. Возможно, сначала должен идти выбор главных, не соприкасающихся друг с другом
       супер биомов, а ведомые супер биомы подстраиваются под них.
     6)Настройку количества слоёв для каждого типа тайла
-    7)Добавление нарисованых заранее кусков карт
+    7)Добавление нарисованых заранее кусков карт #РЕАЛИЗОВАНО
     
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -36,7 +36,7 @@ import copy
 
 class Tile:
     """ Содержит изображение, описание, особое содержание тайла, стоимость передвижения, тип, высоту и лестницу """
-    __slots__ = ('icon', 'description', 'list_of_features', 'price_move', 'type', 'level', 'stairs')
+    __slots__ = ('icon', 'description', 'list_of_features', 'price_move', 'type', 'level', 'stairs', 'vertices')
     def __init__(self, icon):
         self.icon = icon
         self.description = self.getting_attributes(icon, 0)
@@ -45,6 +45,7 @@ class Tile:
         self.type = '0'
         self.level = 0
         self.stairs = False
+        self.vertices = -1
         
     def getting_attributes(self, icon, number):
         ground_dict =   {
@@ -75,13 +76,14 @@ class Tile:
 
 class Location:
     """ Содержит описание локации """
-    __slots__ = ('name', 'temperature', 'chunk', 'icon', 'price_move')
+    __slots__ = ('name', 'temperature', 'chunk', 'icon', 'price_move', 'vertices')
     def __init__(self, name:str, temperature:float, chunk:list, icon:str, price_move:int):
         self.name = name
         self.temperature = temperature
         self.chunk = chunk
         self.icon = icon
         self.price_move = price_move
+        self.vertices = []
 
 
 def timeit(func):
@@ -194,6 +196,41 @@ def master_map_generate(global_region_grid, region_grid, chunks_grid, mini_grid,
     ready_global_map = cutting_tiles_map(all_class_tiles_map, chunks_map)
 
     return ready_global_map
+
+
+def defining_vertices(processed_map):
+    """
+        Определение независимых областей на локациях и связей между ними для последующей работы с алгоритмом A*
+    """
+    banned_tuple = ('~', '▲')
+    for number_global_line, global_line in enumerate(processed_map):
+        for number_global_tile, global_tile in enumerate(global_line):
+            number_vertices = 0
+            friends_vertices = []
+            for number_line in range(len(global_tile.chunk)):
+                for number_tile in range(len(global_tile.chunk[number_line])):
+                    if not(global_tile.chunk[number_line][number_tile].icon in banned_tuple):
+                        
+                        if number_line == 0 and number_tile == 0:
+                            global_tile.chunk[number_line][number_tile].vertices = number_vertices
+
+                        if number_tile > 0 and global_tile.chunk[number_line][number_tile - 1].vertices >= 0:
+                            global_tile.chunk[number_line][number_tile].vertices = global_tile.chunk[number_line][number_tile - 1].vertices
+
+                        if number_line > 0 and global_tile.chunk[number_line - 1][number_tile].vertices >= 0:
+                            if global_tile.chunk[number_line][number_tile].vertices >= 0 and global_tile.chunk[number_line - 1][number_tile].vertices != global_tile.chunk[number_line][number_tile].vertices:
+                                friends_vertices.append([global_tile.chunk[number_line - 1][number_tile].vertices, global_tile.chunk[number_line][number_tile].vertices])
+                            else:
+                                global_tile.chunk[number_line][number_tile].vertices = global_tile.chunk[number_line - 1][number_tile].vertices
+                        if global_tile.chunk[number_line][number_tile - 1].vertices == -1:
+                            number_vertices += 1
+                            global_tile.chunk[number_line][number_tile].vertices = number_vertices
+                            
+            if friends_vertices:
+                for friends in friends_vertices:
+                    number_vertices = 0
+                    
+
 
 def diversity_field_tiles(processed_map):
     """
