@@ -154,11 +154,14 @@ def master_map_generate(global_region_grid, region_grid, chunks_grid, mini_grid,
     #Карта мини-регионов
     mini_region_map = mini_region_map_generate(chunks_map, (global_region_grid*region_grid*chunks_grid), mini_grid)
 
-    #Генерация морей по методу горных озёр
-    sea_generate(mini_region_map, global_region_map)
+    #Генерация больших структур по методу горных озёр
+    big_structures_generate(mini_region_map, global_region_map)
     
     #Готовая глобальная тайловая карта
-    all_tiles_map = tiles_map_generate(mini_region_map, (global_region_grid*region_grid*chunks_grid*mini_grid), tiles_field_size) 
+    all_tiles_map = tiles_map_generate(mini_region_map, (global_region_grid*region_grid*chunks_grid*mini_grid), tiles_field_size)
+
+    #Отрисовка больших структур на карте локаций
+    big_structures_writer(chunks_map, mini_region_map)
     
     #Добавление тайлов из списка рандомного заполнения
     add_random_all_tiles_map = add_random_tiles(all_tiles_map, chunks_map)
@@ -168,9 +171,6 @@ def master_map_generate(global_region_grid, region_grid, chunks_grid, mini_grid,
 
     #Рисование реки
     river_map_generation(add_random_all_tiles_map, 5)
-    
-    #Отрисовка морей на карте локаций
-    sea_writer(chunks_map, mini_region_map)
     
     #Конвертирование тайлов в класс
     all_class_tiles_map = convert_tiles_to_class(add_random_all_tiles_map, chunks_map)
@@ -212,7 +212,7 @@ def diversity_field_tiles(processed_map):
             if processed_map[number_line][number_tile].icon in tiles_dict:
                 processed_map[number_line][number_tile].type = random.choice(tiles_dict[processed_map[number_line][number_tile].icon])
 
-def sea_generate(processed_map, managing_map):
+def big_structures_generate(processed_map, managing_map):
     """
         Генерирует моря по методу горных озёр
     """
@@ -221,18 +221,27 @@ def sea_generate(processed_map, managing_map):
         for managing_tile in range(len(managing_map[managing_line])):
             if managing_map[managing_line][managing_tile] == 5:
                 mountain_gen(processed_map, managing_line*chunk_size + chunk_size//3, managing_tile*chunk_size + chunk_size//3,
-                             random.randrange(chunk_size//2, chunk_size), 1, 2, '`', ('.'))
+                             random.randrange(chunk_size//2, chunk_size), random.randrange(1, 3), random.randrange(1, 3), '~', ('.'))
+            if managing_map[managing_line][managing_tile] == 4:
+                mountain_gen(processed_map, managing_line*chunk_size + chunk_size//3, managing_tile*chunk_size + chunk_size//3,
+                             random.randrange(chunk_size//2, chunk_size), random.randrange(1, 3), random.randrange(1, 3), 'C', ('.'))
 
-def sea_writer(processed_map, managing_map):
+def big_structures_writer(processed_map, managing_map):
     """
         Отрисовывает моря на карте локаций
     """
     chunk_size = len(managing_map)//len(processed_map)
     for number_line in range(len(managing_map)):
         for number_tile in range(len(managing_map[number_line])):
-            if managing_map[number_line][number_tile] == '`':
+            if managing_map[number_line][number_tile] == '~':
                 #print(f"processed_map[number_line//chunk_size][number_tile//chunk_size] - {processed_map[number_line//chunk_size][number_tile//chunk_size]}")
-                processed_map[number_line//chunk_size][number_tile//chunk_size] = ['~', 'sea', ['`'], ['`'], 50, [12.0, 18.0]]
+                processed_map[number_line//chunk_size][number_tile//chunk_size] = ['~', 'sea', ['~'], ['.', 's', 'o'], 50, [12.0, 18.0]]
+
+            if managing_map[number_line][number_tile] == 'C':
+                #print(f"processed_map[number_line//chunk_size][number_tile//chunk_size] - {processed_map[number_line//chunk_size][number_tile//chunk_size]}")
+                processed_map[number_line//chunk_size][number_tile//chunk_size] = ['R', 'big canyons', ['C'], ['.', 'o', '▲'], 20, [20.0,35.0]]
+
+                
                 
     
                 
@@ -430,8 +439,8 @@ def region_generate(global_region_map, global_region_grid, region_grid):
                     1: [['A', '▲']],        # Горный
                     2: [['„', ',', 'P']],   # Живой
                     3: [[';', '.']],        # Солёный
-                    4: [['C', 'R', ]],      # Каньонный
-                    5: [['S']]              # Водяной
+                    4: [['A', '.']],        # Каньонный
+                    5: [['S', '▲']]         # Водяной
                 }
 
     raw_region_map = all_map_master_generate(global_region_map, region_grid, False, seed_dict, 0, False)
@@ -451,7 +460,7 @@ def chunks_map_generate(region_map, initial_size, chunks_grid):
                     'S': ['S',  'snake semi-desert',   ['A', '.', ','],       ['▲','o', 'i'],     7,        [35.0,50.0]],
                     '▲': ['▲',  'hills',               ['o', ','],            ['▲', '„', ','],   20,        [20.0,35.0]],
                     'B': ['▲',  'big hills',           ['▲', 'o'],            ['o'],             20,        [20.0,35.0]],
-                    'C': ['C',  'canyons',             ['C', '.', ','],       ['C'],             20,        [20.0,35.0]],
+                    'C': ['C',  'canyons',             ['C', '.', ','],       ['.'],             20,        [20.0,35.0]],
                     'R': ['R',  'big canyons',         ['C'],                 ['.', 'o', '▲'],   20,        [20.0,35.0]],
                     '„': ['„',  'field',               ['u', '„', ','],       ['ü', 'o'],         5,        [20.0,35.0]],
                     ',': [',',  'dried field',         ['„', ','],            ['o', 'u'],         2,        [30.0,40.0]],
@@ -496,6 +505,7 @@ def tiles_map_generate(mini_region_map, initial_size, chunk_size):
                     '~': '~',
                     '`': '`',
                     'u': 'u',
+                    's': 'u',
                 }
 
     raw_all_tiles_map = all_map_master_generate(mini_region_map, chunk_size, True, seed_dict, 0, False)
