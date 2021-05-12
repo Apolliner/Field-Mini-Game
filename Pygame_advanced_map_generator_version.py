@@ -1805,6 +1805,13 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
     all_sprites.add(Image_tile(chunk_size//2*size_tile, chunk_size//2*size_tile, size_tile, tiles_image_dict, '☺', '0'))
 
 
+    #Отрисовка зон доступности
+    for number_line in range(chunk_size):
+        for number_tile in range(chunk_size):
+            all_sprites.add(Island_friends(number_tile*size_tile, number_line*size_tile, size_tile,
+                                       landscape_layer[number_line][number_tile].vertices))
+
+
     #for number_line in range(chunk_size):
     #    for number_tile in range(chunk_size):
     #        if sky_layer[number_line][number_tile].icon != '0':
@@ -1843,6 +1850,53 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
     print(f"{test1_1 - start} - test1_1 \n{test1_2 - test1_1} - test1_2 \n{test1_3 - test1_2} - test1_3 \n{test1 - test1_3} - test1")
     print(F"{test_control_1 - test1} - test_control_1 \n{test2_1 - test_control_1} - test2_1 \n{test2_2 - test2_1} - test2_2 \n{test2_3 - test2_2} - test2_3")
     print(F"{test2 - test2_3} - test2 \n{test_1_end - test2} - test_1_end \n{test_2_end - test_1_end} - test_2_end \n{test_3_end - test_2_end} - test_3_end \n{end - test_3_end} - end \n")
+
+class Island_friends(pygame.sprite.Sprite):
+    """ Содержит спрайты миникарты """
+
+    def __init__(self, x, y, size_tile, number):
+        pygame.sprite.Sprite.__init__(self)
+        self.x = x
+        self.y = y
+        self.image = pygame.Surface((size_tile, size_tile))
+        self.image.fill(self.color_dict(number))
+        self.image.set_alpha(40)
+        self.rect = self.image.get_rect()
+        self.rect.left = x
+        self.rect.top = y
+        self.speed = 0
+    def color_dict(self, number):
+        color_dict =   {
+                        -1: (0, 0, 0),
+                        0: (255, 255, 0),
+                        1: (255, 255, 100),
+                        2: (255, 255, 200),
+                        3: (0, 1255, 255),
+                        4: (100, 255, 255),
+                        5: (200, 255, 255),
+                        6: (255, 0, 255),
+                        7: (255, 100, 255),
+                        8: (255, 200, 255),
+                        9: (0, 255, 0),
+                        10: (0, 128, 0),
+                        11: (0, 100, 0),
+                        12: (128, 128, 0),
+                        13: (128, 128, 0),
+                        14: (255, 255, 255),
+                        15: (235, 255, 255),
+                        16: (200, 255, 255),
+                        17: (200, 200, 100),
+                        18: (255, 100, 100),
+                        }
+
+        if number in color_dict:
+            return color_dict[number]
+        else:
+            return (0, 0, 0)
+
+
+
+
 def landscape_layer_calculations(person, chunk_size, go_to_print):
     """
         Формирует изображение ландшафта на печать
