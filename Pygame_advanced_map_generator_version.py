@@ -1806,9 +1806,10 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
 
 
     #Отрисовка зон доступности
-    for number_line in range(chunk_size):
-        for number_tile in range(chunk_size):
-            all_sprites.add(Island_friends(number_tile*size_tile, number_line*size_tile, size_tile,
+    if person.test_visible:
+        for number_line in range(chunk_size):
+            for number_tile in range(chunk_size):
+                all_sprites.add(Island_friends(number_tile*size_tile, number_line*size_tile, size_tile,
                                        landscape_layer[number_line][number_tile].vertices))
 
 
@@ -1860,7 +1861,7 @@ class Island_friends(pygame.sprite.Sprite):
         self.y = y
         self.image = pygame.Surface((size_tile, size_tile))
         self.image.fill(self.color_dict(number))
-        self.image.set_alpha(40)
+        self.image.set_alpha(60)
         self.rect = self.image.get_rect()
         self.rect.left = x
         self.rect.top = y
@@ -1869,13 +1870,13 @@ class Island_friends(pygame.sprite.Sprite):
         color_dict =   {
                         -1: (0, 0, 0),
                         0: (255, 255, 0),
-                        1: (255, 255, 100),
-                        2: (255, 255, 200),
-                        3: (0, 1255, 255),
-                        4: (100, 255, 255),
-                        5: (200, 255, 255),
-                        6: (255, 0, 255),
-                        7: (255, 100, 255),
+                        1: (255, 255, 150),
+                        2: (0, 255, 255),
+                        3: (150, 255, 255),
+                        4: (255, 0, 255),
+                        5: (255, 150, 255),
+                        6: (0, 0, 255),
+                        7: (0, 255, 0),
                         8: (255, 200, 255),
                         9: (0, 255, 0),
                         10: (0, 128, 0),
@@ -1886,7 +1887,7 @@ class Island_friends(pygame.sprite.Sprite):
                         15: (235, 255, 255),
                         16: (200, 255, 255),
                         17: (200, 200, 100),
-                        18: (255, 100, 100),
+                        255: (255, 0, 0),
                         }
 
         if number in color_dict:
