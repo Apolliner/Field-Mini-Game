@@ -211,10 +211,10 @@ def defining_vertices(processed_map):
             self.number = number
             self.friends = [number,]
     
-    banned_tuple = ('~', '▲')
+    banned_tuple = ('~', '▲', 'C')
     for number_global_line, global_line in enumerate(processed_map):
         for number_global_tile, global_tile in enumerate(global_line):
-            number_vertices = 0
+            number_vertices = 1
             friends_vertices = []
             for number_line in range(len(global_tile.chunk)):
                 for number_tile in range(len(global_tile.chunk[number_line])):
@@ -224,6 +224,7 @@ def defining_vertices(processed_map):
                         if number_line == 0 and number_tile == 0:
                             global_tile.chunk[number_line][number_tile].vertices = number_vertices
                             friends_vertices.append(Vertices(global_tile.chunk[number_line][number_tile].vertices))
+                            number_vertices += 1
 
                         #Определение номера тайла по тайлу слева
                         if number_tile > 0 and global_tile.chunk[number_line][number_tile - 1].vertices >= 0:
@@ -247,14 +248,16 @@ def defining_vertices(processed_map):
 
                         #Если доступный тайл до сих пор остался необработанным
                         if global_tile.chunk[number_line][number_tile - 1].vertices == -1:
-                            number_vertices += 1
                             global_tile.chunk[number_line][number_tile].vertices = number_vertices
                             friends_vertices.append(Vertices(global_tile.chunk[number_line][number_tile].vertices))
+                            number_vertices += 1
 
             #Группирует дружеские тайлы в "острова"
             islands_friends = []
             if friends_vertices:
+                #print('start')
                 for friends in friends_vertices:
+                    #print(f'friends.friends - {friends.friends}')
                     if islands_friends:
                         not_found_friends = True
                         for island in islands_friends:
@@ -268,10 +271,44 @@ def defining_vertices(processed_map):
                             
                     else:
                         islands_friends.append(friends.friends)
+            #print(f'islands_friends - {islands_friends}')
+
+
+
+            deleted_island = []
+            for number_island in range(len(islands_friends)):
+                for number_friend in range(len(islands_friends[number_island])):
+                    for double_number_island in range(len(islands_friends)):
+                        if islands_friends[number_island][number_friend] in islands_friends[double_number_island]:
+                            deleted_island.append(double_number_island)
+                            for friend in islands_friends[double_number_island]:
+                                if not (friend in islands_friends[number_island]):
+                                    islands_friends[number_island].append(friend)
+            
+            #print('finish')
+                        
+            #islands_friends = []
+            #deleted_island = []
+            #if friends_vertices:
+            #    for number_friends in range(len(friends_vertices)):
+            #        if not(number_friends in deleted_island):
+            #            for friend in friends_vertices[number_friends].friends:
+            #                for double_number_friends in range(len(friends_vertices)):
+            #                    if number_friends != double_number_friends and friend in friends_vertices[double_number_friends].friends:
+            #                        deleted_island.append(double_number_friends)
+            #                        friends_vertices[number_friends].friends += friends_vertices[double_number_friends].friends
+            #for number_friends in range(len(friends_vertices)):
+            #    if not(number_friends in deleted_island):
+            #        islands_friends.append(friends_vertices[number_friends].friends)
+                
+                                    
+                            
+                
                                 
 
             #Объединение определённых зон
             for number_island in range(len(islands_friends)):
+                #if not (number_island in deleted_island):
                 for number_line in range(len(global_tile.chunk)):
                     for number_tile in range(len(global_tile.chunk[number_line])):
                         if global_tile.chunk[number_line][number_tile].vertices in islands_friends[number_island]:
