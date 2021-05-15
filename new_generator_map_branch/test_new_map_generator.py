@@ -196,7 +196,7 @@ def master_map_generate(global_region_grid, region_grid, chunks_grid, mini_grid,
     ready_global_map = cutting_tiles_map(all_class_tiles_map, chunks_map)
 
     #Определение независимых областей на локациях
-    defining_vertices(ready_global_map)
+    defining_vertices_v2(ready_global_map)
 
     return ready_global_map
 
@@ -281,6 +281,8 @@ def defining_vertices(processed_map):
                     for double_number_island in range(len(islands_friends)):
                         if islands_friends[number_island][number_friend] in islands_friends[double_number_island]:
                             deleted_island.append(double_number_island)
+                            #islands_friends[number_island].extend(islands_friends[double_number_island])
+                            
                             for friend in islands_friends[double_number_island]:
                                 if not (friend in islands_friends[number_island]):
                                     islands_friends[number_island].append(friend)
@@ -314,8 +316,72 @@ def defining_vertices(processed_map):
                         if global_tile.chunk[number_line][number_tile].vertices in islands_friends[number_island]:
                             global_tile.chunk[number_line][number_tile].vertices = number_island
             
-                    
+@timeit
+def defining_vertices_v2(processed_map):
+    """
+        Определение независимых областей на локациях и связей между ними для последующей работы с алгоритмом A*
+    """
+    class Availability_field:
+        def __init__(self, number, tile):
+            self.number = number
+            self.global_number = number
+            self.tiles = [tile]
+            
+    banned_tuple = ('~', '▲', 'C')
+    for number_global_line, global_line in enumerate(processed_map):
+        for number_global_tile, global_tile in enumerate(global_line):
+            number_field = 0
+            list_availability_fields = []
+            for number_line in range(len(global_tile.chunk)):
+                for number_tile, tile in enumerate(global_tile.chunk[number_line]):
+                    if not(tile.icon in banned_tuple):
+                        #Обработка тайла слева
+                        if number_tile > 0 and global_tile.chunk[number_line][number_tile - 1].vertices >= 0:
+                            tile.vertices = global_tile.chunk[number_line][number_tile - 1].vertices
+                            list_availability_fields[tile.vertices].tiles.append([number_line, number_tile])
 
+                        #Обработка тайла сверху
+                        if number_line > 0 and global_tile.chunk[number_line - 1][number_tile].vertices >= 0:
+                            
+                            #Если тайл обрабатывался
+                            if tile.vertices >= 0:
+                                
+                                #print(f"1 - {list_availability_fields[global_tile.chunk[number_line - 1][number_tile].vertices].global_number}")
+                                #print(f"2 - {list_availability_fields[tile.vertices].global_number}")
+                                
+
+                                if list_availability_fields[tile.vertices].global_number < list_availability_fields[
+                                        global_tile.chunk[number_line - 1][number_tile].vertices].global_number:
+                                        
+                                    list_availability_fields[global_tile.chunk[number_line - 1][number_tile].vertices
+                                                             ].global_number = list_availability_fields[tile.vertices].global_number
+                                    
+                                elif list_availability_fields[tile.vertices].global_number > list_availability_fields[
+                                        global_tile.chunk[number_line - 1][number_tile].vertices].global_number:
+                                        
+                                    list_availability_fields[tile.vertices].global_number = list_availability_fields[
+                                        global_tile.chunk[number_line - 1][number_tile].vertices].global_number
+                                        
+                            #Если тайл не обрабатывался
+                            elif tile.vertices == -1:
+                                tile.vertices = global_tile.chunk[number_line][number_tile - 1].vertices
+                                list_availability_fields[tile.vertices].tiles.append([number_line, number_tile])
+                                
+                                
+                        #Если тайл еще не обрабатывался
+                        if tile.vertices == -1:
+                            tile.vertices = number_field
+                            list_availability_fields.append(Availability_field(number_field, [number_line, number_tile]))
+                            number_field += 1
+
+            
+            for availability_field in list_availability_fields:
+                for tile in availability_field.tiles:
+                    global_tile.chunk[tile[0]][tile[1]].vertices = availability_field.global_number
+                
+                
+
+                        
 
 def diversity_field_tiles(processed_map):
     """
