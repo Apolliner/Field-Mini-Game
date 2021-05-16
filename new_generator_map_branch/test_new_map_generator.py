@@ -196,131 +196,38 @@ def master_map_generate(global_region_grid, region_grid, chunks_grid, mini_grid,
     ready_global_map = cutting_tiles_map(all_class_tiles_map, chunks_map)
 
     #Определение независимых областей на локациях
-    defining_vertices_v2(ready_global_map)
+    defining_vertices(ready_global_map)
 
     return ready_global_map
-
+            
 @timeit
 def defining_vertices(processed_map):
     """
         Определение независимых областей на локациях и связей между ними для последующей работы с алгоритмом A*
     """
-
-    class Vertices:
-        def __init__(self, number):
-            self.number = number
-            self.friends = [number,]
-    
-    banned_tuple = ('~', '▲', 'C')
-    for number_global_line, global_line in enumerate(processed_map):
-        for number_global_tile, global_tile in enumerate(global_line):
-            number_vertices = 1
-            friends_vertices = []
-            for number_line in range(len(global_tile.chunk)):
-                for number_tile in range(len(global_tile.chunk[number_line])):
-                    if not(global_tile.chunk[number_line][number_tile].icon in banned_tuple):
-
-                        #Нулевая точка по двум осям
-                        if number_line == 0 and number_tile == 0:
-                            global_tile.chunk[number_line][number_tile].vertices = number_vertices
-                            friends_vertices.append(Vertices(global_tile.chunk[number_line][number_tile].vertices))
-                            number_vertices += 1
-
-                        #Определение номера тайла по тайлу слева
-                        if number_tile > 0 and global_tile.chunk[number_line][number_tile - 1].vertices >= 0:
-                            global_tile.chunk[number_line][number_tile].vertices = global_tile.chunk[number_line][number_tile - 1].vertices
-
-                        #Определение номера тайла по тайлу сверху или сравнение двух номеров
-                        if number_line > 0 and global_tile.chunk[number_line - 1][number_tile].vertices >= 0:
-                            #Если проверяемый тайл уже обрабатывался
-                            if global_tile.chunk[number_line][number_tile].vertices >= 0:
-                                #Если сверху не такой же номер тайла
-                                if global_tile.chunk[number_line - 1][number_tile].vertices != global_tile.chunk[number_line][number_tile].vertices:
-                                    for friends in friends_vertices:
-                                        if friends.number == global_tile.chunk[number_line - 1][number_tile].vertices and not(global_tile.chunk[number_line][number_tile].vertices in friends.friends):
-                                            friends.friends.append(global_tile.chunk[number_line][number_tile].vertices)
-                                        if friends.number == global_tile.chunk[number_line][number_tile].vertices and not(global_tile.chunk[number_line - 1][number_tile].vertices in friends.friends):
-                                            friends.friends.append(global_tile.chunk[number_line - 1][number_tile].vertices)
-                                        
-                            #Если проверяемый тайл ещё не обрабатывался
-                            else:
-                                global_tile.chunk[number_line][number_tile].vertices = global_tile.chunk[number_line - 1][number_tile].vertices
-
-                        #Если доступный тайл до сих пор остался необработанным
-                        if global_tile.chunk[number_line][number_tile - 1].vertices == -1:
-                            global_tile.chunk[number_line][number_tile].vertices = number_vertices
-                            friends_vertices.append(Vertices(global_tile.chunk[number_line][number_tile].vertices))
-                            number_vertices += 1
-
-            #Группирует дружеские тайлы в "острова"
-            islands_friends = []
-            if friends_vertices:
-                #print('start')
-                for friends in friends_vertices:
-                    #print(f'friends.friends - {friends.friends}')
-                    if islands_friends:
-                        not_found_friends = True
-                        for island in islands_friends:
-                            if friends.number in island:
-                                not_found_friends = False
-                                for friend in friends.friends:
-                                    if not(friend in island):
-                                        island.append(friend)
-                        if not_found_friends:
-                            islands_friends.append(friends.friends)
-                            
-                    else:
-                        islands_friends.append(friends.friends)
-            #print(f'islands_friends - {islands_friends}')
-
-
-
-            deleted_island = []
-            for number_island in range(len(islands_friends)):
-                for number_friend in range(len(islands_friends[number_island])):
-                    for double_number_island in range(len(islands_friends)):
-                        if islands_friends[number_island][number_friend] in islands_friends[double_number_island]:
-                            deleted_island.append(double_number_island)
-                            #islands_friends[number_island].extend(islands_friends[double_number_island])
-                            
-                            for friend in islands_friends[double_number_island]:
-                                if not (friend in islands_friends[number_island]):
-                                    islands_friends[number_island].append(friend)
-            
-            #print('finish')
+    def repeat_pass(global_tile, number):
+        new_friends_list = []
+        for number_line in range(len(global_tile.chunk)):
+            for number_tile, tile in enumerate(global_tile.chunk[number_line]):
+                if number_line > 0 and tile.vertices != -1 and -1 != global_tile.chunk[number_line - 1][number_tile].vertices != tile.vertices:
+                    if not ([global_tile.chunk[number_line - 1][number_tile].vertices, tile.vertices] in new_friends_list):
+                        new_friends_list.append([global_tile.chunk[number_line - 1][number_tile].vertices, tile.vertices])
+        if new_friends_list:
+            #print(f"{number} new_friends_list - {new_friends_list}")
+            for frends in new_friends_list:
+                master = min(frends[0], frends[1])
+                slave = max(frends[0], frends[1])
+                for number_line in range(1, len(global_tile.chunk)):
+                    for number_tile, tile in enumerate(global_tile.chunk[number_line]):
                         
-            #islands_friends = []
-            #deleted_island = []
-            #if friends_vertices:
-            #    for number_friends in range(len(friends_vertices)):
-            #        if not(number_friends in deleted_island):
-            #            for friend in friends_vertices[number_friends].friends:
-            #                for double_number_friends in range(len(friends_vertices)):
-            #                    if number_friends != double_number_friends and friend in friends_vertices[double_number_friends].friends:
-            #                        deleted_island.append(double_number_friends)
-            #                        friends_vertices[number_friends].friends += friends_vertices[double_number_friends].friends
-            #for number_friends in range(len(friends_vertices)):
-            #    if not(number_friends in deleted_island):
-            #        islands_friends.append(friends_vertices[number_friends].friends)
-                
-                                    
-                            
-                
-                                
-
-            #Объединение определённых зон
-            for number_island in range(len(islands_friends)):
-                #if not (number_island in deleted_island):
-                for number_line in range(len(global_tile.chunk)):
-                    for number_tile in range(len(global_tile.chunk[number_line])):
-                        if global_tile.chunk[number_line][number_tile].vertices in islands_friends[number_island]:
-                            global_tile.chunk[number_line][number_tile].vertices = number_island
-            
-@timeit
-def defining_vertices_v2(processed_map):
-    """
-        Определение независимых областей на локациях и связей между ними для последующей работы с алгоритмом A*
-    """
+                        if tile.vertices == slave:
+                            if number == 2:
+                                print(f"before tile.vertices - {tile.vertices}")
+                            tile.vertices = master
+                            if number == 2:
+                                print(f"after tile.vertices - {tile.vertices}")
+                        
+    
     class Availability_field:
         def __init__(self, number, tile):
             self.number = number
@@ -335,6 +242,7 @@ def defining_vertices_v2(processed_map):
             for number_line in range(len(global_tile.chunk)):
                 for number_tile, tile in enumerate(global_tile.chunk[number_line]):
                     if not(tile.icon in banned_tuple):
+                            
                         #Обработка тайла слева
                         if number_tile > 0 and global_tile.chunk[number_line][number_tile - 1].vertices >= 0:
                             tile.vertices = global_tile.chunk[number_line][number_tile - 1].vertices
@@ -342,6 +250,10 @@ def defining_vertices_v2(processed_map):
 
                         #Обработка тайла сверху
                         if number_line > 0 and global_tile.chunk[number_line - 1][number_tile].vertices >= 0:
+                            #Обработка крайней левой линии
+                            if number_tile == 0 and number_line > 0:
+                                tile.vertices = global_tile.chunk[number_line - 1][number_tile].vertices
+                                list_availability_fields[tile.vertices].tiles.append([number_line, number_tile])
                             
                             #Если тайл обрабатывался
                             if tile.vertices >= 0:
@@ -364,7 +276,7 @@ def defining_vertices_v2(processed_map):
                                         
                             #Если тайл не обрабатывался
                             elif tile.vertices == -1:
-                                tile.vertices = global_tile.chunk[number_line][number_tile - 1].vertices
+                                tile.vertices = global_tile.chunk[number_line - 1][number_tile].vertices
                                 list_availability_fields[tile.vertices].tiles.append([number_line, number_tile])
                                 
                                 
@@ -378,8 +290,34 @@ def defining_vertices_v2(processed_map):
             for availability_field in list_availability_fields:
                 for tile in availability_field.tiles:
                     global_tile.chunk[tile[0]][tile[1]].vertices = availability_field.global_number
-                
-                
+
+            #Повторный проход для определения неопределённых связей
+
+            new_friends_list = []
+            for number_line in range(len(global_tile.chunk)):
+                for number_tile, tile in enumerate(global_tile.chunk[number_line]):
+                    if number_line > 0 and tile.vertices != -1 and -1 != global_tile.chunk[number_line - 1][number_tile].vertices != tile.vertices:
+                        if not ([global_tile.chunk[number_line - 1][number_tile].vertices, tile.vertices] in new_friends_list):
+                            new_friends_list.append([global_tile.chunk[number_line - 1][number_tile].vertices, tile.vertices])
+                            
+                    elif number_line == 0 and tile.vertices != -1 and -1 != global_tile.chunk[number_line + 1][number_tile].vertices != tile.vertices:
+                        if not ([global_tile.chunk[number_line + 1][number_tile].vertices, tile.vertices] in new_friends_list):
+                            new_friends_list.append([global_tile.chunk[number_line + 1][number_tile].vertices, tile.vertices])
+                            #print(f"{[global_tile.chunk[number_line + 1][number_tile].vertices, tile.vertices]}")
+                    
+            if new_friends_list:
+                #print(f" new_friends_list - {new_friends_list}")
+                for frends in new_friends_list:
+                    master = min(frends[0], frends[1])
+                    slave = max(frends[0], frends[1])
+                    for number_line in range(1, len(global_tile.chunk)):
+                        for number_tile, tile in enumerate(global_tile.chunk[number_line]):
+                            
+                            if tile.vertices == slave:
+                                #print(f"before tile.vertices - {tile.vertices}")
+                                tile.vertices = master
+                                #print(f"after tile.vertices - {tile.vertices}")
+                            
 
                         
 
