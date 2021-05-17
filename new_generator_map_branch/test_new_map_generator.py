@@ -76,14 +76,17 @@ class Tile:
 
 class Location:
     """ Содержит описание локации """
-    __slots__ = ('name', 'temperature', 'chunk', 'icon', 'price_move', 'vertices')
-    def __init__(self, name:str, temperature:float, chunk:list, icon:str, price_move:int):
+    __slots__ = ('name', 'temperature', 'chunk', 'icon', 'price_move', 'vertices', 'position')
+    def __init__(self, name:str, temperature:float, chunk:list, icon:str, price_move:int, position):
         self.name = name
         self.temperature = temperature
         self.chunk = chunk
         self.icon = icon
         self.price_move = price_move
         self.vertices = []
+        self.position = position
+
+
 
 
 def timeit(func):
@@ -198,7 +201,121 @@ def master_map_generate(global_region_grid, region_grid, chunks_grid, mini_grid,
     #Определение независимых областей на локациях
     defining_vertices(ready_global_map)
 
+    #Определение связей между локациями
+    defining_zone_relationships(ready_global_map)
+
     return ready_global_map
+
+
+class Global_vertices:
+    """ Содержит описание зоны доступности """
+    def __init__(self, number, position, connections):
+        self.number = number
+        self.position = position
+        self.connections = [connections]
+
+class Connections:
+    """Содержит описание связей зоны доступности"""
+    def __init__(self, number, position, tile):
+        self.number = number
+        self.position = position
+        self.tiles = [tile]
+
+@timeit
+def defining_zone_relationships(processed_map):
+    """
+        Определение связей между зонами доступности на краях локаций и сохранение информации об этом в описание локации
+    """
+
+    def defining_connections(processed_map, tile_number, tile_position, defining_local_position, local_position, connect_number, connect_position, global_tile):
+        """
+            Определяет связи
+        """
+        if tile_number != -1 and processed_map[connect_position[0]][connect_position[1]].chunk[defining_local_position[0]][defining_local_position[1]].vertices != -1:
+            global_not_ok = True
+            if global_tile.vertices:                                
+                for vertices in global_tile.vertices:
+                    if tile_number == vertices.number:
+                        not_ok = True
+                        if vertices.connections:
+                            for connection in vertices.connections:
+                                if connection.number == connect_number and connection.position == connect_position:
+                                    connection.tiles.append(tile_position)
+                                    not_ok = False
+                                    global_not_ok = False
+                        if not_ok:
+                            vertices.connections.append(Connections(connect_number, connect_position, local_position))
+                            global_not_ok = False
+            if global_not_ok:
+                global_tile.vertices.append(Global_vertices(tile_number, global_tile.position, Connections(connect_number,
+                                                    connect_position, local_position)))
+
+    
+    for number_global_line, global_line in enumerate(processed_map):
+        for number_global_tile, global_tile in enumerate(global_line):
+            #Обработка верхних и нижних краёв
+            for number_line in (0, len(global_tile.chunk) - 1):
+                for number_tile, tile in enumerate(global_tile.chunk[number_line]):
+                    tile_number = tile.vertices
+                    tile_position = [number_global_line, number_global_tile]
+                    local_position = [number_line, number_tile]
+                    #Обработка верха
+                    if number_global_line > 0 and number_line == 0:
+                        defining_local_position = [len(global_tile.chunk) - 1, number_tile]
+                        connect_number = processed_map[number_global_line - 1][number_global_tile].chunk[len(global_tile.chunk) - 1][number_tile].vertices
+                        connect_position = [number_global_line - 1, number_global_tile]
+
+                        defining_connections(processed_map, tile_number, tile_position, defining_local_position, local_position, connect_number, connect_position, global_tile)
+
+                    #Обработка низа
+                    if number_global_line < len(processed_map) - 1 and number_line == len(global_tile.chunk) - 1:
+                        defining_local_position = [0, number_tile]
+                        connect_number = processed_map[number_global_line + 1][number_global_tile].chunk[0][number_tile].vertices
+                        connect_position = [number_global_line + 1, number_global_tile]
+
+                        defining_connections(processed_map, tile_number, tile_position, defining_local_position, local_position, connect_number, connect_position, global_tile)
+
+            #Обработка правых и левых краёв
+            for number_line in range(len(global_tile.chunk)):
+                for number_tile in (0, len(global_tile.chunk[number_line]) - 1):
+                    tile_number = global_tile.chunk[number_line][number_tile].vertices
+                    tile_position = [number_global_line, number_global_tile]
+                    local_position = [number_line, number_tile]
+                    #Обработка левой стороны
+                    if number_global_tile > 0 and number_tile == 0:
+                        defining_local_position = [number_line, len(global_tile.chunk) - 1]#
+                        connect_number = processed_map[number_global_line][number_global_tile - 1].chunk[number_line][len(global_tile.chunk) - 1].vertices
+                        connect_position = [number_global_line, number_global_tile - 1]
+
+                        defining_connections(processed_map, tile_number, tile_position, defining_local_position, local_position, connect_number, connect_position, global_tile)
+
+                    #Обработка правой стороны
+                    if number_global_tile < len(processed_map[0]) - 1 and number_tile == len(global_tile.chunk[0]) - 1:
+                        defining_local_position = [number_line, 0]
+                        connect_number = processed_map[number_global_line][number_global_tile + 1].chunk[number_line][0].vertices
+                        connect_position = [number_global_line, number_global_tile + 1]
+
+                        defining_connections(processed_map, tile_number, tile_position, defining_local_position, local_position, connect_number, connect_position, global_tile)
+
+
+                        #if tile.vertices != -1 and processed_map[number_global_line - 1][number_global_tile].chunk[len(global_tile.chunk) - 1][number_tile].vertices != -1:
+                        #    global_not_ok = True
+                        #    if global_tile.vertices:                                
+                        #        for vertices in global_tile.vertices:
+                        #            if tile.vertices == vertices.number:
+                        #                not_ok = True
+                        #                for connection in vertices.connections:
+                        #                    if connection.number == connect_number and connection.position == [number_global_line - 1, number_global_tile]:
+                        #                        connection.tiles.append([number_line, number_tile])
+                        #                        not_ok = False
+                        #                        global_not_ok = False
+                        #                if not_ok:
+                        #                    vertices.connections.append(Connections(connect_number, [number_global_line - 1, number_global_tile], [number_line, number_tile]))
+                        #                    global_not_ok = False
+                        #    if global_not_ok:
+                        #        global_tile.vertices.append(Global_vertices(tile.vertices, global_tile.position, Connections(connect_number,
+                        #                                    [number_global_line - 1, number_global_tile], [number_line, number_tile])))
+                    
             
 @timeit
 def defining_vertices(processed_map):
@@ -871,7 +988,7 @@ def cutting_tiles_map(processed_map, chunks_map):
     for number_seed_line, seed_line in enumerate(chunks_map):
         new_global_line = []
         for number_seed, seed in enumerate(seed_line):
-            new_global_location = Location(seed[1], random.uniform(min(seed[5][0], seed[5][1]), max(seed[5][0], seed[5][1])), [], seed[0], seed[4])
+            new_global_location = Location(seed[1], random.uniform(min(seed[5][0], seed[5][1]), max(seed[5][0], seed[5][1])), [], seed[0], seed[4], [len(global_map), len(new_global_line)])
             for number_line in range((number_seed_line)*chunk_size, (number_seed_line)*chunk_size + chunk_size):
                 location_line = []
                 for number_tile in range((number_seed)*chunk_size, (number_seed)*chunk_size + chunk_size):
