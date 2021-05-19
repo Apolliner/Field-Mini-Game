@@ -833,7 +833,7 @@ def enemy_a_star_algorithm_move_calculation(calculation_map, start_point, finish
 
 
 
-def vertices_enemy_a_star_algorithm_move_calculation(calculation_map, start_point, finish_point, banned_list):
+def vertices_enemy_a_star_algorithm_move_calculation(processed_map, start_point, finish_point):
     """
         Рассчитывает поиск пути по алгоритму A* на основании связей полей доступности.
 
@@ -852,109 +852,83 @@ def vertices_enemy_a_star_algorithm_move_calculation(calculation_map, start_poin
         Не требуется проверять на проходимость, так как это проверено заранее.
         Область поисков ограничена расчитанной заранее зоной доступности.
         Точки переходов заранее известны.
+        Соседние узлы графа уже известны
+
+        Сюда приходит:
+        Обрабатываемая карта - processed_map;
+        Cтартовые кординаты, содержащие вершину - start_point:[y, x, vertices];
+        Финишная точка - finish_point:[y, x, vertices];
         
     """
     class Node_vertices:
         """Содержит узлы графа для работы с зонами доступности"""
-        __slots__ = ('number', 'position', 'friends', 'price', 'direction')
-        def __init__(self, number, position, price, direction):
+        __slots__ = ('number', 'vertices', 'position', 'price', 'direction', 'ready')
+        def __init__(self, number, vertices, position, price, direction):
             self.number = number
+            self.vertices = vertices
             self.position = position
-            self.friends = []
             self.price = price
-            self.direction = direction
+            self.direction = direction #Хранит номер вершины из которой вышла
+            self.ready = True #Проверена ли точка
 
-    
     def path_length(start_point, finish_point):
         """
             Вычисляет примерное расстояния до финиша, для рассчётов стоимости перемещения
         """
         return math.sqrt((start_point[0] - finish_point[0])**2 + (start_point[1] - finish_point[1])**2)
-        
-    def node_friends_calculation(calculation_map, graph, node, verified_node, banned_list):
-        """
-            Вычисляет соседние узлы графа
-        """
-        friends = []
-        if 0 <= node.position[0] < len(calculation_map):
-            if node.position[0] + 1 < len(calculation_map):
-                if not(calculation_map[node.position[0] + 1][node.position[1]].icon in banned_list) and not([node.position[0] + 1, node.position[1]] in verified_node):
-                    friend = Node(len(graph), [node.position[0] + 1, node.position[1]], calculation_map[
-                             node.position[0] + 1][node.position[1]].price_move + path_length([node.position[0] + 1, node.position[1]], finish_point), [-1, 0])
-                    friends.append(friend)
-                    graph.append(friend)                                                                                              
-            if node.position[0] - 1 >= 0:                                                                                                   
-                if not(calculation_map[node.position[0] - 1][node.position[1]].icon in banned_list) and not([node.position[0] - 1, node.position[1]] in verified_node):
-                    friend = Node(len(graph), [node.position[0] - 1, node.position[1]], calculation_map[
-                            node.position[0] - 1][node.position[1]].price_move + path_length([node.position[0] - 1, node.position[1]], finish_point), [1, 0])
-                    friends.append(friend)
-                    graph.append(friend)                
-        if 0 <= node.position[1] < len(calculation_map):
-            if node.position[1] + 1 < len(calculation_map):
-                if not(calculation_map[node.position[0]][node.position[1] + 1].icon in banned_list) and not([node.position[0], node.position[1] + 1] in verified_node):
-                    friend = Node(len(graph), [node.position[0], node.position[1] + 1], calculation_map[
-                            node.position[0]][node.position[1] + 1].price_move + path_length([node.position[0], node.position[1] + 1], finish_point), [0, -1])
-                    friends.append(friend)
-                    graph.append(friend)
-            if node.position[1] - 1 >= 0:
-                if not(calculation_map[node.position[0]][node.position[1] - 1].icon in banned_list) and not([node.position[0], node.position[1] - 1] in verified_node):
-                    friend = Node(len(graph), [node.position[0], node.position[1] - 1], calculation_map[
-                            node.position[0]][node.position[1] - 1].price_move + path_length([node.position[0], node.position[1] - 1], finish_point), [0, 1])
-                    friends.append(friend)
-                    graph.append(friend)                
-        return friends
 
-    graph = []
-    verified_node = []
-    start_node = Node(0, start_point, 0, [0, 0])
-    start_node.friends = node_friends_calculation(calculation_map, graph, start_node, verified_node, banned_list)
-    graph.append(start_node)
-    verified_node.append(start_node.position)
-    finding_a_path = True
-    finish_node = 0
+    def node_connections(processed_map, graph, processed_node, finish_point):
+        """
+            Определяет связи вершины и добавляет их в граф
+        """
+        node.ready = False
+        connections = []
+        #Находим указанную зону доступности
+        for vertices in processed_map[processed_node.position[0]][processed_node.position[1]].vertices:
+            if vertices.number == processed_node.vertices:
+                #Проверяем, есть ли у неё связи
+                if vertices.connections:
+                    for connect in vertices.connections:
+                        friend = Node_vertices(len(graph), connect.number, connect.position, path_length(connect.position,
+                                                                                    finish_point), processed_node.number)
+                        graph.append(friend)   
+
+
+    # Для вычислений на глобальной карте:
+    graph = [] #Список, содержащий все вершины
+    graph.append(Node_vertices(0, start_point[2], [start_point[0], start_point[1]], path_length(start_point, finish_point), -1))
+    node_connections(processed_map, graph, graph[0], finish_point)
+    general_loop = True #Параметр останавливающий цикл
     sucess = True
-    step_count = 0
-    reversed_waypoints = []
-
-    #Основной цикл алгоритма, в котором происходит перебор известных вершин и запись соседних.
-    while finding_a_path:
+    count_step = 0 #Шаг цикла
+    finish_node = 0 #Хранит номер финишной точки
+    reversed_waypoints = [] #Обращенный список вейпоинтов
+    while general_loop:
         min_price = 99999
         node = graph[-1]
         for number_node in range(len(graph)):
-            if not(graph[number_node].position in verified_node):
+            if graph[number_node].ready:
                 if graph[number_node].price < min_price:
                     min_price = graph[number_node].price
                     node = graph[number_node]
         if min_price == 99999:
             sucess = False
-            finding_a_path = False
-            
-        verified_node.append(node.position)
-        node.friends = node_friends_calculation(calculation_map, graph, node, verified_node, banned_list)
-        if node.position == finish_point:
-            finding_a_path = False
+            general_loop = False        
+        node_connections(processed_map, graph, node, finish_point)
+        if node.position == [finish_point[0], finish_point[1]] and node.vertices == finish_point[3]:
             finish_node = node.number
+            general_loop = False
         step_count += 1
         if step_count == 250:
             sucess = False
             finding_a_path = False
     if sucess:
-        check_node = graph[-1]
-        while check_node.position != start_node.position:
-            reversed_waypoints.append(graph[finish_node].position)
-            preview_node = [graph[finish_node].position[0] + graph[finish_node].direction[0], graph[finish_node].position[1] + graph[finish_node].direction[1]]
-            for number_node in range(len(graph)):
-                if graph[number_node].position == preview_node:
-                    finish_node = number_node
-                    check_node = graph[number_node]
-            
+        check_node = graph[finish_node]
+        while check_node.position != graph[0].position and check_node.vertices != graph[0].vertices:
+            reversed_waypoints.append([check_node.position[0], check_node.position[1], check_node.vertices])
+            check_node = graph[check_node.direction] #Предыдущая вершина объявляется проверяемой
+
     return list(reversed(reversed_waypoints))
-
-
-
-
-
-
 
 
 def path_straightener(calculation_map, waypoints, banned_list):
