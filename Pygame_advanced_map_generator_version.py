@@ -833,19 +833,19 @@ def enemy_a_star_algorithm_move_calculation(calculation_map, start_point, finish
 
 
 
-def vertices_enemy_a_star_algorithm_move_calculation(processed_map, start_point, finish_point):
+def global_vertices_enemy_a_star_algorithm_move_calculation(processed_map, start_point, finish_point, global_or_local):
     """
-        Рассчитывает поиск пути по алгоритму A* на основании связей полей доступности.
+        Рассчитывает поиск пути, алгоритмом A* на основании связей полей доступности.
 
         ТРЕБОВАНИЯ:
 
-        Учёт разности высот между тайлами, а так же наличие параметра лестницы.
-        Работа как для приблизительной карты локаций, так и для передвижения по игровой карте.
-        Возвращает готовый набор вейпоинтов.
-        Пара вейпоинтов содержит информацию о том, в какой зоне доступности они находятся.
-        Цена передвижения рассчитывается исходя из цены локации, в которой находится зона доступности.
+        Работа как для приблизительной карты локаций, так и для передвижения по игровой карте. #РЕАЛИЗОВАНО
+        Учёт разности высот между тайлами, а так же наличие параметра лестницы. #РЕАЛИЗОВАНО
+        Возвращает готовый набор вейпоинтов. #РЕАЛИЗОВАНО
+        Пара вейпоинтов содержит информацию о том, в какой зоне доступности они находятся. #РЕАЛИЗОВАНО
+        Цена передвижения рассчитывается исходя из цены локации, в которой находится зона доступности. #РЕАЛИЗОВАНО
         При отсутствии возможного пути, выбиратся точка, имеющая наименьшую цену.
-        При передвижении по игровой карте, расчёт ведется только на тайлах, соответствующих рассчитаной на глобальной карте зоне доступности.
+        При передвижении по игровой карте, расчёт ведется только на тайлах, соответствующих рассчитаной на глобальной карте зоне доступности. #РЕАЛИЗОВАНО
 
         ОСОБЕННОСТИ:
 
@@ -879,7 +879,7 @@ def vertices_enemy_a_star_algorithm_move_calculation(processed_map, start_point,
 
     def node_connections(processed_map, graph, processed_node, finish_point):
         """
-            Определяет связи вершины и добавляет их в граф
+            Определяет связи вершины и добавляет их в граф при расчёте по глобальной карте
         """
         node.ready = False
         connections = []
@@ -891,13 +891,49 @@ def vertices_enemy_a_star_algorithm_move_calculation(processed_map, start_point,
                     for connect in vertices.connections:
                         friend = Node_vertices(len(graph), connect.number, connect.position, path_length(connect.position,
                                                                                     finish_point), processed_node.number)
-                        graph.append(friend)   
+                        graph.append(friend)
 
+    def node_friends_calculation(calculation_map, graph, node, finish_point):
+        """
+            Вычисляет соседние узлы графа при расчёте по локальной карте
 
-    # Для вычислений на глобальной карте:
+            То же самое, что было раньше, только с проверкой на высоту и лестницы
+        """
+        node_tile = calculation_map[node.position[0]][node.position[1]]
+        if 0 <= node.position[0] < len(calculation_map):
+            if node.position[0] + 1 < len(calculation_map):
+                if calculation_map[node.position[0] + 1][node.position[1]].vertices == node_tile.vertices:
+                    if calculation_map[node.position[0] + 1][node.position[1]].level == node_tile.level or node_tile.stairs or calculation_map[node.position[0] + 1][node.position[1]].stairs:
+                        graph.append(Node_vertices(len(graph), node.vertices, [node.position[0] + 1, node.position[1]],
+                                                   calculation_map[node.position[0] + 1][node.position[1]].price_move +
+                                                   path_length([node.position[0] + 1, node.position[1]], finish_point), node.number))
+                                                                                           
+            if node.position[0] - 1 >= 0:
+                if calculation_map[node.position[0] - 1][node.position[1]].vertices == node_tile.vertices:
+                    if calculation_map[node.position[0] - 1][node.position[1]].level == node_tile.level or node_tile.stairs or calculation_map[node.position[0] - 1][node.position[1]].stairs:
+                        graph.append(Node_vertices(len(graph), node.vertices, [node.position[0] - 1, node.position[1]],
+                                                   calculation_map[node.position[0] - 1][node.position[1]].price_move +
+                                                   path_length([node.position[0] - 1, node.position[1]], finish_point), node.number))              
+        if 0 <= node.position[1] < len(calculation_map):
+            if node.position[1] + 1 < len(calculation_map):
+                if calculation_map[node.position[0]][node.position[1] + 1].vertices == node_tile.vertices:
+                    if calculation_map[node.position[0]][node.position[1] + 1].level == node_tile.level or node_tile.stairs or calculation_map[node.position[0]][node.position[1] + 1].stairs:
+                        graph.append(Node_vertices(len(graph), node.vertices, [node.position[0], node.position[1] + 1],
+                                                   calculation_map[node.position[0]][node.position[1] + 1].price_move +
+                                                   path_length([node.position[0], node.position[1] + 1], finish_point), node.number))
+            if node.position[1] - 1 >= 0:
+                if calculation_map[node.position[0]][node.position[1] - 1].vertices == node_tile.vertices:
+                    if calculation_map[node.position[0]][node.position[1] - 1].level == node_tile.level or node_tile.stairs or calculation_map[node.position[0]][node.position[1] - 1].stairs:
+                        graph.append(Node_vertices(len(graph), node.vertices, [node.position[0], node.position[1] - 1],
+                                                   calculation_map[node.position[0]][node.position[1] - 1].price_move +
+                                                   path_length([node.position[0], node.position[1] - 1], finish_point), node.number))
+
     graph = [] #Список, содержащий все вершины
     graph.append(Node_vertices(0, start_point[2], [start_point[0], start_point[1]], path_length(start_point, finish_point), -1))
-    node_connections(processed_map, graph, graph[0], finish_point)
+    if global_or_local == 'global':
+        node_connections(processed_map, graph, graph[0], finish_point)
+    elif global_or_local == 'local':
+        node_friends_calculation(processed_map, graph, graph[0], finish_point)
     general_loop = True #Параметр останавливающий цикл
     sucess = True
     count_step = 0 #Шаг цикла
@@ -913,8 +949,11 @@ def vertices_enemy_a_star_algorithm_move_calculation(processed_map, start_point,
                     node = graph[number_node]
         if min_price == 99999:
             sucess = False
-            general_loop = False        
-        node_connections(processed_map, graph, node, finish_point)
+            general_loop = False
+        if global_or_local == 'global':
+            node_connections(processed_map, graph, node, finish_point)
+        elif global_or_local == 'local':
+            node_friends_calculation(processed_map, graph, graph[0], finish_point)
         if node.position == [finish_point[0], finish_point[1]] and node.vertices == finish_point[3]:
             finish_node = node.number
             general_loop = False
@@ -929,6 +968,8 @@ def vertices_enemy_a_star_algorithm_move_calculation(processed_map, start_point,
             check_node = graph[check_node.direction] #Предыдущая вершина объявляется проверяемой
 
     return list(reversed(reversed_waypoints))
+
+
 
 
 def path_straightener(calculation_map, waypoints, banned_list):
