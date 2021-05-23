@@ -424,7 +424,7 @@ def interaction_processing(global_map, interaction, enemy_list):
             if interact[0] == 'task_point_all_enemies':
                 for enemy in enemy_list:
                     if enemy.type_npc == 'hunter':
-                        enemy.waypoints = vertices_enemy_a_star_move_global_calculations(global_map, enemy, interact[1])
+                        enemy.target = interact[1]
                         
 
 
@@ -504,8 +504,9 @@ class Action_in_map:
 
 class Enemy:
     """ Отвечает за всех NPC """
-    def __init__(self, global_position, action_points):
+    def __init__(self, global_position, local_position, action_points):
         self.global_position = global_position
+        self.local_position = local_position
         self.action_points = action_points
         self.dynamic_chunk = False
         self.dynamic_chunk_position = [0, 0]
@@ -513,7 +514,6 @@ class Enemy:
         self.step_exit_from_assemblage_point = 0
         self.waypoints = []
         self.dynamic_waypoints = [] # [[local_y, local_x], vertices, [global_y, global_x]]
-        self.local_waypoints = []
         self.alarm = False
         self.pass_step = 0
         self.on_the_screen = False
@@ -529,8 +529,8 @@ class Horseman(Enemy):
     """ Отвечает за всадников """
     
     """ activity_map содержит следующие значения [описание активности, название активности, добавляемые очки, количество пропускаемых шагов] """
-    def __init__(self, global_position, action_points):
-        super().__init__(global_position, action_points)
+    def __init__(self, global_position, local_position, action_points):
+        super().__init__(global_position, local_position, action_points)
         self.name = 'horseman'
         self.name_npc = random.choice(['Малыш Билли', 'Буффало Билл', 'Маленькая Верная Рука Энни Окли', 'Дикий Билл Хикок'])
         self.priority_biom = [',', '„', 'P']
@@ -558,8 +558,8 @@ class Riffleman(Enemy):
     """ Отвечает за стрелков """
         
     """ activity_map содержит следующие значения [описание активности, название активности, добавляемые очки, количество пропускаемых шагов] """
-    def __init__(self, global_position, action_points):
-        super().__init__(global_position, action_points)
+    def __init__(self, global_position, local_position, action_points):
+        super().__init__(global_position, local_position, action_points)
         self.name = 'riffleman'
         self.name_npc = random.choice(['Бедовая Джейн', 'Бутч Кэссиди', 'Сандэнс Кид', 'Черный Барт'])
         self.priority_biom = ['.', 'A', '▲']
@@ -587,8 +587,8 @@ class Gold_digger(Enemy):
     """ Отвечает за золотоискателей """
         
     """ activity_map содержит следующие значения [описание активности, название активности, добавляемые очки, количество пропускаемых шагов] """
-    def __init__(self, global_position, action_points):
-        super().__init__(global_position, action_points)
+    def __init__(self, global_position, local_position, action_points):
+        super().__init__(global_position, local_position, action_points)
         self.name = 'gold_digger'
         self.name_npc = random.choice(['Бедовая Джейн', 'Бутч Кэссиди', 'Сандэнс Кид', 'Черный Барт'])
         self.priority_biom = ['.', 'A', '▲']
@@ -616,8 +616,8 @@ class Horse(Enemy):
     """ Отвечает за коней """
         
     """ activity_map содержит следующие значения [описание активности, название активности, добавляемые очки, количество пропускаемых шагов] """
-    def __init__(self, global_position, action_points):
-        super().__init__(global_position, action_points)
+    def __init__(self, global_position, local_position, action_points):
+        super().__init__(global_position, local_position, action_points)
         self.name = 'horse'
         self.name_npc = random.choice(['Стреноженая белая лошадь', 'Стреноженая гнедая лошадь', 'Стреноженая черная лошадь'])
         self.priority_biom = [',', '„', 'P']
@@ -645,8 +645,8 @@ class Coyot(Enemy):
     """ Отвечает за койотов """
         
     """ activity_map содержит следующие значения [описание активности, название активности, добавляемые очки, количество пропускаемых шагов] """
-    def __init__(self, global_position, action_points):
-        super().__init__(global_position, action_points)
+    def __init__(self, global_position, local_position, action_points):
+        super().__init__(global_position, local_position, action_points)
         self.name = 'coyot'
         self.name_npc = random.choice(['плешивый койот', 'молодой койот', 'подраный койот'])
         self.priority_biom = ['.', ',', '„', 'P', 'A']
@@ -684,9 +684,9 @@ def master_npc_calculation(global_map, enemy_list, person, go_to_print, step, ac
             enemy.level = global_map[enemy.global_position[0]][enemy.global_position[1]].chunk[enemy.dynamic_chunk_position[0]][enemy.dynamic_chunk_position[0]].level
             enemy.vertices = global_map[enemy.global_position[0]][enemy.global_position[1]].chunk[enemy.dynamic_chunk_position[0]][enemy.dynamic_chunk_position[0]].vertices
         except IndexError:
-            print(f"enemy.name_npc - {enemy.name_npc}, enemy.global_position - {enemy.global_position}, enemy.dynamic_chunk_position - {enemy.dynamic_chunk_position}")
+            print(f"!!!enemy.name_npc - {enemy.name_npc}, enemy.global_position - {enemy.global_position}, enemy.dynamic_chunk_position - {enemy.dynamic_chunk_position}")
         except TypeError:
-            print(f"enemy.name_npc - {enemy.name_npc}, enemy.level - {enemy.level}")
+            print(f"!!!enemy.name_npc - {enemy.name_npc}, enemy.level - {enemy.level}")
         #Удаление реализованной цели
         if enemy.target and enemy.target == [enemy.global_position, enemy.vertices, enemy.dynamic_chunk_position]:
             enemy.target = []
@@ -714,9 +714,11 @@ def master_npc_calculation(global_map, enemy_list, person, go_to_print, step, ac
             if random.randrange(21)//18 > 0:
                 activity_list.append(Action_in_map(enemy.activity_map['move'][0][1], step, enemy.global_position, enemy.dynamic_chunk_position, chunk_size, enemy.name_npc))
             activity_list.append(Action_in_map('faint_footprints', step, enemy.global_position, enemy.dynamic_chunk_position, chunk_size, enemy.name_npc))
-
-            enemy.global_position = enemy.dynamic_waypoints[0][2]
-            enemy.local_position = enemy.dynamic_waypoints[0][0]
+            print(f"??? {enemy.name_npc} собирается поменять глобальную позицию enemy.global_position - {enemy.global_position}")
+            #print(f"его динамические вейпоинты enemy.dynamic_waypoints - {enemy.dynamic_waypoints}")
+            enemy.global_position = enemy.dynamic_waypoints[0][3]
+            print(f"??? {enemy.name_npc} поменял глобальную позицию enemy.global_position - {enemy.global_position}")
+            enemy.local_position = [enemy.dynamic_waypoints[0][0], enemy.dynamic_waypoints[0][1]]
             enemy.vertices = enemy.dynamic_waypoints[0][1]
             enemy.dynamic_waypoints.pop(0)
             
@@ -737,9 +739,12 @@ def enemy_move_calculaton(global_map, enemy):
     """
     #Если есть глобальные вейпоинты, то сразу считаем локальные вейпоинты
     if enemy.waypoints:
-        enemy.local_waypoints = vertices_enemy_a_star_move_local_calculations(global_map, enemy,
-                                [[enemy.waypoints[0], enemy.waypoints[1]], enemy.waypoints[2]], True)
-        print(f"{enemy.name_npc} - посчитал локальные вейпоинты, имея глобальные")
+        try:
+            vertices_enemy_a_star_move_local_calculations(global_map, enemy,
+                                [[enemy.waypoints[0][0], enemy.waypoints[0][1]], enemy.waypoints[0][2]], True)
+        except IndexError:
+            print(f'!!!IndexError enemy.name_npc - {enemy.name_npc} enemy.waypoints - {enemy.waypoints}')
+        print(f"{enemy.name_npc} - посчитал локальные вейпоинты, имея глобальные | {enemy.waypoints} | {enemy.dynamic_waypoints}")
     #Если нет глобальных вейпоинтов
     else:
         #Если глобальные позиции не равны или глобальные позиции равны, но не равны зоны доступности
@@ -747,16 +752,16 @@ def enemy_move_calculaton(global_map, enemy):
             #Сначала считаем глобальные вейпоинты
             vertices_enemy_a_star_move_global_calculations(global_map, enemy,[enemy.target[0][0], enemy.target[0][1], enemy.target[1]])
             #А затем локальные
-            enemy.local_waypoints = vertices_enemy_a_star_move_local_calculations(global_map, enemy,
+            vertices_enemy_a_star_move_local_calculations(global_map, enemy,
                                 [[enemy.waypoints[0][0], enemy.waypoints[0][1]], enemy.waypoints[0][2]], True)
             enemy.waypoints.pop(0)
-            print(f"{enemy.name_npc} - посчитал глобальные, а затем локальные вейпоинты")
+            print(f"{enemy.name_npc} - посчитал глобальные, а затем локальные вейпоинты | {enemy.waypoints} | {enemy.dynamic_waypoints}")
         #Если равны глобальные позиции и зоны доступности
         elif enemy.target[0] == enemy.global_position and enemy.target[1] == enemy.vertices:
             #Считаем только локальные вейпоинты без перехода на другую локацию
-            enemy.local_waypoints = vertices_enemy_a_star_move_local_calculations(global_map, enemy,
+            vertices_enemy_a_star_move_local_calculations(global_map, enemy,
                                 [[enemy.waypoints[0], enemy.waypoints[1]], enemy.waypoints[2]], False)
-            print(f"{enemy.name_npc} - посчитал локальные вейпоинты без необходимости считать глобальные")
+            print(f"{enemy.name_npc} - посчитал локальные вейпоинты без необходимости считать глобальные | {enemy.waypoints} | {enemy.dynamic_waypoints}")
             
         
 
@@ -764,7 +769,10 @@ def vertices_enemy_a_star_move_global_calculations(processed_map, enemy, finish_
     """
         Подготавливает запрос и вызывает алгоритм А* для передвижения по глобальной карте
     """
-    start_point = [enemy.global_position[0], enemy.global_position[1], enemy.vertices]
+    try:
+        start_point = [enemy.global_position[0], enemy.global_position[1], enemy.vertices]
+    except TypeError:
+        print(f"!!!TypeError enemy.name_npc - {enemy.name_npc}, enemy.global_position - {enemy.global_position}")
     enemy.waypoints = vertices_enemy_a_star_algorithm_move_calculation(processed_map, start_point, finish_point, 'global', enemy)
 
 def vertices_enemy_a_star_move_local_calculations(global_map, enemy, target, moving_between_locations):
@@ -774,8 +782,8 @@ def vertices_enemy_a_star_move_local_calculations(global_map, enemy, target, mov
         target:[[y, x], номер зоны доступности на следующей или на этой карте в которую нужно прийти]
     """
     processed_map = global_map[enemy.global_position[0]][enemy.global_position[1]].chunk
-    start_point = [enemy.dynamic_chunk_position[0], enemy.dynamic_chunk_position[1],
-                   processed_map[enemy.dynamic_chunk_position[0]][enemy.dynamic_chunk_position[1]].vertices]
+    start_point = [enemy.local_position[0], enemy.local_position[1],
+                   enemy.vertices]
 
     finish_point = []
     if moving_between_locations:
@@ -905,7 +913,7 @@ def vertices_enemy_a_star_algorithm_move_calculation(processed_map, start_point,
                                                    calculation_map[node.position[0]][node.position[1] - 1].price_move +
                                                    path_length([node.position[0], node.position[1] - 1], finish_point), node.number))
 
-    print(f"{enemy.name_npc} finish_point - {finish_point}, start_point - {start_point}")
+    #print(f"{enemy.name_npc} finish_point - {finish_point}, start_point - {start_point}")
 
     graph = [] #Список, содержащий все вершины
     graph.append(Node_vertices(0, start_point[2], [start_point[0], start_point[1]], path_length(start_point, finish_point), -1))
@@ -952,8 +960,8 @@ def vertices_enemy_a_star_algorithm_move_calculation(processed_map, start_point,
         reversed_waypoints.append([check_node.position[0], check_node.position[1], check_node.vertices])
         check_node = graph[check_node.direction] #Предыдущая вершина объявляется проверяемой
 
-    print(f"{enemy.name_npc} reversed_waypoints - {reversed_waypoints}")
-    print(f"{enemy.name_npc} list(reversed(reversed_waypoints)) - {list(reversed(reversed_waypoints))}")
+
+    print(f"{enemy.name_npc} {global_or_local} list(reversed(reversed_waypoints)) - {list(reversed(reversed_waypoints))}")
     return list(reversed(reversed_waypoints))
 
 
@@ -1547,7 +1555,12 @@ def test_request_move(global_map:list, person, chunk_size:int, go_to_print, pres
             person.dynamic[1] += chunk_size//2
 
     elif pressed_button == 'button_purpose_task':
-        interaction.append(['task_point_all_enemies', [person.global_position[0], person.global_position[0], person.vertices]])
+        local_position = copy.deepcopy(person.dynamic)
+        if local_position[0] > chunk_size:
+            local_position[0] -= chunk_size
+        if local_position[1] > chunk_size:
+            local_position[1] -= chunk_size
+        interaction.append(['task_point_all_enemies', [person.global_position, person.vertices, local_position]])
 
     elif pressed_button == 'button_add_beacon':
         activity_list.append(Action_in_map('test_beacon', step, person.global_position, person.dynamic, chunk_size,
@@ -1794,13 +1807,16 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
 
     for number_line in range(len(global_map)):
         for number_tile in range(len(global_map[0])):
-
             if person.global_position == [number_line, number_tile]:
                 all_sprites.add(All_tiles(number_tile*size_tile_minimap + (30*size_tile), number_line*size_tile_minimap, size_tile_minimap,
                                       '☺'))
             else:
                 all_sprites.add(All_tiles(number_tile*size_tile_minimap + (30*size_tile), number_line*size_tile_minimap, size_tile_minimap,
                                       global_map[number_line][number_tile].icon))
+
+    for enemy in enemy_list:
+        all_sprites.add(All_tiles(enemy.global_position[0]*size_tile_minimap + (30*size_tile), enemy.global_position[0]*size_tile_minimap,
+                                  size_tile_minimap, '☺'))
 
 
     test_1_end = time.time() #
@@ -1817,9 +1833,9 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
     
     end = time.time() #проверка времени выполнения
 
-    print(f"{test1_1 - start} - test1_1 \n{test1_2 - test1_1} - test1_2 \n{test1_3 - test1_2} - test1_3 \n{test1 - test1_3} - test1")
-    print(F"{test_control_1 - test1} - test_control_1 \n{test2_1 - test_control_1} - test2_1 \n{test2_2 - test2_1} - test2_2 \n{test2_3 - test2_2} - test2_3")
-    print(F"{test2 - test2_3} - test2 \n{test_1_end - test2} - test_1_end \n{test_2_end - test_1_end} - test_2_end \n{test_3_end - test_2_end} - test_3_end \n{end - test_3_end} - end \n")
+    #print(f"{test1_1 - start} - test1_1 \n{test1_2 - test1_1} - test1_2 \n{test1_3 - test1_2} - test1_3 \n{test1 - test1_3} - test1")
+    #print(F"{test_control_1 - test1} - test_control_1 \n{test2_1 - test_control_1} - test2_1 \n{test2_2 - test2_1} - test2_2 \n{test2_3 - test2_2} - test2_3")
+    #print(F"{test2 - test2_3} - test2 \n{test_1_end - test2} - test_1_end \n{test_2_end - test_1_end} - test_2_end \n{test_3_end - test_2_end} - test_3_end \n{end - test_3_end} - end \n")
 
 
 
@@ -2468,8 +2484,8 @@ def main():
     
     person = Person([value_region_box//2, value_region_box//2], [chunk_size//2, chunk_size//2], [], [chunk_size//2, chunk_size//2], [chunk_size//2, chunk_size//2])
     calculation_assemblage_point(global_map, person, chunk_size)
-    enemy_list = [Horseman([len(global_map)//2, len(global_map)//2] , 5), Horseman([len(global_map)//3, len(global_map)//3] , 5),
-                  Riffleman([len(global_map)//4, len(global_map)//4] , 2), Coyot([len(global_map)//5, len(global_map)//5] , 0)]
+    enemy_list = [Horseman([len(global_map)//2, len(global_map)//2], [chunk_size//2, chunk_size//2], 5), Horseman([len(global_map)//3, len(global_map)//3], [chunk_size//2, chunk_size//2], 5),
+                  Riffleman([len(global_map)//4, len(global_map)//4], [chunk_size//2, chunk_size//2], 2), Coyot([len(global_map)//5, len(global_map)//5], [chunk_size//2, chunk_size//2], 0)]
     game_loop(global_map, person, chunk_size, frame_size, enemy_list)
     
     print('Игра окончена!')
