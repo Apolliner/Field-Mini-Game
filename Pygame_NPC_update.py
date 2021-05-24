@@ -425,6 +425,9 @@ def interaction_processing(global_map, interaction, enemy_list):
                 for enemy in enemy_list:
                     if enemy.type_npc == 'hunter':
                         enemy.target = interact[1]
+                        enemy.waypoints = []
+                        enemy.dynamic_waypoints = []
+                        print(F"{enemy.name_npc} получил задачу {enemy.target}")
                         
 
 
@@ -773,7 +776,7 @@ def vertices_enemy_a_star_move_global_calculations(processed_map, enemy, finish_
         start_point = [enemy.global_position[0], enemy.global_position[1], enemy.vertices]
     except TypeError:
         print(f"!!!TypeError enemy.name_npc - {enemy.name_npc}, enemy.global_position - {enemy.global_position}")
-    enemy.waypoints = vertices_enemy_a_star_algorithm_move_calculation(processed_map, start_point, finish_point, 'global', enemy)
+    enemy.waypoints, success = vertices_enemy_a_star_algorithm_move_calculation(processed_map, start_point, finish_point, 'global', enemy)
 
 def vertices_enemy_a_star_move_local_calculations(global_map, enemy, target, moving_between_locations):
     """
@@ -794,25 +797,26 @@ def vertices_enemy_a_star_move_local_calculations(global_map, enemy, target, mov
                         if connect.position == target[0] and connect.number == target[1]:
                             finish = random.choice(connect.tiles)
                             finish_point = [finish[0], finish[1], vertices.number]
+                            #print(F"finish_point - {finish_point} connect.tiles - {connect.tiles}")
     else:
         finish_point = enemy.target[2]
     
     
     if finish_point:
-        raw_dynamic_waypoints = vertices_enemy_a_star_algorithm_move_calculation(processed_map, start_point, finish_point, 'local', enemy)
+        raw_dynamic_waypoints, success = vertices_enemy_a_star_algorithm_move_calculation(processed_map, start_point, finish_point, 'local', enemy)
         #В каждую путевую точку добавляется глобальная позиция этой точки
         for waypoint in raw_dynamic_waypoints:
             waypoint.append(enemy.global_position)
         #Добавление вейпоинта, соседнего последнему, но на другой карте и с указанием других глобальных координат
-        if moving_between_locations:
+        if moving_between_locations and success:
             if target[0] == [enemy.global_position[0] - 1, enemy.global_position[1]]:
-                raw_dynamic_waypoints.append([raw_dynamic_waypoints[-1][0] + 1, raw_dynamic_waypoints[-1][1], target[1], target[0]])
+                raw_dynamic_waypoints.append([len(global_map[0][0].chunk) - 1, raw_dynamic_waypoints[-1][1], target[1], target[0]])
             elif target[0] == [enemy.global_position[0] + 1, enemy.global_position[1]]:
-                raw_dynamic_waypoints.append([raw_dynamic_waypoints[-1][0] - 1, raw_dynamic_waypoints[-1][1], target[1], target[0]])
+                raw_dynamic_waypoints.append([0, raw_dynamic_waypoints[-1][1], target[1], target[0]])
             elif target[0] == [enemy.global_position[0], enemy.global_position[1] - 1]:
-                raw_dynamic_waypoints.append([raw_dynamic_waypoints[-1][0], raw_dynamic_waypoints[-1][1] + 1, target[1], target[0]]) 
+                raw_dynamic_waypoints.append([raw_dynamic_waypoints[-1][0], len(global_map[0][0].chunk) - 1, target[1], target[0]]) 
             elif target[0] == [enemy.global_position[0], enemy.global_position[1] + 1]:
-                raw_dynamic_waypoints.append([raw_dynamic_waypoints[-1][0], raw_dynamic_waypoints[-1][1] - 1, target[1], target[0]])
+                raw_dynamic_waypoints.append([raw_dynamic_waypoints[-1][0], 0, target[1], target[0]])
                 
     
         enemy.dynamic_waypoints = raw_dynamic_waypoints
@@ -844,6 +848,10 @@ def vertices_enemy_a_star_algorithm_move_calculation(processed_map, start_point,
         Обрабатываемая карта - processed_map;
         Cтартовые кординаты, содержащие вершину - start_point:[y, x, vertices];
         Финишная точка - finish_point:[y, x, vertices];
+
+
+        НУЖНО ДЛЯ ИСПРАВЛЕНИЯ ОШИБОК:
+        Добавить список уже занятых координат и сравнивать с ним при добавлении новой вершины.
         
     """
     class Node_vertices:
@@ -863,7 +871,7 @@ def vertices_enemy_a_star_algorithm_move_calculation(processed_map, start_point,
         """
         return math.sqrt((start_point[0] - finish_point[0])**2 + (start_point[1] - finish_point[1])**2)
 
-    def node_connections(processed_map, graph, processed_node, finish_point):
+    def node_connections(processed_map, graph, processed_node, finish_point, verified_position):
         """
             Определяет связи вершины и добавляет их в граф при расчёте по глобальной карте
         """
@@ -874,9 +882,10 @@ def vertices_enemy_a_star_algorithm_move_calculation(processed_map, start_point,
                 #Проверяем, есть ли у неё связи
                 if vertices.connections:
                     for connect in vertices.connections:
-                        friend = Node_vertices(len(graph), connect.number, connect.position, path_length(connect.position,
-                                                                                    finish_point), processed_node.number)
-                        graph.append(friend)
+                        if not [connect.position, connect.number] in verified_position:
+                            print(f'добавлена вершина под номером {len(graph)}, направлением на вершину с номером {processed_node.number} и координатами {connect.position}, {connect.number}')
+                            graph.append(Node_vertices(len(graph), connect.number, connect.position, path_length(connect.position,
+                                                                                    finish_point), processed_node.number))
 
     def node_friends_calculation(calculation_map, graph, node, finish_point):
         """
@@ -913,18 +922,21 @@ def vertices_enemy_a_star_algorithm_move_calculation(processed_map, start_point,
                                                    calculation_map[node.position[0]][node.position[1] - 1].price_move +
                                                    path_length([node.position[0], node.position[1] - 1], finish_point), node.number))
 
-    #print(f"{enemy.name_npc} finish_point - {finish_point}, start_point - {start_point}")
+    print(f"{enemy.name_npc} finish_point - {finish_point}, start_point - {start_point}")
 
     graph = [] #Список, содержащий все вершины
+    verified_position = [] #Содержит список всех использованных координат, что бы сравнивать с ним при добавлении новой вершины.
     graph.append(Node_vertices(0, start_point[2], [start_point[0], start_point[1]], path_length(start_point, finish_point), -1))
+    verified_position.append([[start_point[0], start_point[1]], start_point[2]])
     if global_or_local == 'global':
-        node_connections(processed_map, graph, graph[0], finish_point)
+        node_connections(processed_map, graph, graph[0], finish_point, verified_position)
     elif global_or_local == 'local':
         node_friends_calculation(processed_map, graph, graph[0], finish_point)
     general_loop = True #Параметр останавливающий цикл
     step_count = 0 #Шаг цикла
-    finish_node = 0 #Хранит номер финишной точки
+    number_finish_node = 0 #Хранит номер финишной точки
     reversed_waypoints = [] #Обращенный список вейпоинтов
+    success = True #Передаёт информацию об успехе и не успехе
     while general_loop:
         min_price = 99999
         node = graph[-1]
@@ -934,14 +946,15 @@ def vertices_enemy_a_star_algorithm_move_calculation(processed_map, start_point,
                     min_price = graph[number_node].price
                     node = graph[number_node]
         if min_price == 99999:
-            finish_point == graph[-1]
+            number_finish_node = graph[-1]
             general_loop = False
+            sucess = False
         if global_or_local == 'global':
-            node_connections(processed_map, graph, node, finish_point)
+            node_connections(processed_map, graph, node, finish_point, verified_position)
         elif global_or_local == 'local':
             node_friends_calculation(processed_map, graph, graph[0], finish_point)
         if node.position == [finish_point[0], finish_point[1]] and node.vertices == finish_point[2]:
-            finish_node = node.number
+            number_finish_node = node.number
             general_loop = False
         step_count += 1
         if step_count == 250:
@@ -951,18 +964,21 @@ def vertices_enemy_a_star_algorithm_move_calculation(processed_map, start_point,
                 if graph[number_node].ready:
                     if graph[number_node].price < min_price:
                         min_price = graph[number_node].price
-                        finish_node = number_node
+                        number_finish_node = number_node
+            print(f"!!! {enemy.name_npc} {global_or_local} путь по алгоритму А* не найден. Выбрана ближайшая точка.")
+            sucess = False
             general_loop = False
             
-    check_node = graph[finish_node]
-    reversed_waypoints.append(finish_point)
+    check_node = graph[number_finish_node]
+    reversed_waypoints.append([check_node.position[0], check_node.position[1], check_node.vertices])
     while check_node.position != graph[0].position and check_node.vertices != graph[0].vertices:
         reversed_waypoints.append([check_node.position[0], check_node.position[1], check_node.vertices])
+        print(f"имея обрабатываемую точку под номером {check_node.number} обрабатываемой точкой становится родительская под номером {check_node.direction}, имеющая координаты {check_node.position}, {check_node.vertices}")
         check_node = graph[check_node.direction] #Предыдущая вершина объявляется проверяемой
 
 
     print(f"{enemy.name_npc} {global_or_local} list(reversed(reversed_waypoints)) - {list(reversed(reversed_waypoints))}")
-    return list(reversed(reversed_waypoints))
+    return list(reversed(reversed_waypoints)), success
 
 
 
