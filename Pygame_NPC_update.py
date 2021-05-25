@@ -526,6 +526,7 @@ class Enemy:
         self.level = 0
         self.vertices = 0
         self.target = [] #[[global_y, global_x], vertices, [local_y, local_x]]
+        self.visible = True
 
     def all_description_calculation(self):
         self.description = f"{self.pass_description} {self.person_description}"
@@ -687,9 +688,12 @@ def master_npc_calculation(global_map, enemy_list, person, go_to_print, step, ac
     for enemy in enemy_list:
 
         #print(f"{enemy.name_npc} - на начало обработки имеет: \n global - {enemy.waypoints} \n local - {enemy.local_waypoints}")
-
+    
         enemy.level = global_map[enemy.global_position[0]][enemy.global_position[1]].chunk[enemy.local_position[0]][enemy.local_position[0]].level
         enemy.vertices = global_map[enemy.global_position[0]][enemy.global_position[1]].chunk[enemy.local_position[0]][enemy.local_position[0]].vertices
+        #Удаление реализованного глобального вейпоинта
+        if enemy.waypoints and enemy.global_position == enemy.waypoints[0]:
+            enemy.waypoints.pop(0)
 
         #Удаление реализованной цели
         if enemy.target and enemy.target == [enemy.global_position, enemy.vertices, enemy.local_position]:
@@ -971,6 +975,8 @@ def vertices_enemy_a_star_algorithm_move_calculation(processed_map, start_point,
             sucess = False
             general_loop = False
             print(f"!!! {enemy.name_npc} {global_or_local} путь по алгоритму А* не найден. Выбрана ближайшая точка.")
+            if global_or_local == 'global': #УДАЛЕНИЕ ЦЕЛИ ЕСЛИ НЕ НАЙДЕН ПУТЬ ЧТО БЫ НЕ СПАМИЛ
+                enemy.target = []
         if global_or_local == 'global':
             node_connections(processed_map, graph, node, finish_point, verified_position)
         elif global_or_local == 'local':
@@ -988,6 +994,8 @@ def vertices_enemy_a_star_algorithm_move_calculation(processed_map, start_point,
                         min_price = graph[number_node].price
                         number_finish_node = number_node
             print(f"!!! {enemy.name_npc} {global_or_local} путь по алгоритму А* за отведённые шаги не найден. Выбрана ближайшая точка.")
+            if global_or_local == 'global': #УДАЛЕНИЕ ЦЕЛИ ЕСЛИ НЕ НАЙДЕН ПУТЬ ЧТО БЫ НЕ СПАМИЛ
+                enemy.target = []
             sucess = False
             general_loop = False
             
@@ -1815,9 +1823,9 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
     
     landscape_layer = landscape_layer_calculations(person, chunk_size, go_to_print)
     test1_1 = time.time()
-    activity_layer = activity_layer_calculations(person, chunk_size, go_to_print, enemy_list, activity_list)
+    activity_layer = activity_layer_calculations(person, chunk_size, go_to_print, activity_list)
     test1_2 = time.time()
-    entities_layer = entities_layer_calculations(person, chunk_size, go_to_print, enemy_list, activity_list)
+    entities_layer = activity_layer_calculations(person, chunk_size, go_to_print, enemy_list) #Использование функции для отображения активностей
     test1_3 = time.time()
     #sky_layer = sky_layer_calculations(chunk_size)
 
@@ -2042,9 +2050,9 @@ def landscape_layer_calculations(person, chunk_size, go_to_print):
         landscape_layer.append(new_line)
     return landscape_layer
 
-def activity_layer_calculations(person, chunk_size:int, go_to_print, enemy_list, activity_list):
+def activity_layer_calculations(person, chunk_size:int, go_to_print, activity_list):
     """
-        Отрисовывает слой активностей
+        Отрисовывает слой активностей или слой персонажей
     """
     start_stop = [(person.dynamic[0] - chunk_size//2), (person.dynamic[1] - chunk_size//2),
                   (person.dynamic[0] + chunk_size//2 + 1),(person.dynamic[1] + chunk_size//2 + 1)]
@@ -2080,7 +2088,7 @@ def activity_layer_calculations(person, chunk_size:int, go_to_print, enemy_list,
     return activity_layer
             
 
-def entities_layer_calculations(person, chunk_size, go_to_print, enemy_list, activity_list):
+def entities_layer_calculations(person, chunk_size, go_to_print, enemy_list, activity_list): #УСТАРЕЛО
     """
         Отрисовывает персонажей
     """
