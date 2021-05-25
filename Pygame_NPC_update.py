@@ -419,7 +419,7 @@ def interaction_processing(global_map, interaction, enemy_list):
     """
         Обрабатывает взаимодействие игрока с миром
     """
-    if len(interaction) != 0:
+    if interaction:
         for interact in interaction:
             if interact[0] == 'task_point_all_enemies':
                 for enemy in enemy_list:
@@ -428,6 +428,7 @@ def interaction_processing(global_map, interaction, enemy_list):
                         enemy.waypoints = []
                         enemy.dynamic_waypoints = []
                         print(F"{enemy.name_npc} получил задачу {enemy.target}")
+    interaction = []
                         
 
 
@@ -512,11 +513,12 @@ class Enemy:
         self.local_position = local_position
         self.action_points = action_points
         self.dynamic_chunk = False
-        self.dynamic_chunk_position = [0, 0]
+        self.dynamic_chunk_position = [0, 0]  #УСТАРЕЛО
         self.old_position_assemblage_point = [1, 1]
         self.step_exit_from_assemblage_point = 0
         self.waypoints = []
-        self.dynamic_waypoints = [] # [[local_y, local_x], vertices, [global_y, global_x]]
+        self.dynamic_waypoints = [] #УСТАРЕЛО
+        self.local_waypoints = [] # [[local_y, local_x], vertices, [global_y, global_x]]
         self.alarm = False
         self.pass_step = 0
         self.on_the_screen = False
@@ -683,21 +685,23 @@ def master_npc_calculation(global_map, enemy_list, person, go_to_print, step, ac
     enemy_dynamic_chunk_check(global_map, enemy_list, person, step, chunk_size)
 
     for enemy in enemy_list:
-        try:
-            enemy.level = global_map[enemy.global_position[0]][enemy.global_position[1]].chunk[enemy.dynamic_chunk_position[0]][enemy.dynamic_chunk_position[0]].level
-            enemy.vertices = global_map[enemy.global_position[0]][enemy.global_position[1]].chunk[enemy.dynamic_chunk_position[0]][enemy.dynamic_chunk_position[0]].vertices
-        except IndexError:
-            print(f"!!!enemy.name_npc - {enemy.name_npc}, enemy.global_position - {enemy.global_position}, enemy.dynamic_chunk_position - {enemy.dynamic_chunk_position}")
-        except TypeError:
-            print(f"!!!enemy.name_npc - {enemy.name_npc}, enemy.level - {enemy.level}")
+
+        #print(f"{enemy.name_npc} - на начало обработки имеет: \n global - {enemy.waypoints} \n local - {enemy.local_waypoints}")
+
+        enemy.level = global_map[enemy.global_position[0]][enemy.global_position[1]].chunk[enemy.local_position[0]][enemy.local_position[0]].level
+        enemy.vertices = global_map[enemy.global_position[0]][enemy.global_position[1]].chunk[enemy.local_position[0]][enemy.local_position[0]].vertices
+
         #Удаление реализованной цели
-        if enemy.target and enemy.target == [enemy.global_position, enemy.vertices, enemy.dynamic_chunk_position]:
+        if enemy.target and enemy.target == [enemy.global_position, enemy.vertices, enemy.local_position]:
             enemy.target = []
+            #print(F"xxx {enemy.name_npc} удалена реализованнная цель")
         #Если есть цель, но нет динамических вейпоинтов.
-        if enemy.target and not(enemy.dynamic_waypoints):
+        if enemy.target and not(enemy.local_waypoints):
+            #print(F"xxx {enemy.name_npc} есть цель, но нет динамических вейпоинтов")
             enemy_move_calculaton(global_map, enemy)
-        #Если цели нет
-        if not enemy.target:
+        #Если цели нет и нет динамических вейпоинтов
+        if not enemy.target and not enemy.local_waypoints:
+            #print(F"xxx {enemy.name_npc} цели нет и нет динамических вейпоинтов")
             for vertices in global_map[enemy.global_position[0]][enemy.global_position[1]].vertices:
                 if vertices.number == enemy.vertices:
                     if vertices.connections:
@@ -712,20 +716,22 @@ def master_npc_calculation(global_map, enemy_list, person, go_to_print, step, ac
                         #Задаётся цель из существующих координат, существующих связей и существующих тайлов
                         enemy.target = [vertices.connections[number_target].position, vertices.connections[number_target].number, target_tiles]
         #Если есть динамические вейпоинты
-        if enemy.dynamic_waypoints:
+        if enemy.local_waypoints:
+            #print(F"xxx {enemy.name_npc} есть динамические вейпоинты")
             #Добавляются следы
             if random.randrange(21)//18 > 0:
-                activity_list.append(Action_in_map(enemy.activity_map['move'][0][1], step, enemy.global_position, enemy.dynamic_chunk_position, chunk_size, enemy.name_npc))
-            activity_list.append(Action_in_map('faint_footprints', step, enemy.global_position, enemy.dynamic_chunk_position, chunk_size, enemy.name_npc))
-            print(f"??? {enemy.name_npc} собирается поменять глобальную позицию enemy.global_position - {enemy.global_position}")
-            #print(f"его динамические вейпоинты enemy.dynamic_waypoints - {enemy.dynamic_waypoints}")
-            enemy.global_position = enemy.dynamic_waypoints[0][3]
-            print(f"??? {enemy.name_npc} поменял глобальную позицию enemy.global_position - {enemy.global_position}")
-            enemy.local_position = [enemy.dynamic_waypoints[0][0], enemy.dynamic_waypoints[0][1]]
-            enemy.vertices = enemy.dynamic_waypoints[0][1]
-            enemy.dynamic_waypoints.pop(0)
+                activity_list.append(Action_in_map(enemy.activity_map['move'][0][1], step, enemy.global_position, enemy.local_position, chunk_size, enemy.name_npc))
+            activity_list.append(Action_in_map('faint_footprints', step, enemy.global_position, enemy.local_position, chunk_size, enemy.name_npc))
+            #print(f"??? {enemy.name_npc} собирается поменять глобальную позицию enemy.global_position - {enemy.global_position}")
+            #print(f"его динамические вейпоинты enemy.local_waypoints - {enemy.local_waypoints}")
+            enemy.global_position = enemy.local_waypoints[0][3]
+            #print(f"??? {enemy.name_npc} поменял глобальную позицию enemy.global_position - {enemy.global_position} меняя локальную позицию - {enemy.local_position}")
+            enemy.local_position = [enemy.local_waypoints[0][0], enemy.local_waypoints[0][1]]
+            enemy.vertices = enemy.local_waypoints[0][1]
+            enemy.local_waypoints.pop(0)
+            #print(F"??? {enemy.name_npc} поменял локальную позицию - {enemy.local_position}")
             
-            
+        #print(f"{enemy.name_npc} - на конец обработки имеет: \n global - {enemy.waypoints} \n local - {enemy.local_waypoints}")
 
 
 def enemy_move_calculaton(global_map, enemy):
@@ -740,14 +746,12 @@ def enemy_move_calculaton(global_map, enemy):
         2) Если глобальные позиции совпадают, но не совпадают номера зон доступности, то сначала выполняется глобальный поиск, а за ним локальный
         3) Если совпадают и глобальные позиции и номера зон доступности, то выполняется локальный поиск.
     """
-    #Если есть глобальные вейпоинты, то сразу считаем локальные вейпоинты
-    if enemy.waypoints:
-        try:
-            vertices_enemy_a_star_move_local_calculations(global_map, enemy,
+    #Если есть глобальные вейпоинты, но нет локальных - то считаем локальные вейпоинты
+    if enemy.waypoints and not enemy.local_waypoints:
+        vertices_enemy_a_star_move_local_calculations(global_map, enemy,
                                 [[enemy.waypoints[0][0], enemy.waypoints[0][1]], enemy.waypoints[0][2]], True)
-        except IndexError:
-            print(f'!!!IndexError enemy.name_npc - {enemy.name_npc} enemy.waypoints - {enemy.waypoints}')
-        print(f"{enemy.name_npc} - посчитал локальные вейпоинты, имея глобальные | {enemy.waypoints} | {enemy.dynamic_waypoints}")
+
+        #print(f"{enemy.name_npc} - посчитал локальные вейпоинты, имея глобальные | {enemy.waypoints} | {enemy.dynamic_waypoints}")
     #Если нет глобальных вейпоинтов
     else:
         #Если глобальные позиции не равны или глобальные позиции равны, но не равны зоны доступности
@@ -758,13 +762,13 @@ def enemy_move_calculaton(global_map, enemy):
             vertices_enemy_a_star_move_local_calculations(global_map, enemy,
                                 [[enemy.waypoints[0][0], enemy.waypoints[0][1]], enemy.waypoints[0][2]], True)
             enemy.waypoints.pop(0)
-            print(f"{enemy.name_npc} - посчитал глобальные, а затем локальные вейпоинты | {enemy.waypoints} | {enemy.dynamic_waypoints}")
+            #print(f"{enemy.name_npc} - посчитал глобальные, а затем локальные вейпоинты | {enemy.waypoints} | {enemy.dynamic_waypoints}")
         #Если равны глобальные позиции и зоны доступности
         elif enemy.target[0] == enemy.global_position and enemy.target[1] == enemy.vertices:
             #Считаем только локальные вейпоинты без перехода на другую локацию
             vertices_enemy_a_star_move_local_calculations(global_map, enemy,
-                                [[enemy.waypoints[0], enemy.waypoints[1]], enemy.waypoints[2]], False)
-            print(f"{enemy.name_npc} - посчитал локальные вейпоинты без необходимости считать глобальные | {enemy.waypoints} | {enemy.dynamic_waypoints}")
+                                [[enemy.target[2][0], enemy.target[2][1]], enemy.target[1]], False)
+            #print(f"{enemy.name_npc} - посчитал локальные вейпоинты без необходимости считать глобальные | {enemy.waypoints} | {enemy.dynamic_waypoints}")
             
         
 
@@ -797,29 +801,29 @@ def vertices_enemy_a_star_move_local_calculations(global_map, enemy, target, mov
                         if connect.position == target[0] and connect.number == target[1]:
                             finish = random.choice(connect.tiles)
                             finish_point = [finish[0], finish[1], vertices.number]
-                            print(F"finish_point - {finish_point} connect.tiles - {connect.tiles}")
+                            #print(F"finish_point - {finish_point} connect.tiles - {connect.tiles}")
     else:
         finish_point = enemy.target[2]
     
     
     if finish_point:
-        raw_dynamic_waypoints, success = vertices_enemy_a_star_algorithm_move_calculation(processed_map, start_point, finish_point, 'local', enemy)
+        raw_local_waypoints, success = vertices_enemy_a_star_algorithm_move_calculation(processed_map, start_point, finish_point, 'local', enemy)
         #В каждую путевую точку добавляется глобальная позиция этой точки
-        for waypoint in raw_dynamic_waypoints:
+        for waypoint in raw_local_waypoints:
             waypoint.append(enemy.global_position)
         #Добавление вейпоинта, соседнего последнему, но на другой карте и с указанием других глобальных координат
         if moving_between_locations and success:
             if target[0] == [enemy.global_position[0] - 1, enemy.global_position[1]]:
-                raw_dynamic_waypoints.append([len(global_map[0][0].chunk) - 1, raw_dynamic_waypoints[-1][1], target[1], target[0]])
+                raw_local_waypoints.append([len(global_map[0][0].chunk) - 1, raw_local_waypoints[-1][1], target[1], target[0]])
             elif target[0] == [enemy.global_position[0] + 1, enemy.global_position[1]]:
-                raw_dynamic_waypoints.append([0, raw_dynamic_waypoints[-1][1], target[1], target[0]])
+                raw_local_waypoints.append([0, raw_local_waypoints[-1][1], target[1], target[0]])
             elif target[0] == [enemy.global_position[0], enemy.global_position[1] - 1]:
-                raw_dynamic_waypoints.append([raw_dynamic_waypoints[-1][0], len(global_map[0][0].chunk) - 1, target[1], target[0]]) 
+                raw_local_waypoints.append([raw_local_waypoints[-1][0], len(global_map[0][0].chunk) - 1, target[1], target[0]]) 
             elif target[0] == [enemy.global_position[0], enemy.global_position[1] + 1]:
-                raw_dynamic_waypoints.append([raw_dynamic_waypoints[-1][0], 0, target[1], target[0]])
+                raw_local_waypoints.append([raw_local_waypoints[-1][0], 0, target[1], target[0]])
                 
     
-        enemy.dynamic_waypoints = raw_dynamic_waypoints
+        enemy.local_waypoints = raw_local_waypoints
        
 
 def vertices_enemy_a_star_algorithm_move_calculation(processed_map, start_point, finish_point, global_or_local, enemy):
@@ -852,6 +856,9 @@ def vertices_enemy_a_star_algorithm_move_calculation(processed_map, start_point,
 
         НУЖНО ДЛЯ ИСПРАВЛЕНИЯ ОШИБОК:
         Добавить список уже занятых координат и сравнивать с ним при добавлении новой вершины.
+
+        ЗАПЛАНИРОВАНО:
+        1) Если невозможно найти путь локальным поиском, то следующий глобальный вейпоинт объявляется непроходимым и ищется другой путь
         
     """
     class Node_vertices:
@@ -905,7 +912,7 @@ def vertices_enemy_a_star_algorithm_move_calculation(processed_map, start_point,
                             graph.append(Node_vertices(len(graph), node.vertices, [node.position[0] + 1, node.position[1]],
                                                    calculation_map[node.position[0] + 1][node.position[1]].price_move +
                                                    path_length([node.position[0] + 1, node.position[1]], finish_point), node.number))
-                            print(f'добавлена вершина под номером {len(graph)}, направлением на вершину с номером {node.number} и координатами {[node.position[0] + 1, node.position[1]]}, {node.vertices}')
+                            #print(f'добавлена вершина под номером {len(graph)}, направлением на вершину с номером {node.number} и координатами {[node.position[0] + 1, node.position[1]]}, {node.vertices}')
                                                                                            
             if node.position[0] - 1 >= 0:
                 if calculation_map[node.position[0] - 1][node.position[1]].vertices == node_tile.vertices:
@@ -915,7 +922,7 @@ def vertices_enemy_a_star_algorithm_move_calculation(processed_map, start_point,
                             graph.append(Node_vertices(len(graph), node.vertices, [node.position[0] - 1, node.position[1]],
                                                    calculation_map[node.position[0] - 1][node.position[1]].price_move +
                                                    path_length([node.position[0] - 1, node.position[1]], finish_point), node.number))
-                            print(f'добавлена вершина под номером {len(graph)}, направлением на вершину с номером {node.number} и координатами {[node.position[0] - 1, node.position[1]]}, {node.vertices}')
+                            #print(f'добавлена вершина под номером {len(graph)}, направлением на вершину с номером {node.number} и координатами {[node.position[0] - 1, node.position[1]]}, {node.vertices}')
         if 0 <= node.position[1] < len(calculation_map):
             if node.position[1] + 1 < len(calculation_map):
                 if calculation_map[node.position[0]][node.position[1] + 1].vertices == node_tile.vertices:
@@ -925,7 +932,7 @@ def vertices_enemy_a_star_algorithm_move_calculation(processed_map, start_point,
                             graph.append(Node_vertices(len(graph), node.vertices, [node.position[0], node.position[1] + 1],
                                                    calculation_map[node.position[0]][node.position[1] + 1].price_move +
                                                    path_length([node.position[0], node.position[1] + 1], finish_point), node.number))
-                            print(f'добавлена вершина под номером {len(graph)}, направлением на вершину с номером {node.number} и координатами {[node.position[0], node.position[1] + 1]}, {node.vertices}')
+                            #print(f'добавлена вершина под номером {len(graph)}, направлением на вершину с номером {node.number} и координатами {[node.position[0], node.position[1] + 1]}, {node.vertices}')
             if node.position[1] - 1 >= 0:
                 if calculation_map[node.position[0]][node.position[1] - 1].vertices == node_tile.vertices:
                     if calculation_map[node.position[0]][node.position[1] - 1].level == node_tile.level or node_tile.stairs or calculation_map[node.position[0]][node.position[1] - 1].stairs:
@@ -934,9 +941,9 @@ def vertices_enemy_a_star_algorithm_move_calculation(processed_map, start_point,
                             graph.append(Node_vertices(len(graph), node.vertices, [node.position[0], node.position[1] - 1],
                                                    calculation_map[node.position[0]][node.position[1] - 1].price_move +
                                                    path_length([node.position[0], node.position[1] - 1], finish_point), node.number))
-                            print(f'добавлена вершина под номером {len(graph)}, направлением на вершину с номером {node.number} и координатами {[node.position[0], node.position[1] - 1]}, {node.vertices}')
+                            #print(f'добавлена вершина под номером {len(graph)}, направлением на вершину с номером {node.number} и координатами {[node.position[0], node.position[1] - 1]}, {node.vertices}')
 
-    print(f"{enemy.name_npc} finish_point - {finish_point}, start_point - {start_point}")
+    #print(f"{enemy.name_npc} finish_point - {finish_point}, start_point - {start_point}")
 
     graph = [] #Список, содержащий все вершины
     verified_position = [] #Содержит список всех использованных координат, что бы сравнивать с ним при добавлении новой вершины.
@@ -993,10 +1000,40 @@ def vertices_enemy_a_star_algorithm_move_calculation(processed_map, start_point,
             ran_while = False
         #print(f"имея обрабатываемую точку под номером {check_node.number} обрабатываемой точкой становится родительская под номером {check_node.direction}, имеющая координаты {check_node.position}, {check_node.vertices}")
         check_node = graph[check_node.direction] #Предыдущая вершина объявляется проверяемой
+
+    if global_or_local == 'global':
+        test_print = ''
+        test_reversed_waypoints = []
+        for waypoint in reversed_waypoints:
+            test_reversed_waypoints.append([waypoint[0], waypoint[1]])
+        for number_line in range(len(processed_map)):
+            for number_tile in range(len(processed_map[number_line])):
+                    
+                if [number_line, number_tile] in test_reversed_waypoints:
+                    test_print += processed_map[number_line][number_tile].icon + 'v'
+                #elif [number_line, number_tile, start_point[2]] in verified_position:
+                    #test_print += processed_map[number_line][number_tile].icon + 'x'
+                else:
+                    test_print += processed_map[number_line][number_tile].icon + ' '
+            test_print += '\n'
+        #print(test_print)
         
+    elif global_or_local == 'local':
+        test_print = ''
+        for number_line in range(len(processed_map)):
+            for number_tile in range(len(processed_map[number_line])):
+                    
+                if [number_line, number_tile, start_point[2]] in reversed_waypoints:
+                    test_print += processed_map[number_line][number_tile].icon + 'v'
+                elif [number_line, number_tile, start_point[2]] in verified_position:
+                    test_print += processed_map[number_line][number_tile].icon + 'x'
+                else:
+                    test_print += processed_map[number_line][number_tile].icon + ' '
+            test_print += '\n'
+        #print(test_print)
 
 
-    print(f"{enemy.name_npc} {global_or_local} list(reversed(reversed_waypoints)) - {list(reversed(reversed_waypoints))}")
+    #print(f"{enemy.name_npc} {global_or_local} list(reversed(reversed_waypoints)) - {list(reversed(reversed_waypoints))}")
     return list(reversed(reversed_waypoints)), success
 
 
@@ -2497,7 +2534,7 @@ def game_loop(global_map:list, person:list, chunk_size:int, frame_size:list, ene
         test2 = time.time() #проверка времени выполнения
         print('step = ', step)
         end = time.time() #проверка времени выполнения
-        #print(f"{end - start} - end ")
+        print(f"{end - start} - end ")
         #print(f"{test1 - start} - test1 \n {test2 - test1} - test2 \n {end - test2} - end \n ")
     
 
