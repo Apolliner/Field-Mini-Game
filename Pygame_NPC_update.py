@@ -40,6 +40,12 @@ garbage = ['░', '▒', '▓', '█', '☺']
 
     
 """
+class World:
+    """ Содержит в себе описание текущего состояния игрового мира """
+    def __init__(self):
+        self.npc_path_calculation = False #Считал ли какой-либо NPC глобальный или локальный путь на этом шаге
+
+
 
 class Person:
     """ Содержит в себе глобальное местоположение персонажа, расположение в пределах загруженного участка карты и координаты используемых чанков """
@@ -407,13 +413,13 @@ class Tiles_image_dict:
 
 """
 
-def master_game_events(global_map, enemy_list, person, go_to_print, step, activity_list, chunk_size, interaction, new_step):
+def master_game_events(global_map, enemy_list, person, go_to_print, step, activity_list, chunk_size, interaction, new_step, world):
     """
         Здесь происходят все события, не связанные с пользовательским вводом
     """
     interaction_processing(global_map, interaction, enemy_list)
     activity_list_check(activity_list, step)
-    master_npc_calculation(global_map, enemy_list, person, go_to_print, step, activity_list, chunk_size, interaction, new_step)
+    master_npc_calculation(global_map, enemy_list, person, go_to_print, step, activity_list, chunk_size, interaction, new_step, world)
 
 def interaction_processing(global_map, interaction, enemy_list):
     """
@@ -676,15 +682,13 @@ class Coyot(Enemy):
         self.description = ''
         self.speed = 1
 
-def master_npc_calculation(global_map, enemy_list, person, go_to_print, step, activity_list, chunk_size, interaction, new_step):
+def master_npc_calculation(global_map, enemy_list, person, go_to_print, step, activity_list, chunk_size, interaction, new_step, world):
     """
         Здесь происходят все события, связанные с NPC
 
         self.target = [] #[[global_y, global_x], vertices, [local_y, local_x]]
-        self.dynamic_waypoints = [] # [[local_y, local_x], vertices, [global_y, global_x]]
+        self.local_waypoints = [] # [[local_y, local_x], vertices, [global_y, global_x]]
     """
-    enemy_dynamic_chunk_check(global_map, enemy_list, person, step, chunk_size)
-
     for enemy in enemy_list:
 
         #print(f"{enemy.name_npc} - на начало обработки имеет: \n global_position - {enemy.global_position} {enemy.vertices}, local_position - {enemy.local_position} \n global - {enemy.waypoints} \n local - {enemy.local_waypoints}")
@@ -700,26 +704,36 @@ def master_npc_calculation(global_map, enemy_list, person, go_to_print, step, ac
         if enemy.target and enemy.target == [enemy.global_position, enemy.vertices, enemy.local_position]:
             enemy.target = []
             #print(F"xxx {enemy.name_npc} удалена реализованнная цель")
-        #Если есть цель, но нет динамических вейпоинтов.
-        if enemy.target and not(enemy.local_waypoints):
-            #print(F"xxx {enemy.name_npc} есть цель, но нет динамических вейпоинтов")
-            enemy_move_calculaton(global_map, enemy)
-        #Если цели нет и нет динамических вейпоинтов
-        if not enemy.target and not enemy.local_waypoints:
-            #print(F"xxx {enemy.name_npc} цели нет и нет динамических вейпоинтов")
-            for vertices in global_map[enemy.global_position[0]][enemy.global_position[1]].vertices:
-                if vertices.number == enemy.vertices:
-                    if vertices.connections:
-                        #Определяем позицию искомого тайла, путём выбора из точек перехода искомой зоны доступности
-                        number_target = random.randrange(len(vertices.connections))
-                        target_tiles = [0, 0]
-                        for target_vertices in global_map[vertices.connections[number_target].position[0]][vertices.connections[number_target].position[1]].vertices:
-                            if target_vertices == vertices.connections[number_target].number:
-                                for connect in target_vertices.connections:
-                                    if connect.number == vertices.number:
-                                        target_tiles = random.choice(connect.tiles)
-                        #Задаётся цель из существующих координат, существующих связей и существующих тайлов
-                        enemy.target = [vertices.connections[number_target].position, vertices.connections[number_target].number, target_tiles]
+            
+        if not world.npc_path_calculation: #Если никто не считал вейпоинты на этом шаге
+            
+            #Если есть цель, но нет динамических вейпоинтов.
+            if enemy.target and not(enemy.local_waypoints):
+                #print(F"xxx {enemy.name_npc} есть цель, но нет динамических вейпоинтов")
+                enemy_move_calculaton(global_map, enemy)
+                world.npc_path_calculation = True
+                #print(F"\n \n На этом шаге, вейпоинты считает {enemy.name_npc} \n \n ")
+            #Если цели нет и нет динамических вейпоинтов
+            if not enemy.target and not enemy.local_waypoints:
+                #print(F"xxx {enemy.name_npc} цели нет и нет динамических вейпоинтов")
+                for vertices in global_map[enemy.global_position[0]][enemy.global_position[1]].vertices:
+                    if vertices.number == enemy.vertices:
+                        if vertices.connections:
+                            #Определяем позицию искомого тайла, путём выбора из точек перехода искомой зоны доступности
+                            number_target = random.randrange(len(vertices.connections))
+                            target_tiles = [0, 0]
+                            for target_vertices in global_map[vertices.connections[number_target].position[0]][vertices.connections[number_target].position[1]].vertices:
+                                if target_vertices == vertices.connections[number_target].number:
+                                    for connect in target_vertices.connections:
+                                        if connect.number == vertices.number:
+                                            target_tiles = random.choice(connect.tiles)
+                            #Задаётся цель из существующих координат, существующих связей и существующих тайлов
+                            enemy.target = [vertices.connections[number_target].position, vertices.connections[number_target].number, target_tiles]
+            #Если есть количество глобальных вейпоинтов больше 1 и истекают локальные вейпоинты, то считаются локальные вейпоинты для следующей карты.
+            if len(enemy.waypoints) > 1 and len(enemy.local_waypoints) < 3: 
+                enemy_move_calculaton(global_map, enemy)
+                world.npc_path_calculation = True
+                #print(F"\n \n На этом шаге, заранее считает вейпоинты {enemy.name_npc} \n \n ")
         #Если есть динамические вейпоинты
         if enemy.local_waypoints:
             #print(F"xxx {enemy.name_npc} есть динамические вейпоинты")
@@ -749,6 +763,7 @@ def enemy_move_calculaton(global_map, enemy):
         1) Если глобальные позиции не совпадают, то выполняется поиск по глобальной карте, а за ним по локальной.
         2) Если глобальные позиции совпадают, но не совпадают номера зон доступности, то сначала выполняется глобальный поиск, а за ним локальный
         3) Если совпадают и глобальные позиции и номера зон доступности, то выполняется локальный поиск.
+        4) Если глобальных вейпоинтов больше 1го и есть локальные вейпоинты, то считаются локальные вейпоинты для следующей карты.
     """
     #Если есть глобальные вейпоинты, но нет локальных - то считаем локальные вейпоинты
     if enemy.waypoints and not enemy.local_waypoints:
@@ -756,6 +771,13 @@ def enemy_move_calculaton(global_map, enemy):
                                 [[enemy.waypoints[0][0], enemy.waypoints[0][1]], enemy.waypoints[0][2]], True)
 
         #print(f"{enemy.name_npc} - посчитал локальные вейпоинты, имея глобальные | {enemy.waypoints} | {enemy.dynamic_waypoints}")
+        
+    #Если глобальных вейпоинтов больше 1го и есть локальные вейпоинты, то считаются локальные вейпоинты для следующей карты.
+    elif len(enemy.waypoints) > 1 and len(enemy.local_waypoints) < 3:
+        vertices_enemy_a_star_move_local_calculations(global_map, enemy,
+                                [[enemy.waypoints[1][0], enemy.waypoints[1][1]], enemy.waypoints[1][2]], True)
+
+    
     #Если нет глобальных вейпоинтов
     else:
         #Если глобальные позиции не равны или глобальные позиции равны, но не равны зоны доступности
@@ -791,13 +813,20 @@ def vertices_enemy_a_star_move_local_calculations(global_map, enemy, target, mov
 
         target:[[local_y, local_x], vertices - номер зоны доступности на следующей или на этой карте в которую нужно прийти]
     """
-    processed_map = global_map[enemy.global_position[0]][enemy.global_position[1]].chunk
-    start_point = [enemy.local_position[0], enemy.local_position[1], enemy.vertices]
-
+    
+    if enemy.local_waypoints: #Если уже есть локальные вейпоинты, то стартовой точкой объявляется последний вейпоинт
+        start_point = [enemy.local_waypoints[-1][0], enemy.local_waypoints[-1][1], enemy.local_waypoints[-1][2]]
+        global_axis = [enemy.local_waypoints[-1][3][0], enemy.local_waypoints[-1][3][1]]
+    else: #Если локальных вейпоинтов нет, то стартовой точкой объявляется локальная позиция
+        start_point = [enemy.local_position[0], enemy.local_position[1], enemy.vertices]
+        global_axis = enemy.global_position
+        
+    processed_map = global_map[global_axis[0]][global_axis[1]].chunk
+    
     finish_point = []
     if moving_between_locations:
         if target[0] != enemy.global_position:
-            for vertices in global_map[enemy.global_position[0]][enemy.global_position[1]].vertices:
+            for vertices in global_map[global_axis[0]][global_axis[1]].vertices:
                 if vertices.number == enemy.vertices:
                     for connect in vertices.connections:
                         if connect.position == target[0] and connect.number == target[1]:
@@ -812,20 +841,24 @@ def vertices_enemy_a_star_move_local_calculations(global_map, enemy, target, mov
         raw_local_waypoints, success = vertices_enemy_a_star_algorithm_move_calculation(processed_map, start_point, finish_point, 'local', enemy)
         #В каждую путевую точку добавляется глобальная позиция этой точки
         for waypoint in raw_local_waypoints:
-            waypoint.append(enemy.global_position)
+            if enemy.local_waypoints:
+                waypoint.append(enemy.local_waypoints[-1][3])
+            else:
+                waypoint.append(enemy.global_position)
         #Добавление вейпоинта, соседнего последнему, но на другой карте и с указанием других глобальных координат
         if moving_between_locations and success:
-            if target[0] == [enemy.global_position[0] - 1, enemy.global_position[1]]:
+            if target[0] == [global_axis[0] - 1, global_axis[1]]:
                 raw_local_waypoints.append([len(global_map[0][0].chunk) - 1, raw_local_waypoints[-1][1], target[1], target[0]])
-            elif target[0] == [enemy.global_position[0] + 1, enemy.global_position[1]]:
+            elif target[0] == [global_axis[0] + 1, global_axis[1]]:
                 raw_local_waypoints.append([0, raw_local_waypoints[-1][1], target[1], target[0]])
-            elif target[0] == [enemy.global_position[0], enemy.global_position[1] - 1]:
+            elif target[0] == [global_axis[0], global_axis[1] - 1]:
                 raw_local_waypoints.append([raw_local_waypoints[-1][0], len(global_map[0][0].chunk) - 1, target[1], target[0]]) 
-            elif target[0] == [enemy.global_position[0], enemy.global_position[1] + 1]:
+            elif target[0] == [global_axis[0], global_axis[1] + 1]:
                 raw_local_waypoints.append([raw_local_waypoints[-1][0], 0, target[1], target[0]])
-                
-    
-        enemy.local_waypoints = raw_local_waypoints
+
+        #Добавление новых вейпоинтов в конец списка
+        for local_waypoint in raw_local_waypoints:
+            enemy.local_waypoints.append(local_waypoint)
        
 
 def vertices_enemy_a_star_algorithm_move_calculation(processed_map, start_point, finish_point, global_or_local, enemy):
@@ -860,9 +893,9 @@ def vertices_enemy_a_star_algorithm_move_calculation(processed_map, start_point,
         Добавить список уже занятых координат и сравнивать с ним при добавлении новой вершины.
 
         ЗАПЛАНИРОВАНО:
-        1) Если невозможно найти путь локальным поиском, то следующий глобальный вейпоинт объявляется непроходимым и ищется другой путь
+        1) !!! Если невозможно найти путь локальным поиском, то следующий глобальный вейпоинт объявляется непроходимым и ищется другой путь
         2) При наличии глобальных вейпоинтов, персонажи считают локальные вейпоинты для следующей локации, не доходя несколько локальных
-        вейпоинтов по текущей. При этом, они проверяют, не считал ли вейпоинты на этом шаге какой-либо другой персонаж.
+        вейпоинтов по текущей. При этом, они проверяют, не считал ли вейпоинты на этом шаге какой-либо другой персонаж. #РЕАЛИЗОВАНО
         
         
     """
@@ -1053,8 +1086,6 @@ def vertices_enemy_a_star_algorithm_move_calculation(processed_map, start_point,
     return list(reversed(reversed_waypoints)), success
 
 
-
-
 def enemy_on_the_screen(enemy, person, chunk_size):
     """
         Проверяет NPC на видимость игроком
@@ -1129,42 +1160,10 @@ def enemy_in_dynamic_chunk(global_map, enemy, person, chunk_size, step, activity
                 move_biom_enemy(global_map, enemy)
     enemy_global_position_recalculation(global_map, enemy, person, chunk_size)
 
-def enemy_a_star_move_dynamic_calculations(global_map, enemy, chunk_size, mode, target_point):
+
+def enemy_ideal_move_calculation(start_point, finish_point): #В ДАННЫЙ МОМЕНТ НЕ ИСПОЛЬЗУЕТСЯ
     """
-        Рассчитывает передвижение по динамическому чанку с помощью алгоритма А*
-    """
-    #УДАЛЕНО
-
-    #надо посчитать координаты внутри используемого чанка, а потом пересчитать вейпоинты на динамические
-
-    number_of_chunks_y = enemy.dynamic_chunk_position[0]//chunk_size
-    number_of_chunks_x = enemy.dynamic_chunk_position[1]//chunk_size
-
-    raw_waypoints = enemy_ideal_move_calculation(start_point, finish_point)
-    not_ok, raw_waypoints = checking_the_path(use_calculation_map, raw_waypoints, banned_list)
-    if raw_waypoints:
-        if raw_waypoints[-1] != finish_point:
-            calculation_waypoints = enemy_a_star_algorithm_move_calculation(use_calculation_map, raw_waypoints[-1], finish_point, banned_list)
-            for waypoint in calculation_waypoints:
-                raw_waypoints.append(waypoint)
-    else:
-        raw_waypoints = enemy_a_star_algorithm_move_calculation(use_calculation_map, start_point, finish_point, banned_list)
-
-    if raw_waypoints and mode == 'moving_between_locations':
-        if direction == 'up':
-            raw_waypoints.append([raw_waypoints[-1][0] - 1, raw_waypoints[-1][1]])
-        elif direction == 'down':
-            raw_waypoints.append([raw_waypoints[-1][0] + 1, raw_waypoints[-1][1]])
-        elif direction == 'left':
-            raw_waypoints.append([raw_waypoints[-1][0], raw_waypoints[-1][1] - 1])
-        elif direction == 'right':
-            raw_waypoints.append([raw_waypoints[-1][0], raw_waypoints[-1][1] + 1])
-
-    
-
-def enemy_ideal_move_calculation(start_point, finish_point):
-    """
-        Рассчитывает идеальную траекторию движения NPC.
+        Рассчитывает идеальную траекторию движения NPC. 
     """
     
     axis_y = finish_point[0] - start_point[0] # длинна стороны и количество шагов
@@ -1210,7 +1209,7 @@ def enemy_ideal_move_calculation(start_point, finish_point):
 
     return waypoints
 
-def checking_the_path(calculation_map, waypoints, banned_list):
+def checking_the_path(calculation_map, waypoints, banned_list):  #В ДАННЫЙ МОМЕНТ НЕ ИСПОЛЬЗУЕТСЯ
         """
             Проверяет путь на отсутствие преград.
         """
@@ -1234,88 +1233,8 @@ def checking_the_path(calculation_map, waypoints, banned_list):
                     break
         return not_ok, waypoints 
     
-def enemy_global_position_recalculation(global_map, enemy, person, chunk_size):
-    """
-        Перерассчитывает глобальную позицию NPC при их перемещении на динамическом чанке
-    """
-    enemy.global_position = [(person.assemblage_point[0] + enemy.dynamic_chunk_position[0]//chunk_size),
-                             (person.assemblage_point[1] + enemy.dynamic_chunk_position[1]//chunk_size)]
 
-def enemy_recalculation_dynamic_chank_position(global_map, enemy, person, chunk_size, step):
-    """
-        Перерассчитывает позицию NPC и его динамические путевые точки при перерассчёте динамического чанка
-    """
-    if enemy.old_position_assemblage_point != person.assemblage_point:
-        if person.assemblage_point[0] == (enemy.old_position_assemblage_point[0] - 1):
-            enemy.dynamic_chunk_position[0] += chunk_size
-            for number_dynamic_waypoint in range(len(enemy.dynamic_waypoints)):
-                enemy.dynamic_waypoints[number_dynamic_waypoint][0] += chunk_size
-           
-        elif person.assemblage_point[0] == (enemy.old_position_assemblage_point[0] + 1):
-            enemy.dynamic_chunk_position[0] -= chunk_size
-            for number_dynamic_waypoint in range(len(enemy.dynamic_waypoints)):
-                enemy.dynamic_waypoints[number_dynamic_waypoint][0] -= chunk_size
-                
-        if person.assemblage_point[1] == (enemy.old_position_assemblage_point[1] - 1):
-            enemy.dynamic_chunk_position[1] += chunk_size
-            for number_dynamic_waypoint in range(len(enemy.dynamic_waypoints)):
-                enemy.dynamic_waypoints[number_dynamic_waypoint][1] += chunk_size
-            
-        elif person.assemblage_point[1] == (enemy.old_position_assemblage_point[1] + 1):
-            enemy.dynamic_chunk_position[1] -= chunk_size
-            for number_dynamic_waypoint in range(len(enemy.dynamic_waypoints)):
-                enemy.dynamic_waypoints[number_dynamic_waypoint][1] -= chunk_size
-
-    if (0 <= enemy.dynamic_chunk_position[0] >= chunk_size*2) and (0 <= enemy.dynamic_chunk_position[1] >= chunk_size*2):
-        enemy.step_exit_from_assemblage_point = step
-    enemy.old_position_assemblage_point = copy.deepcopy(person.assemblage_point)
-    
-def enemy_dynamic_chunk_check(global_map, enemy_list, person, step, chunk_size):
-    """
-        Проверяет нахождение NPC на динамическом чанке игрока
-    """
-    for enemy in enemy_list:
-        number_encounter_chank_ok = 99
-        for number_encounter_chunk in range(len(person.check_encounter_position)):
-            if person.check_encounter_position[number_encounter_chunk] == enemy.global_position:
-                number_encounter_chank_ok = number_encounter_chunk 
-        if enemy.dynamic_chunk == False and number_encounter_chank_ok != 99:
-            enemy.old_position_assemblage_point = copy.deepcopy(person.assemblage_point)
-            enemy.dynamic_chunk = True
-            if number_encounter_chank_ok == 0:
-                enemy.dynamic_chunk_position = [person.dynamic[0] - chunk_size, person.dynamic[1] - chunk_size]
-            elif number_encounter_chank_ok == 1:
-                enemy.dynamic_chunk_position = [person.dynamic[0] - chunk_size, person.dynamic[1]]
-            elif number_encounter_chank_ok == 2:
-                enemy.dynamic_chunk_position = [person.dynamic[0] - chunk_size, person.dynamic[1] + chunk_size]
-            elif number_encounter_chank_ok == 3:
-                enemy.dynamic_chunk_position = [person.dynamic[0], person.dynamic[1] - chunk_size]
-            elif number_encounter_chank_ok == 4:
-                enemy.dynamic_chunk_position = [person.dynamic[0], person.dynamic[1]]
-            elif number_encounter_chank_ok == 5:
-                enemy.dynamic_chunk_position = [person.dynamic[0], person.dynamic[1] + chunk_size]
-            elif number_encounter_chank_ok == 6:
-                enemy.dynamic_chunk_position = [person.dynamic[0] + chunk_size, person.dynamic[1] - chunk_size]
-            elif number_encounter_chank_ok == 7:
-                enemy.dynamic_chunk_position = [person.dynamic[0] + chunk_size, person.dynamic[1]]
-            elif number_encounter_chank_ok == 8:
-                enemy.dynamic_chunk_position = [person.dynamic[0] + chunk_size, person.dynamic[1] + chunk_size]
-
-        elif enemy.dynamic_chunk and number_encounter_chank_ok != 99:
-            pass
-        
-        elif (step - enemy.step_exit_from_assemblage_point) < 30 and enemy.step_exit_from_assemblage_point and step > 30:
-            pass
-        
-        elif (step - enemy.step_exit_from_assemblage_point) == 30 and step != 30:
-            enemy.step_exit_from_assemblage_point = 0
-            enemy.dynamic_waypoints = []
-            enemy.dynamic_chunk = False
-        else:
-            enemy.dynamic_waypoints = []
-            enemy.dynamic_chunk = False
-
-def action_in_dynamic_chank(global_map, enemy, activity_list, step, chunk_size):
+def action_in_dynamic_chank(global_map, enemy, activity_list, step, chunk_size):  #В ДАННЫЙ МОМЕНТ НЕ ИСПОЛЬЗУЕТСЯ
     """
         Обрабатывает появление активностей на динамическом чанке
     """
@@ -1347,24 +1266,9 @@ def action_in_dynamic_chank(global_map, enemy, activity_list, step, chunk_size):
         enemy.pass_step += activity[3] # Пропуск указанного количества шагов
         enemy.pass_description = activity[0]
 
-            
-def move_enemy_waypoints(global_map, enemy):
-    """
-        Обрабатывает передвижение NPC по вейпоинтам
-    """
-    if enemy.waypoints:
-        number_slice = 0
-        for number_waypoint in range(len(enemy.waypoints)):
-            if enemy.global_position == enemy.waypoints[number_waypoint]:
-                number_slice = number_waypoint - 1
-        if number_slice > 0:
-            enemy.waypoints[number_slice: len(enemy.waypoints)]
-        
-        enemy.global_position = enemy.waypoints[0]
-        enemy.waypoints.pop(0)
 
 
-def enemy_emulation_life(global_map, enemy, go_to_print, step, activity_list, chunk_size):
+def enemy_emulation_life(global_map, enemy, go_to_print, step, activity_list, chunk_size):  #В ДАННЫЙ МОМЕНТ НЕ ИСПОЛЬЗУЕТСЯ
     """
         Обрабатывает жизнь NPC за кадром, на глобальной карте
         step нужен для запоминания следами деятельности времени в которое появились
@@ -1419,38 +1323,6 @@ def enemy_emulation_life(global_map, enemy, go_to_print, step, activity_list, ch
                 elif type_activity == 'other':
                     activity_list.append(Action_in_map(activity[1], step, enemy.global_position, [random.randrange(chunk_size), random.randrange(chunk_size)], chunk_size, enemy.name_npc))
                 enemy.action_points -= activity[2]//3
-
-                
-def move_biom_enemy(global_map, enemy):
-    """
-        Обрабатывает перемещение NPC за кадром между биомами #ТРЕБУЕТ ОБНОВЛЕНИЯ
-    """
-
-    
-    direction_moved = []
-    if not(global_map[enemy.global_position[0] - 1][enemy.global_position[1]].icon in enemy.banned_biom) and enemy.global_position[0] - 1 > 0:
-        direction_moved.append([enemy.global_position[0] - 1, enemy.global_position[1]])
-    if not(global_map[enemy.global_position[0] + 1][enemy.global_position[1]].icon in enemy.banned_biom) and enemy.global_position[0] + 1 < len(global_map) - 1:
-        direction_moved.append([enemy.global_position[0] + 1, enemy.global_position[1]]) 
-    if not(global_map[enemy.global_position[0]][enemy.global_position[1] - 1].icon in enemy.banned_biom) and enemy.global_position[1] - 1 > 0:
-        direction_moved.append([enemy.global_position[0], enemy.global_position[1] - 1])
-    if not(global_map[enemy.global_position[0]][enemy.global_position[1] + 1].icon in enemy.banned_biom) and enemy.global_position[1] + 1 < len(global_map) - 1:
-        direction_moved.append([enemy.global_position[0], enemy.global_position[1] + 1])
-    if len(direction_moved) != 0:
-        #print(f"Нашлись подходящие направления")
-        enemy.waypoints.append(random.choice(direction_moved))
-    else:
-        #print(f"Не нашлись подходящие направления")
-        direction_moved = []
-        if enemy.global_position[0] - 1 > 0:
-            direction_moved.append([enemy.global_position[0] - 1, enemy.global_position[1]])
-        elif enemy.global_position[0] + 1 < len(global_map) - 1:
-            direction_moved.append([enemy.global_position[0] + 1, enemy.global_position[1]])
-        elif enemy.global_position[1] - 1 > 0:
-            direction_moved.append([enemy.global_position[0], enemy.global_position[1] - 1])
-        elif enemy.global_position[1] + 1 < len(global_map) - 1:
-            direction_moved.append([enemy.global_position[0], enemy.global_position[1] + 1])
-        enemy.waypoints.append(random.choice(direction_moved))
 
 
 
@@ -2523,7 +2395,7 @@ def print_minimap(global_map, person, go_to_print, enemy_list):
 
 """
 
-def game_loop(global_map:list, person:list, chunk_size:int, frame_size:list, enemy_list:list):
+def game_loop(global_map:list, person, chunk_size:int, frame_size:list, enemy_list:list, world):
     """
         Здесь происходят все игровые события
         
@@ -2547,6 +2419,7 @@ def game_loop(global_map:list, person:list, chunk_size:int, frame_size:list, ene
     while game_loop:
         clock.tick(game_fps)
         interaction = []
+        world.npc_path_calculation = False #Сброс предыдущего состояния поиска пути NPC персонажами
         new_step, step = new_step_calculation(enemy_list, person, step)
         if not person.person_pass_step:
             mode_action = master_player_action(global_map, person, chunk_size, go_to_print, mode_action, interaction, activity_list, step)
@@ -2554,7 +2427,7 @@ def game_loop(global_map:list, person:list, chunk_size:int, frame_size:list, ene
         start = time.time() #проверка времени выполнения
         all_pass_step_calculations(person, enemy_list, mode_action, interaction)
         if not person.enemy_pass_step:
-            master_game_events(global_map, enemy_list, person, go_to_print, step, activity_list, chunk_size, interaction, new_step)
+            master_game_events(global_map, enemy_list, person, go_to_print, step, activity_list, chunk_size, interaction, new_step, world)
         test1 = time.time() #проверка времени выполнения
         master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action, enemy_list, activity_list, screen, tiles_image_dict)
         test2 = time.time() #проверка времени выполнения
@@ -2584,7 +2457,10 @@ def main():
     calculation_assemblage_point(global_map, person, chunk_size)
     enemy_list = [Horseman([len(global_map)//2, len(global_map)//2], [chunk_size//2, chunk_size//2], 5), Horseman([len(global_map)//3, len(global_map)//3], [chunk_size//2, chunk_size//2], 5),
                   Riffleman([len(global_map)//4, len(global_map)//4], [chunk_size//2, chunk_size//2], 2), Coyot([len(global_map)//5, len(global_map)//5], [chunk_size//2, chunk_size//2], 0)]
-    game_loop(global_map, person, chunk_size, frame_size, enemy_list)
+    world = World() #Описание текущего состояния игрового мира
+
+
+    game_loop(global_map, person, chunk_size, frame_size, enemy_list, world)
     
     print('Игра окончена!')
 
