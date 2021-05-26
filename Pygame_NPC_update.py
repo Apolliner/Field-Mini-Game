@@ -426,7 +426,7 @@ def interaction_processing(global_map, interaction, enemy_list):
                     if enemy.type_npc == 'hunter':
                         enemy.target = interact[1]
                         enemy.waypoints = []
-                        enemy.dynamic_waypoints = []
+                        enemy.local_waypoints = []
                         print(F"{enemy.name_npc} получил задачу {enemy.target}")
     interaction = []
                         
@@ -687,12 +687,13 @@ def master_npc_calculation(global_map, enemy_list, person, go_to_print, step, ac
 
     for enemy in enemy_list:
 
-        #print(f"{enemy.name_npc} - на начало обработки имеет: \n global - {enemy.waypoints} \n local - {enemy.local_waypoints}")
+        #print(f"{enemy.name_npc} - на начало обработки имеет: \n global_position - {enemy.global_position} {enemy.vertices}, local_position - {enemy.local_position} \n global - {enemy.waypoints} \n local - {enemy.local_waypoints}")
     
         enemy.level = global_map[enemy.global_position[0]][enemy.global_position[1]].chunk[enemy.local_position[0]][enemy.local_position[0]].level
-        enemy.vertices = global_map[enemy.global_position[0]][enemy.global_position[1]].chunk[enemy.local_position[0]][enemy.local_position[0]].vertices
+        enemy.vertices = global_map[enemy.global_position[0]][enemy.global_position[1]].chunk[enemy.local_position[0]][enemy.local_position[1]].vertices
+        #print(f"global_map[enemy.global_position[0]][enemy.global_position[1]].chunk[enemy.local_position[0]][enemy.local_position[1]].vertices - {global_map[enemy.global_position[0]][enemy.global_position[1]].chunk[enemy.local_position[0]][enemy.local_position[1]].vertices}")
         #Удаление реализованного глобального вейпоинта
-        if enemy.waypoints and enemy.global_position == enemy.waypoints[0]:
+        if enemy.waypoints and [enemy.global_position[0], enemy.global_position[1], enemy.vertices] == enemy.waypoints[0]:
             enemy.waypoints.pop(0)
 
         #Удаление реализованной цели
@@ -731,11 +732,10 @@ def master_npc_calculation(global_map, enemy_list, person, go_to_print, step, ac
             enemy.global_position = enemy.local_waypoints[0][3]
             #print(f"??? {enemy.name_npc} поменял глобальную позицию enemy.global_position - {enemy.global_position} меняя локальную позицию - {enemy.local_position}")
             enemy.local_position = [enemy.local_waypoints[0][0], enemy.local_waypoints[0][1]]
-            enemy.vertices = enemy.local_waypoints[0][1]
             enemy.local_waypoints.pop(0)
             #print(F"??? {enemy.name_npc} поменял локальную позицию - {enemy.local_position}")
             
-        #print(f"{enemy.name_npc} - на конец обработки имеет: \n global - {enemy.waypoints} \n local - {enemy.local_waypoints}")
+        #print(f"{enemy.name_npc} - на конец обработки имеет: \n global_position - {enemy.global_position} {enemy.vertices}, local_position - {enemy.local_position} \n global - {enemy.waypoints} \n local - {enemy.local_waypoints} \n ||||||||||||||||||||||||||")
 
 
 def enemy_move_calculaton(global_map, enemy):
@@ -765,7 +765,6 @@ def enemy_move_calculaton(global_map, enemy):
             #А затем локальные
             vertices_enemy_a_star_move_local_calculations(global_map, enemy,
                                 [[enemy.waypoints[0][0], enemy.waypoints[0][1]], enemy.waypoints[0][2]], True)
-            enemy.waypoints.pop(0)
             #print(f"{enemy.name_npc} - посчитал глобальные, а затем локальные вейпоинты | {enemy.waypoints} | {enemy.dynamic_waypoints}")
         #Если равны глобальные позиции и зоны доступности
         elif enemy.target[0] == enemy.global_position and enemy.target[1] == enemy.vertices:
@@ -790,11 +789,10 @@ def vertices_enemy_a_star_move_local_calculations(global_map, enemy, target, mov
     """
         Подготавливает запрос и вызывает алгоритм А* для передвижения по локальной карте
 
-        target:[[y, x], номер зоны доступности на следующей или на этой карте в которую нужно прийти]
+        target:[[local_y, local_x], vertices - номер зоны доступности на следующей или на этой карте в которую нужно прийти]
     """
     processed_map = global_map[enemy.global_position[0]][enemy.global_position[1]].chunk
-    start_point = [enemy.local_position[0], enemy.local_position[1],
-                   enemy.vertices]
+    start_point = [enemy.local_position[0], enemy.local_position[1], enemy.vertices]
 
     finish_point = []
     if moving_between_locations:
@@ -807,7 +805,7 @@ def vertices_enemy_a_star_move_local_calculations(global_map, enemy, target, mov
                             finish_point = [finish[0], finish[1], vertices.number]
                             #print(F"finish_point - {finish_point} connect.tiles - {connect.tiles}")
     else:
-        finish_point = enemy.target[2]
+        finish_point = [target[0][0], target[0][1], target[1]]
     
     
     if finish_point:
@@ -863,6 +861,9 @@ def vertices_enemy_a_star_algorithm_move_calculation(processed_map, start_point,
 
         ЗАПЛАНИРОВАНО:
         1) Если невозможно найти путь локальным поиском, то следующий глобальный вейпоинт объявляется непроходимым и ищется другой путь
+        2) При наличии глобальных вейпоинтов, персонажи считают локальные вейпоинты для следующей локации, не доходя несколько локальных
+        вейпоинтов по текущей. При этом, они проверяют, не считал ли вейпоинты на этом шаге какой-либо другой персонаж.
+        
         
     """
     class Node_vertices:
@@ -880,7 +881,11 @@ def vertices_enemy_a_star_algorithm_move_calculation(processed_map, start_point,
         """
             Вычисляет примерное расстояния до финиша, для рассчётов стоимости перемещения
         """
-        return math.sqrt((start_point[0] - finish_point[0])**2 + (start_point[1] - finish_point[1])**2)
+        try:
+            return math.sqrt((start_point[0] - finish_point[0])**2 + (start_point[1] - finish_point[1])**2)
+        except TypeError:
+            print(f"!!! TypeError start_point - {start_point} | finish_point - {finish_point}")
+            return 999
 
     def node_connections(processed_map, graph, processed_node, finish_point, verified_position):
         """
@@ -981,9 +986,12 @@ def vertices_enemy_a_star_algorithm_move_calculation(processed_map, start_point,
             node_connections(processed_map, graph, node, finish_point, verified_position)
         elif global_or_local == 'local':
             node_friends_calculation(processed_map, graph, node, finish_point, verified_position)
-        if node.position == [finish_point[0], finish_point[1]] and node.vertices == finish_point[2]:
-            number_finish_node = node.number
-            general_loop = False
+        try:
+            if node.position == [finish_point[0], finish_point[1]] and node.vertices == finish_point[2]:
+                number_finish_node = node.number
+                general_loop = False
+        except IndexError:
+            print(F"!!! {enemy.name_npc} finish_point - {finish_point}")
         step_count += 1
         if step_count == 250:
             min_price = 99999
@@ -1823,9 +1831,9 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
     
     landscape_layer = landscape_layer_calculations(person, chunk_size, go_to_print)
     test1_1 = time.time()
-    activity_layer = activity_layer_calculations(person, chunk_size, go_to_print, activity_list)
+    activity_layer = entities_layer_calculations(person, chunk_size, go_to_print, activity_list)
     test1_2 = time.time()
-    entities_layer = activity_layer_calculations(person, chunk_size, go_to_print, enemy_list) #Использование функции для отображения активностей
+    entities_layer = entities_layer_calculations(person, chunk_size, go_to_print, enemy_list) #Использование функции для отображения активностей
     test1_3 = time.time()
     #sky_layer = sky_layer_calculations(chunk_size)
 
@@ -1957,63 +1965,63 @@ class Island_friends(pygame.sprite.Sprite):
                         17: (200, 200, 100),
                         18: (100, 200, 100),
                         19: (200, 100, 100),
-                        20: (255, 255, 0),
-                        21: (255, 255, 150),
-                        22: (0, 255, 255),
-                        23: (150, 255, 255),
-                        24: (255, 0, 255),
-                        25: (255, 150, 255),
-                        26: (0, 0, 255),
-                        27: (0, 255, 0),
-                        28: (255, 200, 255),
-                        29: (0, 255, 0),
-                        30: (0, 128, 0),
-                        31: (0, 100, 0),
-                        32: (128, 128, 0),
-                        33: (128, 128, 0),
-                        34: (255, 255, 255),
-                        35: (235, 255, 255),
-                        36: (200, 255, 255),
-                        37: (200, 200, 100),
-                        38: (100, 200, 100),
-                        39: (200, 100, 100),
-                        40: (100, 100, 200),
-                        41: (255, 255, 150),
-                        42: (0, 255, 255),
-                        43: (150, 255, 255),
-                        44: (255, 0, 255),
-                        45: (255, 150, 255),
-                        46: (0, 0, 255),
-                        47: (0, 255, 0),
-                        48: (255, 200, 255),
-                        49: (0, 255, 0),
-                        50: (0, 128, 0),
-                        51: (0, 100, 0),
-                        52: (128, 128, 0),
-                        53: (128, 128, 0),
-                        54: (255, 255, 255),
-                        55: (235, 255, 255),
-                        56: (200, 255, 255),
-                        57: (200, 200, 100),
-                        58: (100, 200, 100),
-                        59: (200, 100, 100),
-                        60: (100, 100, 200),
-                        61: (255, 255, 150),
-                        62: (0, 255, 255),
-                        63: (150, 255, 255),
-                        64: (255, 0, 255),
-                        65: (255, 150, 255),
-                        66: (0, 0, 255),
-                        67: (0, 255, 0),
-                        68: (255, 200, 255),
-                        69: (0, 255, 0),
+                        20: (245, 245, 0),
+                        21: (245, 245, 140),
+                        22: (0, 245, 245),
+                        23: (140, 245, 245),
+                        24: (245, 0, 245),
+                        25: (245, 140, 245),
+                        26: (0, 0, 245),
+                        27: (0, 245, 0),
+                        28: (245, 200, 245),
+                        29: (0, 245, 0),
+                        30: (0, 148, 0),
+                        31: (0, 140, 0),
+                        32: (120, 120, 0),
+                        33: (120, 120, 0),
+                        34: (245, 245, 245),
+                        35: (235, 245, 245),
+                        36: (200, 245, 245),
+                        37: (200, 200, 140),
+                        38: (140, 200, 140),
+                        39: (200, 140, 140),
+                        40: (140, 140, 200),
+                        41: (245, 245, 140),
+                        42: (0, 235, 235),
+                        43: (130, 235, 235),
+                        44: (235, 0, 235),
+                        45: (235, 130, 235),
+                        46: (0, 0, 235),
+                        47: (0, 235, 0),
+                        48: (235, 200, 235),
+                        49: (0, 235, 0),
+                        50: (0, 123, 0),
+                        51: (0, 130, 0),
+                        52: (123, 123, 0),
+                        53: (123, 123, 0),
+                        54: (235, 235, 235),
+                        55: (205, 235, 235),
+                        56: (200, 235, 235),
+                        57: (210, 210, 100),
+                        58: (100, 210, 100),
+                        59: (210, 100, 100),
+                        60: (100, 100, 210),
+                        61: (225, 225, 150),
+                        62: (0, 225, 225),
+                        63: (150, 225, 225),
+                        64: (225, 0, 225),
+                        65: (225, 150, 225),
+                        66: (0, 0, 225),
+                        67: (0, 225, 0),
+                        68: (225, 200, 225),
+                        69: (0, 225, 0),
                         70: (0, 128, 0),
                         71: (0, 100, 0),
                         72: (128, 128, 0),
                         73: (128, 128, 0),
-                        74: (255, 255, 255),
-                        75: (235, 255, 255),
-                        76: (200, 255, 255),
+                        74: (225, 225, 225),
+                        75: (235, 225, 225),
+                        76: (200, 225, 225),
                         77: (200, 200, 100),
                         78: (100, 200, 100),
                         79: (200, 100, 100),
@@ -2086,35 +2094,45 @@ def activity_layer_calculations(person, chunk_size:int, go_to_print, activity_li
         activity_layer.append(new_line)
 
     return activity_layer
-            
 
-def entities_layer_calculations(person, chunk_size, go_to_print, enemy_list, activity_list): #УСТАРЕЛО
+
+
+def entities_layer_calculations(person, chunk_size:int, go_to_print, entities_list):
     """
-        Отрисовывает персонажей
+        Отрисовывает слой активностей или слой персонажей
     """
     start_stop = [(person.dynamic[0] - chunk_size//2), (person.dynamic[1] - chunk_size//2),
                   (person.dynamic[0] + chunk_size//2 + 1),(person.dynamic[1] + chunk_size//2 + 1)]
     go_draw_entities = []
-    for enemy in enemy_list:
-        if enemy.global_position in person.check_encounter_position:
-            if (0 <= enemy.dynamic_chunk_position[0] < chunk_size * 2) and (0 <= enemy.dynamic_chunk_position[1] < chunk_size * 2 - 2):
-                go_draw_entities.append([enemy.dynamic_chunk_position[0], enemy.dynamic_chunk_position[1], enemy])
+    for entity in entities_list:
+        if entity.visible or person.test_visible:
+            if entity.global_position[0] == person.assemblage_point[0] and entity.global_position[1] == person.assemblage_point[1]:
+                go_draw_entities.append([entity.local_position[0], entity.local_position[1], entity])
+
+            elif entity.global_position[0] == person.assemblage_point[0] and entity.global_position[1] == person.assemblage_point[1] + 1:
+                go_draw_entities.append([entity.local_position[0], entity.local_position[1] + chunk_size, entity])
+
+            elif entity.global_position[0] == person.assemblage_point[0] + 1 and entity.global_position[1] == person.assemblage_point[1]:
+                go_draw_entities.append([entity.local_position[0] + chunk_size, entity.local_position[1], entity])
+
+            elif entity.global_position[0] == person.assemblage_point[0] + 1 and entity.global_position[1] == person.assemblage_point[1] + 1:
+                go_draw_entities.append([entity.local_position[0] + chunk_size, entity.local_position[1] + chunk_size, entity])
 
     entities_layer = []
     for number_line in range(start_stop[0], start_stop[2]):
         new_line = []
         for number_tile in range(start_stop[1], start_stop[3]):
             no_changes = True
-            for entitie in go_draw_entities:
-                if number_line == entitie[0] and number_tile == entitie[1]:
-                    new_line.append(entitie[2])
+            for entity in go_draw_entities:
+                if number_line == entity[0] and number_tile == entity[1]:
+                    new_line.append(entity[2])
                     no_changes = False
                     break
             if no_changes:
                 new_line.append(Tile('0'))
         entities_layer.append(new_line)
 
-    return entities_layer
+    return entities_layer         
 
 
 def sky_layer_calculations(chunk_size):
@@ -2542,8 +2560,8 @@ def game_loop(global_map:list, person:list, chunk_size:int, frame_size:list, ene
         test2 = time.time() #проверка времени выполнения
         print('step = ', step)
         end = time.time() #проверка времени выполнения
-        print(f"{end - start} - end ")
-        #print(f"{test1 - start} - test1 \n {test2 - test1} - test2 \n {end - test2} - end \n ")
+        #print(f"{end - start} - end ")
+        print(f" {test1 - start} - персонажи \n {test2 - test1} - отрисовка \n {end - start} - общее время \n ")
     
 
 def main():
