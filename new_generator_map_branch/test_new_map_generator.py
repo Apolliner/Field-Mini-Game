@@ -175,7 +175,7 @@ def master_map_generate(global_region_grid, region_grid, chunks_grid, mini_grid,
     mountains_generate(add_random_all_tiles_map, chunks_map)
 
     #Рисование реки
-    river_map_generation(add_random_all_tiles_map, 5)
+    #river_map_generation(add_random_all_tiles_map, 5)
     
     #Конвертирование тайлов в класс
     all_class_tiles_map = convert_tiles_to_class(add_random_all_tiles_map, chunks_map)
@@ -205,6 +205,175 @@ def master_map_generate(global_region_grid, region_grid, chunks_grid, mini_grid,
     defining_zone_relationships(ready_global_map)
 
     return ready_global_map
+
+
+def advanced_river_generation(global_tiles_map, chunks_map, global_region_map, number_of_rivers):
+    """
+        Использование старой версии алгоритма поиска пути, для определения движения продвинутых рек.
+
+        Типы глобальных регионов:   0 - пустынный
+                                    1 - горный
+                                    2 - зелёный
+                                    3 - солёный
+                                    4 - каньонный
+                                    5 - водяной
+    """
+    class River_for_generator:
+        """ Содержит описание реки для генератора """
+        def __init__(self, start_point, width, depth):
+            self.start_point = start_point
+            self.finish_point = finish_point
+            self.global_path = []
+            self.local_path = []
+            self.width = width
+            self.depth = depth
+
+    chunk_size = len(global_tiles_map)/len(chunks_map)
+    global_region_size = len(global_tiles_map)/len(global_region_map)
+
+    #Определение истока
+    candidates_global_chunks = []
+
+    for number_global_line, global_line in enumerate(global_region_map):
+        for number_global_tile, global_tile in enumerate(global_line):
+            if global_tile == 5:
+                candidates_global_chunks.append(number_global_line, number_global_tile)
+                
+    if candidates_global_chunks:
+        global_start_point = random.choice(candidates_global_chunks)
+
+
+def a_star_algorithm_river_calculation(calculation_map, start_point, finish_point, banned_list):
+    """
+        Рассчитывает движение реки по алгоритму A*
+
+        Использование старой версии алгоритма поиска пути, для определения движения продвинутых рек.
+
+
+        ОСОБЕННОСТИ:
+        Река избегает пустынных биомов и каньонов, а так же биомов с высокой температурой.
+        Температура локации определяет стоимость перемещения.
+
+        
+    """
+    class Node:
+        """Содержит узлы графа"""
+        __slots__ = ('number', 'position', 'friends', 'price', 'direction')
+        def __init__(self, number, position, price, direction):
+            self.number = number
+            self.position = position
+            self.friends = []
+            self.price = price
+            self.direction = direction
+            
+    def path_length(start_point, finish_point):
+        """
+            Вычисляет примерное расстояния до финиша, для рассчётов стоимости перемещения
+        """
+        return math.sqrt((start_point[0] - finish_point[0])**2 + (start_point[1] - finish_point[1])**2)
+        
+    def node_friends_calculation(calculation_map, graph, node, verified_node, banned_list):
+        """
+            Вычисляет соседние узлы графа
+        """
+        friends = []
+        if 0 <= node.position[0] < len(calculation_map):
+            if node.position[0] + 1 < len(calculation_map):
+                if not(calculation_map[node.position[0] + 1][node.position[1]].icon in banned_list) and not([node.position[0] + 1, node.position[1]] in verified_node):
+                    friend = Node(len(graph), [node.position[0] + 1, node.position[1]], calculation_map[
+                             node.position[0] + 1][node.position[1]].price_move + path_length([node.position[0] + 1, node.position[1]], finish_point), [-1, 0])
+                    friends.append(friend)
+                    graph.append(friend)                                                                                              
+            if node.position[0] - 1 >= 0:                                                                                                   
+                if not(calculation_map[node.position[0] - 1][node.position[1]].icon in banned_list) and not([node.position[0] - 1, node.position[1]] in verified_node):
+                    friend = Node(len(graph), [node.position[0] - 1, node.position[1]], calculation_map[
+                            node.position[0] - 1][node.position[1]].price_move + path_length([node.position[0] - 1, node.position[1]], finish_point), [1, 0])
+                    friends.append(friend)
+                    graph.append(friend)                
+        if 0 <= node.position[1] < len(calculation_map):
+            if node.position[1] + 1 < len(calculation_map):
+                if not(calculation_map[node.position[0]][node.position[1] + 1].icon in banned_list) and not([node.position[0], node.position[1] + 1] in verified_node):
+                    friend = Node(len(graph), [node.position[0], node.position[1] + 1], calculation_map[
+                            node.position[0]][node.position[1] + 1].price_move + path_length([node.position[0], node.position[1] + 1], finish_point), [0, -1])
+                    friends.append(friend)
+                    graph.append(friend)
+            if node.position[1] - 1 >= 0:
+                if not(calculation_map[node.position[0]][node.position[1] - 1].icon in banned_list) and not([node.position[0], node.position[1] - 1] in verified_node):
+                    friend = Node(len(graph), [node.position[0], node.position[1] - 1], calculation_map[
+                            node.position[0]][node.position[1] - 1].price_move + path_length([node.position[0], node.position[1] - 1], finish_point), [0, 1])
+                    friends.append(friend)
+                    graph.append(friend)                
+        return friends
+
+    graph = []
+    verified_node = []
+    start_node = Node(0, start_point, 0, [0, 0])
+    start_node.friends = node_friends_calculation(calculation_map, graph, start_node, verified_node, banned_list)
+    graph.append(start_node)
+    verified_node.append(start_node.position)
+    finding_a_path = True
+    finish_node = 0
+    sucess = True
+    step_count = 0
+    reversed_waypoints = []
+    while finding_a_path:
+        min_price = 99999
+        node = graph[-1]
+        for number_node in range(len(graph)):
+            if not(graph[number_node].position in verified_node):
+                if graph[number_node].price < min_price:
+                    min_price = graph[number_node].price
+                    node = graph[number_node]
+        if min_price == 99999:
+            sucess = False
+            finding_a_path = False
+            
+        verified_node.append(node.position)
+        node.friends = node_friends_calculation(calculation_map, graph, node, verified_node, banned_list)
+        if node.position == finish_point:
+            finding_a_path = False
+            finish_node = node.number
+        step_count += 1
+        if step_count == 250:
+            sucess = False
+            finding_a_path = False
+    if sucess:
+        check_node = graph[-1]
+        while check_node.position != start_node.position:
+            reversed_waypoints.append(graph[finish_node].position)
+            preview_node = [graph[finish_node].position[0] + graph[finish_node].direction[0], graph[finish_node].position[1] + graph[finish_node].direction[1]]
+            for number_node in range(len(graph)):
+                if graph[number_node].position == preview_node:
+                    finish_node = number_node
+                    check_node = graph[number_node]
+        test_print = ''
+        for number_line in range(len(calculation_map)):
+            for number_tile in range(len(calculation_map[number_line])):
+                
+                if [number_line, number_tile] in reversed_waypoints:
+                    test_print += calculation_map[number_line][number_tile].icon + 'v'
+                elif [number_line, number_tile] in verified_node:
+                    test_print += calculation_map[number_line][number_tile].icon + 'x'
+                else:
+                    test_print += calculation_map[number_line][number_tile].icon + ' '
+            test_print += '\n'
+ 
+        #print(test_print)
+    else:
+        #print(f"По алгоритму А* не нашлось пути. На входе было: start_point - {start_point}, finish_point - {finish_point}")
+        test_print = ''
+        for number_line in range(len(calculation_map)):
+            for number_tile in range(len(calculation_map[number_line])):
+                if [number_line, number_tile] in verified_node:
+                    test_print += calculation_map[number_line][number_tile].icon + 'x'
+                else:
+                    test_print += calculation_map[number_line][number_tile].icon + ' '
+            test_print += '\n'
+ 
+        #print(test_print)
+
+            
+    return list(reversed(reversed_waypoints))
 
 
 class Global_vertices:
@@ -240,7 +409,7 @@ def defining_zone_relationships(processed_map):
                         if vertices.connections:
                             for connection in vertices.connections:
                                 if connection.number == connect_number and connection.position == connect_position:
-                                    connection.tiles.append(tile_position)
+                                    connection.tiles.append(local_position)
                                     not_ok = False
                                     global_not_ok = False
                         if not_ok:
@@ -296,26 +465,6 @@ def defining_zone_relationships(processed_map):
                         connect_position = [number_global_line, number_global_tile + 1]
 
                         defining_connections(processed_map, tile_number, tile_position, defining_local_position, local_position, connect_number, connect_position, global_tile)
-
-
-                        #if tile.vertices != -1 and processed_map[number_global_line - 1][number_global_tile].chunk[len(global_tile.chunk) - 1][number_tile].vertices != -1:
-                        #    global_not_ok = True
-                        #    if global_tile.vertices:                                
-                        #        for vertices in global_tile.vertices:
-                        #            if tile.vertices == vertices.number:
-                        #                not_ok = True
-                        #                for connection in vertices.connections:
-                        #                    if connection.number == connect_number and connection.position == [number_global_line - 1, number_global_tile]:
-                        #                        connection.tiles.append([number_line, number_tile])
-                        #                        not_ok = False
-                        #                        global_not_ok = False
-                        #                if not_ok:
-                        #                    vertices.connections.append(Connections(connect_number, [number_global_line - 1, number_global_tile], [number_line, number_tile]))
-                        #                    global_not_ok = False
-                        #    if global_not_ok:
-                        #        global_tile.vertices.append(Global_vertices(tile.vertices, global_tile.position, Connections(connect_number,
-                        #                                    [number_global_line - 1, number_global_tile], [number_line, number_tile])))
-                    
             
 @timeit
 def defining_vertices(processed_map):
@@ -712,7 +861,7 @@ def global_region_generate(global_grid):
 
         Типы глобальных регионов:   0 - пустынный
                                     1 - горный
-                                    2 - живой
+                                    2 - зелёный
                                     3 - солёный
                                     4 - каньонный
                                     5 - водяной
@@ -988,7 +1137,7 @@ def cutting_tiles_map(processed_map, chunks_map):
     for number_seed_line, seed_line in enumerate(chunks_map):
         new_global_line = []
         for number_seed, seed in enumerate(seed_line):
-            new_global_location = Location(seed[1], random.uniform(min(seed[5][0], seed[5][1]), max(seed[5][0], seed[5][1])), [], seed[0], seed[4], [len(global_map), len(new_global_line)])
+            new_global_location = Location(seed[1], random.uniform(min(seed[5][0], seed[5][1]), max(seed[5][0], seed[5][1])), [], seed[0], seed[4], [len(global_map) - 1, len(new_global_line) - 1])
             for number_line in range((number_seed_line)*chunk_size, (number_seed_line)*chunk_size + chunk_size):
                 location_line = []
                 for number_tile in range((number_seed)*chunk_size, (number_seed)*chunk_size + chunk_size):
