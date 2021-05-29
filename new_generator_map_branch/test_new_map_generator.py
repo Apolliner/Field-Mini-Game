@@ -179,7 +179,7 @@ def master_map_generate(global_region_grid, region_grid, chunks_grid, mini_grid,
     #river_map_generation(add_random_all_tiles_map, 5)
 
     #Рисование продвинутой реки
-    #advanced_river_generation(add_random_all_tiles_map, chunks_map, 5)
+    advanced_river_generation(add_random_all_tiles_map, chunks_map, 5)
     
     #Конвертирование тайлов в класс
     all_class_tiles_map = convert_tiles_to_class(add_random_all_tiles_map, chunks_map)
@@ -288,7 +288,7 @@ def advanced_river_generation(global_tiles_map, chunks_map, number_of_rivers):
                     local_start_point = [0, random.randrange(chunk_size)]
                 else:
                     local_start_point = river.local_path[-1]
-                    river.local_path.pop(-1)
+                    #river.local_path.pop(-1)
                 #Определение финишной локальной точки
                 if number_step_path < len(river.global_path) - 1:
                     if river.global_path[number_step_path + 1] == [step_path[0] - 1, step_path[1]]:
@@ -307,7 +307,7 @@ def advanced_river_generation(global_tiles_map, chunks_map, number_of_rivers):
                     local_finish_point = [chunk_size - 1, random.randrange(chunk_size)]
                 #Получение сырых локальных вейпоинтов
                 river_raw_path = a_star_algorithm_river_calculation(processed_map, local_start_point, local_finish_point, [])
-                print(f"river_raw_path - {river_raw_path}")
+                #print(f"river_raw_path - {river_raw_path}")
                 added_point = []
                 if number_step_path < len(river.global_path) - 1:
                     if direction == 'up':
@@ -324,7 +324,7 @@ def advanced_river_generation(global_tiles_map, chunks_map, number_of_rivers):
                     river.local_path.append(added_point)
             #Отрисовка реки по рассчитанным координатам
             for step_local_path in river.local_path:
-                global_tiles_map[step_local_path[0], step_local_path[1]] = '~'
+                global_tiles_map[step_local_path[0]][step_local_path[1]] = '~'
 
 def a_star_algorithm_river_calculation(calculation_map, start_point, finish_point, banned_list):
     """
@@ -440,7 +440,7 @@ def a_star_algorithm_river_calculation(calculation_map, start_point, finish_poin
                     test_print += calculation_map[number_line][number_tile].icon + ' '
             test_print += '\n'
  
-        print(test_print)
+        #print(test_print)
     else:
         print(f"По алгоритму А* не нашлось пути. На входе было: start_point - {start_point}, finish_point - {finish_point}")
         test_print = ''
@@ -452,7 +452,7 @@ def a_star_algorithm_river_calculation(calculation_map, start_point, finish_poin
                     test_print += calculation_map[number_line][number_tile].icon + ' '
             test_print += '\n'
  
-        print(test_print)
+        #print(test_print)
 
             
     return list(reversed(reversed_waypoints))
