@@ -1,6 +1,7 @@
 import random
 import time
 import copy
+import math
 
 
 """
@@ -176,6 +177,9 @@ def master_map_generate(global_region_grid, region_grid, chunks_grid, mini_grid,
 
     #Рисование реки
     #river_map_generation(add_random_all_tiles_map, 5)
+
+    #Рисование продвинутой реки
+    #advanced_river_generation(add_random_all_tiles_map, chunks_map, 5)
     
     #Конвертирование тайлов в класс
     all_class_tiles_map = convert_tiles_to_class(add_random_all_tiles_map, chunks_map)
@@ -206,8 +210,8 @@ def master_map_generate(global_region_grid, region_grid, chunks_grid, mini_grid,
 
     return ready_global_map
 
-
-def advanced_river_generation(global_tiles_map, chunks_map, global_region_map, number_of_rivers):
+@timeit
+def advanced_river_generation(global_tiles_map, chunks_map, number_of_rivers):
     """
         Использование старой версии алгоритма поиска пути, для определения движения продвинутых рек.
 
@@ -220,28 +224,107 @@ def advanced_river_generation(global_tiles_map, chunks_map, global_region_map, n
     """
     class River_for_generator:
         """ Содержит описание реки для генератора """
-        def __init__(self, start_point, width, depth):
-            self.start_point = start_point
-            self.finish_point = finish_point
+        def __init__(self, global_start_point, global_finish_point, width):
+            self.global_start_point = global_start_point
+            self.global_finish_point = global_finish_point
             self.global_path = []
             self.local_path = []
             self.width = width
-            self.depth = depth
+            self.depth = 1
 
-    chunk_size = len(global_tiles_map)/len(chunks_map)
-    global_region_size = len(global_tiles_map)/len(global_region_map)
+    class Fantom_tile:
+        """ Приводит тайлы к виду, необходимому для генератора """
+        def __init__(self, icon, price):
+            self.icon = icon
+            self.price_move = price
+
+    chunk_size = len(global_tiles_map)//len(chunks_map)
+    #global_region_size = len(global_tiles_map)/len(global_region_map)
 
     #Определение истока
-    candidates_global_chunks = []
+    #candidates_global_chunks = []
+    #
+    #for number_global_line, global_line in enumerate(global_region_map):
+    #    for number_global_tile, global_tile in enumerate(global_line):
+    #        if global_tile == 5:
+    #            candidates_global_chunks.append(number_global_line, number_global_tile)
+    #            
+    #if candidates_global_chunks:
+    #    global_start_point = random.choice(candidates_global_chunks)
 
-    for number_global_line, global_line in enumerate(global_region_map):
-        for number_global_tile, global_tile in enumerate(global_line):
-            if global_tile == 5:
-                candidates_global_chunks.append(number_global_line, number_global_tile)
-                
-    if candidates_global_chunks:
-        global_start_point = random.choice(candidates_global_chunks)
+    for another_one_river in range(number_of_rivers):
+        global_start_point = [0, random.randrange(len(chunks_map))]
+        global_finish_point = [len(chunks_map) - 1, random.randrange(len(chunks_map))]
+        width = 2
+        river = River_for_generator(global_start_point, global_finish_point, width)
+        #Определение глобального пути
 
+        #Приведение глобальной карты к необхоимому виду
+        global_map = []
+        for number_line in range(len(chunks_map)):
+            global_line = []
+            for number_tile in range(len(chunks_map[number_line])): #0, 4
+                #Приведение локации к необходимому для генератора виду
+                location = Fantom_tile(chunks_map[number_line][number_tile][0], chunks_map[number_line][number_tile][4])
+                global_line.append(location)
+            global_map.append(global_line)
+
+        
+        river.global_path = a_star_algorithm_river_calculation(global_map, river.global_start_point, river.global_finish_point, ['~', 'C'])
+        if river.global_path:
+            print(f"Река посчиталась! ||| global_start_point - {global_start_point} ||| global_finish_point - {global_finish_point}")
+            for number_step_path, step_path in enumerate(river.global_path):
+                #Вырезание участка карты, будущей локации и приведение тайлов к необходимому для генератора виду
+                processed_map = []
+                for number_line in range(step_path[0]*chunk_size, step_path[0]*chunk_size + chunk_size):
+                    tiles_line = []
+                    for number_tile in range(step_path[1]*chunk_size, step_path[1]*chunk_size + chunk_size):
+                        #Приведение тайла к необходимому для генератора виду
+                        tile = Fantom_tile(global_tiles_map[number_line][number_tile], 0)
+                        tiles_line.append(tile)
+                    processed_map.append(tiles_line)
+                #Определение стартовой локальной точки
+                if number_step_path == 0:
+                    local_start_point = [0, random.randrange(chunk_size)]
+                else:
+                    local_start_point = river.local_path[-1]
+                    river.local_path.pop(-1)
+                #Определение финишной локальной точки
+                if number_step_path < len(river.global_path) - 1:
+                    if river.global_path[number_step_path + 1] == [step_path[0] - 1, step_path[1]]:
+                        local_finish_point = [0, random.randrange(chunk_size)]
+                        direction = 'up'
+                    elif river.global_path[number_step_path + 1] == [step_path[0] + 1, step_path[1]]:
+                        local_finish_point = [chunk_size - 1, random.randrange(chunk_size)]
+                        direction = 'down'
+                    elif river.global_path[number_step_path + 1] == [step_path[0], step_path[1] - 1]:
+                        local_finish_point = [random.randrange(chunk_size), 0]
+                        direction = 'left'
+                    else:
+                        local_finish_point = [random.randrange(chunk_size), random.randrange(chunk_size)]
+                        direction = 'right'
+                elif number_step_path == len(river.global_path) - 1:
+                    local_finish_point = [chunk_size - 1, random.randrange(chunk_size)]
+                #Получение сырых локальных вейпоинтов
+                river_raw_path = a_star_algorithm_river_calculation(processed_map, local_start_point, local_finish_point, [])
+                print(f"river_raw_path - {river_raw_path}")
+                added_point = []
+                if number_step_path < len(river.global_path) - 1:
+                    if direction == 'up':
+                        added_point = [chunk_size - 1, river_raw_path[-1][1]]
+                    elif direction == 'down':
+                        added_point = [0, river_raw_path[-1][1]]
+                    elif direction == 'left':
+                        added_point = [river_raw_path[-1][0], chunk_size - 1]
+                    else:
+                        added_point = [river_raw_path[-1][0], 0]
+                for river_raw in river_raw_path:
+                    river.local_path.append([river_raw[0] + step_path[0]*chunk_size, river_raw[1] + step_path[1]*chunk_size])
+                if added_point:
+                    river.local_path.append(added_point)
+            #Отрисовка реки по рассчитанным координатам
+            for step_local_path in river.local_path:
+                global_tiles_map[step_local_path[0], step_local_path[1]] = '~'
 
 def a_star_algorithm_river_calculation(calculation_map, start_point, finish_point, banned_list):
     """
@@ -254,7 +337,6 @@ def a_star_algorithm_river_calculation(calculation_map, start_point, finish_poin
         Река избегает пустынных биомов и каньонов, а так же биомов с высокой температурой.
         Температура локации определяет стоимость перемещения.
 
-        
     """
     class Node:
         """Содержит узлы графа"""
@@ -358,9 +440,9 @@ def a_star_algorithm_river_calculation(calculation_map, start_point, finish_poin
                     test_print += calculation_map[number_line][number_tile].icon + ' '
             test_print += '\n'
  
-        #print(test_print)
+        print(test_print)
     else:
-        #print(f"По алгоритму А* не нашлось пути. На входе было: start_point - {start_point}, finish_point - {finish_point}")
+        print(f"По алгоритму А* не нашлось пути. На входе было: start_point - {start_point}, finish_point - {finish_point}")
         test_print = ''
         for number_line in range(len(calculation_map)):
             for number_tile in range(len(calculation_map[number_line])):
@@ -370,7 +452,7 @@ def a_star_algorithm_river_calculation(calculation_map, start_point, finish_poin
                     test_print += calculation_map[number_line][number_tile].icon + ' '
             test_print += '\n'
  
-        #print(test_print)
+        print(test_print)
 
             
     return list(reversed(reversed_waypoints))
