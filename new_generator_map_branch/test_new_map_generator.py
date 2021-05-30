@@ -179,7 +179,7 @@ def master_map_generate(global_region_grid, region_grid, chunks_grid, mini_grid,
     #river_map_generation(add_random_all_tiles_map, 5)
 
     #Рисование продвинутой реки
-    advanced_river_generation(add_random_all_tiles_map, chunks_map, 5)
+    advanced_river_generation(add_random_all_tiles_map, chunks_map, 1)
     
     #Конвертирование тайлов в класс
     all_class_tiles_map = convert_tiles_to_class(add_random_all_tiles_map, chunks_map)
@@ -252,6 +252,9 @@ def advanced_river_generation(global_tiles_map, chunks_map, number_of_rivers):
     #if candidates_global_chunks:
     #    global_start_point = random.choice(candidates_global_chunks)
 
+
+    banned_list = ['▲']
+
     for another_one_river in range(number_of_rivers):
         global_start_point = [0, random.randrange(len(chunks_map))]
         global_finish_point = [len(chunks_map) - 1, random.randrange(len(chunks_map))]
@@ -270,9 +273,18 @@ def advanced_river_generation(global_tiles_map, chunks_map, number_of_rivers):
             global_map.append(global_line)
 
         
-        river.global_path = a_star_algorithm_river_calculation(global_map, river.global_start_point, river.global_finish_point, ['~', 'C'])
+        river.global_path = a_star_algorithm_river_calculation(global_map, river.global_start_point, river.global_finish_point, ['C'])
+        river.global_path.insert(0, river.global_start_point)
         if river.global_path:
             print(f"Река посчиталась! ||| global_start_point - {global_start_point} ||| global_finish_point - {global_finish_point}")
+
+            #Отрисовка реки на будущей миникарте
+            for step_path in river.global_path:
+                #print(F"chunks_map[step_path[0], step_path[1]] - {chunks_map[step_path[0], step_path[1]]}")
+                chunks_map[step_path[0]][step_path[1]][0] = '~'
+
+
+            
             for number_step_path, step_path in enumerate(river.global_path):
                 #Вырезание участка карты, будущей локации и приведение тайлов к необходимому для генератора виду
                 processed_map = []
@@ -280,7 +292,7 @@ def advanced_river_generation(global_tiles_map, chunks_map, number_of_rivers):
                     tiles_line = []
                     for number_tile in range(step_path[1]*chunk_size, step_path[1]*chunk_size + chunk_size):
                         #Приведение тайла к необходимому для генератора виду
-                        tile = Fantom_tile(global_tiles_map[number_line][number_tile], 0)
+                        tile = Tile(global_tiles_map[number_line][number_tile])
                         tiles_line.append(tile)
                     processed_map.append(tiles_line)
                 #Определение стартовой локальной точки
@@ -292,22 +304,59 @@ def advanced_river_generation(global_tiles_map, chunks_map, number_of_rivers):
                 #Определение финишной локальной точки
                 if number_step_path < len(river.global_path) - 1:
                     if river.global_path[number_step_path + 1] == [step_path[0] - 1, step_path[1]]:
-                        local_finish_point = [0, random.randrange(chunk_size)]
+                        candidates = []
+                        for number_tile in range(chunk_size):
+                            if not processed_map[0][number_tile].icon in banned_list:
+                                candidates.append(number_tile)
+                        if candidates:
+                            local_finish_point = [0, random.choice(candidates)]
+                        else:
+                            local_finish_point = [0, random.randrange(chunk_size)]
                         direction = 'up'
                     elif river.global_path[number_step_path + 1] == [step_path[0] + 1, step_path[1]]:
-                        local_finish_point = [chunk_size - 1, random.randrange(chunk_size)]
+                        candidates = []
+                        for number_tile in range(chunk_size):
+                            if not processed_map[chunk_size - 1][number_tile].icon in banned_list:
+                                candidates.append(number_tile)
+                        if candidates:
+                            local_finish_point = [chunk_size - 1, random.choice(candidates)]
+                        else:
+                            local_finish_point = [chunk_size - 1, random.randrange(chunk_size)]
                         direction = 'down'
                     elif river.global_path[number_step_path + 1] == [step_path[0], step_path[1] - 1]:
-                        local_finish_point = [random.randrange(chunk_size), 0]
+                        candidates = []
+                        for number_line in range(chunk_size):
+                            if not processed_map[number_line][0].icon in banned_list:
+                                candidates.append(number_tile)
+                        if candidates:
+                            local_finish_point = [random.choice(candidates), 0]
+                        else:
+                            local_finish_point = [random.randrange(chunk_size), 0]
                         direction = 'left'
+                    elif river.global_path[number_step_path + 1] == [step_path[0], step_path[1] + 1]:
+                        candidates = []
+                        for number_line in range(chunk_size):
+                            if not processed_map[number_line][chunk_size - 1].icon in banned_list:
+                                candidates.append(number_tile)
+                        if candidates:
+                            local_finish_point = [random.choice(candidates), chunk_size - 1]
+                        else:
+                            local_finish_point = [random.randrange(chunk_size), chunk_size - 1]
+                        direction = 'right'
                     else:
                         local_finish_point = [random.randrange(chunk_size), random.randrange(chunk_size)]
                         direction = 'right'
                 elif number_step_path == len(river.global_path) - 1:
                     local_finish_point = [chunk_size - 1, random.randrange(chunk_size)]
                 #Получение сырых локальных вейпоинтов
-                river_raw_path = a_star_algorithm_river_calculation(processed_map, local_start_point, local_finish_point, [])
-                #print(f"river_raw_path - {river_raw_path}")
+                river_raw_path = a_star_algorithm_river_calculation(processed_map, local_start_point, local_finish_point, banned_list)
+                
+                #Если расчёт алгоритмом А* не был успешен, то происходит расчёт прямого пути
+                if not river_raw_path:
+                    river_raw_path = enemy_ideal_move_calculation(local_start_point, local_finish_point)
+
+                river_raw_path.insert(0, local_start_point)
+                    
                 added_point = []
                 if number_step_path < len(river.global_path) - 1:
                     if direction == 'up':
@@ -325,6 +374,55 @@ def advanced_river_generation(global_tiles_map, chunks_map, number_of_rivers):
             #Отрисовка реки по рассчитанным координатам
             for step_local_path in river.local_path:
                 global_tiles_map[step_local_path[0]][step_local_path[1]] = '~'
+
+
+def enemy_ideal_move_calculation(start_point, finish_point):
+    """
+        Рассчитывает идеальную траекторию движения NPC.
+    """
+    
+    axis_y = finish_point[0] - start_point[0] # длинна стороны и количество шагов
+    axis_x = finish_point[1] - start_point[1] # длинна стороны и количество шагов
+    if abs(axis_y) > abs(axis_x):
+        if axis_x != 0:
+            length_step = abs(axis_y)//abs(axis_x) # на один X столько то Y
+        else:
+            length_step = abs(axis_y)
+        long_side = 'y'
+    else:
+        if axis_y != 0:
+            length_step = abs(axis_x)//abs(axis_y) # на один Y столько то X
+        else:
+            length_step = abs(axis_x)
+        long_side = 'x'
+        
+    waypoints = [start_point]
+        
+    for step in range((abs(axis_y) + abs(axis_x))):
+        if (step + 1)%(length_step + 1) == 0:
+            if long_side == 'y':
+                if axis_y >= 0 and axis_x >= 0 or axis_y < 0 and axis_x >= 0:
+                    waypoints.append([waypoints[step][0], waypoints[step][1] + 1])
+                else:
+                    waypoints.append([waypoints[step][0], waypoints[step][1] - 1])    
+            elif long_side == 'x':
+                if axis_x >= 0 and axis_y >= 0 or axis_x < 0 and axis_y >= 0:
+                    waypoints.append([waypoints[step][0] + 1, waypoints[step][1]])
+                else:
+                    waypoints.append([waypoints[step][0] - 1, waypoints[step][1]])
+        else:
+            if long_side == 'y':
+                if axis_y >= 0 and axis_x >= 0 or axis_y >= 0 and axis_x < 0:
+                    waypoints.append([waypoints[step][0] + 1, waypoints[step][1]])
+                else:
+                    waypoints.append([waypoints[step][0] - 1, waypoints[step][1]])
+            elif long_side == 'x':
+                if axis_x >= 0 and axis_y >= 0 or axis_x >= 0 and axis_y < 0:
+                    waypoints.append([waypoints[step][0], waypoints[step][1] + 1])
+                else:
+                    waypoints.append([waypoints[step][0], waypoints[step][1] - 1])
+
+    return waypoints
 
 def a_star_algorithm_river_calculation(calculation_map, start_point, finish_point, banned_list):
     """
@@ -372,13 +470,16 @@ def a_star_algorithm_river_calculation(calculation_map, start_point, finish_poin
                             node.position[0] - 1][node.position[1]].price_move + path_length([node.position[0] - 1, node.position[1]], finish_point), [1, 0])
                     friends.append(friend)
                     graph.append(friend)                
-        if 0 <= node.position[1] < len(calculation_map):
+        if 0 <= node.position[1] < len(calculation_map) - 1:
             if node.position[1] + 1 < len(calculation_map):
-                if not(calculation_map[node.position[0]][node.position[1] + 1].icon in banned_list) and not([node.position[0], node.position[1] + 1] in verified_node):
-                    friend = Node(len(graph), [node.position[0], node.position[1] + 1], calculation_map[
+                try:
+                    if not(calculation_map[node.position[0]][node.position[1] + 1].icon in banned_list) and not([node.position[0], node.position[1] + 1] in verified_node):
+                        friend = Node(len(graph), [node.position[0], node.position[1] + 1], calculation_map[
                             node.position[0]][node.position[1] + 1].price_move + path_length([node.position[0], node.position[1] + 1], finish_point), [0, -1])
-                    friends.append(friend)
-                    graph.append(friend)
+                        friends.append(friend)
+                        graph.append(friend)
+                except IndexError:
+                    print(F'IndexError node.position - {node.position}')
             if node.position[1] - 1 >= 0:
                 if not(calculation_map[node.position[0]][node.position[1] - 1].icon in banned_list) and not([node.position[0], node.position[1] - 1] in verified_node):
                     friend = Node(len(graph), [node.position[0], node.position[1] - 1], calculation_map[
@@ -428,18 +529,18 @@ def a_star_algorithm_river_calculation(calculation_map, start_point, finish_poin
                 if graph[number_node].position == preview_node:
                     finish_node = number_node
                     check_node = graph[number_node]
-        test_print = ''
-        for number_line in range(len(calculation_map)):
-            for number_tile in range(len(calculation_map[number_line])):
-                
-                if [number_line, number_tile] in reversed_waypoints:
-                    test_print += calculation_map[number_line][number_tile].icon + 'v'
-                elif [number_line, number_tile] in verified_node:
-                    test_print += calculation_map[number_line][number_tile].icon + 'x'
-                else:
-                    test_print += calculation_map[number_line][number_tile].icon + ' '
-            test_print += '\n'
- 
+        #test_print = ''
+        #for number_line in range(len(calculation_map)):
+        #    for number_tile in range(len(calculation_map[number_line])):
+        #        
+        #        if [number_line, number_tile] in reversed_waypoints:
+        #            test_print += calculation_map[number_line][number_tile].icon + 'v'
+        #        elif [number_line, number_tile] in verified_node:
+        #            test_print += calculation_map[number_line][number_tile].icon + 'x'
+        #        else:
+        #            test_print += calculation_map[number_line][number_tile].icon + ' '
+        #    test_print += '\n'
+ #
         #print(test_print)
     else:
         print(f"По алгоритму А* не нашлось пути. На входе было: start_point - {start_point}, finish_point - {finish_point}")
@@ -452,7 +553,7 @@ def a_star_algorithm_river_calculation(calculation_map, start_point, finish_poin
                     test_print += calculation_map[number_line][number_tile].icon + ' '
             test_print += '\n'
  
-        #print(test_print)
+        print(test_print)
 
             
     return list(reversed(reversed_waypoints))
