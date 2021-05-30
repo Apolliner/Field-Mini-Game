@@ -224,12 +224,13 @@ def advanced_river_generation(global_tiles_map, chunks_map, number_of_rivers):
     """
     class River_for_generator:
         """ Содержит описание реки для генератора """
-        def __init__(self, global_start_point, global_finish_point, width):
+        def __init__(self, global_start_point, global_finish_point, width, coast):
             self.global_start_point = global_start_point
             self.global_finish_point = global_finish_point
             self.global_path = []
             self.local_path = []
             self.width = width
+            self.coast = coast
             self.depth = 1
 
     class Fantom_tile:
@@ -258,8 +259,9 @@ def advanced_river_generation(global_tiles_map, chunks_map, number_of_rivers):
     for another_one_river in range(number_of_rivers):
         global_start_point = [0, random.randrange(len(chunks_map))]
         global_finish_point = [len(chunks_map) - 1, random.randrange(len(chunks_map))]
-        width = 2
-        river = River_for_generator(global_start_point, global_finish_point, width)
+        width = 3
+        coast = 2
+        river = River_for_generator(global_start_point, global_finish_point, width, coast)
         #Определение глобального пути
 
         #Приведение глобальной карты к необхоимому виду
@@ -305,9 +307,9 @@ def advanced_river_generation(global_tiles_map, chunks_map, number_of_rivers):
                 if number_step_path < len(river.global_path) - 1:
                     if river.global_path[number_step_path + 1] == [step_path[0] - 1, step_path[1]]:
                         candidates = []
-                        for number_tile in range(chunk_size):
-                            if not processed_map[0][number_tile].icon in banned_list:
-                                candidates.append(number_tile)
+                        for finish_number_tile in range(chunk_size):
+                            if not processed_map[0][finish_number_tile].icon in banned_list:
+                                candidates.append(finish_number_tile)
                         if candidates:
                             local_finish_point = [0, random.choice(candidates)]
                         else:
@@ -315,9 +317,9 @@ def advanced_river_generation(global_tiles_map, chunks_map, number_of_rivers):
                         direction = 'up'
                     elif river.global_path[number_step_path + 1] == [step_path[0] + 1, step_path[1]]:
                         candidates = []
-                        for number_tile in range(chunk_size):
-                            if not processed_map[chunk_size - 1][number_tile].icon in banned_list:
-                                candidates.append(number_tile)
+                        for finish_number_tile in range(chunk_size):
+                            if not processed_map[chunk_size - 1][finish_number_tile].icon in banned_list:
+                                candidates.append(finish_number_tile)
                         if candidates:
                             local_finish_point = [chunk_size - 1, random.choice(candidates)]
                         else:
@@ -325,9 +327,9 @@ def advanced_river_generation(global_tiles_map, chunks_map, number_of_rivers):
                         direction = 'down'
                     elif river.global_path[number_step_path + 1] == [step_path[0], step_path[1] - 1]:
                         candidates = []
-                        for number_line in range(chunk_size):
-                            if not processed_map[number_line][0].icon in banned_list:
-                                candidates.append(number_tile)
+                        for finish_number_line in range(chunk_size):
+                            if not processed_map[finish_number_line][0].icon in banned_list:
+                                candidates.append(finish_number_line)
                         if candidates:
                             local_finish_point = [random.choice(candidates), 0]
                         else:
@@ -335,9 +337,9 @@ def advanced_river_generation(global_tiles_map, chunks_map, number_of_rivers):
                         direction = 'left'
                     elif river.global_path[number_step_path + 1] == [step_path[0], step_path[1] + 1]:
                         candidates = []
-                        for number_line in range(chunk_size):
-                            if not processed_map[number_line][chunk_size - 1].icon in banned_list:
-                                candidates.append(number_tile)
+                        for finish_number_line in range(chunk_size):
+                            if not processed_map[finish_number_line][chunk_size - 1].icon in banned_list:
+                                candidates.append(finish_number_line)
                         if candidates:
                             local_finish_point = [random.choice(candidates), chunk_size - 1]
                         else:
@@ -372,8 +374,28 @@ def advanced_river_generation(global_tiles_map, chunks_map, number_of_rivers):
                 if added_point:
                     river.local_path.append(added_point)
             #Отрисовка реки по рассчитанным координатам
+
             for step_local_path in river.local_path:
-                global_tiles_map[step_local_path[0]][step_local_path[1]] = '~'
+                if 15 < step_local_path[0] < len(global_tiles_map) - 15 and 15 < step_local_path[1] < (len(global_tiles_map) - 15):
+                    all_width = river.width + 2*river.coast
+                    for number_line in range(all_width):
+                        for number_tile in range(all_width):
+                            
+                            if river.coast < number_line + 1 < all_width - river.coast and river.coast < number_tile + 1 < all_width - river.coast:
+                                
+                                global_tiles_map[step_local_path[0] + number_line][step_local_path[1] + number_tile] = '~'
+                            else:
+                                if not global_tiles_map[step_local_path[0] + number_line  - river.coast][step_local_path[1] + number_tile - river.coast] in ('~', '▲'):
+                                    global_tiles_map[step_local_path[0] - river.coast + number_line][step_local_path[1]
+                                                                       - river.coast + number_tile] = random.choice([',', '„', '.', 'u', 'ü'])
+                    
+                    if random.randrange(100)//99 > 0:
+                        if 3 < river.width < 10:
+                            river.width += random.randrange(-1, 2)
+                        elif river.width == 9:
+                            river.width -= 1
+                        elif river.width < 4:
+                            river.width += 1
 
 
 def enemy_ideal_move_calculation(start_point, finish_point):
@@ -470,16 +492,14 @@ def a_star_algorithm_river_calculation(calculation_map, start_point, finish_poin
                             node.position[0] - 1][node.position[1]].price_move + path_length([node.position[0] - 1, node.position[1]], finish_point), [1, 0])
                     friends.append(friend)
                     graph.append(friend)                
-        if 0 <= node.position[1] < len(calculation_map) - 1:
+        if 0 <= node.position[1] < len(calculation_map):
             if node.position[1] + 1 < len(calculation_map):
-                try:
-                    if not(calculation_map[node.position[0]][node.position[1] + 1].icon in banned_list) and not([node.position[0], node.position[1] + 1] in verified_node):
-                        friend = Node(len(graph), [node.position[0], node.position[1] + 1], calculation_map[
+                if not(calculation_map[node.position[0]][node.position[1] + 1].icon in banned_list) and not([node.position[0], node.position[1] + 1] in verified_node):
+                    friend = Node(len(graph), [node.position[0], node.position[1] + 1], calculation_map[
                             node.position[0]][node.position[1] + 1].price_move + path_length([node.position[0], node.position[1] + 1], finish_point), [0, -1])
-                        friends.append(friend)
-                        graph.append(friend)
-                except IndexError:
-                    print(F'IndexError node.position - {node.position}')
+                    friends.append(friend)
+                    graph.append(friend)
+
             if node.position[1] - 1 >= 0:
                 if not(calculation_map[node.position[0]][node.position[1] - 1].icon in banned_list) and not([node.position[0], node.position[1] - 1] in verified_node):
                     friend = Node(len(graph), [node.position[0], node.position[1] - 1], calculation_map[
