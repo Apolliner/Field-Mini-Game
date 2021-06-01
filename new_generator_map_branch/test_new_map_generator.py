@@ -210,6 +210,19 @@ def master_map_generate(global_region_grid, region_grid, chunks_grid, mini_grid,
 
     return ready_global_map
 
+
+def draw_ready_map(processed_map, file_draw_map, number_line, number_tile, chunk_size):
+    """
+        Рисует готовую карту на указанном чанке.
+    """
+    draw_map = file_draw_map.read().splitlines()
+    for number_all_line in range(len(draw_map)):
+        for number_all_tile in range(len(draw_map[number_all_line])):
+            if draw_map[number_all_line][number_all_tile] != '0' and draw_map[number_all_line][number_all_tile] != 'b':
+                processed_map[number_line*chunk_size + number_all_line][number_tile*chunk_size + number_all_tile] = draw_map[number_all_line][number_all_tile]
+            elif draw_map[number_all_line][number_all_tile] != 'b':
+                processed_map[number_line*chunk_size + number_all_line][number_tile*chunk_size + number_all_tile] = random.choice((',', '„', '.', 'u', 'ü'))
+
 @timeit
 def advanced_river_generation(global_tiles_map, chunks_map, number_of_rivers):
     """
@@ -240,19 +253,6 @@ def advanced_river_generation(global_tiles_map, chunks_map, number_of_rivers):
             self.price_move = price
 
     chunk_size = len(global_tiles_map)//len(chunks_map)
-    #global_region_size = len(global_tiles_map)/len(global_region_map)
-
-    #Определение истока
-    #candidates_global_chunks = []
-    #
-    #for number_global_line, global_line in enumerate(global_region_map):
-    #    for number_global_tile, global_tile in enumerate(global_line):
-    #        if global_tile == 5:
-    #            candidates_global_chunks.append(number_global_line, number_global_tile)
-    #            
-    #if candidates_global_chunks:
-    #    global_start_point = random.choice(candidates_global_chunks)
-
 
     banned_list = ['▲']
 
@@ -264,7 +264,7 @@ def advanced_river_generation(global_tiles_map, chunks_map, number_of_rivers):
         river = River_for_generator(global_start_point, global_finish_point, width, coast)
         #Определение глобального пути
 
-        #Приведение глобальной карты к необхоимому виду
+        #Приведение глобальной карты к необходимому виду
         global_map = []
         for number_line in range(len(chunks_map)):
             global_line = []
@@ -306,41 +306,65 @@ def advanced_river_generation(global_tiles_map, chunks_map, number_of_rivers):
                 #Определение финишной локальной точки
                 if number_step_path < len(river.global_path) - 1:
                     if river.global_path[number_step_path + 1] == [step_path[0] - 1, step_path[1]]:
+                        preferred_candidates = []
                         candidates = []
                         for finish_number_tile in range(chunk_size):
                             if not processed_map[0][finish_number_tile].icon in banned_list:
-                                candidates.append(finish_number_tile)
-                        if candidates:
+                                if processed_map[0][finish_number_tile].price_move <= 10:
+                                    preferred_candidates.append(finish_number_tile)
+                                else:
+                                    candidates.append(finish_number_tile)
+                        if preferred_candidates:
+                            local_finish_point = [0, random.choice(preferred_candidates)]
+                        elif candidates:
                             local_finish_point = [0, random.choice(candidates)]
                         else:
                             local_finish_point = [0, random.randrange(chunk_size)]
                         direction = 'up'
                     elif river.global_path[number_step_path + 1] == [step_path[0] + 1, step_path[1]]:
+                        preferred_candidates = []
                         candidates = []
                         for finish_number_tile in range(chunk_size):
                             if not processed_map[chunk_size - 1][finish_number_tile].icon in banned_list:
-                                candidates.append(finish_number_tile)
-                        if candidates:
+                                if processed_map[chunk_size - 1][finish_number_tile].price_move <= 10:
+                                    preferred_candidates.append(finish_number_tile)
+                                else:
+                                    candidates.append(finish_number_tile)
+                        if preferred_candidates:
+                            local_finish_point = [chunk_size - 1, random.choice(preferred_candidates)]
+                        elif candidates:
                             local_finish_point = [chunk_size - 1, random.choice(candidates)]
                         else:
                             local_finish_point = [chunk_size - 1, random.randrange(chunk_size)]
                         direction = 'down'
                     elif river.global_path[number_step_path + 1] == [step_path[0], step_path[1] - 1]:
+                        preferred_candidates = []
                         candidates = []
                         for finish_number_line in range(chunk_size):
                             if not processed_map[finish_number_line][0].icon in banned_list:
-                                candidates.append(finish_number_line)
-                        if candidates:
+                                if processed_map[finish_number_line][0].price_move <= 10:
+                                    preferred_candidates.append(finish_number_line)
+                                else:
+                                    candidates.append(finish_number_line)
+                        if preferred_candidates:
+                            local_finish_point = [random.choice(preferred_candidates), 0]
+                        elif candidates:
                             local_finish_point = [random.choice(candidates), 0]
                         else:
                             local_finish_point = [random.randrange(chunk_size), 0]
                         direction = 'left'
                     elif river.global_path[number_step_path + 1] == [step_path[0], step_path[1] + 1]:
+                        preferred_candidates = []
                         candidates = []
                         for finish_number_line in range(chunk_size):
                             if not processed_map[finish_number_line][chunk_size - 1].icon in banned_list:
-                                candidates.append(finish_number_line)
-                        if candidates:
+                                if processed_map[finish_number_line][chunk_size - 1].price_move <= 10:
+                                    preferred_candidates.append(finish_number_line)
+                                else:
+                                    candidates.append(finish_number_line)
+                        if preferred_candidates:
+                            local_finish_point = [random.choice(preferred_candidates), chunk_size - 1]
+                        elif candidates:
                             local_finish_point = [random.choice(candidates), chunk_size - 1]
                         else:
                             local_finish_point = [random.randrange(chunk_size), chunk_size - 1]
@@ -374,28 +398,20 @@ def advanced_river_generation(global_tiles_map, chunks_map, number_of_rivers):
                 if added_point:
                     river.local_path.append(added_point)
             #Отрисовка реки по рассчитанным координатам
+            file_river_3x3 = open("new_generator_map_branch/draw_map/river_3x3.txt", encoding="utf-8")
+            draw_map = file_river_3x3.read().splitlines()
+            print(F"len(draw_map) - {len(draw_map)}")
 
             for step_local_path in river.local_path:
                 if 15 < step_local_path[0] < len(global_tiles_map) - 15 and 15 < step_local_path[1] < (len(global_tiles_map) - 15):
-                    all_width = river.width + 2*river.coast
-                    for number_line in range(all_width):
-                        for number_tile in range(all_width):
-                            
-                            if river.coast < number_line + 1 < all_width - river.coast and river.coast < number_tile + 1 < all_width - river.coast:
-                                
-                                global_tiles_map[step_local_path[0] + number_line][step_local_path[1] + number_tile] = '~'
-                            else:
-                                if not global_tiles_map[step_local_path[0] + number_line  - river.coast][step_local_path[1] + number_tile - river.coast] in ('~', '▲'):
-                                    global_tiles_map[step_local_path[0] - river.coast + number_line][step_local_path[1]
-                                                                       - river.coast + number_tile] = random.choice([',', '„', '.', 'u', 'ü'])
                     
-                    if random.randrange(100)//99 > 0:
-                        if 3 < river.width < 10:
-                            river.width += random.randrange(-1, 2)
-                        elif river.width == 9:
-                            river.width -= 1
-                        elif river.width < 4:
-                            river.width += 1
+                    for number_draw_line in range(len(draw_map)):
+                        for number_draw_tile in range(len(draw_map[number_draw_line])):
+                            if draw_map[number_draw_line][number_draw_tile] != '0':
+                                if draw_map[number_draw_line][number_draw_tile] != 'b':
+                                    global_tiles_map[step_local_path[0] + number_draw_line][step_local_path[1] + number_draw_tile] = draw_map[number_draw_line][number_draw_tile]
+                                elif draw_map[number_draw_line][number_draw_tile] == 'b' and global_tiles_map[step_local_path[0] + number_draw_line][step_local_path[1] + number_draw_tile] != '~':
+                                    global_tiles_map[step_local_path[0] + number_draw_line][step_local_path[1] + number_draw_tile] = random.choice((',', '„', '.', 'u', 'ü'))
 
 
 def enemy_ideal_move_calculation(start_point, finish_point):
@@ -964,17 +980,6 @@ def mountains_generate(all_tiles_map, chunks_map):
     """
         Генерация гор и озёр по методу горных озёр
     """
-                
-    def draw_ready_map(processed_map, file_draw_map, number_line, number_tile, chunk_size):
-        """
-            Рисует готовую карту на указанном чанке.
-        """
-        draw_map = file_draw_map.read().splitlines()
-        for number_all_line in range(len(draw_map)):
-            for number_all_tile in range(len(draw_map[number_all_line])):
-                if draw_map[number_all_line][number_all_tile] != '0':
-                    processed_map[number_line*chunk_size + number_all_line][number_tile*chunk_size + number_all_tile] = draw_map[number_all_line][number_all_tile]
-    
     chunk_size = len(all_tiles_map)//len(chunks_map)
     for number_line in range(len(chunks_map)):
         for number_tile in range(len(chunks_map[number_line])):
