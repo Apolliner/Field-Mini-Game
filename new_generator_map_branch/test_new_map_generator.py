@@ -176,9 +176,6 @@ def master_map_generate(global_region_grid, region_grid, chunks_grid, mini_grid,
     #Генерация гор и озёр по методу горных озёр
     mountains_generate(add_random_all_tiles_map, chunks_map)
 
-    #Рисование реки
-    #river_map_generation(add_random_all_tiles_map, 5)
-
     #Рисование продвинутой реки
     advanced_river_generation(add_random_all_tiles_map, chunks_map, 1)
     
@@ -255,24 +252,24 @@ def advanced_river_generation(global_tiles_map, chunks_map, number_of_rivers):
 
     banned_list = ['▲']
 
+    #Приведение глобальной карты к необходимому виду
+    global_map = []
+    for number_line in range(len(chunks_map)):
+        global_line = []
+        for number_tile in range(len(chunks_map[number_line])): #0, 4
+            #Приведение локации к необходимому для генератора виду
+            location = Fantom_tile(chunks_map[number_line][number_tile][0], chunks_map[number_line][number_tile][4])
+            global_line.append(location)
+        global_map.append(global_line)
+                                              
+
     for another_one_river in range(number_of_rivers):
         global_start_point = [0, random.randrange(len(chunks_map))]
         global_finish_point = [len(chunks_map) - 1, random.randrange(len(chunks_map))]
-        width = 3
+        width = random.randrange(3, 10)
         coast = 2
         river = River_for_generator(global_start_point, global_finish_point, width, coast)
-        #Определение глобального пути
-
-        #Приведение глобальной карты к необходимому виду
-        global_map = []
-        for number_line in range(len(chunks_map)):
-            global_line = []
-            for number_tile in range(len(chunks_map[number_line])): #0, 4
-                #Приведение локации к необходимому для генератора виду
-                location = Fantom_tile(chunks_map[number_line][number_tile][0], chunks_map[number_line][number_tile][4])
-                global_line.append(location)
-            global_map.append(global_line)
-
+        #Определение глобального пути                      
         
         river.global_path = a_star_algorithm_river_calculation(global_map, river.global_start_point, river.global_finish_point, ['C'])
         river.global_path.insert(0, river.global_start_point)
@@ -284,8 +281,6 @@ def advanced_river_generation(global_tiles_map, chunks_map, number_of_rivers):
                 #print(F"chunks_map[step_path[0], step_path[1]] - {chunks_map[step_path[0], step_path[1]]}")
                 chunks_map[step_path[0]][step_path[1]][0] = '~'
 
-
-            
             for number_step_path, step_path in enumerate(river.global_path):
                 #Вырезание участка карты, будущей локации и приведение тайлов к необходимому для генератора виду
                 processed_map = []
