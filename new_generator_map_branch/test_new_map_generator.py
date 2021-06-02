@@ -2,6 +2,7 @@ import random
 import time
 import copy
 import math
+from new_generator_map_branch import map_patch
 
 
 """
@@ -218,11 +219,9 @@ def draw_ready_map(processed_map, file_draw_map, number_line, number_tile, chunk
     draw_map = file_draw_map.read().splitlines()
     for number_all_line in range(len(draw_map)):
         for number_all_tile in range(len(draw_map[number_all_line])):
-            if draw_map[number_all_line][number_all_tile] != '0' and draw_map[number_all_line][number_all_tile] != 'b':
+            if draw_map[number_all_line][number_all_tile] != '0':
                 processed_map[number_line*chunk_size + number_all_line][number_tile*chunk_size + number_all_tile] = draw_map[number_all_line][number_all_tile]
-            elif draw_map[number_all_line][number_all_tile] != 'b':
-                processed_map[number_line*chunk_size + number_all_line][number_tile*chunk_size + number_all_tile] = random.choice((',', '„', '.', 'u', 'ü'))
-
+            
 @timeit
 def advanced_river_generation(global_tiles_map, chunks_map, number_of_rivers):
     """
@@ -398,13 +397,22 @@ def advanced_river_generation(global_tiles_map, chunks_map, number_of_rivers):
                 if added_point:
                     river.local_path.append(added_point)
             #Отрисовка реки по рассчитанным координатам
-            file_river_3x3 = open("new_generator_map_branch/draw_map/river_3x3.txt", encoding="utf-8")
-            draw_map = file_river_3x3.read().splitlines()
-            print(F"len(draw_map) - {len(draw_map)}")
+
+            river_dict = {
+                          1: 'river_1x1',
+                          2: 'river_2x2',
+                          3: 'river_3x3',
+                          4: 'river_4x4',
+                          5: 'river_5x5',
+                          6: 'river_6x6',
+                          7: 'river_7x7',
+                          8: 'river_8x8',
+                          9: 'river_9x9',
+                         }
 
             for step_local_path in river.local_path:
-                if 15 < step_local_path[0] < len(global_tiles_map) - 15 and 15 < step_local_path[1] < (len(global_tiles_map) - 15):
-                    
+                if 10 < step_local_path[0] < len(global_tiles_map) - 15 and 10 < step_local_path[1] < (len(global_tiles_map) - 15):
+                    draw_map = map_patch.map_patch(river_dict[river.width])
                     for number_draw_line in range(len(draw_map)):
                         for number_draw_tile in range(len(draw_map[number_draw_line])):
                             if draw_map[number_draw_line][number_draw_tile] != '0':
@@ -412,7 +420,14 @@ def advanced_river_generation(global_tiles_map, chunks_map, number_of_rivers):
                                     global_tiles_map[step_local_path[0] + number_draw_line][step_local_path[1] + number_draw_tile] = draw_map[number_draw_line][number_draw_tile]
                                 elif draw_map[number_draw_line][number_draw_tile] == 'b' and global_tiles_map[step_local_path[0] + number_draw_line][step_local_path[1] + number_draw_tile] != '~':
                                     global_tiles_map[step_local_path[0] + number_draw_line][step_local_path[1] + number_draw_tile] = random.choice((',', '„', '.', 'u', 'ü'))
-
+                    #Изменение ширины реки
+                    if random.randrange(100)//99 > 0:
+                        if river.width <= 3:
+                            river.width += 1
+                        elif river.width >= 9:
+                            river.width -= 1
+                        else:
+                            river.width += random.randrange(-1, 2)
 
 def enemy_ideal_move_calculation(start_point, finish_point):
     """
