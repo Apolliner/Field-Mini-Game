@@ -68,6 +68,7 @@ class Tile:
                         'P': ['раскидистое дерево', 1],
                         '~': ['вода', 20],
                         '`': ['солёная вода', 50],
+                        'f': ['брод', 10],
                         'C': ['каньон', 20],
                         '??': ['ничего', 10],
                         }
@@ -177,7 +178,7 @@ def master_map_generate(global_region_grid, region_grid, chunks_grid, mini_grid,
     mountains_generate(add_random_all_tiles_map, chunks_map)
 
     #Рисование продвинутой реки
-    advanced_river_generation(add_random_all_tiles_map, chunks_map, 1)
+    rivers_waypoints = advanced_river_generation(add_random_all_tiles_map, chunks_map, 1)
     
     #Конвертирование тайлов в класс
     all_class_tiles_map = convert_tiles_to_class(add_random_all_tiles_map, chunks_map)
@@ -194,11 +195,15 @@ def master_map_generate(global_region_grid, region_grid, chunks_grid, mini_grid,
     levelness_calculation(all_class_tiles_map, ('▲'), True, True)
     levelness_calculation(all_class_tiles_map, ('▲'), True, True)
 
+
     #Разнообразие тайловых полей, не требующих границ
     diversity_field_tiles(all_class_tiles_map)
 
     #Разрезание глобальной карты на карту классов Location
     ready_global_map = cutting_tiles_map(all_class_tiles_map, chunks_map)
+    
+    #Добавление бродов в реки
+    add_fords_in_rivers(ready_global_map, rivers_waypoints)
 
     #Определение независимых областей на локациях
     defining_vertices(ready_global_map)
@@ -208,6 +213,35 @@ def master_map_generate(global_region_grid, region_grid, chunks_grid, mini_grid,
 
     return ready_global_map
 
+"""
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+    ГЕНЕРАЦИЯ ЛОКАЛЬНЫХ И ГЛОБАЛЬНЫХ СТРУКТУР
+        
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+"""
+@timeit
+def add_fords_in_rivers(processed_map, rivers_waypoints):
+    if rivers_waypoints:
+        for river_waypoint in rivers_waypoints:
+            river_map = processed_map[river_waypoint[0]][river_waypoint[1]].chunk
+            for number_line, line in enumerate(river_map):
+                for number_tile, tile in enumerate(line):
+                    if tile.icon == '~' and number_line < len(river_map) - 7 and number_tile < len(river_map) - 7 and random.randrange(30)//29 > 0:
+                        draw_ford = map_patch.map_patch('ford_river_5x5')
+                        for number_patch_line in range(len(draw_ford)):
+                            for number_patch_tile in range(len(draw_ford[number_patch_line])):
+                                try:
+                                    if draw_ford[number_patch_line][number_patch_tile] == 'f' and river_map[number_line + number_patch_line][number_tile + number_patch_tile].icon == '~':
+                                        river_map[number_line + number_patch_line][number_tile + number_patch_tile].icon = 'f'
+                                        river_map[number_line + number_patch_line][number_tile + number_patch_tile].description = 'брод'
+                                        river_map[number_line + number_patch_line][number_tile + number_patch_tile].price_move = 10
+                                        river_map[number_line + number_patch_line][number_tile + number_patch_tile].level = 0
+                                except IndexError:
+                                    print(F"len(river_map) - {len(river_map)} | number_line + number_patch_line - {number_line + number_patch_line} | number_tile + number_patch_tile - {number_tile + number_patch_tile}")
+                    
+                    
 
 def draw_ready_map(processed_map, file_draw_map, number_line, number_tile, chunk_size):
     """
@@ -252,6 +286,8 @@ def advanced_river_generation(global_tiles_map, chunks_map, number_of_rivers):
 
     banned_list = ['▲']
 
+    rivers_waypoints = []
+
     #Приведение глобальной карты к необходимому виду
     global_map = []
     for number_line in range(len(chunks_map)):
@@ -273,7 +309,7 @@ def advanced_river_generation(global_tiles_map, chunks_map, number_of_rivers):
         
         river.global_path = a_star_algorithm_river_calculation(global_map, river.global_start_point, river.global_finish_point, ['C'])
         river.global_path.insert(0, river.global_start_point)
-        if river.global_path:
+        if len(river.global_path) > 1:
             print(f"Река посчиталась! ||| global_start_point - {global_start_point} ||| global_finish_point - {global_finish_point}")
 
             #Отрисовка реки на будущей миникарте
@@ -391,7 +427,13 @@ def advanced_river_generation(global_tiles_map, chunks_map, number_of_rivers):
                     river.local_path.append([river_raw[0] + step_path[0]*chunk_size, river_raw[1] + step_path[1]*chunk_size])
                 if added_point:
                     river.local_path.append(added_point)
+
+            #Добавление вейпоинтов в список всех вейпоинтов с реками
+            for river_waypoint in river.global_path:
+                if not river_waypoint in rivers_waypoints:
+                    rivers_waypoints.append(river_waypoint)
             #Отрисовка реки по рассчитанным координатам
+
 
             river_dict = {
                           1: 'river_1x1',
@@ -423,6 +465,8 @@ def advanced_river_generation(global_tiles_map, chunks_map, number_of_rivers):
                             river.width -= 1
                         else:
                             river.width += random.randrange(-1, 2)
+
+    return rivers_waypoints
 
 def enemy_ideal_move_calculation(start_point, finish_point):
     """
@@ -505,33 +549,36 @@ def a_star_algorithm_river_calculation(calculation_map, start_point, finish_poin
             Вычисляет соседние узлы графа
         """
         friends = []
-        if 0 <= node.position[0] < len(calculation_map):
-            if node.position[0] + 1 < len(calculation_map):
-                if not(calculation_map[node.position[0] + 1][node.position[1]].icon in banned_list) and not([node.position[0] + 1, node.position[1]] in verified_node):
-                    friend = Node(len(graph), [node.position[0] + 1, node.position[1]], calculation_map[
-                             node.position[0] + 1][node.position[1]].price_move + path_length([node.position[0] + 1, node.position[1]], finish_point), [-1, 0])
-                    friends.append(friend)
-                    graph.append(friend)                                                                                              
-            if node.position[0] - 1 >= 0:                                                                                                   
-                if not(calculation_map[node.position[0] - 1][node.position[1]].icon in banned_list) and not([node.position[0] - 1, node.position[1]] in verified_node):
-                    friend = Node(len(graph), [node.position[0] - 1, node.position[1]], calculation_map[
-                            node.position[0] - 1][node.position[1]].price_move + path_length([node.position[0] - 1, node.position[1]], finish_point), [1, 0])
-                    friends.append(friend)
-                    graph.append(friend)                
-        if 0 <= node.position[1] < len(calculation_map):
-            if node.position[1] + 1 < len(calculation_map):
-                if not(calculation_map[node.position[0]][node.position[1] + 1].icon in banned_list) and not([node.position[0], node.position[1] + 1] in verified_node):
-                    friend = Node(len(graph), [node.position[0], node.position[1] + 1], calculation_map[
-                            node.position[0]][node.position[1] + 1].price_move + path_length([node.position[0], node.position[1] + 1], finish_point), [0, -1])
-                    friends.append(friend)
-                    graph.append(friend)
+        try:
+            if 0 <= node.position[0] < len(calculation_map):
+                if node.position[0] + 1 < len(calculation_map):
+                    if not(calculation_map[node.position[0] + 1][node.position[1]].icon in banned_list) and not([node.position[0] + 1, node.position[1]] in verified_node):
+                        friend = Node(len(graph), [node.position[0] + 1, node.position[1]], calculation_map[
+                                 node.position[0] + 1][node.position[1]].price_move + path_length([node.position[0] + 1, node.position[1]], finish_point), [-1, 0])
+                        friends.append(friend)
+                        graph.append(friend)                                                                                              
+                if node.position[0] - 1 >= 0:                                                                                                   
+                    if not(calculation_map[node.position[0] - 1][node.position[1]].icon in banned_list) and not([node.position[0] - 1, node.position[1]] in verified_node):
+                        friend = Node(len(graph), [node.position[0] - 1, node.position[1]], calculation_map[
+                                node.position[0] - 1][node.position[1]].price_move + path_length([node.position[0] - 1, node.position[1]], finish_point), [1, 0])
+                        friends.append(friend)
+                        graph.append(friend)                
+            if 0 <= node.position[1] < len(calculation_map):
+                if node.position[1] + 1 < len(calculation_map):
+                    if not(calculation_map[node.position[0]][node.position[1] + 1].icon in banned_list) and not([node.position[0], node.position[1] + 1] in verified_node):
+                        friend = Node(len(graph), [node.position[0], node.position[1] + 1], calculation_map[
+                                node.position[0]][node.position[1] + 1].price_move + path_length([node.position[0], node.position[1] + 1], finish_point), [0, -1])
+                        friends.append(friend)
+                        graph.append(friend)
 
-            if node.position[1] - 1 >= 0:
-                if not(calculation_map[node.position[0]][node.position[1] - 1].icon in banned_list) and not([node.position[0], node.position[1] - 1] in verified_node):
-                    friend = Node(len(graph), [node.position[0], node.position[1] - 1], calculation_map[
-                            node.position[0]][node.position[1] - 1].price_move + path_length([node.position[0], node.position[1] - 1], finish_point), [0, 1])
-                    friends.append(friend)
-                    graph.append(friend)                
+                if node.position[1] - 1 >= 0:
+                    if not(calculation_map[node.position[0]][node.position[1] - 1].icon in banned_list) and not([node.position[0], node.position[1] - 1] in verified_node):
+                        friend = Node(len(graph), [node.position[0], node.position[1] - 1], calculation_map[
+                                node.position[0]][node.position[1] - 1].price_move + path_length([node.position[0], node.position[1] - 1], finish_point), [0, 1])
+                        friends.append(friend)
+                        graph.append(friend)
+        except IndexError:
+            print(f"!!! \n !!! \n IndexError len(calculation_map) - {len(calculation_map)}, node.position - {node.position}  \n !!! \n !!!")
         return friends
 
     graph = []
@@ -586,7 +633,7 @@ def a_star_algorithm_river_calculation(calculation_map, start_point, finish_poin
         #        else:
         #            test_print += calculation_map[number_line][number_tile].icon + ' '
         #    test_print += '\n'
- #
+ 
         #print(test_print)
     else:
         print(f"По алгоритму А* не нашлось пути. На входе было: start_point - {start_point}, finish_point - {finish_point}")
@@ -911,10 +958,7 @@ def big_structures_writer(processed_map, managing_map):
             if managing_map[number_line][number_tile] == 'C':
                 #print(f"processed_map[number_line//chunk_size][number_tile//chunk_size] - {processed_map[number_line//chunk_size][number_tile//chunk_size]}")
                 processed_map[number_line//chunk_size][number_tile//chunk_size] = ['R', 'big canyons', ['C'], ['.', 'o', '▲'], 20, [20.0,35.0]]
-
-                
-                
-    
+ 
                 
 def mountain_gen(processed_map, position_y, position_x, size, add_position_y_to_step, start_quantity_step, add_icon, filling_icon):
     """
@@ -1010,68 +1054,16 @@ def mountains_generate(all_tiles_map, chunks_map):
             elif chunks_map[number_line][number_tile][0] == '~' and random.randrange(20)//18 > 0:
                 file_draw_map = open("new_generator_map_branch\draw_map\island_1.txt", encoding="utf-8") #new_generator_map_branch\
                 draw_ready_map(all_tiles_map, file_draw_map, number_line, number_tile, chunk_size)
-    
-def river_map_generation(processed_map, number_of_rivers):
-    """
-        Генерирует реки
-    """
-    minirivers = []
-    for river in range(number_of_rivers):
-        position_y = 1
-        position_x = random.randrange(25, len(processed_map) - 25)
-        print(f"position_x - {position_x}")
-        for number_line in range(len(processed_map)):
-            position_y = number_line
-            if not(processed_map[position_y][position_x - 1] in ('~', '`')):
-                processed_map[position_y][position_x - 1] = random.choice([',', '„', '.', 'u', 'ü'])
-            processed_map[position_y][position_x] = '~'
-            processed_map[position_y - 1][position_x] = '~'
-            processed_map[position_y][position_x + 1] = '~'
-            processed_map[position_y][position_x + 2] = '~'
-            processed_map[position_y][position_x + 3] = '~'
-            processed_map[position_y - 1][position_x + 3] = '~'
-            if not(processed_map[position_y][position_x + 4] in ('~', '`')):
-                processed_map[position_y][position_x + 4] = random.choice([',', '„', '.', 'u', 'ü'])
-            if random.randrange(50)//30 > 0:
-                if 4 < position_x < len(processed_map) - 10:
-                    position_x += random.randrange(-1, 2)
-                elif position_x == 10:
-                    position_x += random.randrange(2)
-                elif position_x == len(processed_map) - 10:
-                    position_x += random.randrange(-1, 1)
-            if random.randrange(500)//495 > 0:
-                minirivers.append([position_y, position_x])
-    for miniriver in minirivers:
-        position_y = miniriver[0]
-        position_x = miniriver[1]
-        direction = random.choice(['left', 'right'])
-        step = 0
-        for number_line in range(position_y, len(processed_map)):
-            position_y = number_line
-            if processed_map[position_y][position_x] == '~' and step > 25:
-                break
-            if random.randrange(500)//495 > 0:
-                break
-            processed_map[position_y][position_x] = '~'
-            processed_map[position_y - 1][position_x] = '~'
-            if random.randrange(500)//495 > 0:
-                minirivers.append([position_y, position_x])
-            if random.randrange(50)//30 > 0:
-                if direction == 'left':
-                    if 4 < position_x < len(processed_map) - 10:
-                        position_x += random.randrange(-1, 2)
-                    elif position_x == 10:
-                        pass
-                    elif position_x == len(processed_map) - 10:
-                        position_x += random.randrange(-1, 1)
-                if direction == 'right':
-                    if 4 < position_x < len(processed_map) - 10:
-                        position_x += random.randrange(2)
-                    elif position_x == len(processed_map) - 10:
-                        pass
-            step += 1
-              
 
+"""
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+    ГЕНЕРАЦИЯ ОСНОВЫ КАРТЫ
+        
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+"""
+    
 @timeit
 def global_region_generate(global_grid):
     """
