@@ -1712,7 +1712,7 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
     test1 = time.time()
 
     size_tile = 30 # Настройка размера тайлов игрового окна
-    size_tile_minimap = 10 # Настройка размера тайлов миникаты
+    size_tile_minimap = 15 # Настройка размера тайлов миникаты
     
     all_sprites = pygame.sprite.Group()
 
@@ -1768,15 +1768,15 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
     for number_line in range(len(global_map)):
         for number_tile in range(len(global_map[0])):
             if person.global_position == [number_line, number_tile]:
-                all_sprites.add(All_tiles(number_tile*size_tile_minimap + (30*size_tile), number_line*size_tile_minimap, size_tile_minimap,
-                                      '☺'))
+                all_sprites.add(All_tiles(number_tile*size_tile_minimap + (26*size_tile), number_line*size_tile_minimap, size_tile_minimap,
+                                      '☺', tiles_image_dict))
             else:
-                all_sprites.add(All_tiles(number_tile*size_tile_minimap + (30*size_tile), number_line*size_tile_minimap, size_tile_minimap,
-                                      global_map[number_line][number_tile].icon))
+                all_sprites.add(All_tiles(number_tile*size_tile_minimap + (26*size_tile), number_line*size_tile_minimap, size_tile_minimap,
+                                      global_map[number_line][number_tile].icon, tiles_image_dict))
 
     for enemy in enemy_list:
-        all_sprites.add(All_tiles(enemy.global_position[0]*size_tile_minimap + (30*size_tile), enemy.global_position[0]*size_tile_minimap,
-                                  size_tile_minimap, '☺'))
+        all_sprites.add(All_tiles(enemy.global_position[0]*size_tile_minimap + (26*size_tile), enemy.global_position[0]*size_tile_minimap,
+                                  size_tile_minimap, enemy.icon, tiles_image_dict))
 
 
     test_1_end = time.time() #
@@ -2308,44 +2308,54 @@ class Image_tile(pygame.sprite.Sprite):
 class All_tiles(pygame.sprite.Sprite):
     """ Содержит спрайты миникарты """
 
-    def __init__(self, x, y, size_tile, icon):
+    def __init__(self, x, y, size_tile, tile_icon, tiles_image_dict):
         pygame.sprite.Sprite.__init__(self)
         self.x = x
         self.y = y
-        self.image = pygame.Surface((size_tile, size_tile))
-        self.image.fill(self.color_dict(icon))
+        self.img = self.image_dict(tile_icon, tiles_image_dict)
+        self.image = pygame.transform.scale(self.img, (size_tile, size_tile))
         self.rect = self.image.get_rect()
         self.rect.left = x
         self.rect.top = y
         self.speed = 0
-    def color_dict(self, icon):
-        color_dict =   {
-                        '~': (100, 100, 255),
-                        'j': (255, 255, 50),
-                        '.': (255, 255, 0),
-                        ',': (100, 255, 0),
-                        'o': (192, 192, 192),
-                        'A': (150, 150, 150),
-                        '▲': (50, 50, 50),
-                        'i': (128, 255, 0),
-                        ':': (100, 100, 100),
-                        ';': (128, 128, 128),
-                        '„': (0, 255, 0),
-                        'u': (0, 128, 0),
-                        'ü': (0, 100, 0),
-                        'F': (128, 128, 0),
-                        'P': (128, 128, 0),
-                        '☺': (255, 255, 255),
-                        '☻': (235, 255, 255),
-                        'H': (200, 255, 255),
-                        'C': (200, 200, 100),
-                        'R': (255, 100, 100),
+    def image_dict(self, icon, tiles_image_dict):
+        icon_dict =   {
+                        'j': tiles_image_dict.dune_0,
+                        's': tiles_image_dict.seashell_0,
+                        '.': tiles_image_dict.sand,
+                        ',': tiles_image_dict.dry_grass_0,
+                        'o': tiles_image_dict.stones_0,
+                        'S': tiles_image_dict.stones_2,
+                        'A': tiles_image_dict.bump_0,
+                        '▲': tiles_image_dict.hills_0,
+                        'i': tiles_image_dict.cactus_0,
+                        ':': tiles_image_dict.saline_1_0,
+                        ';': tiles_image_dict.saline_2,
+                        '„': tiles_image_dict.grass_0,
+                        'u': tiles_image_dict.tall_grass_0,
+                        'ü': tiles_image_dict.prickly_grass,
+                        'F': tiles_image_dict.dry_tree_0,
+                        'P': tiles_image_dict.live_tree,
+                        '~': tiles_image_dict.water_1,
+                        '`': tiles_image_dict.salty_water_0,
+                        'C': tiles_image_dict.canyons_0,
+                        'R': tiles_image_dict.canyons_1,
+                        '☺': tiles_image_dict.person,
+                        '☻': tiles_image_dict.enemy_riffleman,
+                        'c': tiles_image_dict.enemy_coyot,
+                        '8': tiles_image_dict.human_traces,
+                        '%': tiles_image_dict.horse_traces,
+                        '@': tiles_image_dict.animal_traces,
+                        '/': tiles_image_dict.camp,
+                        '+': tiles_image_dict.bonfire,
+                        '№': tiles_image_dict.rest_stop,
+                        '#': tiles_image_dict.gnawed_bones,
+                        '$': tiles_image_dict.animal_rest_stop,
                         }
-
-        if icon in color_dict:
-            return color_dict[icon]
+        if icon in icon_dict:
+            return icon_dict[icon]
         else:
-            return (0, 0, 0)
+            return tiles_image_dict.warning
 
 def load_tile_table(filename, width, height):
     """
