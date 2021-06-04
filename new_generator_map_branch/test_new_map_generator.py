@@ -77,6 +77,20 @@ class Tile:
         except TypeError:
             print(f"icon - {icon}, number - {number}")
 
+class Tile_minimap:
+    """ Содержит изображение, описание, особое содержание тайла миникарты"""
+    __slots__ = ('icon', 'description', 'list_of_features', 'price_move', 'type', 'level', 'stairs', 'vertices', 'temperature')
+    def __init__(self, icon, name, price_move, temperature):
+        self.icon = icon
+        self.description = name
+        self.list_of_features = []
+        self.price_move = price_move
+        self.temperature = temperature
+        self.type = '0'
+        self.level = 0
+        self.stairs = False
+        self.vertices = -1
+
 class Location:
     """ Содержит описание локации """
     __slots__ = ('name', 'temperature', 'chunk', 'icon', 'price_move', 'vertices', 'position')
@@ -211,7 +225,28 @@ def master_map_generate(global_region_grid, region_grid, chunks_grid, mini_grid,
     #Определение связей между локациями
     defining_zone_relationships(ready_global_map)
 
-    return ready_global_map
+    #Создание миникарты
+    minimap = minimap_create(ready_global_map)
+
+    return ready_global_map, minimap
+
+
+def minimap_create(global_map):
+    """
+        Создание миникарты на основе глобальной карты
+    """
+    minimap = []
+    for number_line, line in enumerate(global_map):
+        minimap_line = []
+        for number_tile, tile in enumerate(line):
+            minimap_line.append(Tile_minimap(tile.icon, tile.name, tile.price_move, tile.temperature))
+        minimap.append(minimap_line)
+        
+    levelness_calculation(minimap, ('~', '▲', 'C', ':', 'o', ',', '„', '`'), False, False)
+    levelness_calculation(minimap, ('~', 'C', '`'), True, False)
+
+    return minimap
+            
 
 """
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

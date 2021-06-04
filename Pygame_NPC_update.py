@@ -328,6 +328,38 @@ class Tiles_image_dict:
         self.salty_water_T = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_T.png'))
         self.salty_water_U = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_U.png'))
 
+        self.ford_river_0 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_0.png'))
+        self.ford_river_1 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_1.png'))
+        self.ford_river_2 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_2.png'))
+        self.ford_river_3 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_3.png'))
+        self.ford_river_4 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_4.png'))
+        self.ford_river_5 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_5.png'))
+        self.ford_river_6 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_6.png'))
+        self.ford_river_7 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_7.png'))
+        self.ford_river_8 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_8.png'))
+        self.ford_river_9 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_9.png'))
+        self.ford_river_A = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_A.png'))
+        self.ford_river_B = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_B.png'))
+        self.ford_river_C = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_C.png'))
+        self.ford_river_D = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_D.png'))
+        self.ford_river_E = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_E.png'))
+        self.ford_river_F = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_F.png'))
+        self.ford_river_G = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_G.png'))
+        self.ford_river_H = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_H.png'))
+        self.ford_river_I = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_I.png'))
+        self.ford_river_J = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_J.png'))
+        self.ford_river_K = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_K.png'))
+        self.ford_river_L = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_L.png'))
+        self.ford_river_M = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_M.png'))
+        self.ford_river_N = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_N.png'))
+        self.ford_river_O = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_O.png'))
+        self.ford_river_P = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_p.png'))
+        self.ford_river_Q = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_Q.png'))
+        self.ford_river_R = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_R.png'))
+        self.ford_river_S = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_S.png'))
+        self.ford_river_T = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_T.png'))
+        self.ford_river_U = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_U.png'))
+
         self.hills_0 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_0.png'))
         self.hills_1 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_1.png'))
         self.hills_2 = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_2.png'))
@@ -1672,7 +1704,7 @@ def test_print(layer):
     print(print_map)
             
 
-def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action, enemy_list, activity_list, screen, tiles_image_dict):
+def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action, enemy_list, activity_list, screen, tiles_image_dict, minimap):
     """
         Работает с классом Interfase, содержащимся в go_to_print
 
@@ -1765,18 +1797,25 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
 
     # Печать миникарты
 
-    for number_line in range(len(global_map)):
-        for number_tile in range(len(global_map[0])):
-            if person.global_position == [number_line, number_tile]:
-                all_sprites.add(All_tiles(number_tile*size_tile_minimap + (26*size_tile), number_line*size_tile_minimap, size_tile_minimap,
-                                      '☺', tiles_image_dict))
-            else:
-                all_sprites.add(All_tiles(number_tile*size_tile_minimap + (26*size_tile), number_line*size_tile_minimap, size_tile_minimap,
-                                      global_map[number_line][number_tile].icon, tiles_image_dict))
+    #for number_line in range(len(global_map)):
+    #    for number_tile in range(len(global_map[0])):
+    #        if person.global_position == [number_line, number_tile]:
+    #            all_sprites.add(All_tiles(number_tile*size_tile_minimap + (26*size_tile), number_line*size_tile_minimap, size_tile_minimap,
+    #                                  '☺', tiles_image_dict))
+    #        else:
+    #            all_sprites.add(All_tiles(number_tile*size_tile_minimap + (26*size_tile), number_line*size_tile_minimap, size_tile_minimap,
+    #                                  global_map[number_line][number_tile].icon, tiles_image_dict))
 
+    for number_minimap_line, minimap_line in enumerate(minimap):
+        for number_minimap_tile, minimap_tile in enumerate(minimap_line):
+            all_sprites.add(All_tiles(number_tile*size_tile_minimap + (26*size_tile), number_line*size_tile_minimap, size_tile_minimap,
+                                        tiles_image_dict, minimap_tile.icon, minimap_tile.type))
+            
+    all_sprites.add(All_tiles(person.global_position[1]*size_tile_minimap + (26*size_tile), person.global_position[0]*size_tile_minimap,
+                              size_tile_minimap, tiles_image_dict, '☺', 0))
     for enemy in enemy_list:
         all_sprites.add(All_tiles(enemy.global_position[0]*size_tile_minimap + (26*size_tile), enemy.global_position[0]*size_tile_minimap,
-                                  size_tile_minimap, enemy.icon, tiles_image_dict))
+                                  size_tile_minimap, tiles_image_dict, enemy.icon, enemy.type))
 
 
     test_1_end = time.time() #
@@ -2218,6 +2257,39 @@ class Image_tile(pygame.sprite.Sprite):
                                 'T': tiles_image_dict.water_T,
                                 'U': tiles_image_dict.water_U,
                              },
+                        'f': {
+                                '0': tiles_image_dict.ford_river_0,
+                                '1': tiles_image_dict.ford_river_1,
+                                '2': tiles_image_dict.ford_river_2,
+                                '3': tiles_image_dict.ford_river_3,
+                                '4': tiles_image_dict.ford_river_4,
+                                '5': tiles_image_dict.ford_river_5,
+                                '6': tiles_image_dict.ford_river_6,
+                                '7': tiles_image_dict.ford_river_7,
+                                '8': tiles_image_dict.ford_river_8,
+                                '9': tiles_image_dict.ford_river_9,
+                                'A': tiles_image_dict.ford_river_A,
+                                'B': tiles_image_dict.ford_river_B,
+                                'C': tiles_image_dict.ford_river_C,
+                                'D': tiles_image_dict.ford_river_D,
+                                'E': tiles_image_dict.ford_river_E,
+                                'F': tiles_image_dict.ford_river_F,
+                                'G': tiles_image_dict.ford_river_G,
+                                'H': tiles_image_dict.ford_river_H,
+                                'I': tiles_image_dict.ford_river_I,
+                                'J': tiles_image_dict.ford_river_J,
+                                'K': tiles_image_dict.ford_river_K,
+                                'L': tiles_image_dict.ford_river_L,
+                                'M': tiles_image_dict.ford_river_M,
+                                'N': tiles_image_dict.ford_river_N,
+                                'O': tiles_image_dict.ford_river_O,
+                                'P': tiles_image_dict.ford_river_P,
+                                'Q': tiles_image_dict.ford_river_Q,
+                                'R': tiles_image_dict.ford_river_R,
+                                'S': tiles_image_dict.ford_river_S,
+                                'T': tiles_image_dict.ford_river_T,
+                                'U': tiles_image_dict.ford_river_U,
+                             },
                         '`': {
                                 '0': tiles_image_dict.salty_water_0,
                                 '1': tiles_image_dict.salty_water_1,
@@ -2308,17 +2380,311 @@ class Image_tile(pygame.sprite.Sprite):
 class All_tiles(pygame.sprite.Sprite):
     """ Содержит спрайты миникарты """
 
-    def __init__(self, x, y, size_tile, tile_icon, tiles_image_dict):
+    def __init__(self, x, y, size_tile, tiles_image_dict, tile_icon, tile_type):
         pygame.sprite.Sprite.__init__(self)
         self.x = x
         self.y = y
-        self.img = self.image_dict(tile_icon, tiles_image_dict)
+        self.img = self.image_dict(tile_icon, tile_type, tiles_image_dict)
         self.image = pygame.transform.scale(self.img, (size_tile, size_tile))
         self.rect = self.image.get_rect()
         self.rect.left = x
         self.rect.top = y
         self.speed = 0
-    def image_dict(self, icon, tiles_image_dict):
+    def image_dict(self, icon_tile, type_tile, tiles_image_dict):
+
+        image_dict =   {
+                        'j': {
+                                '0': tiles_image_dict.dune_0,
+                                '1': tiles_image_dict.dune_1,
+                             },
+                        's': {'0': tiles_image_dict.seashell_0},
+                        '.': {'0': tiles_image_dict.sand,},
+                        ',': {
+                                '0': tiles_image_dict.dry_grass_5,
+                                '1': tiles_image_dict.dry_grass_0,
+                                '2': tiles_image_dict.dry_grass_2,
+                                '3': tiles_image_dict.dry_grass_1,
+                                '4': tiles_image_dict.dry_grass_2,
+                                '5': tiles_image_dict.dry_grass_2,
+                                '6': tiles_image_dict.dry_grass_4,
+                                '7': tiles_image_dict.dry_grass_3,
+                                '8': tiles_image_dict.dry_grass_2,
+                                '9': tiles_image_dict.dry_grass_3,
+                                'A': tiles_image_dict.dry_grass_4,
+                                'B': tiles_image_dict.dry_grass_4,
+                                'C': tiles_image_dict.dry_grass_5,
+                                'D': tiles_image_dict.dry_grass_2,
+                                'E': tiles_image_dict.dry_grass_3,
+                                'F': tiles_image_dict.dry_grass_4,
+                              },
+                        'o': {
+                                '0': tiles_image_dict.stones_4,
+                                '1': tiles_image_dict.stones_0,
+                                '2': tiles_image_dict.stones_2,
+                                '3': tiles_image_dict.stones_3,
+                                '4': tiles_image_dict.stones_4,
+                                '5': tiles_image_dict.stones_2,
+                                '6': tiles_image_dict.stones_3,
+                                '7': tiles_image_dict.stones_4,
+                                '8': tiles_image_dict.stones_2,
+                                '9': tiles_image_dict.stones_3,
+                                'A': tiles_image_dict.stones_4,
+                                'B': tiles_image_dict.stones_2,
+                                'C': tiles_image_dict.stones_3,
+                                'D': tiles_image_dict.stones_4,
+                                'E': tiles_image_dict.stones_2,
+                                'F': tiles_image_dict.stones_3,
+                              },
+                        'A': {
+                                '0': tiles_image_dict.bump_0,
+                                '1': tiles_image_dict.bump_1,
+                             },
+                        '▲': {
+                                '0': tiles_image_dict.hills_0,
+                                '1': tiles_image_dict.hills_1,
+                                '2': tiles_image_dict.hills_2,
+                                '3': tiles_image_dict.hills_3,
+                                '4': tiles_image_dict.hills_4,
+                                '5': tiles_image_dict.hills_5,
+                                '6': tiles_image_dict.hills_6,
+                                '7': tiles_image_dict.hills_7,
+                                '8': tiles_image_dict.hills_8,
+                                '9': tiles_image_dict.hills_9,
+                                'A': tiles_image_dict.hills_A,
+                                'B': tiles_image_dict.hills_B,
+                                'C': tiles_image_dict.hills_C,
+                                'D': tiles_image_dict.hills_D,
+                                'E': tiles_image_dict.hills_E,
+                                'F': tiles_image_dict.hills_F,
+                                'G': tiles_image_dict.hills_G,
+                                'H': tiles_image_dict.hills_H,
+                                'I': tiles_image_dict.hills_I,
+                                'J': tiles_image_dict.hills_J,
+                                'K': tiles_image_dict.hills_K,
+                                'L': tiles_image_dict.hills_L,
+                                'M': tiles_image_dict.hills_M,
+                                'N': tiles_image_dict.hills_N,
+                                'O': tiles_image_dict.hills_O,
+                                'P': tiles_image_dict.hills_P,
+                                'Q': tiles_image_dict.hills_Q,
+                                'R': tiles_image_dict.hills_R,
+                                'S': tiles_image_dict.hills_S,
+                                'T': tiles_image_dict.hills_T,
+                                'U': tiles_image_dict.hills_U,
+                             },
+                        'i': {
+                                '0': tiles_image_dict.cactus_0,
+                                '1': tiles_image_dict.cactus_1,
+                                '2': tiles_image_dict.cactus_2,
+                                '3': tiles_image_dict.cactus_3,
+                              },
+                        ':': {
+                                '0': tiles_image_dict.saline_1_0,
+                                '1': tiles_image_dict.saline_1_1,
+                                '2': tiles_image_dict.saline_1_2,
+                                '3': tiles_image_dict.saline_1_3,
+                                '4': tiles_image_dict.saline_1_4,
+                                '5': tiles_image_dict.saline_1_5,
+                                '6': tiles_image_dict.saline_1_6,
+                                '7': tiles_image_dict.saline_1_7,
+                                '8': tiles_image_dict.saline_1_8,
+                                '9': tiles_image_dict.saline_1_9,
+                                'A': tiles_image_dict.saline_1_A,
+                                'B': tiles_image_dict.saline_1_B,
+                                'C': tiles_image_dict.saline_1_C,
+                                'D': tiles_image_dict.saline_1_D,
+                                'E': tiles_image_dict.saline_1_E,
+                                'F': tiles_image_dict.saline_1_F,
+                             },
+                        ';': {'0': tiles_image_dict.saline_2,},
+                        '„': {
+                                '0': tiles_image_dict.grass_4,
+                                '1': tiles_image_dict.grass_0,
+                                '2': tiles_image_dict.grass_2,
+                                '3': tiles_image_dict.grass_3,
+                                '4': tiles_image_dict.grass_4,
+                                '5': tiles_image_dict.grass_2,
+                                '6': tiles_image_dict.grass_3,
+                                '7': tiles_image_dict.grass_4,
+                                '8': tiles_image_dict.grass_2,
+                                '9': tiles_image_dict.grass_3,
+                                'A': tiles_image_dict.grass_4,
+                                'B': tiles_image_dict.grass_2,
+                                'C': tiles_image_dict.grass_3,
+                                'D': tiles_image_dict.grass_4,
+                                'E': tiles_image_dict.grass_2,
+                                'F': tiles_image_dict.grass_3,
+                              },
+                        'u': {
+                                '0': tiles_image_dict.tall_grass_0,
+                                '1': tiles_image_dict.tall_grass_1,
+                             },
+                        'ü': {'0': tiles_image_dict.prickly_grass,},
+                        'F': {
+                                '0': tiles_image_dict.dry_tree_0,
+                                '1': tiles_image_dict.dry_tree_1,
+                                '2': tiles_image_dict.dry_tree_2,
+                                '3': tiles_image_dict.dry_tree_3,
+                                '4': tiles_image_dict.dry_tree_4,
+                                '5': tiles_image_dict.dry_tree_5,
+                                '6': tiles_image_dict.dry_tree_6,
+                                '7': tiles_image_dict.dry_tree_7,
+                             },
+                        'P': {'0': tiles_image_dict.live_tree,},
+                        '~': {
+                                '0': tiles_image_dict.water_0,
+                                '1': tiles_image_dict.water_1,
+                                '2': tiles_image_dict.water_2,
+                                '3': tiles_image_dict.water_3,
+                                '4': tiles_image_dict.water_4,
+                                '5': tiles_image_dict.water_5,
+                                '6': tiles_image_dict.water_6,
+                                '7': tiles_image_dict.water_7,
+                                '8': tiles_image_dict.water_8,
+                                '9': tiles_image_dict.water_9,
+                                'A': tiles_image_dict.water_A,
+                                'B': tiles_image_dict.water_B,
+                                'C': tiles_image_dict.water_C,
+                                'D': tiles_image_dict.water_D,
+                                'E': tiles_image_dict.water_E,
+                                'F': tiles_image_dict.water_F,
+                                'G': tiles_image_dict.water_G,
+                                'H': tiles_image_dict.water_H,
+                                'I': tiles_image_dict.water_I,
+                                'J': tiles_image_dict.water_J,
+                                'K': tiles_image_dict.water_K,
+                                'L': tiles_image_dict.water_L,
+                                'M': tiles_image_dict.water_M,
+                                'N': tiles_image_dict.water_N,
+                                'O': tiles_image_dict.water_O,
+                                'P': tiles_image_dict.water_P,
+                                'Q': tiles_image_dict.water_Q,
+                                'R': tiles_image_dict.water_R,
+                                'S': tiles_image_dict.water_S,
+                                'T': tiles_image_dict.water_T,
+                                'U': tiles_image_dict.water_U,
+                             },
+                        'f': {
+                                '0': tiles_image_dict.ford_river_0,
+                                '1': tiles_image_dict.ford_river_1,
+                                '2': tiles_image_dict.ford_river_2,
+                                '3': tiles_image_dict.ford_river_3,
+                                '4': tiles_image_dict.ford_river_4,
+                                '5': tiles_image_dict.ford_river_5,
+                                '6': tiles_image_dict.ford_river_6,
+                                '7': tiles_image_dict.ford_river_7,
+                                '8': tiles_image_dict.ford_river_8,
+                                '9': tiles_image_dict.ford_river_9,
+                                'A': tiles_image_dict.ford_river_A,
+                                'B': tiles_image_dict.ford_river_B,
+                                'C': tiles_image_dict.ford_river_C,
+                                'D': tiles_image_dict.ford_river_D,
+                                'E': tiles_image_dict.ford_river_E,
+                                'F': tiles_image_dict.ford_river_F,
+                                'G': tiles_image_dict.ford_river_G,
+                                'H': tiles_image_dict.ford_river_H,
+                                'I': tiles_image_dict.ford_river_I,
+                                'J': tiles_image_dict.ford_river_J,
+                                'K': tiles_image_dict.ford_river_K,
+                                'L': tiles_image_dict.ford_river_L,
+                                'M': tiles_image_dict.ford_river_M,
+                                'N': tiles_image_dict.ford_river_N,
+                                'O': tiles_image_dict.ford_river_O,
+                                'P': tiles_image_dict.ford_river_P,
+                                'Q': tiles_image_dict.ford_river_Q,
+                                'R': tiles_image_dict.ford_river_R,
+                                'S': tiles_image_dict.ford_river_S,
+                                'T': tiles_image_dict.ford_river_T,
+                                'U': tiles_image_dict.ford_river_U,
+                             },
+                        '`': {
+                                '0': tiles_image_dict.salty_water_0,
+                                '1': tiles_image_dict.salty_water_1,
+                                '2': tiles_image_dict.salty_water_2,
+                                '3': tiles_image_dict.salty_water_3,
+                                '4': tiles_image_dict.salty_water_4,
+                                '5': tiles_image_dict.salty_water_5,
+                                '6': tiles_image_dict.salty_water_6,
+                                '7': tiles_image_dict.salty_water_7,
+                                '8': tiles_image_dict.salty_water_8,
+                                '9': tiles_image_dict.salty_water_9,
+                                'A': tiles_image_dict.salty_water_A,
+                                'B': tiles_image_dict.salty_water_B,
+                                'C': tiles_image_dict.salty_water_C,
+                                'D': tiles_image_dict.salty_water_D,
+                                'E': tiles_image_dict.salty_water_E,
+                                'F': tiles_image_dict.salty_water_F,
+                                'G': tiles_image_dict.salty_water_G,
+                                'H': tiles_image_dict.salty_water_H,
+                                'I': tiles_image_dict.salty_water_I,
+                                'J': tiles_image_dict.salty_water_J,
+                                'K': tiles_image_dict.salty_water_K,
+                                'L': tiles_image_dict.salty_water_L,
+                                'M': tiles_image_dict.salty_water_M,
+                                'N': tiles_image_dict.salty_water_N,
+                                'O': tiles_image_dict.salty_water_O,
+                                'P': tiles_image_dict.salty_water_P,
+                                'Q': tiles_image_dict.salty_water_Q,
+                                'R': tiles_image_dict.salty_water_R,
+                                'S': tiles_image_dict.salty_water_S,
+                                'T': tiles_image_dict.salty_water_T,
+                                'U': tiles_image_dict.salty_water_U,
+                             },
+                        'C': {
+                                '0': tiles_image_dict.canyons_0,
+                                '1': tiles_image_dict.canyons_1,
+                                '2': tiles_image_dict.canyons_2,
+                                '3': tiles_image_dict.canyons_3,
+                                '4': tiles_image_dict.canyons_4,
+                                '5': tiles_image_dict.canyons_5,
+                                '6': tiles_image_dict.canyons_6,
+                                '7': tiles_image_dict.canyons_7,
+                                '8': tiles_image_dict.canyons_8,
+                                '9': tiles_image_dict.canyons_9,
+                                'A': tiles_image_dict.canyons_A,
+                                'B': tiles_image_dict.canyons_B,
+                                'C': tiles_image_dict.canyons_C,
+                                'D': tiles_image_dict.canyons_D,
+                                'E': tiles_image_dict.canyons_E,
+                                'F': tiles_image_dict.canyons_F,
+                                'G': tiles_image_dict.canyons_G,
+                                'H': tiles_image_dict.canyons_H,
+                                'I': tiles_image_dict.canyons_I,
+                                'J': tiles_image_dict.canyons_J,
+                                'K': tiles_image_dict.canyons_K,
+                                'L': tiles_image_dict.canyons_L,
+                                'M': tiles_image_dict.canyons_M,
+                                'N': tiles_image_dict.canyons_N,
+                                'O': tiles_image_dict.canyons_O,
+                                'P': tiles_image_dict.canyons_P,
+                                'Q': tiles_image_dict.canyons_Q,
+                                'R': tiles_image_dict.canyons_R,
+                                'S': tiles_image_dict.canyons_S,
+                                'T': tiles_image_dict.canyons_T,
+                                'U': tiles_image_dict.canyons_U,
+                             },
+                        '☺': {'0': tiles_image_dict.person,},
+                        '☻': {
+                                'r': tiles_image_dict.enemy_riffleman,
+                                'h': tiles_image_dict.enemy_horseman,
+                             },
+                        'c': {'0': tiles_image_dict.enemy_coyot,},
+                        '8': {'0': tiles_image_dict.human_traces,},
+                        '%': {'0': tiles_image_dict.horse_traces,},
+                        '@': {'0': tiles_image_dict.animal_traces,},
+                        '/': {'0': tiles_image_dict.camp,},
+                        '+': {'0': tiles_image_dict.bonfire,},
+                        '№': {'0': tiles_image_dict.rest_stop,},
+                        '#': {'0': tiles_image_dict.gnawed_bones,},
+                        '$': {'0': tiles_image_dict.animal_rest_stop,},
+                        }
+        if icon_tile in image_dict and type_tile in image_dict[icon_tile]:
+            return image_dict[icon_tile][type_tile]
+
+        else:
+            return tiles_image_dict.warning
+
+    def image_dict2(self, icon, tile_type, tiles_image_dict):
         icon_dict =   {
                         'j': tiles_image_dict.dune_0,
                         's': tiles_image_dict.seashell_0,
@@ -2356,6 +2722,9 @@ class All_tiles(pygame.sprite.Sprite):
             return icon_dict[icon]
         else:
             return tiles_image_dict.warning
+
+
+
 
 def load_tile_table(filename, width, height):
     """
@@ -2404,8 +2773,42 @@ def print_minimap(global_map, person, go_to_print, enemy_list):
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 """
+def main_loop():
+    """
+        Здесь работает игровое меню
+        
+    """
+    
+    global_region_grid = 3
+    region_grid = 3
+    chunks_grid = 3
+    mini_region_grid = 5
+    tile_field_grid = 5
 
-def game_loop(global_map:list, person, chunk_size:int, frame_size:list, enemy_list:list, world):
+    chunk_size = mini_region_grid * tile_field_grid #Определяет размер одного игрового поля и окна просмотра. Рекоммендуемое значение 25.
+    
+    pygame.init()
+    screen = pygame.display.set_mode((1200, 750))
+    pygame.display.set_caption("My Game")
+
+    
+    tiles_image_dict = Tiles_image_dict() #Загружаются тайлы
+
+    while main_loop:
+
+        global_map, minimap = map_generator.master_map_generate(global_region_grid, region_grid, chunks_grid, mini_region_grid, tile_field_grid)
+        
+        person = Person([2, 2], [2, 2], [], [chunk_size//2, chunk_size//2], [chunk_size//2, chunk_size//2])
+        calculation_assemblage_point(global_map, person, chunk_size)
+        enemy_list = [Horseman([len(global_map)//2, len(global_map)//2], [chunk_size//2, chunk_size//2], 5), Horseman([len(global_map)//3, len(global_map)//3], [chunk_size//2, chunk_size//2], 5),
+                      Riffleman([len(global_map)//4, len(global_map)//4], [chunk_size//2, chunk_size//2], 2), Coyot([len(global_map)//5, len(global_map)//5], [chunk_size//2, chunk_size//2], 0)]
+        world = World() #Описание текущего состояния игрового мира
+
+
+        game_loop(global_map, person, chunk_size, enemy_list, world, screen, tiles_image_dict, minimap)
+        
+
+def game_loop(global_map:list, person, chunk_size:int, enemy_list:list, world, screen, tiles_image_dict, minimap):
     """
         Здесь происходят все игровые события
         
@@ -2416,15 +2819,8 @@ def game_loop(global_map:list, person, chunk_size:int, frame_size:list, enemy_li
     print('game_loop запущен')
     global changing_step
     mode_action = 'move'
-
-    pygame.init()
-
-    screen = pygame.display.set_mode((1200, 750))
-    pygame.display.set_caption("My Game")
-    
-    game_fps = 100
-    clock = pygame.time.Clock()
-    tiles_image_dict = Tiles_image_dict()
+    clock = pygame.time.Clock()#
+    game_fps = 100#
   
     while game_loop:
         clock.tick(game_fps)
@@ -2439,7 +2835,7 @@ def game_loop(global_map:list, person, chunk_size:int, frame_size:list, enemy_li
         if not person.enemy_pass_step:
             master_game_events(global_map, enemy_list, person, go_to_print, step, activity_list, chunk_size, interaction, new_step, world)
         test1 = time.time() #проверка времени выполнения
-        master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action, enemy_list, activity_list, screen, tiles_image_dict)
+        master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action, enemy_list, activity_list, screen, tiles_image_dict, minimap)
         test2 = time.time() #проверка времени выполнения
         print('step = ', step)
         end = time.time() #проверка времени выполнения
@@ -2461,7 +2857,7 @@ def main():
     #global_map = old_map_generator.master_generate(value_region_box, chunk_size, grid)
 
     #                                              global_region_grid | region_grid | chunks_grid | mini_region_grid | tile_field_grid
-    global_map = map_generator.master_map_generate(       3,                  3,          3,              5,                  5)
+    global_map, minimap = map_generator.master_map_generate(       3,                  3,          3,              5,                  5)
     
     person = Person([value_region_box//2, value_region_box//2], [chunk_size//2, chunk_size//2], [], [chunk_size//2, chunk_size//2], [chunk_size//2, chunk_size//2])
     calculation_assemblage_point(global_map, person, chunk_size)
@@ -2469,11 +2865,17 @@ def main():
                   Riffleman([len(global_map)//4, len(global_map)//4], [chunk_size//2, chunk_size//2], 2), Coyot([len(global_map)//5, len(global_map)//5], [chunk_size//2, chunk_size//2], 0)]
     world = World() #Описание текущего состояния игрового мира
 
+    pygame.init()
+    screen = pygame.display.set_mode((1200, 750))
+    pygame.display.set_caption("My Game")
 
-    game_loop(global_map, person, chunk_size, frame_size, enemy_list, world)
+    
+    tiles_image_dict = Tiles_image_dict() #Загружаются тайлы
+
+    game_loop(global_map, person, chunk_size, enemy_list, world, screen, tiles_image_dict, minimap)
     
     print('Игра окончена!')
 
-main()
+main_loop()
     
 
