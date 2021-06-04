@@ -1812,10 +1812,17 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
                                         tiles_image_dict, minimap_tile.icon, minimap_tile.type))
             
     all_sprites.add(All_tiles(person.global_position[1]*size_tile_minimap + (26*size_tile), person.global_position[0]*size_tile_minimap,
-                              size_tile_minimap, tiles_image_dict, '☺', 0))
+                              size_tile_minimap, tiles_image_dict, '☺', '0'))
     for enemy in enemy_list:
         all_sprites.add(All_tiles(enemy.global_position[0]*size_tile_minimap + (26*size_tile), enemy.global_position[0]*size_tile_minimap,
                                   size_tile_minimap, tiles_image_dict, enemy.icon, enemy.type))
+
+    #Отрисовка температуры на миникарте
+    if person.test_visible:
+        for number_minimap_line, minimap_line in enumerate(minimap):
+            for number_minimap_tile, minimap_tile in enumerate(minimap_line):
+                all_sprites.add(Minimap_temperature(number_minimap_tile*size_tile_minimap + (26*size_tile), number_minimap_line*size_tile_minimap,
+                                                    size_tile_minimap, minimap_tile.temperature))
 
 
     test_1_end = time.time() #
@@ -1835,8 +1842,6 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
     #print(f"{test1_1 - start} - test1_1 \n{test1_2 - test1_1} - test1_2 \n{test1_3 - test1_2} - test1_3 \n{test1 - test1_3} - test1")
     #print(F"{test_control_1 - test1} - test_control_1 \n{test2_1 - test_control_1} - test2_1 \n{test2_2 - test2_1} - test2_2 \n{test2_3 - test2_2} - test2_3")
     #print(F"{test2 - test2_3} - test2 \n{test_1_end - test2} - test_1_end \n{test_2_end - test_1_end} - test_2_end \n{test_3_end - test_2_end} - test_3_end \n{end - test_3_end} - end \n")
-
-
 
 
 class Island_friends(pygame.sprite.Sprite):
@@ -1944,6 +1949,73 @@ class Island_friends(pygame.sprite.Sprite):
             return color_dict[number]
         else:
             return (random.randrange(256), random.randrange(256), random.randrange(256))
+
+
+class Minimap_temperature(pygame.sprite.Sprite):
+    """ Содержит спрайты температуры """
+
+    def __init__(self, x, y, size_tile, temperature):
+        pygame.sprite.Sprite.__init__(self)
+        self.x = x
+        self.y = y
+        self.image = pygame.Surface((size_tile, size_tile))
+        self.image.fill(self.color_dict(temperature))
+        self.image.set_alpha(95)
+        self.rect = self.image.get_rect()
+        self.rect.left = x
+        self.rect.top = y
+        self.speed = 0
+    def color_dict(self, temperature):
+        color_dict =   {
+                        0: (0, 0, 0),
+                        1: (0, 0, 255),
+                        2: (100, 100, 200),
+                        3: (100, 200, 100),
+                        4: (200, 255, 100),
+                        5: (255, 255, 0),
+                        6: (255, 225, 0),
+                        7: (255, 200, 0),
+                        8: (255, 165, 0),
+                        9: (255, 130, 0),
+                        10:(255, 100, 0),
+                        11:(255, 70, 0),
+                        12:(255, 40, 0),
+                        13:(255, 0, 0),
+                        14:(225, 0, 0),
+                        15:(200, 0, 0),
+                        16:(150, 0, 0),
+                        17:(100, 0, 0),
+                        18:(0, 0, 0),
+                        }
+        key = 0
+        if temperature <= 0:
+            key = 1
+        elif 0 < temperature <= 5:
+            key = 2
+        elif 5 < temperature <= 10:
+            key = 3
+        elif 10 < temperature <= 15:
+            key = 4
+        elif 15 < temperature <= 20:
+            key = 5
+        elif 20 < temperature <= 25:
+            key = 6
+        elif 25 < temperature <= 30:
+            key = 7
+        elif 30 < temperature <= 35:
+            key = 8
+        elif 35 < temperature <= 40:
+            key = 9
+        elif 40 < temperature <= 45:
+            key = 10
+        elif 45 < temperature <= 50:
+            key = 11
+        elif temperature > 50:
+            key = 15
+
+
+        return color_dict[key]
+
 
 
 
@@ -2417,7 +2489,7 @@ class All_tiles(pygame.sprite.Sprite):
                                 'E': tiles_image_dict.dry_grass_3,
                                 'F': tiles_image_dict.dry_grass_4,
                               },
-                        'o': {
+                        'S': {
                                 '0': tiles_image_dict.stones_4,
                                 '1': tiles_image_dict.stones_0,
                                 '2': tiles_image_dict.stones_2,
@@ -2478,7 +2550,7 @@ class All_tiles(pygame.sprite.Sprite):
                                 '2': tiles_image_dict.cactus_2,
                                 '3': tiles_image_dict.cactus_3,
                               },
-                        ':': {
+                        ';': {
                                 '0': tiles_image_dict.saline_1_0,
                                 '1': tiles_image_dict.saline_1_1,
                                 '2': tiles_image_dict.saline_1_2,
@@ -2496,7 +2568,7 @@ class All_tiles(pygame.sprite.Sprite):
                                 'E': tiles_image_dict.saline_1_E,
                                 'F': tiles_image_dict.saline_1_F,
                              },
-                        ';': {'0': tiles_image_dict.saline_2,},
+                        ':': {'0': tiles_image_dict.saline_2,},
                         '„': {
                                 '0': tiles_image_dict.grass_4,
                                 '1': tiles_image_dict.grass_0,

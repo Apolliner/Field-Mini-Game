@@ -242,7 +242,7 @@ def minimap_create(global_map):
             minimap_line.append(Tile_minimap(tile.icon, tile.name, tile.price_move, tile.temperature))
         minimap.append(minimap_line)
         
-    levelness_calculation(minimap, ('~', '▲', 'C', ':', 'o', ',', '„', '`'), False, False)
+    levelness_calculation(minimap, ('~', '▲', 'C', ';', 'o', ',', '„', 'S'), False, False)
     levelness_calculation(minimap, ('~', 'C', '`'), True, False)
 
     return minimap
@@ -992,7 +992,7 @@ def big_structures_writer(processed_map, managing_map):
 
             if managing_map[number_line][number_tile] == 'C':
                 #print(f"processed_map[number_line//chunk_size][number_tile//chunk_size] - {processed_map[number_line//chunk_size][number_tile//chunk_size]}")
-                processed_map[number_line//chunk_size][number_tile//chunk_size] = ['R', 'big canyons', ['C'], ['.', 'o', '▲'], 20, [20.0,35.0]]
+                processed_map[number_line//chunk_size][number_tile//chunk_size] = ['C', 'big canyons', ['C'], ['.', 'o', '▲'], 20, [20.0,35.0]]
  
                 
 def mountain_gen(processed_map, position_y, position_x, size, add_position_y_to_step, start_quantity_step, add_icon, filling_icon):
@@ -1122,12 +1122,12 @@ def region_generate(global_region_map, global_region_grid, region_grid):
         На основании карты глобальных регионов, генерирует карту регионов содержащих зёрна возможных локаций
     """
     seed_dict = {  
-                    0: [['j', '.', 'S']],   # Пустынный
-                    1: [['A', '▲']],        # Горный
-                    2: [['„', ',', 'P']],   # Живой
-                    3: [[';', '.']],        # Солёный
-                    4: [['A', '.']],        # Каньонный
-                    5: [['S', '▲']]         # Водяной
+                    0: [['j', '.', 'S', 'F']],      # Пустынный
+                    1: [['A', '▲']],                # Горный
+                    2: [['„', ',', 'P']],           # Живой
+                    3: [[';', '.']],                # Солёный
+                    4: [['A', '.']],                # Каньонный
+                    5: [['S', '▲']]                 # Водяной
                 }
 
     raw_region_map = all_map_master_generate(global_region_map, region_grid, False, seed_dict, 0, False)
@@ -1151,9 +1151,10 @@ def chunks_map_generate(region_map, initial_size, chunks_grid):
                     'R': ['R',  'big canyons',         ['C'],                 ['.', 'o', '▲'],   20,        [20.0,35.0]],
                     '„': ['„',  'field',               ['u', '„', ','],       ['ü', 'o'],         5,        [20.0,35.0]],
                     ',': [',',  'dried field',         ['„', ','],            ['o', 'u'],         2,        [30.0,40.0]],
-                    'P': ['P',  'oasis',               ['P', '„'],            ['F', ','],         0,        [15.0,30.0]],
+                    'P': ['P',  'forest',              ['P', '„'],            ['F', ','],         0,        [15.0,30.0]],
                     '~': ['~',  'salty lake',          ['~'],                 ['„', '.'],        20,        [25.0,40.0]],
                     ';': [';',  'saline land',         [':'],                 [':'],             15,        [40.0,50.0]],
+                    'F': ['F',  'dried forest',        ['F', ','],            ['P', 'o'],        10,        [25.0,40.0]],
                 }
     raw_chunks_map = all_map_master_generate(region_map, chunks_grid, True, seed_dict, 0, True)
     chunks_map = all_gluing_map(raw_chunks_map, initial_size, chunks_grid)
