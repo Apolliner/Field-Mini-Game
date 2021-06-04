@@ -1808,7 +1808,7 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
 
     for number_minimap_line, minimap_line in enumerate(minimap):
         for number_minimap_tile, minimap_tile in enumerate(minimap_line):
-            all_sprites.add(All_tiles(number_tile*size_tile_minimap + (26*size_tile), number_line*size_tile_minimap, size_tile_minimap,
+            all_sprites.add(All_tiles(number_minimap_tile*size_tile_minimap + (26*size_tile), number_minimap_line*size_tile_minimap, size_tile_minimap,
                                         tiles_image_dict, minimap_tile.icon, minimap_tile.type))
             
     all_sprites.add(All_tiles(person.global_position[1]*size_tile_minimap + (26*size_tile), person.global_position[0]*size_tile_minimap,
