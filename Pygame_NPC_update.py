@@ -51,7 +51,7 @@ class Person:
     """ Содержит в себе глобальное местоположение персонажа, расположение в пределах загруженного участка карты и координаты используемых чанков """
     __slots__ = ('name', 'assemblage_point', 'dynamic', 'chunks_use_map', 'pointer', 'gun', 'global_position', 'number_chunk',
                  'check_encounter_position', 'environment_temperature', 'person_temperature', 'person_pass_step', 'enemy_pass_step',
-                 'speed', 'test_visible', 'level', 'vertices')
+                 'speed', 'test_visible', 'level', 'vertices', 'local_position')
     def __init__(self, assemblage_point:list, dynamic:list, chunks_use_map:list, pointer:list, gun:list):
         self.name = 'person'
         self.assemblage_point = assemblage_point
@@ -74,8 +74,21 @@ class Person:
         self.test_visible = False
         self.level = 0
         self.vertices = 0
+        self.local_position = dynamic
 
 
+    def check_local_position(self):
+        local_position = []
+        if self.dynamic[0] > len(self.chunks_use_map)//2:
+            local_position.append(self.dynamic[0] - len(self.chunks_use_map)//2)
+        else:
+            local_position.append(self.dynamic[0])
+            
+        if self.dynamic[1] > len(self.chunks_use_map)//2:
+            local_position.append(self.dynamic[1] - len(self.chunks_use_map)//2)
+        else:
+            local_position.append(self.dynamic[1])
+        self.local_position = local_position
         
     def check_encounter(self):
         """
@@ -1367,11 +1380,13 @@ def enemy_emulation_life(global_map, enemy, go_to_print, step, activity_list, ch
 
 """
 
-def master_player_action(global_map, person, chunk_size, go_to_print, mode_action, interaction, activity_list, step):
+def master_player_action(global_map, person, chunk_size, go_to_print, mode_action, interaction, activity_list, step, enemy_list):
 
     person.level = person.chunks_use_map[person.dynamic[0]][person.dynamic[1]].level # Определение высоты персонажа
     person.vertices = person.chunks_use_map[person.dynamic[0]][person.dynamic[1]].vertices
     pressed_button = ''
+    person.check_local_position()
+    
     mode_action, pressed_button = request_press_button(global_map, person, chunk_size, go_to_print, mode_action, interaction)
     if pressed_button != 'none':
         if mode_action == 'move':
@@ -1381,7 +1396,7 @@ def master_player_action(global_map, person, chunk_size, go_to_print, mode_actio
             request_move(global_map, person, chunk_size, go_to_print, pressed_button)
     
         elif mode_action == 'test_move':
-            test_request_move(global_map, person, chunk_size, go_to_print, pressed_button, interaction, activity_list, step)
+            test_request_move(global_map, person, chunk_size, go_to_print, pressed_button, interaction, activity_list, step, enemy_list)
         
         elif mode_action == 'pointer':    
             request_pointer(person, chunk_size, go_to_print, pressed_button)
@@ -1413,6 +1428,10 @@ def wait_keyboard():
                     return 'p'
                 if event.key == pygame.K_v:
                     return 'v'
+                if event.key == pygame.K_c:
+                    return 'c'
+                if event.key == pygame.K_h:
+                    return 'h'
 
 def request_press_button(global_map, person, chunk_size, go_to_print, mode_action, interaction):
     """
@@ -1477,7 +1496,17 @@ def request_press_button(global_map, person, chunk_size, go_to_print, mode_actio
         if mode_action == 'test_move':
             return ('test_move', 'button_add_beacon')
         else:
-            return (mode_action, 'none')    
+            return (mode_action, 'none')
+    elif key == 'c' or key == 'с':
+        if mode_action == 'test_move':
+            return ('test_move', 'add_coyot')
+        else:
+            return (mode_action, 'none')
+    elif key == 'h' or key == 'р':
+        if mode_action == 'test_move':
+            return ('test_move', 'add_hunter')
+        else:
+            return (mode_action, 'none')
     else:
         return (mode_action, 'none')
 
@@ -1525,7 +1554,7 @@ def request_move(global_map:list, person, chunk_size:int, go_to_print, pressed_b
     person.global_position_calculation(chunk_size) #Рассчитывает глобальное положение и номер чанка через метод
     person.check_encounter() #Рассчитывает порядок и координаты точек проверки
 
-def test_request_move(global_map:list, person, chunk_size:int, go_to_print, pressed_button, interaction, activity_list, step): #тестовый быстрый режим премещения
+def test_request_move(global_map:list, person, chunk_size:int, go_to_print, pressed_button, interaction, activity_list, step, enemy_list): #тестовый быстрый режим премещения
     """
         Меняет динамическое местоположение персонажа в тестовом режиме, без ограничений. По полчанка за раз.
         При нажатии на 'p' назначает всем NPC точку следования.
@@ -1560,6 +1589,13 @@ def test_request_move(global_map:list, person, chunk_size:int, go_to_print, pres
         
     elif pressed_button == 'button_test_visible':
         person.test_visible = not person.test_visible
+
+    elif pressed_button == 'add_hunter':
+        enemy_list.append(Riffleman(person.global_position, person.local_position, 2))
+    elif pressed_button == 'add_coyot':
+        enemy_list.append(Coyot(person.global_position, person.local_position, 0))
+
+         
 
 
     person.global_position_calculation(chunk_size) #Рассчитывает глобальное положение и номер чанка через метод
@@ -1796,20 +1832,6 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
     test2 = time.time() #
 
     # Печать миникарты
-
-    #for number_line in range(len(global_map)):
-    #    for number_tile in range(len(global_map[0])):
-    #        if person.global_position == [number_line, number_tile]:
-    #            all_sprites.add(All_tiles(number_tile*size_tile_minimap + (26*size_tile), number_line*size_tile_minimap, size_tile_minimap,
-    #                                  '☺', tiles_image_dict))
-    #        else:
-    #            all_sprites.add(All_tiles(number_tile*size_tile_minimap + (26*size_tile), number_line*size_tile_minimap, size_tile_minimap,
-    #                                  global_map[number_line][number_tile].icon, tiles_image_dict))
-
-    for number_minimap_line, minimap_line in enumerate(minimap):
-        for number_minimap_tile, minimap_tile in enumerate(minimap_line):
-            all_sprites.add(All_tiles(number_minimap_tile*size_tile_minimap + (26*size_tile), number_minimap_line*size_tile_minimap, size_tile_minimap,
-                                        tiles_image_dict, minimap_tile.icon, minimap_tile.type))
             
     all_sprites.add(All_tiles(person.global_position[1]*size_tile_minimap + (26*size_tile), person.global_position[0]*size_tile_minimap,
                               size_tile_minimap, tiles_image_dict, '☺', '0'))
@@ -1830,6 +1852,8 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
     screen.fill((255, 255, 255))
 
     test_2_end = time.time() #
+
+    minimap.draw(screen)
     
     all_sprites.draw(screen)
 
@@ -2868,13 +2892,22 @@ def main_loop():
 
     while main_loop:
 
-        global_map, minimap = map_generator.master_map_generate(global_region_grid, region_grid, chunks_grid, mini_region_grid, tile_field_grid)
+        global_map, raw_minimap = map_generator.master_map_generate(global_region_grid, region_grid, chunks_grid, mini_region_grid, tile_field_grid)
         
         person = Person([2, 2], [2, 2], [], [chunk_size//2, chunk_size//2], [chunk_size//2, chunk_size//2])
         calculation_assemblage_point(global_map, person, chunk_size)
         enemy_list = [Horseman([len(global_map)//2, len(global_map)//2], [chunk_size//2, chunk_size//2], 5), Horseman([len(global_map)//3, len(global_map)//3], [chunk_size//2, chunk_size//2], 5),
                       Riffleman([len(global_map)//4, len(global_map)//4], [chunk_size//2, chunk_size//2], 2), Coyot([len(global_map)//5, len(global_map)//5], [chunk_size//2, chunk_size//2], 0)]
         world = World() #Описание текущего состояния игрового мира
+
+        #Создание миникарты
+        minimap = pygame.sprite.Group()
+        size_tile = 30
+        size_tile_minimap = 15
+        for number_minimap_line, raw_minimap_line in enumerate(raw_minimap):
+            for number_minimap_tile, minimap_tile in enumerate(raw_minimap_line):
+                minimap.add(All_tiles(number_minimap_tile*size_tile_minimap + (26*size_tile), number_minimap_line*size_tile_minimap, size_tile_minimap,
+                                        tiles_image_dict, minimap_tile.icon, minimap_tile.type))
 
 
         game_loop(global_map, person, chunk_size, enemy_list, world, screen, tiles_image_dict, minimap)
@@ -2900,7 +2933,7 @@ def game_loop(global_map:list, person, chunk_size:int, enemy_list:list, world, s
         world.npc_path_calculation = False #Сброс предыдущего состояния поиска пути NPC персонажами
         new_step, step = new_step_calculation(enemy_list, person, step)
         if not person.person_pass_step:
-            mode_action = master_player_action(global_map, person, chunk_size, go_to_print, mode_action, interaction, activity_list, step)
+            mode_action = master_player_action(global_map, person, chunk_size, go_to_print, mode_action, interaction, activity_list, step, enemy_list)
         calculation_assemblage_point(global_map, person, chunk_size) # Рассчёт динамического чанка
         start = time.time() #проверка времени выполнения
         all_pass_step_calculations(person, enemy_list, mode_action, interaction)
