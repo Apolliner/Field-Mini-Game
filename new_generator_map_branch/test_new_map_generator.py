@@ -32,10 +32,6 @@ from new_generator_map_branch import map_patch
 
 """
 
-
-
-
-
 class Tile:
     """ Содержит изображение, описание, особое содержание тайла, стоимость передвижения, тип, высоту и лестницу """
     __slots__ = ('icon', 'description', 'list_of_features', 'price_move', 'type', 'level', 'stairs', 'vertices')
@@ -72,10 +68,7 @@ class Tile:
                         'C': ['каньон', 20],
                         '??': ['ничего', 10],
                         }
-        try:
-            return ground_dict[icon][number]
-        except TypeError:
-            print(f"icon - {icon}, number - {number}")
+        return ground_dict[icon][number]
 
 class Tile_minimap:
     """ Содержит изображение, описание, особое содержание тайла миникарты"""
@@ -103,9 +96,6 @@ class Location:
         self.vertices = []
         self.position = position
 
-
-
-
 def timeit(func):
     """
     Декоратор. Считает время выполнения функции.
@@ -116,37 +106,6 @@ def timeit(func):
         print(time.time() - start)
         return result
     return inner
-
-
-def print_map(printing_map):
-    """
-    Инструмент на время разработки, для наглядного отображения получившейся карты.
-    """
-    
-    if type(printing_map[0][0]) == list:
-        test_print = ''
-        for number_line in range(len(printing_map)):
-            for number_tile in range(len(printing_map[number_line])):
-                test_print += str(printing_map[number_line][number_tile][0]) + ' '
-            test_print += '\n'
-        print(test_print)
-
-    elif isinstance(printing_map[0][0], Tile):
-        test_print = ''
-        for number_line in range(len(printing_map)):
-            for number_tile in range(len(printing_map[number_line])):
-                #test_print += str(printing_map[number_line][number_tile].icon) + str(printing_map[number_line][number_tile].type)
-                test_print += str(printing_map[number_line][number_tile].icon) + str(abs(printing_map[number_line][number_tile].level))
-                #test_print += ' ' + str(abs(printing_map[number_line][number_tile].level))
-            test_print += '\n'
-        print(test_print)
-    else:
-        test_print = ''
-        for number_line in range(len(printing_map)):
-            for number_tile in range(len(printing_map[number_line])):
-                test_print += str(printing_map[number_line][number_tile]) + ' '
-            test_print += '\n'
-        print(test_print)
 
 
 @timeit
@@ -231,21 +190,7 @@ def master_map_generate(global_region_grid, region_grid, chunks_grid, mini_grid,
     return ready_global_map, minimap
 
 
-def minimap_create(global_map):
-    """
-        Создание миникарты на основе глобальной карты
-    """
-    minimap = []
-    for number_line, line in enumerate(global_map):
-        minimap_line = []
-        for number_tile, tile in enumerate(line):
-            minimap_line.append(Tile_minimap(tile.icon, tile.name, tile.price_move, tile.temperature))
-        minimap.append(minimap_line)
-        
-    levelness_calculation(minimap, ('~', '▲', 'C', ';', 'o', ',', '„', 'S'), False, False)
-    levelness_calculation(minimap, ('~', 'C', '`'), True, False)
 
-    return minimap
             
 
 """
@@ -267,16 +212,12 @@ def add_fords_in_rivers(processed_map, rivers_waypoints):
                         draw_ford = map_patch.map_patch('ford_river_5x5')
                         for number_patch_line in range(len(draw_ford)):
                             for number_patch_tile in range(len(draw_ford[number_patch_line])):
-                                try:
-                                    if draw_ford[number_patch_line][number_patch_tile] == 'f' and river_map[number_line + number_patch_line][number_tile + number_patch_tile].icon == '~':
-                                        river_map[number_line + number_patch_line][number_tile + number_patch_tile].icon = 'f'
-                                        river_map[number_line + number_patch_line][number_tile + number_patch_tile].description = 'брод'
-                                        river_map[number_line + number_patch_line][number_tile + number_patch_tile].price_move = 10
-                                        river_map[number_line + number_patch_line][number_tile + number_patch_tile].level = 0
-                                except IndexError:
-                                    print(F"len(river_map) - {len(river_map)} | number_line + number_patch_line - {number_line + number_patch_line} | number_tile + number_patch_tile - {number_tile + number_patch_tile}")
-                    
-                    
+                                if draw_ford[number_patch_line][number_patch_tile] == 'f' and river_map[number_line + number_patch_line][number_tile + number_patch_tile].icon == '~':
+                                    river_map[number_line + number_patch_line][number_tile + number_patch_tile].icon = 'f'
+                                    river_map[number_line + number_patch_line][number_tile + number_patch_tile].description = 'брод'
+                                    river_map[number_line + number_patch_line][number_tile + number_patch_tile].price_move = 10
+                                    river_map[number_line + number_patch_line][number_tile + number_patch_tile].level = 0
+                                
 
 def draw_ready_map(processed_map, file_draw_map, number_line, number_tile, chunk_size):
     """
@@ -345,29 +286,30 @@ def advanced_river_generation(global_tiles_map, chunks_map, number_of_rivers):
         river.global_path = a_star_algorithm_river_calculation(global_map, river.global_start_point, river.global_finish_point, ['C'])
         river.global_path.insert(0, river.global_start_point)
         if len(river.global_path) > 1:
-            print(f"Река посчиталась! ||| global_start_point - {global_start_point} ||| global_finish_point - {global_finish_point}")
 
             #Отрисовка реки на будущей миникарте
             for step_path in river.global_path:
-                #print(F"chunks_map[step_path[0], step_path[1]] - {chunks_map[step_path[0], step_path[1]]}")
                 chunks_map[step_path[0]][step_path[1]][0] = '~'
 
             for number_step_path, step_path in enumerate(river.global_path):
+                
                 #Вырезание участка карты, будущей локации и приведение тайлов к необходимому для генератора виду
                 processed_map = []
                 for number_line in range(step_path[0]*chunk_size, step_path[0]*chunk_size + chunk_size):
                     tiles_line = []
                     for number_tile in range(step_path[1]*chunk_size, step_path[1]*chunk_size + chunk_size):
+                        
                         #Приведение тайла к необходимому для генератора виду
                         tile = Tile(global_tiles_map[number_line][number_tile])
                         tiles_line.append(tile)
                     processed_map.append(tiles_line)
+                    
                 #Определение стартовой локальной точки
                 if number_step_path == 0:
                     local_start_point = [0, random.randrange(chunk_size)]
                 else:
                     local_start_point = river.local_path[-1]
-                    #river.local_path.pop(-1)
+
                 #Определение финишной локальной точки
                 if number_step_path < len(river.global_path) - 1:
                     if river.global_path[number_step_path + 1] == [step_path[0] - 1, step_path[1]]:
@@ -657,32 +599,6 @@ def a_star_algorithm_river_calculation(calculation_map, start_point, finish_poin
                 if graph[number_node].position == preview_node:
                     finish_node = number_node
                     check_node = graph[number_node]
-        #test_print = ''
-        #for number_line in range(len(calculation_map)):
-        #    for number_tile in range(len(calculation_map[number_line])):
-        #        
-        #        if [number_line, number_tile] in reversed_waypoints:
-        #            test_print += calculation_map[number_line][number_tile].icon + 'v'
-        #        elif [number_line, number_tile] in verified_node:
-        #            test_print += calculation_map[number_line][number_tile].icon + 'x'
-        #        else:
-        #            test_print += calculation_map[number_line][number_tile].icon + ' '
-        #    test_print += '\n'
- 
-        #print(test_print)
-    else:
-        print(f"По алгоритму А* не нашлось пути. На входе было: start_point - {start_point}, finish_point - {finish_point}")
-        test_print = ''
-        for number_line in range(len(calculation_map)):
-            for number_tile in range(len(calculation_map[number_line])):
-                if [number_line, number_tile] in verified_node:
-                    test_print += calculation_map[number_line][number_tile].icon + 'x'
-                else:
-                    test_print += calculation_map[number_line][number_tile].icon + ' '
-            test_print += '\n'
- 
-        print(test_print)
-
             
     return list(reversed(reversed_waypoints))
 
@@ -790,7 +706,6 @@ def defining_vertices(processed_map):
                     if not ([global_tile.chunk[number_line - 1][number_tile].vertices, tile.vertices] in new_friends_list):
                         new_friends_list.append([global_tile.chunk[number_line - 1][number_tile].vertices, tile.vertices])
         if new_friends_list:
-            #print(f"{number} new_friends_list - {new_friends_list}")
             for frends in new_friends_list:
                 master = min(frends[0], frends[1])
                 slave = max(frends[0], frends[1])
@@ -799,10 +714,7 @@ def defining_vertices(processed_map):
                         
                         if tile.vertices == slave:
                             if number == 2:
-                                print(f"before tile.vertices - {tile.vertices}")
-                            tile.vertices = master
-                            if number == 2:
-                                print(f"after tile.vertices - {tile.vertices}")
+                                tile.vertices = master
                         
     
     class Availability_field:
@@ -834,10 +746,6 @@ def defining_vertices(processed_map):
                             
                             #Если тайл обрабатывался
                             if tile.vertices >= 0:
-                                
-                                #print(f"1 - {list_availability_fields[global_tile.chunk[number_line - 1][number_tile].vertices].global_number}")
-                                #print(f"2 - {list_availability_fields[tile.vertices].global_number}")
-                                
 
                                 if list_availability_fields[tile.vertices].global_number < list_availability_fields[
                                         global_tile.chunk[number_line - 1][number_tile].vertices].global_number:
@@ -883,10 +791,6 @@ def defining_vertices(processed_map):
                                 #Если тайл обрабатывался
                                 if tile.vertices >= 0:
                                     
-                                    #print(f"1 - {list_availability_fields[global_tile.chunk[number_line - 1][number_tile].vertices].global_number}")
-                                    #print(f"2 - {list_availability_fields[tile.vertices].global_number}")
-                                    
-
                                     if list_availability_fields[tile.vertices].global_number < list_availability_fields[
                                             global_tile.chunk[number_line - 1][number_tile].vertices].global_number:
                                             
@@ -933,7 +837,6 @@ def defining_vertices(processed_map):
                                 new_friends_list.append([global_tile.chunk[number_line + 1][number_tile].vertices, tile.vertices])
                     
             if new_friends_list:
-                #print(f" new_friends_list - {new_friends_list}")
                 for frends in new_friends_list:
                     master = min(frends[0], frends[1])
                     slave = max(frends[0], frends[1])
@@ -941,9 +844,7 @@ def defining_vertices(processed_map):
                         for number_tile, tile in enumerate(global_tile.chunk[number_line]):
                             
                             if tile.vertices == slave:
-                                #print(f"before tile.vertices - {tile.vertices}")
                                 tile.vertices = master
-                                #print(f"after tile.vertices - {tile.vertices}")
                             
 
                         
@@ -958,7 +859,6 @@ def diversity_field_tiles(processed_map):
                     'j': ('0', '1'),
                     'A': ('0', '1'),
                     'i': ('0', '1', '2', '3'),
-                    #'o': ('0', '1', '2', '3', '4'),
                     }
     for number_line in range(len(processed_map)):
         for number_tile in range(len(processed_map[number_line])):
@@ -987,11 +887,9 @@ def big_structures_writer(processed_map, managing_map):
     for number_line in range(len(managing_map)):
         for number_tile in range(len(managing_map[number_line])):
             if managing_map[number_line][number_tile] == '~':
-                #print(f"processed_map[number_line//chunk_size][number_tile//chunk_size] - {processed_map[number_line//chunk_size][number_tile//chunk_size]}")
                 processed_map[number_line//chunk_size][number_tile//chunk_size] = ['~', 'sea', ['~'], ['.', 's', 'o'], 50, [12.0, 18.0]]
 
             if managing_map[number_line][number_tile] == 'C':
-                #print(f"processed_map[number_line//chunk_size][number_tile//chunk_size] - {processed_map[number_line//chunk_size][number_tile//chunk_size]}")
                 processed_map[number_line//chunk_size][number_tile//chunk_size] = ['C', 'big canyons', ['C'], ['.', 'o', '▲'], 20, [20.0,35.0]]
  
                 
@@ -1087,7 +985,7 @@ def mountains_generate(all_tiles_map, chunks_map):
                 mountain_gen(all_tiles_map, number_line*chunk_size + random.randrange(chunk_size//2),
                              number_tile*chunk_size + random.randrange(chunk_size//2), random.randrange(10, 20), 1, 2, '~', ('u'))
             elif chunks_map[number_line][number_tile][0] == '~' and random.randrange(20)//18 > 0:
-                file_draw_map = open("new_generator_map_branch\draw_map\island_1.txt", encoding="utf-8") #new_generator_map_branch\
+                file_draw_map = open("new_generator_map_branch\draw_map\island_1.txt", encoding="utf-8")
                 draw_ready_map(all_tiles_map, file_draw_map, number_line, number_tile, chunk_size)
 
 """
@@ -1559,9 +1457,7 @@ def print_map(printing_map):
         test_print = ''
         for number_line in range(len(printing_map)):
             for number_tile in range(len(printing_map[number_line])):
-                #test_print += str(printing_map[number_line][number_tile].icon) + str(printing_map[number_line][number_tile].type)
                 test_print += str(printing_map[number_line][number_tile].icon) + str(abs(printing_map[number_line][number_tile].level))
-                #test_print += ' ' + str(abs(printing_map[number_line][number_tile].level))
             test_print += '\n'
         print(test_print)
     else:
@@ -1571,6 +1467,22 @@ def print_map(printing_map):
                 test_print += str(printing_map[number_line][number_tile]) + ' '
             test_print += '\n'
         print(test_print)
+
+def minimap_create(global_map):
+    """
+        Создание миникарты на основе глобальной карты
+    """
+    minimap = []
+    for number_line, line in enumerate(global_map):
+        minimap_line = []
+        for number_tile, tile in enumerate(line):
+            minimap_line.append(Tile_minimap(tile.icon, tile.name, tile.price_move, tile.temperature))
+        minimap.append(minimap_line)
+        
+    levelness_calculation(minimap, ('~', '▲', 'C', ';', 'o', ',', '„', 'S'), False, False)
+    levelness_calculation(minimap, ('~', 'C', '`'), True, False)
+
+    return minimap
 
 
 """
