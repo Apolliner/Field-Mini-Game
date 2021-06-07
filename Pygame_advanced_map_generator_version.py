@@ -45,7 +45,7 @@ class Person:
     """ Содержит в себе глобальное местоположение персонажа, расположение в пределах загруженного участка карты и координаты используемых чанков """
     __slots__ = ('name', 'assemblage_point', 'dynamic', 'chunks_use_map', 'pointer', 'gun', 'global_position', 'number_chunk',
                  'check_encounter_position', 'environment_temperature', 'person_temperature', 'person_pass_step', 'enemy_pass_step',
-                 'speed', 'test_visible', 'level')
+                 'speed', 'test_visible', 'level', 'vertices')
     def __init__(self, assemblage_point:list, dynamic:list, chunks_use_map:list, pointer:list, gun:list):
         self.name = 'person'
         self.assemblage_point = assemblage_point
@@ -67,6 +67,7 @@ class Person:
         self.speed = 1
         self.test_visible = False
         self.level = 0
+        self.vertices = 0
 
 
         
@@ -422,10 +423,9 @@ def interaction_processing(global_map, interaction, enemy_list):
         for interact in interaction:
             if interact[0] == 'task_point_all_enemies':
                 for enemy in enemy_list:
-                    #print(f"{enemy.name} получил задачу")
-                    #print(f"interact[1] = {interact[1]}")
                     if enemy.type_npc == 'hunter':
-                        enemy.waypoints = enemy_a_star_algorithm_move_calculation(global_map, enemy.global_position, interact[1], enemy.banned_biom)
+                        enemy.waypoints = vertices_enemy_a_star_move_global_calculations(global_map, enemy, interact[1])
+                        
 
 
 def activity_list_check(activity_list, step):
@@ -536,6 +536,7 @@ class Enemy:
         self.on_the_screen = False
         self.steps_to_new_step = 1
         self.level = 0
+        self.vertices = 0
 
     def all_description_calculation(self):
         self.description = f"{self.pass_description} {self.person_description}"
@@ -692,6 +693,9 @@ def master_npc_calculation(global_map, enemy_list, person, go_to_print, step, ac
     enemy_dynamic_chunk_check(global_map, enemy_list, person, step, chunk_size)
     go_to_print.text5 = ''
     for enemy in enemy_list:
+        enemy.level = global_map[enemy.global_position[0]][enemy.global_position[1]].chunk[enemy.dynamic_chunk_position[0]][enemy.dynamic_chunk_position[0]].level
+        enemy.vertices = global_map[enemy.global_position[0]][enemy.global_position[1]].chunk[enemy.dynamic_chunk_position[0]][enemy.dynamic_chunk_position[0]].vertices
+    for enemy in enemy_list:
         if enemy.speed == 2 and enemy.on_the_screen:
             max_speed_enemy_visible = True
         else:
@@ -833,7 +837,7 @@ def enemy_a_star_algorithm_move_calculation(calculation_map, start_point, finish
 
 
 
-def global_vertices_enemy_a_star_algorithm_move_calculation(processed_map, start_point, finish_point, global_or_local):
+def vertices_enemy_a_star_algorithm_move_calculation(processed_map, start_point, finish_point, global_or_local):
     """
         Рассчитывает поиск пути, алгоритмом A* на основании связей полей доступности.
 
@@ -881,8 +885,7 @@ def global_vertices_enemy_a_star_algorithm_move_calculation(processed_map, start
         """
             Определяет связи вершины и добавляет их в граф при расчёте по глобальной карте
         """
-        node.ready = False
-        connections = []
+        processed_node.ready = False
         #Находим указанную зону доступности
         for vertices in processed_map[processed_node.position[0]][processed_node.position[1]].vertices:
             if vertices.number == processed_node.vertices:
@@ -928,6 +931,8 @@ def global_vertices_enemy_a_star_algorithm_move_calculation(processed_map, start
                                                    calculation_map[node.position[0]][node.position[1] - 1].price_move +
                                                    path_length([node.position[0], node.position[1] - 1], finish_point), node.number))
 
+    print(f"finish_point - {finish_point}")
+
     graph = [] #Список, содержащий все вершины
     graph.append(Node_vertices(0, start_point[2], [start_point[0], start_point[1]], path_length(start_point, finish_point), -1))
     if global_or_local == 'global':
@@ -935,8 +940,7 @@ def global_vertices_enemy_a_star_algorithm_move_calculation(processed_map, start
     elif global_or_local == 'local':
         node_friends_calculation(processed_map, graph, graph[0], finish_point)
     general_loop = True #Параметр останавливающий цикл
-    sucess = True
-    count_step = 0 #Шаг цикла
+    step_count = 0 #Шаг цикла
     finish_node = 0 #Хранит номер финишной точки
     reversed_waypoints = [] #Обращенный список вейпоинтов
     while general_loop:
@@ -948,26 +952,62 @@ def global_vertices_enemy_a_star_algorithm_move_calculation(processed_map, start
                     min_price = graph[number_node].price
                     node = graph[number_node]
         if min_price == 99999:
-            sucess = False
+            finish_point == graph[-1]
             general_loop = False
         if global_or_local == 'global':
             node_connections(processed_map, graph, node, finish_point)
         elif global_or_local == 'local':
             node_friends_calculation(processed_map, graph, graph[0], finish_point)
+        print(f"2 finish_point - {finish_point}")
         if node.position == [finish_point[0], finish_point[1]] and node.vertices == finish_point[3]:
             finish_node = node.number
             general_loop = False
         step_count += 1
         if step_count == 250:
-            sucess = False
-            finding_a_path = False
-    if sucess:
-        check_node = graph[finish_node]
-        while check_node.position != graph[0].position and check_node.vertices != graph[0].vertices:
-            reversed_waypoints.append([check_node.position[0], check_node.position[1], check_node.vertices])
-            check_node = graph[check_node.direction] #Предыдущая вершина объявляется проверяемой
+            min_price = 99999
+            node = graph[-1]
+            for number_node in range(len(graph)):
+                if graph[number_node].ready:
+                    if graph[number_node].price < min_price:
+                        min_price = graph[number_node].price
+                        finish_node = number_node
+            general_loop = False
+            
+    check_node = graph[finish_node]
+    while check_node.position != graph[0].position and check_node.vertices != graph[0].vertices:
+        reversed_waypoints.append([check_node.position[0], check_node.position[1], check_node.vertices])
+        check_node = graph[check_node.direction] #Предыдущая вершина объявляется проверяемой
 
+    print(f"reversed_waypoints - {reversed_waypoints}")
+    print(f"list(reversed(reversed_waypoints)) - {list(reversed(reversed_waypoints))}")
     return list(reversed(reversed_waypoints))
+
+def vertices_enemy_a_star_move_global_calculations(processed_map, enemy, finish_point):
+    """
+        Подготавливает запрос и вызывает алгоритм А* для передвижения по глобальной карте
+    """
+    start_point = [enemy.global_position[0], enemy.global_position[1], enemy.vertices]
+    enemy.waypoints = vertices_enemy_a_star_algorithm_move_calculation(processed_map, start_point, finish_point, 'global')
+
+def vertices_enemy_a_star_move_local_calculations(global_map, enemy, target):
+    """
+        Подготавливает запрос и вызывает алгоритм А* для передвижения по локальной карте
+
+        target:[[y, x], номер зоны доступности на следующей карте в которую нужно прийти]
+    """
+    processed_map = global_map[enemy.global_position[0]][enemy.global_position[1]].chunk
+    start_point = [enemy.dynamic_chunk_position[0], enemy.dynamic_chunk_position[1],
+                   processed_map[enemy.dynamic_chunk_position[0]][enemy.dynamic_chunk_position[1]].vertices]
+
+    finish_point = []               
+    for vertices in processed_map.vertices:
+        if vertices.number == enemy.vertices:
+            for connect in vertices.connections:
+                if connect.position == target[0] and connect.number == target[1]:
+                    finish = random.choice(connect.tiles)
+                    finish_point = [finish[0], finish[1], vertices.number]              
+    if finish_point:
+        enemy.waypoints = vertices_enemy_a_star_algorithm_move_calculation(processed_map, start_point, finish_point, 'local')
 
 
 
@@ -1546,7 +1586,8 @@ def move_biom_enemy(global_map, enemy):
 
 def master_player_action(global_map, person, chunk_size, go_to_print, mode_action, interaction, activity_list, step):
 
-    person.level = person.chunks_use_map[person.dynamic[0]][person.dynamic[1]].level # Определение высоты прсонажа
+    person.level = person.chunks_use_map[person.dynamic[0]][person.dynamic[1]].level # Определение высоты персонажа
+    person.vertices = person.chunks_use_map[person.dynamic[0]][person.dynamic[1]].vertices
     pressed_button = ''
     mode_action, pressed_button = request_press_button(global_map, person, chunk_size, go_to_print, mode_action, interaction)
     if pressed_button != 'none':
@@ -1697,7 +1738,7 @@ def request_move(global_map:list, person, chunk_size:int, go_to_print, pressed_b
                 person.dynamic[1] + 1].stairs or person.chunks_use_map[person.dynamic[0]][person.dynamic[1]].stairs):
             if person.dynamic[1] <= (chunk_size + chunk_size//2) and person.assemblage_point[1] != (len(global_map) - 2):
                 person.dynamic[1] += 1
-
+    
     person.global_position_calculation(chunk_size) #Рассчитывает глобальное положение и номер чанка через метод
     person.check_encounter() #Рассчитывает порядок и координаты точек проверки
 
@@ -1723,7 +1764,7 @@ def test_request_move(global_map:list, person, chunk_size:int, go_to_print, pres
             person.dynamic[1] += chunk_size//2
 
     elif pressed_button == 'button_purpose_task':
-        interaction.append(['task_point_all_enemies', person.global_position])
+        interaction.append(['task_point_all_enemies', [person.global_position[0], person.global_position[0], person.vertices]])
 
     elif pressed_button == 'button_add_beacon':
         activity_list.append(Action_in_map('test_beacon', step, person.global_position, person.dynamic, chunk_size,
