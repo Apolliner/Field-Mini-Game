@@ -1389,6 +1389,7 @@ def master_player_action(global_map, person, chunk_size, go_to_print, mode_actio
     person.vertices = person.chunks_use_map[person.dynamic[0]][person.dynamic[1]].vertices
     pressed_button = ''
     person.check_local_position()
+    person.direction = 'center'
     
     mode_action, pressed_button = request_press_button(global_map, person, chunk_size, go_to_print, mode_action, interaction)
     if pressed_button != 'none':
@@ -2741,7 +2742,24 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
             elif person.direction == 'down':
                 sprite.rect.top -=10
     else:
+        
+        
         person.pass_draw_move = 3
+
+        #Определение смещения
+        offset_y = 0
+        offset_x = 0
+        if person.direction == 'left':
+            offset_x -= size_tile
+        elif person.direction == 'right':
+            offset_x += size_tile
+        elif person.direction == 'up':
+            offset_y -= size_tile
+        elif person.direction == 'down':
+            offset_y += size_tile
+
+
+            
         landscape_layer = landscape_layer_calculations(person, chunk_size, go_to_print)
 
         activity_layer = entities_layer_calculations(person, chunk_size, go_to_print, activity_list)
@@ -2757,16 +2775,16 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
         
         for number_line in range(chunk_size):
             for number_tile in range(chunk_size):
-                all_sprites.add(Image_tile(number_tile*size_tile, number_line*size_tile, size_tile, tiles_image_dict,
+                all_sprites.add(Image_tile(number_tile*size_tile + offset_x, number_line*size_tile + offset_y, size_tile, tiles_image_dict,
                                            landscape_layer[number_line][number_tile].icon,
                                            landscape_layer[number_line][number_tile].type))
                 if landscape_layer[number_line][number_tile].level > 1:
-                    all_sprites.add(Level_tiles(number_tile*size_tile, number_line*size_tile, size_tile, landscape_layer[number_line][number_tile].level - 1))
+                    all_sprites.add(Level_tiles(number_tile*size_tile + offset_x, number_line*size_tile + offset_y, size_tile, landscape_layer[number_line][number_tile].level - 1))
         
         for number_line in range(chunk_size):
             for number_tile in range(chunk_size):
                 if activity_layer[number_line][number_tile].icon != '0':
-                    all_sprites.add(Image_tile(number_tile*size_tile, number_line*size_tile, size_tile, tiles_image_dict,
+                    all_sprites.add(Image_tile(number_tile*size_tile + offset_x, number_line*size_tile + offset_y, size_tile, tiles_image_dict,
                                            activity_layer[number_line][number_tile].icon,
                                            activity_layer[number_line][number_tile].type))
 
@@ -2774,7 +2792,7 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
         if person.test_visible:
             for number_line in range(chunk_size):
                 for number_tile in range(chunk_size):
-                    all_sprites.add(Island_friends(number_tile*size_tile, number_line*size_tile, size_tile,
+                    all_sprites.add(Island_friends(number_tile*size_tile + offset_x, number_line*size_tile + offset_y, size_tile,
                                            landscape_layer[number_line][number_tile].vertices))
 
 
@@ -2844,11 +2862,11 @@ def master_pass_step(person):
         Считает пропуски хода для плавного перемещения персонажа
     """
     if person.pass_draw_move:
-        person.person_pass_step = False
-        person.enemy_pass_step = False
-    else:
         person.person_pass_step = True
         person.enemy_pass_step = True
+    else:
+        person.person_pass_step = False
+        person.enemy_pass_step = False
 
 def all_pass_step_calculations(person, enemy_list, mode_action, interaction):
     """
@@ -2961,7 +2979,7 @@ def game_loop(global_map:list, person, chunk_size:int, enemy_list:list, world, s
         interaction = []
         world.npc_path_calculation = False #Сброс предыдущего состояния поиска пути NPC персонажами
         master_pass_step(person)
-        new_step, step = new_step_calculation(enemy_list, person, step)
+        #new_step, step = new_step_calculation(enemy_list, person, step)
         if not person.person_pass_step:
             mode_action = master_player_action(global_map, person, chunk_size, go_to_print, mode_action, interaction, activity_list, step, enemy_list)
         start = time.time() #проверка времени выполнения
@@ -2983,7 +3001,7 @@ def game_loop(global_map:list, person, chunk_size:int, enemy_list:list, world, s
 
         print_sprites.draw(screen)
         
-        print_step = fontObj.render((f"step = {step}, path search - {world.npc_path_calculation}"), True, (0, 0, 0), (255, 255, 255))
+        print_step = fontObj.render((f"step = {step}, person.person_pass_step - {person.person_pass_step}, person.pass_draw_move - {person.pass_draw_move}"), True, (0, 0, 0), (255, 255, 255))
         print_step_rect = print_step.get_rect()
         print_step_rect.center = (30*34, 15*29)
         screen.blit(print_step, print_step_rect)
