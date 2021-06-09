@@ -18,22 +18,7 @@ garbage = ['░', '▒', '▓', '█', '☺']
 
     РЕАЛИЗОВАТЬ:
 
-    1)Разный вид тайлов в зависимости от их нахождения на краю однородного тайлового поля. Реализовать это на этапе генерации карты. #РЕАЛИЗОВАНО
-    2)Добавить изменение .type активностям, что бы они отображали на тайле свою "свежесть"
-    3)После пострасчёта полей тайлов, провести повторный расчёт, что бы выделить крайними те тайлы, которые были определены как внутренние.
-    Реализовать это для имитации многоуровневости гор и водоёмов.
-    4)Изменить вывод изображения таим образом, что бы получить возможность плавного передвижения между тайлами.
-    5)Осмысленную генерацию гор и водоёмов. Горы должны иметь несколько пиков.
-    6)Добавить уровни высоты. Переходить по уровням высоты можно только по определённым тайлам.
-    7)Попробовать генерировать горы от обратного. Сначала определять пики и их высоту, а потом опускать вниз, добавляя случайные тайлы.
-    8)Изменение оттенка тайла в зависимости от высоты
-    9)Попробовать добавить нарисованные самостоятельно горы
-
-
-    ТРЕБОВАНИЯ К ПОСТГЕНЕРАТОРУ, ОПРЕДЕЛЯЮЩЕМУ ОДНОРОДНОСТЬ ТАЙЛОВОГО ПОЛЯ И МУЛЬТИВЫСОТНОСТЬ:
-    1)Он должен поддерживать возможность того, что два разных тайла считаются одним тайловым полем.
-    2)Может как просчитывать однородность тайлового поля, так и его мультивысотность.
-    3)Приемлемая скорость выполнения.
+    1)При смене кадра не перессчитывать весь кадр, а убирать или добавлять только крайние линии или столбцы.
 
     
     ТЕМАТИКА:
@@ -2726,9 +2711,14 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
         1.0473484992980957 - test1_2
         3.0611751079559326 - test_1_end
         4.554834604263306 - test2_1
+
+        РЕАЛИЗОВАТЬ:
+        При смене кадра не перессчитывать весь кадр, а убирать или добавлять только крайние линии или столбцы.
     """
     size_tile = 30 # Настройка размера тайлов игрового окна
     size_tile_minimap = 15 # Настройка размера тайлов миникаты
+
+    dynamic_sprites = pygame.sprite.Group()
     
     if person.pass_draw_move:
         person.pass_draw_move -= 1
@@ -2779,7 +2769,8 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
                                            landscape_layer[number_line][number_tile].icon,
                                            landscape_layer[number_line][number_tile].type))
                 if landscape_layer[number_line][number_tile].level > 1:
-                    all_sprites.add(Level_tiles(number_tile*size_tile + offset_x, number_line*size_tile + offset_y, size_tile, landscape_layer[number_line][number_tile].level - 1))
+                    all_sprites.add(Level_tiles(number_tile*size_tile + offset_x, number_line*size_tile + offset_y, size_tile,
+                                                landscape_layer[number_line][number_tile].level - 1))
         
         for number_line in range(chunk_size):
             for number_tile in range(chunk_size):
@@ -2806,20 +2797,19 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
 
         # Печать миникарты
                 
-        all_sprites.add(All_tiles(person.global_position[1]*size_tile_minimap + (26*size_tile), person.global_position[0]*size_tile_minimap,
+        dynamic_sprites.add(All_tiles(person.global_position[1]*size_tile_minimap + (26*size_tile), person.global_position[0]*size_tile_minimap,
                                   size_tile_minimap, tiles_image_dict, '☺', '0'))
         for enemy in enemy_list:
-            all_sprites.add(All_tiles(enemy.global_position[0]*size_tile_minimap + (26*size_tile), enemy.global_position[0]*size_tile_minimap,
+            dynamic_sprites.add(All_tiles(enemy.global_position[0]*size_tile_minimap + (26*size_tile), enemy.global_position[0]*size_tile_minimap,
                                       size_tile_minimap, tiles_image_dict, enemy.icon, enemy.type))
 
         #Отрисовка температуры на миникарте
         if person.test_visible:
             for number_minimap_line, minimap_line in enumerate(minimap):
                 for number_minimap_tile, minimap_tile in enumerate(minimap_line):
-                    all_sprites.add(Minimap_temperature(number_minimap_tile*size_tile_minimap + (26*size_tile), number_minimap_line*size_tile_minimap,
+                    dynamic_sprites.add(Minimap_temperature(number_minimap_tile*size_tile_minimap + (26*size_tile), number_minimap_line*size_tile_minimap,
                                                         size_tile_minimap, minimap_tile.temperature))
                     
-    dynamic_sprites = pygame.sprite.Group()
     #Отрисовка НПЦ
     entities_layer = entities_layer_calculations(person, chunk_size, go_to_print, enemy_list) #Использование функции для отображения активностей
                     
@@ -3001,10 +2991,10 @@ def game_loop(global_map:list, person, chunk_size:int, enemy_list:list, world, s
 
         print_sprites.draw(screen)
         
-        print_step = fontObj.render((f"step = {step}, person.person_pass_step - {person.person_pass_step}, person.pass_draw_move - {person.pass_draw_move}"), True, (0, 0, 0), (255, 255, 255))
-        print_step_rect = print_step.get_rect()
-        print_step_rect.center = (30*34, 15*29)
-        screen.blit(print_step, print_step_rect)
+        #print_step = fontObj.render((f"step = {step}, person.person_pass_step - {person.person_pass_step}, person.pass_draw_move - {person.pass_draw_move}"), True, (0, 0, 0), (255, 255, 255))
+        #print_step_rect = print_step.get_rect()
+        #print_step_rect.center = (30*34, 15*29)
+        #screen.blit(print_step, print_step_rect)
 
         end = time.time() #проверка времени выполнения
         
