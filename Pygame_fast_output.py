@@ -37,7 +37,7 @@ class Person:
     """ Содержит в себе глобальное местоположение персонажа, расположение в пределах загруженного участка карты и координаты используемых чанков """
     __slots__ = ('name', 'assemblage_point', 'dynamic', 'chunks_use_map', 'pointer', 'gun', 'global_position', 'number_chunk',
                  'check_encounter_position', 'environment_temperature', 'person_temperature', 'person_pass_step', 'enemy_pass_step',
-                 'speed', 'test_visible', 'level', 'vertices', 'local_position', 'direction', 'pass_draw_move')
+                 'speed', 'test_visible', 'level', 'vertices', 'local_position', 'direction', 'pass_draw_move', 'recalculating_the_display')
     def __init__(self, assemblage_point:list, dynamic:list, chunks_use_map:list, pointer:list, gun:list):
         self.name = 'person'
         self.assemblage_point = assemblage_point
@@ -63,6 +63,7 @@ class Person:
         self.local_position = dynamic
         self.direction = 'center'
         self.pass_draw_move = 0
+        self.recalculating_the_display = True #Перессчёт игрового экрана
 
 
     def check_local_position(self):
@@ -1555,18 +1556,22 @@ def test_request_move(global_map:list, person, chunk_size:int, go_to_print, pres
     if pressed_button == 'up':
         if person.dynamic[0] >= chunk_size//2 and person.assemblage_point[0] > 0:
             person.dynamic[0] -= chunk_size//2
+            person.recalculating_the_display = True
             
     elif pressed_button == 'left':
         if person.dynamic[1] >= chunk_size//2 and person.assemblage_point[1] > 0:
             person.dynamic[1] -= chunk_size//2
+            person.recalculating_the_display = True
             
     elif pressed_button == 'down': 
         if person.dynamic[0] <= (chunk_size + chunk_size//2) and person.assemblage_point[0] != (len(global_map) - 2):
             person.dynamic[0] += chunk_size//2
+            person.recalculating_the_display = True
             
     elif pressed_button == 'right':
         if person.dynamic[1] <= (chunk_size + chunk_size//2) and person.assemblage_point[1] != (len(global_map) - 2):
             person.dynamic[1] += chunk_size//2
+            person.recalculating_the_display = True
 
     elif pressed_button == 'button_purpose_task':
         local_position = copy.deepcopy(person.dynamic)
@@ -2733,7 +2738,6 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
                 sprite.rect.top -=10
     else:
         
-        
         person.pass_draw_move = 3
 
         #Определение смещения
@@ -2747,68 +2751,120 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
             offset_y -= size_tile
         elif person.direction == 'down':
             offset_y += size_tile
+                
+        if person.recalculating_the_display: #Если надо перессчитывать весь экран
+            
+            landscape_layer = landscape_layer_calculations(person, chunk_size, go_to_print)
+
+            activity_layer = entities_layer_calculations(person, chunk_size, go_to_print, activity_list)
+
+            #sky_layer = sky_layer_calculations(chunk_size)
+
+            all_sprites = pygame.sprite.Group()
+            
+            for number_line in range(chunk_size):
+                for number_tile in range(chunk_size):
+                    all_sprites.add(Image_tile(number_tile*size_tile + offset_x, number_line*size_tile + offset_y, size_tile, tiles_image_dict,
+                                               landscape_layer[number_line][number_tile].icon,
+                                               landscape_layer[number_line][number_tile].type))
+                    if landscape_layer[number_line][number_tile].level > 1:
+                        all_sprites.add(Level_tiles(number_tile*size_tile + offset_x, number_line*size_tile + offset_y, size_tile,
+                                                    landscape_layer[number_line][number_tile].level - 1))
+            
+            for number_line in range(chunk_size):
+                for number_tile in range(chunk_size):
+                    if activity_layer[number_line][number_tile].icon != '0':
+                        all_sprites.add(Image_tile(number_tile*size_tile + offset_x, number_line*size_tile + offset_y, size_tile, tiles_image_dict,
+                                               activity_layer[number_line][number_tile].icon,
+                                               activity_layer[number_line][number_tile].type))
+
+            #Отрисовка зон доступности
+            if person.test_visible:
+                for number_line in range(chunk_size):
+                    for number_tile in range(chunk_size):
+                        all_sprites.add(Island_friends(number_tile*size_tile + offset_x, number_line*size_tile + offset_y, size_tile,
+                                               landscape_layer[number_line][number_tile].vertices))
+
+
+            #for number_line in range(chunk_size):
+            #    for number_tile in range(chunk_size):
+            #        if sky_layer[number_line][number_tile].icon != '0':
+            #            all_sprites.add(Image_tile(number_tile*size_tile, number_line*size_tile, size_tile, tiles_image_dict,
+            #                                   sky_layer[number_line][number_tile].icon,
+            #                                   sky_layer[number_line][number_tile].type))      
+
+
+
+        else: #Если надо перессчитывать только строки и столбцы
+        
+            landscape_layer = landscape_layer_calculations(person, chunk_size, go_to_print)
+
+            activity_layer = entities_layer_calculations(person, chunk_size, go_to_print, activity_list)
+            
+            for number_sprite, sprite in enumerate(all_sprites):
+                if person.direction == 'left':
+                    if sprite.rect.left == size_tile*(chunk_size - 1):
+                        sprite.kill()
+
+                        
+                elif person.direction == 'right':
+                    if sprite.rect.left == 0:
+                        sprite.kill()
+
+                        
+                elif person.direction == 'up':
+                    if sprite.rect.top == size_tile*(chunk_size - 1):
+                        sprite.kill()
+
+                        
+                elif person.direction == 'down':
+                    if sprite.rect.top == 0:
+                        sprite.kill()
+
 
 
             
-        landscape_layer = landscape_layer_calculations(person, chunk_size, go_to_print)
-
-        activity_layer = entities_layer_calculations(person, chunk_size, go_to_print, activity_list)
-
-        #sky_layer = sky_layer_calculations(chunk_size)
-
-
-        
-        
-        all_sprites = pygame.sprite.Group()
-        
-        
-        
-        for number_line in range(chunk_size):
-            for number_tile in range(chunk_size):
+            for number_len in range(len(landscape_layer)):
+                number_line = 0
+                number_tile = 0
+                if person.direction == 'left':
+                    number_line = number_len
+                    number_tile = 0
+                elif person.direction == 'right':
+                    number_line = number_len
+                    number_tile = chunk_size - 1
+                elif person.direction == 'up':
+                    number_line = 0
+                    number_tile = number_len
+                elif person.direction == 'down':
+                    number_line = chunk_size - 1
+                    number_tile = number_len
+                #Отрисовка рассчитаных линий и столбцов    
                 all_sprites.add(Image_tile(number_tile*size_tile + offset_x, number_line*size_tile + offset_y, size_tile, tiles_image_dict,
-                                           landscape_layer[number_line][number_tile].icon,
-                                           landscape_layer[number_line][number_tile].type))
+                                               landscape_layer[number_line][number_tile].icon,
+                                               landscape_layer[number_line][number_tile].type))
                 if landscape_layer[number_line][number_tile].level > 1:
                     all_sprites.add(Level_tiles(number_tile*size_tile + offset_x, number_line*size_tile + offset_y, size_tile,
-                                                landscape_layer[number_line][number_tile].level - 1))
-        
-        for number_line in range(chunk_size):
-            for number_tile in range(chunk_size):
+                                                    landscape_layer[number_line][number_tile].level - 1))
                 if activity_layer[number_line][number_tile].icon != '0':
                     all_sprites.add(Image_tile(number_tile*size_tile + offset_x, number_line*size_tile + offset_y, size_tile, tiles_image_dict,
-                                           activity_layer[number_line][number_tile].icon,
-                                           activity_layer[number_line][number_tile].type))
-
-        #Отрисовка зон доступности
-        if person.test_visible:
-            for number_line in range(chunk_size):
-                for number_tile in range(chunk_size):
-                    all_sprites.add(Island_friends(number_tile*size_tile + offset_x, number_line*size_tile + offset_y, size_tile,
-                                           landscape_layer[number_line][number_tile].vertices))
-
-
-        #for number_line in range(chunk_size):
-        #    for number_tile in range(chunk_size):
-        #        if sky_layer[number_line][number_tile].icon != '0':
-        #            all_sprites.add(Image_tile(number_tile*size_tile, number_line*size_tile, size_tile, tiles_image_dict,
-        #                                   sky_layer[number_line][number_tile].icon,
-        #                                   sky_layer[number_line][number_tile].type))      
-        test2 = time.time() #
+                                               activity_layer[number_line][number_tile].icon,
+                                               activity_layer[number_line][number_tile].type))
 
         # Печать миникарты
-                
+                    
         dynamic_sprites.add(All_tiles(person.global_position[1]*size_tile_minimap + (26*size_tile), person.global_position[0]*size_tile_minimap,
-                                  size_tile_minimap, tiles_image_dict, '☺', '0'))
+                                      size_tile_minimap, tiles_image_dict, '☺', '0'))
         for enemy in enemy_list:
             dynamic_sprites.add(All_tiles(enemy.global_position[0]*size_tile_minimap + (26*size_tile), enemy.global_position[0]*size_tile_minimap,
-                                      size_tile_minimap, tiles_image_dict, enemy.icon, enemy.type))
+                                          size_tile_minimap, tiles_image_dict, enemy.icon, enemy.type))
 
         #Отрисовка температуры на миникарте
         if person.test_visible:
             for number_minimap_line, minimap_line in enumerate(minimap):
                 for number_minimap_tile, minimap_tile in enumerate(minimap_line):
                     dynamic_sprites.add(Minimap_temperature(number_minimap_tile*size_tile_minimap + (26*size_tile), number_minimap_line*size_tile_minimap,
-                                                        size_tile_minimap, minimap_tile.temperature))
+                                                            size_tile_minimap, minimap_tile.temperature))
                     
     #Отрисовка НПЦ
     entities_layer = entities_layer_calculations(person, chunk_size, go_to_print, enemy_list) #Использование функции для отображения активностей
@@ -2829,6 +2885,7 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
 
     
     return screen, all_sprites, dynamic_sprites
+
 """
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -2998,13 +3055,16 @@ def game_loop(global_map:list, person, chunk_size:int, enemy_list:list, world, s
 
         end = time.time() #проверка времени выполнения
         
-        print_time = f"{round(test1 - start, 4)} - персонажи \n {round(test2 - test1, 4)} - отрисовка \n {round(end - start, 4)} - общее время \n "
+        print_time = f"{round(test1 - start, 4)} - персонажи \n {round(test2 - test1, 4)} - отрисовка \n {round(end - start, 4)} - общее время \n {len(all_sprites)} - спрайтов"
 
         textSurfaceObj = fontObj.render(print_time, True, (0, 0, 0), (255, 255, 255))
         textRectObj = textSurfaceObj.get_rect()
         textRectObj.center = (30*34, 15*31)
         screen.blit(textSurfaceObj, textRectObj)            
         pygame.display.flip()
+
+
+        person.recalculating_the_display = False
     
 
 def main():
