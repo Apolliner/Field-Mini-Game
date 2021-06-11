@@ -567,6 +567,7 @@ class Enemy:
         self.vertices = 0
         self.target = [] #[[global_y, global_x], vertices, [local_y, local_x]]
         self.visible = True
+        self.direction = 'center'
 
     def all_description_calculation(self):
         self.description = f"{self.pass_description} {self.person_description}"
@@ -726,7 +727,7 @@ def master_npc_calculation(global_map, enemy_list, person, go_to_print, step, ac
     for enemy in enemy_list:
 
         #print(f"{enemy.name_npc} - на начало обработки имеет: \n global_position - {enemy.global_position} {enemy.vertices}, local_position - {enemy.local_position} \n global - {enemy.waypoints} \n local - {enemy.local_waypoints}")
-    
+        enemy.direction = 'center'
         enemy.level = global_map[enemy.global_position[0]][enemy.global_position[1]].chunk[enemy.local_position[0]][enemy.local_position[0]].level
         enemy.vertices = global_map[enemy.global_position[0]][enemy.global_position[1]].chunk[enemy.local_position[0]][enemy.local_position[1]].vertices
         #print(f"global_map[enemy.global_position[0]][enemy.global_position[1]].chunk[enemy.local_position[0]][enemy.local_position[1]].vertices - {global_map[enemy.global_position[0]][enemy.global_position[1]].chunk[enemy.local_position[0]][enemy.local_position[1]].vertices}")
@@ -777,6 +778,7 @@ def master_npc_calculation(global_map, enemy_list, person, go_to_print, step, ac
             activity_list.append(Action_in_map('faint_footprints', step, enemy.global_position, enemy.local_position, chunk_size, enemy.name_npc))
             #print(f"??? {enemy.name_npc} собирается поменять глобальную позицию enemy.global_position - {enemy.global_position}")
             #print(f"его динамические вейпоинты enemy.local_waypoints - {enemy.local_waypoints}")
+            enemy_direction_calculation(enemy)
             enemy.global_position = enemy.local_waypoints[0][3]
             #print(f"??? {enemy.name_npc} поменял глобальную позицию enemy.global_position - {enemy.global_position} меняя локальную позицию - {enemy.local_position}")
             enemy.local_position = [enemy.local_waypoints[0][0], enemy.local_waypoints[0][1]]
@@ -785,6 +787,28 @@ def master_npc_calculation(global_map, enemy_list, person, go_to_print, step, ac
             
         #print(f"{enemy.name_npc} - на конец обработки имеет: \n global_position - {enemy.global_position} {enemy.vertices}, local_position - {enemy.local_position} \n global - {enemy.waypoints} \n local - {enemy.local_waypoints} \n ||||||||||||||||||||||||||")
 
+
+def enemy_direction_calculation(enemy):
+    """
+        Определяет направление движения NPC
+    """
+    if enemy.global_position == [enemy.local_waypoints[0][3][0], enemy.local_waypoints[0][3][1]]:
+        if enemy.local_position == [enemy.local_waypoints[0][0] - 1, enemy.local_waypoints[0][1]]:
+            enemy.direction = 'up'
+        elif enemy.local_position == [enemy.local_waypoints[0][0] + 1, enemy.local_waypoints[0][1]]:
+            enemy.direction = 'down'
+        elif enemy.local_position == [enemy.local_waypoints[0][0], enemy.local_waypoints[0][1] - 1]:
+            enemy.direction = 'left'
+        elif enemy.local_position == [enemy.local_waypoints[0][0], enemy.local_waypoints[0][1] + 1]:
+            enemy.direction = 'right'
+    elif enemy.global_position == [enemy.local_waypoints[0][3][0] - 1, enemy.local_waypoints[0][3][1]]:
+        enemy.direction = 'up'
+    elif enemy.global_position == [enemy.local_waypoints[0][3][0] + 1, enemy.local_waypoints[0][3][1]]:
+        enemy.direction = 'down'
+    elif enemy.global_position == [enemy.local_waypoints[0][3][0], enemy.local_waypoints[0][3][1] - 1]:
+        enemy.direction = 'left'
+    elif enemy.global_position == [enemy.local_waypoints[0][3][0], enemy.local_waypoints[0][3][1] + 1]:
+        enemy.direction = 'right'
 
 def enemy_move_calculaton(global_map, enemy):
     """
@@ -2690,7 +2714,8 @@ def print_minimap(global_map, person, go_to_print, enemy_list):
     go_to_print.biom_map = minimap
 
 
-def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action, enemy_list, activity_list, screen, tiles_image_dict, minimap, all_sprites):
+def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action, enemy_list, activity_list, screen, tiles_image_dict,
+                                                               minimap, all_sprites, dynamic_sprites, minimap_sprite):
     """
         Работает с классом Interfase, содержащимся в go_to_print
 
@@ -2723,7 +2748,8 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
     size_tile = 30 # Настройка размера тайлов игрового окна
     size_tile_minimap = 15 # Настройка размера тайлов миникаты
 
-    dynamic_sprites = pygame.sprite.Group()
+    
+    static_sprites = pygame.sprite.Group()
     
     if person.pass_draw_move:
         person.pass_draw_move -= 1
@@ -2736,9 +2762,28 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
                 sprite.rect.top +=10
             elif person.direction == 'down':
                 sprite.rect.top -=10
+        for sprite in dynamic_sprites:
+            if person.direction == 'left':
+                sprite.rect.left +=10
+            elif person.direction == 'right':
+                sprite.rect.left -=10
+            elif person.direction == 'up':
+                sprite.rect.top +=10
+            elif person.direction == 'down':
+                sprite.rect.top -=10
+
+            if sprite.direction == 'left':
+                sprite.rect.left +=10
+            elif sprite.direction == 'right':
+                sprite.rect.left -=10
+            elif sprite.direction == 'up':
+                sprite.rect.top +=10
+            elif sprite.direction == 'down':
+                sprite.rect.top -=10
+            
     else:
-        
-        person.pass_draw_move = 3
+
+        dynamic_sprites = pygame.sprite.Group()
 
         #Определение смещения
         offset_y = 0
@@ -2751,8 +2796,12 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
             offset_y -= size_tile
         elif person.direction == 'down':
             offset_y += size_tile
-                
+        
+        person.pass_draw_move = 3
+   
         if person.recalculating_the_display: #Если надо перессчитывать весь экран
+
+            minimap_sprite = pygame.sprite.Group()
             
             landscape_layer = landscape_layer_calculations(person, chunk_size, go_to_print)
 
@@ -2805,25 +2854,16 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
                 if person.direction == 'left':
                     if sprite.rect.left == size_tile*(chunk_size - 1):
                         sprite.kill()
-
-                        
                 elif person.direction == 'right':
                     if sprite.rect.left == 0:
                         sprite.kill()
-
-                        
                 elif person.direction == 'up':
                     if sprite.rect.top == size_tile*(chunk_size - 1):
                         sprite.kill()
-
-                        
                 elif person.direction == 'down':
                     if sprite.rect.top == 0:
                         sprite.kill()
 
-
-
-            
             for number_len in range(len(landscape_layer)):
                 number_line = 0
                 number_tile = 0
@@ -2853,30 +2893,48 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
 
         # Печать миникарты
                     
-        dynamic_sprites.add(All_tiles(person.global_position[1]*size_tile_minimap + (26*size_tile), person.global_position[0]*size_tile_minimap,
+        minimap_sprite.add(All_tiles(person.global_position[1]*size_tile_minimap + (26*size_tile), person.global_position[0]*size_tile_minimap,
                                       size_tile_minimap, tiles_image_dict, '☺', '0'))
         for enemy in enemy_list:
-            dynamic_sprites.add(All_tiles(enemy.global_position[0]*size_tile_minimap + (26*size_tile), enemy.global_position[0]*size_tile_minimap,
+            minimap_sprite.add(All_tiles(enemy.global_position[0]*size_tile_minimap + (26*size_tile), enemy.global_position[0]*size_tile_minimap,
                                           size_tile_minimap, tiles_image_dict, enemy.icon, enemy.type))
 
         #Отрисовка температуры на миникарте
         if person.test_visible:
             for number_minimap_line, minimap_line in enumerate(minimap):
                 for number_minimap_tile, minimap_tile in enumerate(minimap_line):
-                    dynamic_sprites.add(Minimap_temperature(number_minimap_tile*size_tile_minimap + (26*size_tile), number_minimap_line*size_tile_minimap,
+                    minimap_sprite.add(Minimap_temperature(number_minimap_tile*size_tile_minimap + (26*size_tile), number_minimap_line*size_tile_minimap,
                                                             size_tile_minimap, minimap_tile.temperature))
+        #Отрисовка НПЦ
+        entities_layer = entities_layer_calculations(person, chunk_size, go_to_print, enemy_list) #Использование функции для отображения активностей
                     
-    #Отрисовка НПЦ
-    entities_layer = entities_layer_calculations(person, chunk_size, go_to_print, enemy_list) #Использование функции для отображения активностей
+        for number_line in range(chunk_size):
+            for number_tile in range(chunk_size):
+                if entities_layer[number_line][number_tile].icon != '0':
+                    enemy_offset_x = 0
+                    enemy_offset_y = 0
+                    if enemy.direction == 'left':
+                        enemy_offset_x = 0 - size_tile
+
+                    elif enemy.direction == 'right':
+                        enemy_offset_x = size_tile
+
+                    elif enemy.direction == 'up':
+                        enemy_offset_y = 0 - size_tile
+
+                    elif enemy.direction == 'down':
+                        enemy_offset_y = size_tile
+
+                    enemy_sprite = Image_tile(number_tile*size_tile + offset_x + enemy_offset_x, number_line*size_tile + offset_y + enemy_offset_y,
+                                              size_tile, tiles_image_dict, entities_layer[number_line][number_tile].icon,
+                                              entities_layer[number_line][number_tile].type)
+                    enemy_sprite.direction = enemy.direction
+
+                    dynamic_sprites.add(enemy_sprite)
                     
-    for number_line in range(chunk_size):
-        for number_tile in range(chunk_size):
-            if entities_layer[number_line][number_tile].icon != '0':
-                dynamic_sprites.add(Image_tile(number_tile*size_tile, number_line*size_tile, size_tile, tiles_image_dict,
-                                           entities_layer[number_line][number_tile].icon,
-                                           entities_layer[number_line][number_tile].type))
+    
     #Отрисовка персонажа
-    dynamic_sprites.add(Image_tile(chunk_size//2*size_tile, chunk_size//2*size_tile, size_tile, tiles_image_dict, '☺', '0'))
+    static_sprites.add(Image_tile(chunk_size//2*size_tile, chunk_size//2*size_tile, size_tile, tiles_image_dict, '☺', '0'))
     
     #screen.fill((255, 255, 255))
     #minimap.draw(screen)
@@ -2884,7 +2942,7 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
     #all_sprites.draw(screen)
 
     
-    return screen, all_sprites, dynamic_sprites
+    return screen, all_sprites, dynamic_sprites, static_sprites, minimap_sprite
 
 """
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -2934,11 +2992,11 @@ def new_step_calculation(enemy_list, person, step):
         Считает когда начинается новый шаг
     """
     new_step = True
-    person.person_pass_step = False
-    for enemy in enemy_list:
-        if (enemy.on_the_screen and enemy.steps_to_new_step):
-            new_step = False
-            person.person_pass_step = True
+    #person.person_pass_step = False
+    #for enemy in enemy_list:
+    #    if (enemy.on_the_screen and enemy.steps_to_new_step):
+    #        new_step = False
+    #        person.person_pass_step = True
     if new_step:
         step += 1
             
@@ -3011,6 +3069,8 @@ def game_loop(global_map:list, person, chunk_size:int, enemy_list:list, world, s
     game_fps = 100#
     
     all_sprites = pygame.sprite.Group()
+    dynamic_sprites = pygame.sprite.Group()
+    minimap_sprite  = pygame.sprite.Group()
 
     screen.fill((255, 255, 255))
 
@@ -3026,17 +3086,18 @@ def game_loop(global_map:list, person, chunk_size:int, enemy_list:list, world, s
         interaction = []
         world.npc_path_calculation = False #Сброс предыдущего состояния поиска пути NPC персонажами
         master_pass_step(person)
-        #new_step, step = new_step_calculation(enemy_list, person, step)
+        new_step, step = new_step_calculation(enemy_list, person, step)
         if not person.person_pass_step:
             mode_action = master_player_action(global_map, person, chunk_size, go_to_print, mode_action, interaction, activity_list, step, enemy_list)
         start = time.time() #проверка времени выполнения
         calculation_assemblage_point(global_map, person, chunk_size) # Рассчёт динамического чанка
         #all_pass_step_calculations(person, enemy_list, mode_action, interaction)
-        #if not person.enemy_pass_step:
-            #master_game_events(global_map, enemy_list, person, go_to_print, step, activity_list, chunk_size, interaction, new_step, world)
+        if not person.enemy_pass_step:
+            master_game_events(global_map, enemy_list, person, go_to_print, step, activity_list, chunk_size, interaction, new_step, world)
         test1 = time.time() #проверка времени выполнения
-        screen, all_sprites, dynamic_sprites = master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action, enemy_list, activity_list,
-                                                screen, tiles_image_dict, raw_minimap, all_sprites)
+        screen, all_sprites, dynamic_sprites, static_sprites, minimap_sprite = master_pygame_draw(person, chunk_size, go_to_print,
+                                    global_map, mode_action, enemy_list, activity_list, screen, tiles_image_dict, raw_minimap, all_sprites,
+                                    dynamic_sprites, minimap_sprite)
         test2 = time.time() #проверка времени выполнения
         
         #Создание новой группы
@@ -3044,6 +3105,10 @@ def game_loop(global_map:list, person, chunk_size:int, enemy_list:list, world, s
         for sprite in all_sprites:
             print_sprites.add(sprite)
         for sprite in dynamic_sprites:
+            print_sprites.add(sprite)
+        for sprite in static_sprites:
+            print_sprites.add(sprite)
+        for sprite in minimap_sprite:
             print_sprites.add(sprite)
 
         print_sprites.draw(screen)
@@ -3064,7 +3129,7 @@ def game_loop(global_map:list, person, chunk_size:int, enemy_list:list, world, s
         pygame.display.flip()
 
 
-        person.recalculating_the_display = False
+        #person.recalculating_the_display = False
     
 
 def main():
