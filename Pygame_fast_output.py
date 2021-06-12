@@ -2913,22 +2913,22 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
                 if entities_layer[number_line][number_tile].icon != '0':
                     enemy_offset_x = 0
                     enemy_offset_y = 0
-                    if enemy.direction == 'left':
+                    if entities_layer[number_line][number_tile].direction == 'left':
                         enemy_offset_x = 0 - size_tile
 
-                    elif enemy.direction == 'right':
+                    elif entities_layer[number_line][number_tile].direction == 'right':
                         enemy_offset_x = size_tile
 
-                    elif enemy.direction == 'up':
+                    elif entities_layer[number_line][number_tile].direction == 'up':
                         enemy_offset_y = 0 - size_tile
 
-                    elif enemy.direction == 'down':
+                    elif entities_layer[number_line][number_tile].direction == 'down':
                         enemy_offset_y = size_tile
 
                     enemy_sprite = Image_tile(number_tile*size_tile + offset_x + enemy_offset_x, number_line*size_tile + offset_y + enemy_offset_y,
                                               size_tile, tiles_image_dict, entities_layer[number_line][number_tile].icon,
                                               entities_layer[number_line][number_tile].type)
-                    enemy_sprite.direction = enemy.direction
+                    enemy_sprite.direction = entities_layer[number_line][number_tile].direction
 
                     dynamic_sprites.add(enemy_sprite)
                     
