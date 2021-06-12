@@ -6,6 +6,7 @@ import keyboard
 import time
 import math
 import pygame
+import sys
 from pygame.locals import *
 from new_generator_map_branch import test_new_map_generator as map_generator
 from new_generator_map_branch import old_map_generator
@@ -1423,9 +1424,14 @@ def master_player_action(global_map, person, chunk_size, go_to_print, mode_actio
     return mode_action
 
 def wait_keyboard():
+    #print(F'pygame.event.get() - {pygame.event.get()}')
     while True:
         for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                sys.exit()
             if event.type == pygame.KEYDOWN:
+                
+                #print(F'event - {event}')
                 if event.key == pygame.K_LEFT:
                     return 'a'
                 if event.key == pygame.K_RIGHT:
@@ -1446,13 +1452,13 @@ def wait_keyboard():
                     return 'c'
                 if event.key == pygame.K_h:
                     return 'h'
-
+    
 def request_press_button(global_map, person, chunk_size, go_to_print, mode_action, interaction):
     """
         Спрашивает ввод, возвращает тип активности и нажимаемую кнопку
 
     """
-    pygame.event.clear()
+    #pygame.event.clear()
     key = wait_keyboard()
    
     #key = keyboard.read_key()
