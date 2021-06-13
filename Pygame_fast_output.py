@@ -1071,7 +1071,7 @@ def vertices_enemy_a_star_algorithm_move_calculation(processed_map, start_point,
             number_finish_node = len(graph) - 1
             sucess = False
             general_loop = False
-            print(f"!!! {enemy.name_npc} {global_or_local} путь по алгоритму А* не найден. Выбрана ближайшая точка.")
+            #print(f"!!! {enemy.name_npc} {global_or_local} путь по алгоритму А* не найден. Выбрана ближайшая точка.")
             if global_or_local == 'global': #УДАЛЕНИЕ ЦЕЛИ ЕСЛИ НЕ НАЙДЕН ПУТЬ ЧТО БЫ НЕ СПАМИЛ
                 enemy.target = []
         if global_or_local == 'global':
@@ -1093,7 +1093,7 @@ def vertices_enemy_a_star_algorithm_move_calculation(processed_map, start_point,
                     if graph[number_node].price < min_price:
                         min_price = graph[number_node].price
                         number_finish_node = number_node
-            print(f"!!! {enemy.name_npc} {global_or_local} путь по алгоритму А* за отведённые шаги не найден. Выбрана ближайшая точка.")
+            #print(f"!!! {enemy.name_npc} {global_or_local} путь по алгоритму А* за отведённые шаги не найден. Выбрана ближайшая точка.")
             if global_or_local == 'global': #УДАЛЕНИЕ ЦЕЛИ ЕСЛИ НЕ НАЙДЕН ПУТЬ ЧТО БЫ НЕ СПАМИЛ
                 enemy.target = []
             sucess = False
@@ -1424,14 +1424,13 @@ def master_player_action(global_map, person, chunk_size, go_to_print, mode_actio
     return mode_action
 
 def wait_keyboard():
-    #print(F'pygame.event.get() - {pygame.event.get()}')
+    pygame.key.set_repeat(1, 2)
+    
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 sys.exit()
             if event.type == pygame.KEYDOWN:
-                
-                #print(F'event - {event}')
                 if event.key == pygame.K_LEFT:
                     return 'a'
                 if event.key == pygame.K_RIGHT:
@@ -1458,7 +1457,7 @@ def request_press_button(global_map, person, chunk_size, go_to_print, mode_actio
         Спрашивает ввод, возвращает тип активности и нажимаемую кнопку
 
     """
-    #pygame.event.clear()
+    pygame.event.clear()
     key = wait_keyboard()
    
     #key = keyboard.read_key()
