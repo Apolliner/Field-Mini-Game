@@ -27,6 +27,7 @@ garbage = ['░', '▒', '▓', '█', '☺']
 
     
 """
+
 class World:
     """ Содержит в себе описание текущего состояния игрового мира """
     def __init__(self):
@@ -132,6 +133,320 @@ class Interfase:
         self.text8 = text8
         self.text9 = text9
         self.text10 = text10
+"""
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+    ЗАГРУЗКА ИГРОВЫХ РЕСУРСОВ
+        
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+"""
+class Fast_image_tile(pygame.sprite.Sprite):
+    """ Содержит заранее созданную поверхность спрайта """
+    def __init__(self, image_tile):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = image_tile
+        self.rect = self.image.get_rect()
+        self.rect.top = 0
+        self.rect.left = 0
+        self.speed = 0
+
+def loading_all_sprites():
+    """
+        Создаёт поверхности всех спрайтов до начала игры, для ускорения вывода очередного кадра на экран.
+    """
+    sprites_dict =   {
+                    'j': {
+                            '0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dune_0.jpg'))),
+                            '1': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dune_1.jpg'))),
+                         },
+                    's': {'0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_seashell_0.jpg')))},
+                    '.': {'0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_sand.jpg')))},
+                    ',': {
+                            '0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_grass_5.jpg'))),
+                            '1': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_grass_0.jpg'))),
+                            '2': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_grass_2.jpg'))),
+                            '3': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_grass_1.jpg'))),
+                            '4': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_grass_2.jpg'))),
+                            '5': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_grass_2.jpg'))),
+                            '6': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_grass_4.jpg'))),
+                            '7': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_grass_3.jpg'))),
+                            '8': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_grass_2.jpg'))),
+                            '9': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_grass_3.jpg'))),
+                            'A': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_grass_4.jpg'))),
+                            'B': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_grass_4.jpg'))),
+                            'C': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_grass_5.jpg'))),
+                            'D': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_grass_2.jpg'))),
+                            'E': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_grass_3.jpg'))),
+                            'F': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_grass_4.jpg'))),
+                          },
+                    'o': {
+                            '0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_stone_4.jpg'))),
+                            '1': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_stone_0.jpg'))),
+                            '2': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_stone_2.jpg'))),
+                            '3': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_stone_3.jpg'))),
+                            '4': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_stone_4.jpg'))),
+                            '5': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_stone_2.jpg'))),
+                            '6': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_stone_3.jpg'))),
+                            '7': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_stone_4.jpg'))),
+                            '8': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_stone_2.jpg'))),
+                            '9': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_stone_3.jpg'))),
+                            'A': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_stone_4.jpg'))),
+                            'B': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_stone_2.jpg'))),
+                            'C': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_stone_3.jpg'))),
+                            'D': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_stone_4.jpg'))),
+                            'E': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_stone_2.jpg'))),
+                            'F': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_stone_3.jpg'))),
+                          },
+                    'A': {
+                            '0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_bump_0.jpg'))),
+                            '1': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_bump_1.jpg'))),
+                         },
+                    '▲': {
+                            '0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_0.jpg'))),
+                            '1': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_1.jpg'))),
+                            '2': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_2.jpg'))),
+                            '3': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_3.jpg'))),
+                            '4': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_4.jpg'))),
+                            '5': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_5.jpg'))),
+                            '6': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_6.jpg'))),
+                            '7': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_7.jpg'))),
+                            '8': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_8.jpg'))),
+                            '9': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_9.jpg'))),
+                            'A': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_A.jpg'))),
+                            'B': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_B.jpg'))),
+                            'C': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_C.jpg'))),
+                            'D': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_D.jpg'))),
+                            'E': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_E.jpg'))),
+                            'F': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_F.jpg'))),
+                            'G': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_G.jpg'))),
+                            'H': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_H.jpg'))),
+                            'I': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_I.jpg'))),
+                            'J': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_J.jpg'))),
+                            'K': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_K.jpg'))),
+                            'L': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_L.jpg'))),
+                            'M': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_M.jpg'))),
+                            'N': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_N.jpg'))),
+                            'O': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_O.jpg'))),
+                            'P': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_P.jpg'))),
+                            'Q': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_Q.jpg'))),
+                            'R': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_R.jpg'))),
+                            'S': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_S.jpg'))),
+                            'T': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_T.jpg'))),
+                            'U': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_U.jpg'))),
+                         },
+                    'i': {
+                            '0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_cactus_0.jpg'))),
+                            '1': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_cactus_1.jpg'))),
+                            '2': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_cactus_2.jpg'))),
+                            '3': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_cactus_3.jpg'))),
+                          },
+                    ':': {
+                            '0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_saline_1_0.jpg'))),
+                            '1': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_saline_1_1.jpg'))),
+                            '2': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_saline_1_2.jpg'))),
+                            '3': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_saline_1_3.jpg'))),
+                            '4': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_saline_1_4.jpg'))),
+                            '5': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_saline_1_5.jpg'))),
+                            '6': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_saline_1_6.jpg'))),
+                            '7': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_saline_1_7.jpg'))),
+                            '8': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_saline_1_8.jpg'))),
+                            '9': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_saline_1_9.jpg'))),
+                            'A': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_saline_1_A.jpg'))),
+                            'B': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_saline_1_B.jpg'))),
+                            'C': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_saline_1_C.jpg'))),
+                            'D': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_saline_1_D.jpg'))),
+                            'E': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_saline_1_E.jpg'))),
+                            'F': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_saline_1_F.jpg'))),
+                         },
+                    ';': {'0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_saline_2.jpg')))},
+                    '„': {
+                            '0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_grass_4.jpg'))),
+                            '1': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_grass_0.jpg'))),
+                            '2': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_grass_2.jpg'))),
+                            '3': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_grass_3.jpg'))),
+                            '4': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_grass_4.jpg'))),
+                            '5': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_grass_2.jpg'))),
+                            '6': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_grass_3.jpg'))),
+                            '7': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_grass_4.jpg'))),
+                            '8': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_grass_2.jpg'))),
+                            '9': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_grass_3.jpg'))),
+                            'A': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_grass_4.jpg'))),
+                            'B': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_grass_2.jpg'))),
+                            'C': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_grass_3.jpg'))),
+                            'D': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_grass_4.jpg'))),
+                            'E': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_grass_2.jpg'))),
+                            'F': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_grass_3.jpg'))),
+                          },
+                    'u': {
+                            '0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_tall_grass_0.jpg'))),
+                            '1': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_tall_grass_1.jpg'))),
+                         },
+                    'ü': {'0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_prickly_grass.jpg')))},
+                    'F': {
+                            '0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_tree_0.jpg'))),
+                            '1': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_tree_1.jpg'))),
+                            '2': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_tree_2.jpg'))),
+                            '3': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_tree_3.jpg'))),
+                            '4': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_tree_4.jpg'))),
+                            '5': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_tree_5.jpg'))),
+                            '6': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_tree_6.jpg'))),
+                            '7': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_tree_7.jpg'))),
+                         },
+                    'P': {'0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_live_tree.jpg')))},
+                    '~': {
+                            '0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_0.jpg'))),
+                            '1': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_1.jpg'))),
+                            '2': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_2.jpg'))),
+                            '3': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_3.jpg'))),
+                            '4': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_4.jpg'))),
+                            '5': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_5.jpg'))),
+                            '6': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_6.jpg'))),
+                            '7': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_7.jpg'))),
+                            '8': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_8.jpg'))),
+                            '9': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_9.jpg'))),
+                            'A': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_A.jpg'))),
+                            'B': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_B.jpg'))),
+                            'C': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_C.jpg'))),
+                            'D': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_D.jpg'))),
+                            'E': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_E.jpg'))),
+                            'F': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_F.jpg'))),
+                            'G': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_G.jpg'))),
+                            'H': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_H.jpg'))),
+                            'I': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_I.jpg'))),
+                            'J': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_J.jpg'))),
+                            'K': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_K.jpg'))),
+                            'L': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_L.jpg'))),
+                            'M': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_M.jpg'))),
+                            'N': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_N.jpg'))),
+                            'O': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_O.jpg'))),
+                            'P': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_P.jpg'))),
+                            'Q': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_Q.jpg'))),
+                            'R': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_R.jpg'))),
+                            'S': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_S.jpg'))),
+                            'T': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_T.jpg'))),
+                            'U': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_U.jpg'))),
+                         },
+                    'f': {
+                            '0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_0.jpg'))),
+                            '1': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_1.jpg'))),
+                            '2': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_2.jpg'))),
+                            '3': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_3.jpg'))),
+                            '4': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_4.jpg'))),
+                            '5': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_5.jpg'))),
+                            '6': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_6.jpg'))),
+                            '7': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_7.jpg'))),
+                            '8': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_8.jpg'))),
+                            '9': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_9.jpg'))),
+                            'A': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_A.jpg'))),
+                            'B': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_B.jpg'))),
+                            'C': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_C.jpg'))),
+                            'D': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_D.jpg'))),
+                            'E': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_E.jpg'))),
+                            'F': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_F.jpg'))),
+                            'G': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_G.jpg'))),
+                            'H': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_H.jpg'))),
+                            'I': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_I.jpg'))),
+                            'J': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_J.jpg'))),
+                            'K': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_K.jpg'))),
+                            'L': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_L.jpg'))),
+                            'M': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_M.jpg'))),
+                            'N': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_N.jpg'))),
+                            'O': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_O.jpg'))),
+                            'P': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_P.jpg'))),
+                            'Q': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_Q.jpg'))),
+                            'R': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_R.jpg'))),
+                            'S': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_S.jpg'))),
+                            'T': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_T.jpg'))),
+                            'U': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_U.jpg'))),
+                         },
+                    '`': {
+                            '0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_0.jpg'))),
+                            '1': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_1.jpg'))),
+                            '2': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_2.jpg'))),
+                            '3': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_3.jpg'))),
+                            '4': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_4.jpg'))),
+                            '5': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_5.jpg'))),
+                            '6': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_6.jpg'))),
+                            '7': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_7.jpg'))),
+                            '8': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_8.jpg'))),
+                            '9': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_9.jpg'))),
+                            'A': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_A.jpg'))),
+                            'B': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_B.jpg'))),
+                            'C': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_C.jpg'))),
+                            'D': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_D.jpg'))),
+                            'E': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_E.jpg'))),
+                            'F': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_F.jpg'))),
+                            'G': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_G.jpg'))),
+                            'H': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_H.jpg'))),
+                            'I': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_I.jpg'))),
+                            'J': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_J.jpg'))),
+                            'K': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_K.jpg'))),
+                            'L': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_L.jpg'))),
+                            'M': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_M.jpg'))),
+                            'N': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_N.jpg'))),
+                            'O': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_O.jpg'))),
+                            'P': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_P.jpg'))),
+                            'Q': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_Q.jpg'))),
+                            'R': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_R.jpg'))),
+                            'S': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_S.jpg'))),
+                            'T': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_T.jpg'))),
+                            'U': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_U.jpg'))),
+                         },
+                    'C': {
+                            '0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_0.jpg'))),
+                            '1': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_1.jpg'))),
+                            '2': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_2.jpg'))),
+                            '3': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_3.jpg'))),
+                            '4': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_4.jpg'))),
+                            '5': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_5.jpg'))),
+                            '6': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_6.jpg'))),
+                            '7': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_7.jpg'))),
+                            '8': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_8.jpg'))),
+                            '9': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_9.jpg'))),
+                            'A': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_A.jpg'))),
+                            'B': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_B.jpg'))),
+                            'C': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_C.jpg'))),
+                            'D': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_D.jpg'))),
+                            'E': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_E.jpg'))),
+                            'F': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_F.jpg'))),
+                            'G': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_G.jpg'))),
+                            'H': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_H.jpg'))),
+                            'I': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_I.jpg'))),
+                            'J': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_J.jpg'))),
+                            'K': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_K.jpg'))),
+                            'L': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_L.jpg'))),
+                            'M': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_M.jpg'))),
+                            'N': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_N.jpg'))),
+                            'O': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_O.jpg'))),
+                            'P': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_P.jpg'))),
+                            'Q': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_Q.jpg'))),
+                            'R': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_R.jpg'))),
+                            'S': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_S.jpg'))),
+                            'T': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_T.jpg'))),
+                            'U': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_U.jpg'))),
+                         },
+                    '☺': {'0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_person.png')))},
+                    '☻': {
+                            'r': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_enemy_riffleman.png'))),
+                            'h': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_enemy_horseman.png'))),
+                         },
+                    'c': {'0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_enemy_coyot.png')))},
+                    '8': {'0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_human_traces.png')))},
+                    '%': {'0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_horse_traces.png')))},
+                    '@': {'0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_animal_traces.png')))},
+                    '/': {'0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_camp.png')))},
+                    '+': {'0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_bonfire.png')))},
+                    '№': {'0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_rest_stop.png')))},
+                    '#': {'0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_gnawed_bones.png')))},
+                    '$': {'0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_animal_rest_stop.png')))},
+                    'W': {'0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_warning.jpg')))}
+                    }
+    return sprites_dict
+
+
+
+
 """
 
     ТЕХНИЧЕСКИЕ ФУНКЦИИ И КЛАССЫ
@@ -2718,9 +3033,20 @@ def print_minimap(global_map, person, go_to_print, enemy_list):
         minimap.append((print_line))
     go_to_print.biom_map = minimap
 
+class Empty_sprite(pygame.sprite.Sprite):
+    """ Пустой класс для дальнейшего запонения """
+
+    def __init__(self, rect, y, x):
+        pygame.sprite.Sprite.__init__(self)
+        self.rect = rect
+        self.rect.top = y
+        self.rect.left = x
+        self.speed = 0
+    
+      
 
 def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action, enemy_list, activity_list, screen, tiles_image_dict,
-                                                               minimap, all_sprites, dynamic_sprites, minimap_sprite):
+                                                               minimap, all_sprites, dynamic_sprites, minimap_sprite, sprites_dict):
     """
         Работает с классом Interfase, содержащимся в go_to_print
 
@@ -2824,6 +3150,10 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
                     if landscape_layer[number_line][number_tile].level > 1:
                         all_sprites.add(Level_tiles(number_tile*size_tile + offset_x, number_line*size_tile + offset_y, size_tile,
                                                     landscape_layer[number_line][number_tile].level - 1))
+                    #new_sprite = pygame.Surface.copy(sprites_dict[landscape_layer[number_line][number_tile].icon][landscape_layer[number_line][number_tile].type])
+                    #new_sprite.rect.top = number_line*size_tile + offset_y
+                    #new_sprite.rect.left = number_tile*size_tile + offset_x
+                    #all_sprites.add(new_sprite)
             
             for number_line in range(chunk_size):
                 for number_tile in range(chunk_size):
@@ -2941,7 +3271,7 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
     #Отрисовка персонажа
     static_sprites.add(Image_tile(chunk_size//2*size_tile, chunk_size//2*size_tile, size_tile, tiles_image_dict, '☺', '0'))
     
-    #screen.fill((255, 255, 255))
+    screen.fill((255, 255, 255))
     #minimap.draw(screen)
     
     #all_sprites.draw(screen)
@@ -3084,6 +3414,8 @@ def game_loop(global_map:list, person, chunk_size:int, enemy_list:list, world, s
     pygame.display.flip()
 
     fontObj = pygame.font.Font('freesansbold.ttf', 10)
+    #Загрузка и создание поверхностей всех спрайтов
+    sprites_dict = loading_all_sprites()
     
   
     while game_loop:
@@ -3102,7 +3434,7 @@ def game_loop(global_map:list, person, chunk_size:int, enemy_list:list, world, s
         test1 = time.time() #проверка времени выполнения
         screen, all_sprites, dynamic_sprites, static_sprites, minimap_sprite = master_pygame_draw(person, chunk_size, go_to_print,
                                     global_map, mode_action, enemy_list, activity_list, screen, tiles_image_dict, raw_minimap, all_sprites,
-                                    dynamic_sprites, minimap_sprite)
+                                    dynamic_sprites, minimap_sprite, sprites_dict)
         test2 = time.time() #проверка времени выполнения
         
         #Создание новой группы
