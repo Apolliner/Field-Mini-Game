@@ -3331,7 +3331,7 @@ class Color_rect(pygame.sprite.Sprite):
 
 def master_pygame_draw2(person, chunk_size, go_to_print, global_map, mode_action, enemy_list, activity_list, screen, tiles_image_dict,
                         minimap, all_sprites, dynamic_sprites, minimap_sprite, sprites_dict, offset_sprites, landscape_layer, activity_layer,
-                        entities_layer, finishing_surface):
+                        entities_layer, finishing_surface, settings_for_intermediate_steps):
     """
         Работает с классом Interfase, содержащимся в go_to_print
 
@@ -3354,12 +3354,9 @@ def master_pygame_draw2(person, chunk_size, go_to_print, global_map, mode_action
     """
     size_tile = 30 # Настройка размера тайлов игрового окна
     size_tile_minimap = 15 # Настройка размера тайлов миникаты
-    step_direction = 6 #Смещение промежуточного шага
-    number_intermediate_steps = 5 #Колиество промежуточных шагов
     
-    
-    
-    static_sprites = pygame.sprite.Group()
+    number_intermediate_steps = settings_for_intermediate_steps[0] #Количество промежуточных шагов
+    step_direction = settings_for_intermediate_steps[1] #Смещение промежуточного шага
     
     if person.pass_draw_move: #Промежуточный кадр
         person.pass_draw_move -= 1
@@ -3618,7 +3615,6 @@ def master_pygame_draw2(person, chunk_size, go_to_print, global_map, mode_action
                     
     
     #Отрисовка персонажа
-    static_sprites.add(Image_tile(chunk_size//2*size_tile, chunk_size//2*size_tile, size_tile, tiles_image_dict, '☺', '0'))
     person_sprite = sprites_dict['☺'][person.type]
     person_sprite.rect.top = chunk_size//2*size_tile
     person_sprite.rect.left = chunk_size//2*size_tile
@@ -3673,6 +3669,7 @@ def master_pass_step(person):
     else:
         person.person_pass_step = False
         person.enemy_pass_step = False
+
 
 def all_pass_step_calculations(person, enemy_list, mode_action, interaction):
     """
@@ -3790,7 +3787,8 @@ def game_loop(global_map:list, person, chunk_size:int, enemy_list:list, world, s
     entities_layer = [[[]]]
 
     finishing_surface = pygame.Surface(((chunk_size + 1)*30, (chunk_size + 1)*30))
-    
+
+    settings_for_intermediate_steps = [5, 6]
     
   
     while game_loop:
@@ -3814,8 +3812,24 @@ def game_loop(global_map:list, person, chunk_size:int, enemy_list:list, world, s
         screen, landscape_layer, activity_layer, entities_layer, offset_sprites, finishing_surface = master_pygame_draw2(person, chunk_size,
                                             go_to_print, global_map, mode_action, enemy_list, activity_list, screen, tiles_image_dict, minimap,
                                             all_sprites, dynamic_sprites, minimap_sprite, sprites_dict, offset_sprites, landscape_layer, activity_layer,
-                                            entities_layer, finishing_surface)
+                                            entities_layer, finishing_surface, settings_for_intermediate_steps)
         test2 = time.time() #проверка времени выполнения
+        #Рассчёт количества промежуточных шагов в зависимости от скорости вывода основного шага
+        if not person.person_pass_step and not person.enemy_pass_step:
+            if (test2 - test1) >= 0.1:
+                settings_for_intermediate_steps = [2, 15]
+            elif 0.1 > (test2 - test1) >= 0.08:
+                settings_for_intermediate_steps = [3, 10]
+            elif 0.08 > (test2 - test1) >= 0.03:
+                settings_for_intermediate_steps = [5, 6]
+            elif 0.03 > (test2 - test1) >= 0.009:
+                settings_for_intermediate_steps = [6, 5]
+            elif 0.009 > (test2 - test1) >= 0.004:
+                settings_for_intermediate_steps = [10, 3]
+            elif 0.004 > (test2 - test1) >= 0.0009:
+                settings_for_intermediate_steps = [15, 2]
+            elif 0.0009 > (test2 - test1):
+                settings_for_intermediate_steps = [30, 1]
         
         #Создание новой группы
         #print_sprites = pygame.sprite.Group()
@@ -3839,7 +3853,7 @@ def game_loop(global_map:list, person, chunk_size:int, enemy_list:list, world, s
 
         end = time.time() #проверка времени выполнения
         
-        print_time = f"{round(test1 - start, 4)} - персонажи \n {round(test2 - test1, 4)} - отрисовка \n {round(end - start, 4)} - общее время \n {len(all_sprites)} - спрайтов"
+        print_time = f"{round(test1 - start, 4)} - персонажи \n {round(test2 - test1, 4)} - отрисовка \n {round(end - start, 4)} - общее время \n {settings_for_intermediate_steps} - скорость шага"
 
         textSurfaceObj = fontObj.render(print_time, True, (0, 0, 0), (255, 255, 255))
         textRectObj = textSurfaceObj.get_rect()
