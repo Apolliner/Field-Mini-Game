@@ -3543,21 +3543,37 @@ def game_loop(global_map:list, person, chunk_size:int, enemy_list:list, world, s
         
         #Рассчёт количества промежуточных шагов в зависимости от скорости вывода основного шага
         if not person.person_pass_step and not person.enemy_pass_step:
-            if (test2 - test1) >= 0.1:
+            if (test2 - test1) >= 0.075:
                 settings_for_intermediate_steps = [2, 15]
-            elif 0.1 > (test2 - test1) >= 0.08:
+            elif 0.075 > (test2 - test1) >= 0.05:
                 settings_for_intermediate_steps = [3, 10]
-            elif 0.08 > (test2 - test1) >= 0.03:
+            elif 0.05 > (test2 - test1) >= 0.03:
                 settings_for_intermediate_steps = [5, 6]
-            elif 0.03 > (test2 - test1) >= 0.009:
+            elif 0.03 > (test2 - test1) >= 0.025:
                 settings_for_intermediate_steps = [6, 5]
-            elif 0.009 > (test2 - test1) >= 0.004:
+            elif 0.025 > (test2 - test1) >= 0.015:
                 settings_for_intermediate_steps = [10, 3]
-            elif 0.004 > (test2 - test1) >= 0.0009:
+            elif 0.015 > (test2 - test1) >= 0.01:
                 settings_for_intermediate_steps = [15, 2]
-            elif 0.0009 > (test2 - test1):
+            elif 0.01 > (test2 - test1):
                 settings_for_intermediate_steps = [30, 1]
             person.pass_draw_move = settings_for_intermediate_steps[0]
+
+        elif person.person_pass_step and person.enemy_pass_step: #Установка задержек на промежуточные кадры для плавности перемещения
+            if settings_for_intermediate_steps == [2, 15] and (test2 - test1) < 0.075:
+                time.sleep(0.075 - (test2 - test1))
+            elif settings_for_intermediate_steps == [3, 10] and (test2 - test1) < 0.05:
+                time.sleep(0.05 - (test2 - test1))
+            elif settings_for_intermediate_steps == [6, 5] and (test2 - test1) < 0.03:
+                time.sleep(0.03 - (test2 - test1))
+            elif settings_for_intermediate_steps == [6, 5] and (test2 - test1) < 0.025:
+                time.sleep(0.025 - (test2 - test1))
+            elif settings_for_intermediate_steps == [10, 3] and (test2 - test1) < 0.015:
+                time.sleep(0.015 - (test2 - test1))
+            elif settings_for_intermediate_steps == [15, 2] and (test2 - test1) < 0.01:
+                time.sleep(0.01 - (test2 - test1))
+            elif settings_for_intermediate_steps == [30, 1] and (test2 - test1) < 0.005:
+                time.sleep(0.005 - (test2 - test1))
         
         end = time.time() #проверка времени выполнения
         
@@ -3568,40 +3584,6 @@ def game_loop(global_map:list, person, chunk_size:int, enemy_list:list, world, s
         textRectObj.center = (30*34, 15*31)
         screen.blit(textSurfaceObj, textRectObj)            
         pygame.display.flip()
-    
-
-def main():
-    """
-        Запускает игру
-        
-    """
-    chunk_size = 25         #Определяет размер одного игрового поля и окна просмотра. Рекоммендуемое значение 25.
-    value_region_box = 5    #Размер стороны квадрата регионов и количество локаций в регионах.
-    grid = 5                #На сколько делится размер чанка. Должно быть кратно размеру игрового экрана.
-    frame_size = [35, 40]   #Размер одного кадра [высота, ширина]. УСТАРЕЛО
-
-    print('Подождите, генерируется локация для игры')
-    #global_map = old_map_generator.master_generate(value_region_box, chunk_size, grid)
-
-    #                                              global_region_grid | region_grid | chunks_grid | mini_region_grid | tile_field_grid
-    global_map, minimap = map_generator.master_map_generate(       3,                  3,          3,              5,                  5)
-    
-    person = Person([value_region_box//2, value_region_box//2], [chunk_size//2, chunk_size//2], [], [chunk_size//2, chunk_size//2], [chunk_size//2, chunk_size//2])
-    calculation_assemblage_point(global_map, person, chunk_size)
-    enemy_list = [Horseman([len(global_map)//2, len(global_map)//2], [chunk_size//2, chunk_size//2], 5), Horseman([len(global_map)//3, len(global_map)//3], [chunk_size//2, chunk_size//2], 5),
-                  Riffleman([len(global_map)//4, len(global_map)//4], [chunk_size//2, chunk_size//2], 2), Coyot([len(global_map)//5, len(global_map)//5], [chunk_size//2, chunk_size//2], 0)]
-    world = World() #Описание текущего состояния игрового мира
-
-    pygame.init()
-    screen = pygame.display.set_mode((1200, 750))
-    pygame.display.set_caption("My Game")
-
-    
-    tiles_image_dict = Tiles_image_dict() #Загружаются тайлы
-
-    game_loop(global_map, person, chunk_size, enemy_list, world, screen, tiles_image_dict, minimap)
-    
-    print('Игра окончена!')
 
 main_loop()
     
