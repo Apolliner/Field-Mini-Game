@@ -430,7 +430,13 @@ def loading_all_sprites():
                             'T': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_T.jpg'))),
                             'U': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_U.jpg'))),
                          },
-                    '☺': {'0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_person.png')))},
+                    '☺': {
+                            '0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_person.png'))),
+                            '1': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_person_right_0.png'))),
+                            '2': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_person_left_0.png'))),
+                            '3': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_person_up_0.png'))),
+
+                          },
                     '☻': {
                             'r': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_enemy_riffleman.png'))),
                             'h': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_enemy_horseman.png'))),
@@ -1865,6 +1871,7 @@ def request_move(global_map:list, person, chunk_size:int, go_to_print, pressed_b
             if person.dynamic[0] >= chunk_size//2 and person.assemblage_point[0] > 0:
                 person.dynamic[0] -= 1
                 person.direction = 'up'
+                person.type = '3'
             
     elif pressed_button == 'left':
         
@@ -1874,7 +1881,7 @@ def request_move(global_map:list, person, chunk_size:int, go_to_print, pressed_b
             if person.dynamic[1] >= chunk_size//2 and person.assemblage_point[1] > 0:
                 person.dynamic[1] -= 1
                 person.direction = 'left'
-
+                person.type = '2'
             
     elif pressed_button == 'down':
         
@@ -1884,6 +1891,7 @@ def request_move(global_map:list, person, chunk_size:int, go_to_print, pressed_b
             if person.dynamic[0] <= (chunk_size + chunk_size//2) and person.assemblage_point[0] != (len(global_map) - 2):
                 person.dynamic[0] += 1
                 person.direction = 'down'
+                person.type = '0'
             
     elif pressed_button == 'right':
         
@@ -1893,6 +1901,7 @@ def request_move(global_map:list, person, chunk_size:int, go_to_print, pressed_b
             if person.dynamic[1] <= (chunk_size + chunk_size//2) and person.assemblage_point[1] != (len(global_map) - 2):
                 person.dynamic[1] += 1
                 person.direction = 'right'
+                person.type = '1'
     
     person.global_position_calculation(chunk_size) #Рассчитывает глобальное положение и номер чанка через метод
     #person.check_encounter() #Рассчитывает порядок и координаты точек проверки
@@ -1915,7 +1924,7 @@ def test_request_move(global_map:list, person, chunk_size:int, go_to_print, pres
     elif pressed_button == 'down': 
         if person.dynamic[0] <= (chunk_size + chunk_size//2) and person.assemblage_point[0] != (len(global_map) - 2):
             person.dynamic[0] += chunk_size//2
-            person.recalculating_the_display = True
+            person.recalculating_the_display = True    
             
     elif pressed_button == 'right':
         if person.dynamic[1] <= (chunk_size + chunk_size//2) and person.assemblage_point[1] != (len(global_map) - 2):
@@ -1938,9 +1947,9 @@ def test_request_move(global_map:list, person, chunk_size:int, go_to_print, pres
         person.test_visible = not person.test_visible
 
     elif pressed_button == 'add_hunter':
-        enemy_list.append(Riffleman(person.global_position, person.local_position, 2))
+        enemy_list.append(Riffleman(copy.deepcopy(person.global_position), copy.deepcopy(person.local_position), 2))
     elif pressed_button == 'add_coyot':
-        enemy_list.append(Coyot(person.global_position, person.local_position, 0))
+        enemy_list.append(Coyot(copy.deepcopy(person.global_position), copy.deepcopy(person.local_position), 0))
 
          
 
@@ -3253,10 +3262,10 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
             for number_line in range(chunk_size):
                 for number_tile in range(chunk_size):
                     if activity_layer[number_line][number_tile].icon != '0':
-                        print_sprite = sprites_dict[activity_layer[number_line][number_tile].icon][activity_layer[number_line][number_tile].type]
-                        print_sprite.rect.top = number_line*size_tile + offset_y
-                        print_sprite.rect.left = number_tile*size_tile + offset_x
-                        print_sprite.draw(screen)
+                        activity_sprite = sprites_dict[activity_layer[number_line][number_tile].icon][activity_layer[number_line][number_tile].type]
+                        activity_sprite.rect.top = number_line*size_tile + offset_y
+                        activity_sprite.rect.left = number_tile*size_tile + offset_x
+                        activity_sprite.draw(screen)
 
             
 
@@ -3477,7 +3486,6 @@ def main_loop():
                 minimap.add(All_tiles(number_minimap_tile*size_tile_minimap + (26*size_tile), number_minimap_line*size_tile_minimap, size_tile_minimap,
                                         tiles_image_dict, minimap_tile.icon, minimap_tile.type))
 
-
         game_loop(global_map, person, chunk_size, enemy_list, world, screen, tiles_image_dict, minimap, raw_minimap)
         
 
@@ -3534,7 +3542,6 @@ def game_loop(global_map:list, person, chunk_size:int, enemy_list:list, world, s
         if not person.enemy_pass_step:
             master_game_events(global_map, enemy_list, person, go_to_print, step, activity_list, chunk_size, interaction, new_step, world)
         test1 = time.time() #проверка времени выполнения
-
         screen, landscape_layer, activity_layer, entities_layer, offset_sprites, finishing_surface = master_pygame_draw(person, chunk_size,
                                             go_to_print, global_map, mode_action, enemy_list, activity_list, screen, tiles_image_dict, minimap,
                                             all_sprites, dynamic_sprites, minimap_sprite, sprites_dict, offset_sprites, landscape_layer, activity_layer,
