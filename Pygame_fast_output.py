@@ -435,6 +435,14 @@ def loading_all_sprites():
                             '1': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_person_right_0.png'))),
                             '2': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_person_left_0.png'))),
                             '3': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_person_up_0.png'))),
+                            'l0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_person_left_0.png'))),
+                            'l1': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_person_left_1.png'))),
+                            'l2': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_person_left_2.png'))),
+                            'l3': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_person_left_3.png'))),
+                            'r0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_person_right_0.png'))),
+                            'r1': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_person_right_1.png'))),
+                            'r2': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_person_right_2.png'))),
+                            'r3': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_person_right_3.png'))),
 
                           },
                     '☻': {
@@ -3085,6 +3093,212 @@ class Color_rect(pygame.sprite.Sprite):
     def draw(self, surface):
         surface.blit(self.image, self.rect)
 
+def person_walk_draw(person, settings_for_intermediate_steps):
+    """
+        Меняет кадры анимации персонажа во время промежуточных кадров
+    """
+    if settings_for_intermediate_steps == [2, 15]:
+        frame_dict = {
+                        1: {
+                            'left': 'l1',
+                            'right': 'r1',
+                            },
+                        2: {
+                            'left': 'l3',
+                            'right': 'r3',
+                            },
+                     }
+        person.type = frame_dict[person.pass_draw_move][person.direction]
+        
+    elif settings_for_intermediate_steps == [3, 10]:
+        frame_dict = {
+                        1: {
+                            'left': 'l1',
+                            'right': 'r1',
+                            },
+                        2: {
+                            'left': 'l2',
+                            'right': 'r2',
+                            },
+                        3: {
+                            'left': 'l3',
+                            'right': 'r3',
+                            },
+                     }
+        person.type = frame_dict[person.pass_draw_move][person.direction]
+        
+    elif settings_for_intermediate_steps == [5, 6]:
+        frame_dict = {
+                        1: {
+                            'left': 'l1',
+                            'right': 'r1',
+                            },
+                        2: {
+                            'left': 'l1',
+                            'right': 'r1',
+                            },
+                        3: {
+                            'left': 'l2',
+                            'right': 'r2',
+                            },
+                        4: {
+                            'left': 'l3',
+                            'right': 'r3',
+                            },
+                        5: {
+                            'left': 'l3',
+                            'right': 'r3',
+                            },
+                     }
+        try:
+            person.type = frame_dict[person.pass_draw_move][person.direction]
+        except:
+            print(F"!!!except!!! person.type = {person.type}, person.pass_draw_move - {person.pass_draw_move}, person.direction - {person.direction}")
+        
+    elif settings_for_intermediate_steps == [6, 5]:
+        frame_dict = {
+                        1: {
+                            'left': 'l1',
+                            'right': 'r1',
+                            },
+                        2: {
+                            'left': 'l1',
+                            'right': 'r1',
+                            },
+                        3: {
+                            'left': 'l2',
+                            'right': 'r2',
+                            },
+                        4: {
+                            'left': 'l2',
+                            'right': 'r2',
+                            },
+                        5: {
+                            'left': 'l3',
+                            'right': 'r3',
+                            },
+                        6: {
+                            'left': 'l3',
+                            'right': 'r3',
+                            },
+                     }
+        person.type = frame_dict[person.pass_draw_move][person.direction]
+        
+    elif settings_for_intermediate_steps == [10, 3]:
+         frame_dict = {
+                        1: {
+                            'left': 'l1',
+                            'right': 'r1',
+                            },
+                        2: {
+                            'left': 'l1',
+                            'right': 'r1',
+                            },
+                        3: {
+                            'left': 'l1',
+                            'right': 'r1',
+                            },
+                        4: {
+                            'left': 'l2',
+                            'right': 'r2',
+                            },
+                        5: {
+                            'left': 'l2',
+                            'right': 'r2',
+                            },
+                        6: {
+                            'left': 'l2',
+                            'right': 'r2',
+                            },
+                        7: {
+                            'left': 'l3',
+                            'right': 'r3',
+                            },
+                        8: {
+                            'left': 'l3',
+                            'right': 'r3',
+                            },
+                        9: {
+                            'left': 'l3',
+                            'right': 'r3',
+                            },
+                        10: {
+                            'left': 'l0',
+                            'right': 'r0',
+                            },
+                     }
+        #person.type = frame_dict[person.pass_draw_move][person.direction]
+        
+    elif settings_for_intermediate_steps == [15, 2]:
+        frame_dict = {
+                        1: {
+                            'left': 'l1',
+                            'right': 'r1',
+                            },
+                        2: {
+                            'left': 'l1',
+                            'right': 'r1',
+                            },
+                        3: {
+                            'left': 'l1',
+                            'right': 'r1',
+                            },
+                        4: {
+                            'left': 'l1',
+                            'right': 'r1',
+                            },
+                        5: {
+                            'left': 'l1',
+                            'right': 'r1',
+                            },
+                        6: {
+                            'left': 'l2',
+                            'right': 'r2',
+                            },
+                        7: {
+                            'left': 'l2',
+                            'right': 'r2',
+                            },
+                        8: {
+                            'left': 'l2',
+                            'right': 'r2',
+                            },
+                        9: {
+                            'left': 'l2',
+                            'right': 'r2',
+                            },
+                        10: {
+                            'left': 'l3',
+                            'right': 'r3',
+                            },
+                        11: {
+                            'left': 'l3',
+                            'right': 'r3',
+                            },
+                        12: {
+                            'left': 'l3',
+                            'right': 'r3',
+                            },
+                        13: {
+                            'left': 'l3',
+                            'right': 'r3',
+                            },
+                        14: {
+                            'left': 'l3',
+                            'right': 'r3',
+                            },
+                        15: {
+                            'left': 'l0',
+                            'right': 'r0',
+                            },
+                     }
+        person.type = frame_dict[person.pass_draw_move][person.direction]
+        
+    elif settings_for_intermediate_steps == [30, 1]:
+        pass
+        
+    
+
 def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action, enemy_list, activity_list, screen, tiles_image_dict,
                         minimap, all_sprites, dynamic_sprites, minimap_sprite, sprites_dict, offset_sprites, landscape_layer, activity_layer,
                         entities_layer, finishing_surface, settings_for_intermediate_steps):
@@ -3115,8 +3329,13 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
     step_direction = settings_for_intermediate_steps[1] #Смещение промежуточного шага
     
     if person.pass_draw_move: #Промежуточный кадр
+        #Рассчет кадра движения персонажа
+        if person.direction == 'left' or person.direction == 'right':
+            person_walk_draw(person, settings_for_intermediate_steps)
+            
         person.pass_draw_move -= 1
         blit_coordinates = (0, 0)
+        
         
         if person.direction == 'up':
             offset_sprites.all[0] += step_direction
@@ -3571,7 +3790,7 @@ def game_loop(global_map:list, person, chunk_size:int, enemy_list:list, world, s
                 time.sleep(0.075 - (test2 - test1))
             elif settings_for_intermediate_steps == [3, 10] and (test2 - test1) < 0.05:
                 time.sleep(0.05 - (test2 - test1))
-            elif settings_for_intermediate_steps == [6, 5] and (test2 - test1) < 0.03:
+            elif settings_for_intermediate_steps == [5, 6] and (test2 - test1) < 0.03:
                 time.sleep(0.03 - (test2 - test1))
             elif settings_for_intermediate_steps == [6, 5] and (test2 - test1) < 0.025:
                 time.sleep(0.025 - (test2 - test1))
