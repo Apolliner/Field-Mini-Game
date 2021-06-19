@@ -444,8 +444,13 @@ def loading_all_sprites():
 
                           },
                     '☻': {
-                            'r': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_enemy_riffleman.png'))),
+                            'd0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_enemy_riffleman_down_0.png'))),
+                            'u0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_enemy_riffleman_up_0.png'))),
+                            'l0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_enemy_riffleman_left_0.png'))),
+                            'r0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_enemy_riffleman_right_0.png'))),
+                            
                             'h': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_enemy_horseman.png'))),
+                            
                          },
                     'c': {'0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_enemy_coyot.png')))},
                     '8': {'0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_human_traces.png')))},
@@ -957,7 +962,7 @@ class Riffleman(Enemy):
         self.fatigue = 100
         self.reserves = 5
         self.type_npc = 'hunter'
-        self.type = 'r'
+        self.type = 'd0'
         self.pass_description = ''
         self.person_description = f"Шериф одного мрачного города {self.name_npc}"
         self.description = ''
@@ -1128,20 +1133,36 @@ def enemy_direction_calculation(enemy):
     if enemy.global_position == [enemy.local_waypoints[0][3][0], enemy.local_waypoints[0][3][1]]:
         if enemy.local_position == [enemy.local_waypoints[0][0] - 1, enemy.local_waypoints[0][1]]:
             enemy.direction = 'up'
+            if enemy.name == 'riffleman':
+                enemy.type = 'd0'
         elif enemy.local_position == [enemy.local_waypoints[0][0] + 1, enemy.local_waypoints[0][1]]:
             enemy.direction = 'down'
+            if enemy.name == 'riffleman':
+                enemy.type = 'u0'
         elif enemy.local_position == [enemy.local_waypoints[0][0], enemy.local_waypoints[0][1] - 1]:
             enemy.direction = 'left'
+            if enemy.name == 'riffleman':
+                enemy.type = 'r0'
         elif enemy.local_position == [enemy.local_waypoints[0][0], enemy.local_waypoints[0][1] + 1]:
             enemy.direction = 'right'
+            if enemy.name == 'riffleman':
+                enemy.type = 'l0'
     elif enemy.global_position == [enemy.local_waypoints[0][3][0] - 1, enemy.local_waypoints[0][3][1]]:
         enemy.direction = 'up'
+        if enemy.name == 'riffleman':
+                enemy.type = 'd0'
     elif enemy.global_position == [enemy.local_waypoints[0][3][0] + 1, enemy.local_waypoints[0][3][1]]:
         enemy.direction = 'down'
+        if enemy.name == 'riffleman':
+                enemy.type = 'u0'
     elif enemy.global_position == [enemy.local_waypoints[0][3][0], enemy.local_waypoints[0][3][1] - 1]:
         enemy.direction = 'left'
+        if enemy.name == 'riffleman':
+                enemy.type = 'r0'
     elif enemy.global_position == [enemy.local_waypoints[0][3][0], enemy.local_waypoints[0][3][1] + 1]:
         enemy.direction = 'right'
+        if enemy.name == 'riffleman':
+                enemy.type = 'l0'
 
 def enemy_move_calculaton(global_map, enemy):
     """
