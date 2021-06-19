@@ -119,22 +119,12 @@ class Person:
 
 class Interfase:
     """ Содержит элементы для последующего вывода на экран """
-    __slots__ = ('game_field', 'biom_map', 'minimap_on', 'point_to_draw', 'text1', 'text2', 'text3', 'text4', 'text5', 'text6', 'text7', 'text8', 'text9', 'text10')
-    def __init__(self, game_field, biom_map, minimap_on, text1, text2, text3, text4, text5, text6, text7, text8, text9, text10):
+    def __init__(self, game_field, biom_map, minimap_on):
         self.game_field = game_field
         self.biom_map = biom_map
         self.minimap_on = minimap_on
         self.point_to_draw = [0,0]
-        self.text1 = text1
-        self.text2 = text2
-        self.text3 = text3
-        self.text4 = text4
-        self.text5 = text5
-        self.text6 = text6
-        self.text7 = text7
-        self.text8 = text8
-        self.text9 = text9
-        self.text10 = text10
+
 """
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -431,7 +421,7 @@ def loading_all_sprites():
                             'U': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_U.jpg'))),
                          },
                     '☺': {
-                            '0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_person.png'))),
+                            '0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_person_down_0.png'))),
                             '1': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_person_right_0.png'))),
                             '2': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_person_left_0.png'))),
                             '3': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_person_up_0.png'))),
@@ -443,6 +433,14 @@ def loading_all_sprites():
                             'r1': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_person_right_1.png'))),
                             'r2': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_person_right_2.png'))),
                             'r3': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_person_right_3.png'))),
+                            'd0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_person_down_0.png'))),
+                            'd1': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_person_down_1.png'))),
+                            'd2': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_person_down_2.png'))),
+                            'd3': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_person_down_3.png'))),
+                            'u0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_person_up_0.png'))),
+                            'u1': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_person_up_1.png'))),
+                            'u2': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_person_up_2.png'))),
+                            'u3': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_person_up_3.png'))),
 
                           },
                     '☻': {
@@ -1879,7 +1877,7 @@ def request_move(global_map:list, person, chunk_size:int, go_to_print, pressed_b
             if person.dynamic[0] >= chunk_size//2 and person.assemblage_point[0] > 0:
                 person.dynamic[0] -= 1
                 person.direction = 'up'
-                person.type = '3'
+                person.type = 'u3'
             
     elif pressed_button == 'left':
         
@@ -1889,7 +1887,7 @@ def request_move(global_map:list, person, chunk_size:int, go_to_print, pressed_b
             if person.dynamic[1] >= chunk_size//2 and person.assemblage_point[1] > 0:
                 person.dynamic[1] -= 1
                 person.direction = 'left'
-                person.type = '2'
+                person.type = 'l3'
             
     elif pressed_button == 'down':
         
@@ -1899,7 +1897,7 @@ def request_move(global_map:list, person, chunk_size:int, go_to_print, pressed_b
             if person.dynamic[0] <= (chunk_size + chunk_size//2) and person.assemblage_point[0] != (len(global_map) - 2):
                 person.dynamic[0] += 1
                 person.direction = 'down'
-                person.type = '0'
+                person.type = 'd3'
             
     elif pressed_button == 'right':
         
@@ -1909,7 +1907,7 @@ def request_move(global_map:list, person, chunk_size:int, go_to_print, pressed_b
             if person.dynamic[1] <= (chunk_size + chunk_size//2) and person.assemblage_point[1] != (len(global_map) - 2):
                 person.dynamic[1] += 1
                 person.direction = 'right'
-                person.type = '1'
+                person.type = 'r3'
     
     person.global_position_calculation(chunk_size) #Рассчитывает глобальное положение и номер чанка через метод
     #person.check_encounter() #Рассчитывает порядок и координаты точек проверки
@@ -3100,12 +3098,16 @@ def person_walk_draw(person, settings_for_intermediate_steps):
     if settings_for_intermediate_steps == [2, 15]:
         frame_dict = {
                         1: {
-                            'left': 'l1',
-                            'right': 'r1',
+                            'left': 'l0',
+                            'right': 'r0',
+                            'down': 'd0',
+                            'up': 'u0',
                             },
                         2: {
-                            'left': 'l3',
-                            'right': 'r3',
+                            'left': 'l1',
+                            'right': 'r1',
+                            'down': 'd1',
+                            'up': 'u1',
                             },
                      }
         person.type = frame_dict[person.pass_draw_move][person.direction]
@@ -3113,16 +3115,22 @@ def person_walk_draw(person, settings_for_intermediate_steps):
     elif settings_for_intermediate_steps == [3, 10]:
         frame_dict = {
                         1: {
-                            'left': 'l1',
-                            'right': 'r1',
+                            'left': 'l0',
+                            'right': 'r0',
+                            'down': 'd0',
+                            'up': 'u0',
                             },
                         2: {
-                            'left': 'l2',
-                            'right': 'r2',
+                            'left': 'l1',
+                            'right': 'r1',
+                            'down': 'd1',
+                            'up': 'u1',
                             },
                         3: {
-                            'left': 'l3',
-                            'right': 'r3',
+                            'left': 'l2',
+                            'right': 'r2',
+                            'down': 'd2',
+                            'up': 'u2',
                             },
                      }
         person.type = frame_dict[person.pass_draw_move][person.direction]
@@ -3130,24 +3138,34 @@ def person_walk_draw(person, settings_for_intermediate_steps):
     elif settings_for_intermediate_steps == [5, 6]:
         frame_dict = {
                         1: {
-                            'left': 'l1',
-                            'right': 'r1',
+                            'left': 'l0',
+                            'right': 'r0',
+                            'down': 'd0',
+                            'up': 'u0',
                             },
                         2: {
                             'left': 'l1',
                             'right': 'r1',
+                            'down': 'd1',
+                            'up': 'u1',
                             },
                         3: {
-                            'left': 'l2',
-                            'right': 'r2',
+                            'left': 'l1',
+                            'right': 'r1',
+                            'down': 'd1',
+                            'up': 'u1',
                             },
                         4: {
-                            'left': 'l3',
-                            'right': 'r3',
+                            'left': 'l2',
+                            'right': 'r2',
+                            'down': 'd2',
+                            'up': 'u2',
                             },
                         5: {
                             'left': 'l3',
                             'right': 'r3',
+                            'down': 'd3',
+                            'up': 'u3',
                             },
                      }
         try:
@@ -3158,28 +3176,40 @@ def person_walk_draw(person, settings_for_intermediate_steps):
     elif settings_for_intermediate_steps == [6, 5]:
         frame_dict = {
                         1: {
-                            'left': 'l1',
-                            'right': 'r1',
+                            'left': 'l10',
+                            'right': 'r0',
+                            'down': 'd0',
+                            'up': 'u0',
                             },
                         2: {
                             'left': 'l1',
                             'right': 'r1',
+                            'down': 'd1',
+                            'up': 'u1',
                             },
                         3: {
-                            'left': 'l2',
-                            'right': 'r2',
+                            'left': 'l1',
+                            'right': 'r1',
+                            'down': 'd1',
+                            'up': 'u1',
                             },
                         4: {
                             'left': 'l2',
                             'right': 'r2',
+                            'down': 'd2',
+                            'up': 'u2',
                             },
                         5: {
-                            'left': 'l3',
-                            'right': 'r3',
+                            'left': 'l2',
+                            'right': 'r2',
+                            'down': 'd2',
+                            'up': 'u2',
                             },
                         6: {
                             'left': 'l3',
                             'right': 'r3',
+                            'down': 'd3',
+                            'up': 'u3',
                             },
                      }
         person.type = frame_dict[person.pass_draw_move][person.direction]
@@ -3187,44 +3217,64 @@ def person_walk_draw(person, settings_for_intermediate_steps):
     elif settings_for_intermediate_steps == [10, 3]:
          frame_dict = {
                         1: {
-                            'left': 'l1',
-                            'right': 'r1',
+                            'left': 'l0',
+                            'right': 'r0',
+                            'down': 'd0',
+                            'up': 'u0',
                             },
                         2: {
-                            'left': 'l1',
-                            'right': 'r1',
+                            'left': 'l0',
+                            'right': 'r0',
+                            'down': 'd0',
+                            'up': 'u0',
                             },
                         3: {
                             'left': 'l1',
                             'right': 'r1',
+                            'down': 'd1',
+                            'up': 'u1',
                             },
                         4: {
-                            'left': 'l2',
-                            'right': 'r2',
+                            'left': 'l1',
+                            'right': 'r1',
+                            'down': 'd1',
+                            'up': 'u1',
                             },
                         5: {
-                            'left': 'l2',
-                            'right': 'r2',
+                            'left': 'l1',
+                            'right': 'r1',
+                            'down': 'd1',
+                            'up': 'u1',
                             },
                         6: {
                             'left': 'l2',
                             'right': 'r2',
+                            'down': 'd2',
+                            'up': 'u2',
                             },
                         7: {
-                            'left': 'l3',
-                            'right': 'r3',
+                            'left': 'l2',
+                            'right': 'r2',
+                            'down': 'd2',
+                            'up': 'u2',
                             },
                         8: {
-                            'left': 'l3',
-                            'right': 'r3',
+                            'left': 'l2',
+                            'right': 'r2',
+                            'down': 'd2',
+                            'up': 'u2',
                             },
                         9: {
                             'left': 'l3',
                             'right': 'r3',
+                            'down': 'd3',
+                            'up': 'u3',
                             },
                         10: {
-                            'left': 'l0',
-                            'right': 'r0',
+                            'left': 'l3',
+                            'right': 'r3',
+                            'down': 'd3',
+                            'up': 'u3',
                             },
                      }
         #person.type = frame_dict[person.pass_draw_move][person.direction]
@@ -3232,64 +3282,94 @@ def person_walk_draw(person, settings_for_intermediate_steps):
     elif settings_for_intermediate_steps == [15, 2]:
         frame_dict = {
                         1: {
-                            'left': 'l1',
-                            'right': 'r1',
+                            'left': 'l0',
+                            'right': 'r0',
+                            'down': 'd0',
+                            'up': 'u0',
                             },
                         2: {
-                            'left': 'l1',
-                            'right': 'r1',
+                            'left': 'l0',
+                            'right': 'r0',
+                            'down': 'd0',
+                            'up': 'u0',
                             },
                         3: {
-                            'left': 'l1',
-                            'right': 'r1',
+                            'left': 'l0',
+                            'right': 'r0',
+                            'down': 'd0',
+                            'up': 'u0',
                             },
                         4: {
-                            'left': 'l1',
-                            'right': 'r1',
+                            'left': 'l0',
+                            'right': 'r0',
+                            'down': 'd0',
+                            'up': 'u0',
                             },
                         5: {
                             'left': 'l1',
                             'right': 'r1',
+                            'down': 'd1',
+                            'up': 'u1',
                             },
                         6: {
-                            'left': 'l2',
-                            'right': 'r2',
+                            'left': 'l1',
+                            'right': 'r1',
+                            'down': 'd1',
+                            'up': 'u1',
                             },
                         7: {
-                            'left': 'l2',
-                            'right': 'r2',
+                            'left': 'l1',
+                            'right': 'r1',
+                            'down': 'd1',
+                            'up': 'u1',
                             },
                         8: {
-                            'left': 'l2',
-                            'right': 'r2',
+                            'left': 'l1',
+                            'right': 'r1',
+                            'down': 'd1',
+                            'up': 'u1',
                             },
                         9: {
                             'left': 'l2',
                             'right': 'r2',
+                            'down': 'd2',
+                            'up': 'u0',
                             },
                         10: {
-                            'left': 'l3',
-                            'right': 'r3',
+                            'left': 'l2',
+                            'right': 'r2',
+                            'down': 'd2',
+                            'up': 'u2',
                             },
                         11: {
-                            'left': 'l3',
-                            'right': 'r3',
+                            'left': 'l2',
+                            'right': 'r2',
+                            'down': 'd2',
+                            'up': 'u2',
                             },
                         12: {
-                            'left': 'l3',
-                            'right': 'r3',
+                            'left': 'l2',
+                            'right': 'r2',
+                            'down': 'd2',
+                            'up': 'u2',
                             },
                         13: {
                             'left': 'l3',
                             'right': 'r3',
+                            'down': 'd3',
+                            'up': 'u3',
                             },
                         14: {
                             'left': 'l3',
                             'right': 'r3',
+                            'down': 'd3',
+                            'up': 'u3',
                             },
                         15: {
-                            'left': 'l0',
-                            'right': 'r0',
+                            'left': 'l3',
+                            'right': 'r3',
+                            'down': 'd3',
+                            'up': 'u3',
                             },
                      }
         person.type = frame_dict[person.pass_draw_move][person.direction]
@@ -3330,7 +3410,7 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
     
     if person.pass_draw_move: #Промежуточный кадр
         #Рассчет кадра движения персонажа
-        if person.direction == 'left' or person.direction == 'right':
+        if person.direction in ('left', 'right', 'down', 'up'):
             person_walk_draw(person, settings_for_intermediate_steps)
             
         person.pass_draw_move -= 1
@@ -3713,7 +3793,7 @@ def game_loop(global_map:list, person, chunk_size:int, enemy_list:list, world, s
         Здесь происходят все игровые события
         
     """
-    go_to_print = Interfase([], [], True, '', '', '', '', '', '', '', '', '', '')
+    go_to_print = Interfase([], [], True)
     activity_list = []
     step = 0
     print('game_loop запущен')
