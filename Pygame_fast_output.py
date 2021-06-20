@@ -444,10 +444,23 @@ def loading_all_sprites():
 
                           },
                     '☻': {
-                            'd0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_enemy_riffleman_down_0.png'))),
-                            'u0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_enemy_riffleman_up_0.png'))),
+                            
                             'l0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_enemy_riffleman_left_0.png'))),
+                            'l1': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_enemy_riffleman_left_1.png'))),
+                            'l2': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_enemy_riffleman_left_2.png'))),
+                            'l3': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_enemy_riffleman_left_3.png'))),
                             'r0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_enemy_riffleman_right_0.png'))),
+                            'r1': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_enemy_riffleman_right_1.png'))),
+                            'r2': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_enemy_riffleman_right_2.png'))),
+                            'r3': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_enemy_riffleman_right_3.png'))),
+                            'd0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_enemy_riffleman_down_0.png'))),
+                            'd1': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_enemy_riffleman_down_1.png'))),
+                            'd2': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_enemy_riffleman_down_2.png'))),
+                            'd3': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_enemy_riffleman_down_3.png'))),
+                            'u0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_enemy_riffleman_up_0.png'))),
+                            'u1': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_enemy_riffleman_up_1.png'))),
+                            'u2': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_enemy_riffleman_up_2.png'))),
+                            'u3': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_enemy_riffleman_up_3.png'))),
                             
                             'h': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_enemy_horseman.png'))),
                             
@@ -1132,37 +1145,37 @@ def enemy_direction_calculation(enemy):
     """
     if enemy.global_position == [enemy.local_waypoints[0][3][0], enemy.local_waypoints[0][3][1]]:
         if enemy.local_position == [enemy.local_waypoints[0][0] - 1, enemy.local_waypoints[0][1]]:
-            enemy.direction = 'up'
-            if enemy.name == 'riffleman':
-                enemy.type = 'd0'
-        elif enemy.local_position == [enemy.local_waypoints[0][0] + 1, enemy.local_waypoints[0][1]]:
             enemy.direction = 'down'
             if enemy.name == 'riffleman':
-                enemy.type = 'u0'
-        elif enemy.local_position == [enemy.local_waypoints[0][0], enemy.local_waypoints[0][1] - 1]:
-            enemy.direction = 'left'
+                enemy.type = 'd3'
+        elif enemy.local_position == [enemy.local_waypoints[0][0] + 1, enemy.local_waypoints[0][1]]:
+            enemy.direction = 'up'
             if enemy.name == 'riffleman':
-                enemy.type = 'r0'
-        elif enemy.local_position == [enemy.local_waypoints[0][0], enemy.local_waypoints[0][1] + 1]:
+                enemy.type = 'u3'
+        elif enemy.local_position == [enemy.local_waypoints[0][0], enemy.local_waypoints[0][1] - 1]:
             enemy.direction = 'right'
             if enemy.name == 'riffleman':
-                enemy.type = 'l0'
+                enemy.type = 'r3'
+        elif enemy.local_position == [enemy.local_waypoints[0][0], enemy.local_waypoints[0][1] + 1]:
+            enemy.direction = 'left'
+            if enemy.name == 'riffleman':
+                enemy.type = 'l3'
     elif enemy.global_position == [enemy.local_waypoints[0][3][0] - 1, enemy.local_waypoints[0][3][1]]:
-        enemy.direction = 'up'
-        if enemy.name == 'riffleman':
-                enemy.type = 'd0'
-    elif enemy.global_position == [enemy.local_waypoints[0][3][0] + 1, enemy.local_waypoints[0][3][1]]:
         enemy.direction = 'down'
         if enemy.name == 'riffleman':
-                enemy.type = 'u0'
-    elif enemy.global_position == [enemy.local_waypoints[0][3][0], enemy.local_waypoints[0][3][1] - 1]:
-        enemy.direction = 'left'
+                enemy.type = 'd3'
+    elif enemy.global_position == [enemy.local_waypoints[0][3][0] + 1, enemy.local_waypoints[0][3][1]]:
+        enemy.direction = 'up'
         if enemy.name == 'riffleman':
-                enemy.type = 'r0'
-    elif enemy.global_position == [enemy.local_waypoints[0][3][0], enemy.local_waypoints[0][3][1] + 1]:
+                enemy.type = 'u3'
+    elif enemy.global_position == [enemy.local_waypoints[0][3][0], enemy.local_waypoints[0][3][1] - 1]:
         enemy.direction = 'right'
         if enemy.name == 'riffleman':
-                enemy.type = 'l0'
+                enemy.type = 'r3'
+    elif enemy.global_position == [enemy.local_waypoints[0][3][0], enemy.local_waypoints[0][3][1] + 1]:
+        enemy.direction = 'left'
+        if enemy.name == 'riffleman':
+                enemy.type = 'l3'
 
 def enemy_move_calculaton(global_map, enemy):
     """
@@ -3112,7 +3125,7 @@ class Color_rect(pygame.sprite.Sprite):
     def draw(self, surface):
         surface.blit(self.image, self.rect)
 
-def person_walk_draw(person, settings_for_intermediate_steps):
+def person_walk_draw(enemy, person, settings_for_intermediate_steps):
     """
         Меняет кадры анимации персонажа во время промежуточных кадров
     """
@@ -3131,7 +3144,7 @@ def person_walk_draw(person, settings_for_intermediate_steps):
                             'up': 'u1',
                             },
                      }
-        person.type = frame_dict[person.pass_draw_move][person.direction]
+        enemy.type = frame_dict[person.pass_draw_move][enemy.direction]
         
     elif settings_for_intermediate_steps == [3, 10]:
         frame_dict = {
@@ -3154,7 +3167,7 @@ def person_walk_draw(person, settings_for_intermediate_steps):
                             'up': 'u2',
                             },
                      }
-        person.type = frame_dict[person.pass_draw_move][person.direction]
+        enemy.type = frame_dict[person.pass_draw_move][enemy.direction]
         
     elif settings_for_intermediate_steps == [5, 6]:
         frame_dict = {
@@ -3189,10 +3202,7 @@ def person_walk_draw(person, settings_for_intermediate_steps):
                             'up': 'u3',
                             },
                      }
-        try:
-            person.type = frame_dict[person.pass_draw_move][person.direction]
-        except:
-            print(F"!!!except!!! person.type = {person.type}, person.pass_draw_move - {person.pass_draw_move}, person.direction - {person.direction}")
+        enemy.type = frame_dict[person.pass_draw_move][enemy.direction]
         
     elif settings_for_intermediate_steps == [6, 5]:
         frame_dict = {
@@ -3233,7 +3243,7 @@ def person_walk_draw(person, settings_for_intermediate_steps):
                             'up': 'u3',
                             },
                      }
-        person.type = frame_dict[person.pass_draw_move][person.direction]
+        enemy.type = frame_dict[person.pass_draw_move][enemy.direction]
         
     elif settings_for_intermediate_steps == [10, 3]:
          frame_dict = {
@@ -3298,7 +3308,7 @@ def person_walk_draw(person, settings_for_intermediate_steps):
                             'up': 'u3',
                             },
                      }
-        #person.type = frame_dict[person.pass_draw_move][person.direction]
+        #enemy.type = frame_dict[person.pass_draw_move][enemy.direction]
         
     elif settings_for_intermediate_steps == [15, 2]:
         frame_dict = {
@@ -3393,7 +3403,7 @@ def person_walk_draw(person, settings_for_intermediate_steps):
                             'up': 'u3',
                             },
                      }
-        person.type = frame_dict[person.pass_draw_move][person.direction]
+        enemy.type = frame_dict[person.pass_draw_move][enemy.direction]
         
     elif settings_for_intermediate_steps == [30, 1]:
         pass
@@ -3432,9 +3442,9 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
     if person.pass_draw_move: #Промежуточный кадр
         #Рассчет кадра движения персонажа
         if person.direction in ('left', 'right', 'down', 'up'):
-            person_walk_draw(person, settings_for_intermediate_steps)
+            person_walk_draw(person, person, settings_for_intermediate_steps)
             
-        person.pass_draw_move -= 1
+        
         blit_coordinates = (0, 0)
         
         
@@ -3503,17 +3513,20 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
         for number_line in range(chunk_size):
             for number_tile in range(chunk_size):
                 if entities_layer[number_line][number_tile].icon != '0':
+                    if entities_layer[number_line][number_tile].name == 'riffleman':
+                        if entities_layer[number_line][number_tile].direction in ('left', 'right', 'down', 'up'):
+                            person_walk_draw(entities_layer[number_line][number_tile], person, settings_for_intermediate_steps)
 
                     offset_enemy = entities_layer[number_line][number_tile].offset
                     
                     if entities_layer[number_line][number_tile].direction == 'left':
-                       offset_enemy[1] += step_direction
+                       offset_enemy[1] -= step_direction
                     elif entities_layer[number_line][number_tile].direction == 'right':
-                        offset_enemy[1] -= step_direction
+                        offset_enemy[1] += step_direction
                     elif entities_layer[number_line][number_tile].direction == 'up':
-                        offset_enemy[0] += step_direction
-                    elif entities_layer[number_line][number_tile].direction == 'down':
                         offset_enemy[0] -= step_direction
+                    elif entities_layer[number_line][number_tile].direction == 'down':
+                        offset_enemy[0] += step_direction
                     else:
                         offset_enemy = [0, 0]
 
@@ -3521,6 +3534,8 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
                     print_sprite.rect.top = number_line*size_tile + offset_sprites.all[0] + offset_enemy[0]
                     print_sprite.rect.left = number_tile*size_tile + offset_sprites.all[1] + offset_enemy[1]
                     print_sprite.draw(screen)
+
+        person.pass_draw_move -= 1
             
     else: #Основной кадр
 
@@ -3663,16 +3678,16 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
                     enemy_offset_x = 0
                     enemy_offset_y = 0
                     if entities_layer[number_line][number_tile].direction == 'left':
-                        enemy_offset_x = 0 - size_tile
-
-                    elif entities_layer[number_line][number_tile].direction == 'right':
                         enemy_offset_x = size_tile
 
+                    elif entities_layer[number_line][number_tile].direction == 'right':
+                        enemy_offset_x = 0 - size_tile
+
                     elif entities_layer[number_line][number_tile].direction == 'up':
-                        enemy_offset_y = 0 - size_tile
+                        enemy_offset_y = size_tile
 
                     elif entities_layer[number_line][number_tile].direction == 'down':
-                        enemy_offset_y = size_tile
+                        enemy_offset_y = 0 - size_tile
 
                     entities_layer[number_line][number_tile].offset = [enemy_offset_y, enemy_offset_x]
                     print_sprite = sprites_dict[entities_layer[number_line][number_tile].icon][entities_layer[number_line][number_tile].type]
