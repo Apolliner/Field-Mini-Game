@@ -3106,7 +3106,7 @@ class Offset_sprites:
     """ Передаёт в следующий ход смещение выводимых на экран спрайтов """
     def __init__(self):
         self.all = [0, 0]
-        self.enemy = {999: [0, 0],}
+
 
 class Color_rect(pygame.sprite.Sprite):
     """ Содержит спрайты миникарты """
@@ -3779,12 +3779,78 @@ def new_step_calculation(enemy_list, person, step):
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 """
+def frames_per_cycle_and_delays(person, time_1, time_2, settings_for_intermediate_steps):
+    """
+        Рассчёт количества промежуточных шагов в зависимости от скорости вывода основного шага и
+        установка задержек на промежуточные кадры для плавности перемещения
+    """
+    if not person.person_pass_step and not person.enemy_pass_step:
+        if (time_2 - time_1) >= 0.075:
+            settings_for_intermediate_steps = [2, 15]
+        elif 0.075 > (time_2 - time_1) >= 0.05:
+            settings_for_intermediate_steps = [3, 10]
+        elif 0.05 > (time_2 - time_1) >= 0.03:
+            settings_for_intermediate_steps = [5, 6]
+        elif 0.03 > (time_2 - time_1) >= 0.025:
+            settings_for_intermediate_steps = [6, 5]
+        elif 0.025 > (time_2 - time_1) >= 0.015:
+            settings_for_intermediate_steps = [10, 3]
+        elif 0.015 > (time_2 - time_1) >= 0.01:
+            settings_for_intermediate_steps = [15, 2]
+        elif 0.01 > (time_2 - time_1):
+            settings_for_intermediate_steps = [30, 1]
+        person.pass_draw_move = settings_for_intermediate_steps[0]
+
+    elif person.person_pass_step and person.enemy_pass_step: #Установка задержек на промежуточные кадры для плавности перемещения
+        if settings_for_intermediate_steps == [2, 15] and (time_2 - time_1) < 0.075:
+            time.sleep(0.075 - (time_2 - time_1))
+        elif settings_for_intermediate_steps == [3, 10] and (time_2 - time_1) < 0.05:
+            time.sleep(0.05 - (time_2 - time_1))
+        elif settings_for_intermediate_steps == [5, 6] and (time_2 - time_1) < 0.03:
+            time.sleep(0.03 - (time_2 - time_1))
+        elif settings_for_intermediate_steps == [6, 5] and (time_2 - time_1) < 0.025:
+            time.sleep(0.025 - (time_2 - time_1))
+        elif settings_for_intermediate_steps == [10, 3] and (time_2 - time_1) < 0.015:
+            time.sleep(0.015 - (time_2 - time_1))
+        elif settings_for_intermediate_steps == [15, 2] and (time_2 - time_1) < 0.01:
+            time.sleep(0.01 - (time_2 - time_1))
+        elif settings_for_intermediate_steps == [30, 1] and (time_2 - time_1) < 0.005:
+            time.sleep(0.005 - (time_2 - time_1))
+
+class button_rect(pygame.sprite.Sprite):
+    """ Содержит спрайты миникарты """
+
+    def __init__(self, y, x, size_y, size_x, color, text):
+        pygame.sprite.Sprite.__init__(self)
+        self.font = pygame.font.Font('freesansbold.ttf', 10)
+        self.textSurf = self.font.render(text, 1, (255, 255, 255))
+        self.y = y
+        self.x = x
+        self.image = pygame.Surface((size_x, size_y))
+        self.image.fill(color)
+        self.image.blit(self.textSurf, [size_x/2 , size_y/2])
+        self.rect = self.image.get_rect()
+        self.rect.center = (x, y)
+        self.speed = 0
+        
+    def draw(self, surface):
+        surface.blit(self.image, self.rect)
+            
+def master_game_menu_draw(screen, dispay_size):
+    """
+        Отрисовывает игровое меню
+    """
+    screen.fill((255, 255, 255))
+    button_rect(dispay_size[1]/2 - 100, dispay_size[0]/2, 80, 200, (155, 155, 155), 'Новая игра').draw(screen)
+    button_rect(dispay_size[1]/2 + 100, dispay_size[0]/2, 80, 200, (155, 155, 155), 'Закрыть игру').draw(screen)
+    pygame.display.flip()
+    
+            
 def main_loop():
     """
         Здесь работает игровое меню
         
     """
-    
     global_region_grid = 3
     region_grid = 3
     chunks_grid = 3
@@ -3794,13 +3860,17 @@ def main_loop():
     chunk_size = mini_region_grid * tile_field_grid #Определяет размер одного игрового поля и окна просмотра. Рекоммендуемое значение 25.
     
     pygame.init()
-    screen = pygame.display.set_mode((1200, 750), FULLSCREEN | DOUBLEBUF)
+
+    dispay_size = [1200, 750]
+    screen = pygame.display.set_mode(dispay_size, FULLSCREEN | DOUBLEBUF)
     pygame.display.set_caption("My Game")
 
     
     tiles_image_dict = Tiles_image_dict() #Загружаются тайлы
 
     while main_loop:
+
+        master_game_menu_draw(screen, dispay_size)
 
         global_map, raw_minimap = map_generator.master_map_generate(global_region_grid, region_grid, chunks_grid, mini_region_grid, tile_field_grid)
         
@@ -3876,56 +3946,27 @@ def game_loop(global_map:list, person, chunk_size:int, enemy_list:list, world, s
         #all_pass_step_calculations(person, enemy_list, mode_action, interaction)
         if not person.enemy_pass_step:
             master_game_events(global_map, enemy_list, person, go_to_print, step, activity_list, chunk_size, interaction, new_step, world)
-        test1 = time.time() #проверка времени выполнения
+        time_1 = time.time() #проверка времени выполнения
         screen, landscape_layer, activity_layer, entities_layer, offset_sprites, finishing_surface = master_pygame_draw(person, chunk_size,
                                             go_to_print, global_map, mode_action, enemy_list, activity_list, screen, tiles_image_dict, minimap,
                                             all_sprites, dynamic_sprites, minimap_sprite, sprites_dict, offset_sprites, landscape_layer, activity_layer,
                                             entities_layer, finishing_surface, settings_for_intermediate_steps)
-        test2 = time.time() #проверка времени выполнения
+        time_2 = time.time() #проверка времени выполнения
         
         #Рассчёт количества промежуточных шагов в зависимости от скорости вывода основного шага
-        if not person.person_pass_step and not person.enemy_pass_step:
-            if (test2 - test1) >= 0.075:
-                settings_for_intermediate_steps = [2, 15]
-            elif 0.075 > (test2 - test1) >= 0.05:
-                settings_for_intermediate_steps = [3, 10]
-            elif 0.05 > (test2 - test1) >= 0.03:
-                settings_for_intermediate_steps = [5, 6]
-            elif 0.03 > (test2 - test1) >= 0.025:
-                settings_for_intermediate_steps = [6, 5]
-            elif 0.025 > (test2 - test1) >= 0.015:
-                settings_for_intermediate_steps = [10, 3]
-            elif 0.015 > (test2 - test1) >= 0.01:
-                settings_for_intermediate_steps = [15, 2]
-            elif 0.01 > (test2 - test1):
-                settings_for_intermediate_steps = [30, 1]
-            person.pass_draw_move = settings_for_intermediate_steps[0]
-
-        elif person.person_pass_step and person.enemy_pass_step: #Установка задержек на промежуточные кадры для плавности перемещения
-            if settings_for_intermediate_steps == [2, 15] and (test2 - test1) < 0.075:
-                time.sleep(0.075 - (test2 - test1))
-            elif settings_for_intermediate_steps == [3, 10] and (test2 - test1) < 0.05:
-                time.sleep(0.05 - (test2 - test1))
-            elif settings_for_intermediate_steps == [5, 6] and (test2 - test1) < 0.03:
-                time.sleep(0.03 - (test2 - test1))
-            elif settings_for_intermediate_steps == [6, 5] and (test2 - test1) < 0.025:
-                time.sleep(0.025 - (test2 - test1))
-            elif settings_for_intermediate_steps == [10, 3] and (test2 - test1) < 0.015:
-                time.sleep(0.015 - (test2 - test1))
-            elif settings_for_intermediate_steps == [15, 2] and (test2 - test1) < 0.01:
-                time.sleep(0.01 - (test2 - test1))
-            elif settings_for_intermediate_steps == [30, 1] and (test2 - test1) < 0.005:
-                time.sleep(0.005 - (test2 - test1))
+        frames_per_cycle_and_delays(person, time_1, time_2, settings_for_intermediate_steps)
         
         end = time.time() #проверка времени выполнения
         
-        print_time = f"{round(test1 - start, 4)} - персонажи \n {round(test2 - test1, 4)} - отрисовка \n {round(end - start, 4)} - общее время \n {settings_for_intermediate_steps} - скорость шага"
+        print_time = f"{round(time_1 - start, 4)} - персонажи \n {round(time_2 - time_1, 4)} - отрисовка \n {round(end - start, 4)} - общее время \n {settings_for_intermediate_steps} - скорость шага"
 
         textSurfaceObj = fontObj.render(print_time, True, (0, 0, 0), (255, 255, 255))
         textRectObj = textSurfaceObj.get_rect()
         textRectObj.center = (30*34, 15*31)
         screen.blit(textSurfaceObj, textRectObj)            
         pygame.display.flip()
+
+        
 
 main_loop()
     
