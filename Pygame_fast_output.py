@@ -3433,6 +3433,8 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
         1) Изменение смещения и количества промежуточных шагов в зависимости от времени, потраченного на основной кадр
 
     """
+    time_1 = time.time() #проверка времени выполнения
+    
     size_tile = 30 # Настройка размера тайлов игрового окна
     size_tile_minimap = 15 # Настройка размера тайлов миникаты
     
@@ -3709,6 +3711,26 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
     #            Color_rect(number_line*size_tile, number_tile*size_tile, size_tile, (255, 255, 255)).draw(screen)
     #        if 0 == number_tile or number_tile == chunk_size:
     #            Color_rect(number_line*size_tile, number_tile*size_tile, size_tile, (255, 255, 255)).draw(screen)
+
+
+
+    #Вставка части из game_loop
+
+    time_2 = time.time() #проверка времени выполнения
+        
+    #Рассчёт количества промежуточных шагов в зависимости от скорости вывода основного шага
+    frames_per_cycle_and_delays(person, time_1, time_2, settings_for_intermediate_steps)
+    
+    end = time.time() #проверка времени выполнения
+    
+    print_time = f"{round(time_2 - time_1, 4)} - отрисовка \n {round(end - time_1, 4)} - общее время \n {settings_for_intermediate_steps} - скорость шага"
+
+    fontObj = pygame.font.Font('freesansbold.ttf', 10)
+    textSurfaceObj = fontObj.render(print_time, True, (0, 0, 0), (255, 255, 255))
+    textRectObj = textSurfaceObj.get_rect()
+    textRectObj.center = (30*34, 15*31)
+    screen.blit(textSurfaceObj, textRectObj)            
+    pygame.display.flip()
             
     return screen, landscape_layer, activity_layer, entities_layer, offset_sprites, finishing_surface
 
@@ -3836,15 +3858,86 @@ class button_rect(pygame.sprite.Sprite):
     def draw(self, surface):
         surface.blit(self.image, self.rect)
             
-def master_game_menu_draw(screen, dispay_size):
+def master_game_menu_draw(screen, dispay_size, menu_selection, button_selection):
     """
         Отрисовывает игровое меню
     """
     screen.fill((255, 255, 255))
-    button_rect(dispay_size[1]/2 - 100, dispay_size[0]/2, 80, 200, (155, 155, 155), 'Новая игра').draw(screen)
-    button_rect(dispay_size[1]/2 + 100, dispay_size[0]/2, 80, 200, (155, 155, 155), 'Закрыть игру').draw(screen)
+    if menu_selection == 'new_game':
+        button_rect(dispay_size[1]/2 - 200, dispay_size[0]/2, 80, 200, (200, 155, 155), 'Новая игра').draw(screen)
+    else:
+        button_rect(dispay_size[1]/2 - 200, dispay_size[0]/2, 80, 200, (155, 155, 155), 'Новая игра').draw(screen)
+        
+    if menu_selection == 'settings':    
+        button_rect(dispay_size[1]/2 - 100, dispay_size[0]/2, 80, 200, (200, 155, 155), 'Настройки').draw(screen)
+    else:
+        button_rect(dispay_size[1]/2 - 100, dispay_size[0]/2, 80, 200, (155, 155, 155), 'Настройки').draw(screen)
+
+    if menu_selection == 'about':     
+        button_rect(dispay_size[1]/2, dispay_size[0]/2, 80, 200, (200, 155, 155), 'О игре').draw(screen)
+    else:
+        button_rect(dispay_size[1]/2, dispay_size[0]/2, 80, 200, (155, 155, 155), 'О игре').draw(screen)
+
+    if menu_selection == 'exit_game': 
+        button_rect(dispay_size[1]/2 + 100, dispay_size[0]/2, 80, 200, (200, 155, 155), 'Закрыть игру').draw(screen)
+    else:
+        button_rect(dispay_size[1]/2 + 100, dispay_size[0]/2, 80, 200, (155, 155, 155), 'Закрыть игру').draw(screen)
     pygame.display.flip()
-    
+def menu_moving(menu_selection, button_selection):
+    """
+        Выбор кнопки игрового меню
+    """
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                sys.exit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_DOWN:
+                    if menu_selection == 'new_game':
+                        return 'settings', button_selection
+                    if menu_selection == 'settings':
+                        return 'about', button_selection
+                    if menu_selection == 'about':
+                        return 'exit_game', button_selection
+                    if menu_selection == 'exit_game':
+                        return 'new_game', button_selection
+                if event.key == pygame.K_UP:
+                    if menu_selection == 'new_game':
+                        return 'exit_game', button_selection
+                    if menu_selection == 'settings':
+                        return 'new_game', button_selection
+                    if menu_selection == 'about':
+                        return 'settings', button_selection
+                    if menu_selection == 'exit_game':
+                        return 'about', button_selection
+                if event.key == pygame.K_SPACE:
+                    return menu_selection, True
+                    
+def preparing_a_new_game(global_region_grid, region_grid, chunks_grid, mini_region_grid, tile_field_grid, chunk_size, screen):
+    """
+        Производит подготовку к началу новой игры и её запуск
+    """
+    tiles_image_dict = Tiles_image_dict() #Загружаются тайлы
+    global_map, raw_minimap = map_generator.master_map_generate(global_region_grid, region_grid, chunks_grid, mini_region_grid, tile_field_grid)
+        
+    person = Person([2, 2], [2, 2], [], [chunk_size//2, chunk_size//2], [chunk_size//2, chunk_size//2])
+    calculation_assemblage_point(global_map, person, chunk_size)
+    enemy_list = [Horseman([len(global_map)//2, len(global_map)//2], [chunk_size//2, chunk_size//2], 5),
+                  Horseman([len(global_map)//3, len(global_map)//3], [chunk_size//2, chunk_size//2], 5),
+                  Riffleman([len(global_map)//4, len(global_map)//4], [chunk_size//2, chunk_size//2], 2),
+                  Coyot([len(global_map)//5, len(global_map)//5], [chunk_size//2, chunk_size//2], 0)]
+    world = World() #Описание текущего состояния игрового мира
+
+    #Создание миникарты
+    minimap = pygame.sprite.Group()
+    size_tile = 30
+    size_tile_minimap = 15
+    for number_minimap_line, raw_minimap_line in enumerate(raw_minimap):
+        for number_minimap_tile, minimap_tile in enumerate(raw_minimap_line):
+            minimap.add(All_tiles(number_minimap_tile*size_tile_minimap + (26*size_tile), number_minimap_line*size_tile_minimap, size_tile_minimap,
+                                    tiles_image_dict, minimap_tile.icon, minimap_tile.type))
+
+    game_loop(global_map, person, chunk_size, enemy_list, world, screen, tiles_image_dict, minimap, raw_minimap)
             
 def main_loop():
     """
@@ -3865,33 +3958,24 @@ def main_loop():
     screen = pygame.display.set_mode(dispay_size, FULLSCREEN | DOUBLEBUF)
     pygame.display.set_caption("My Game")
 
-    
-    tiles_image_dict = Tiles_image_dict() #Загружаются тайлы
+    menu_selection = 'new_game'
+    button_selection = False
+    #Предварительная отрисовка игрового меню
+    master_game_menu_draw(screen, dispay_size, menu_selection, button_selection)
 
     while main_loop:
 
-        master_game_menu_draw(screen, dispay_size)
-
-        global_map, raw_minimap = map_generator.master_map_generate(global_region_grid, region_grid, chunks_grid, mini_region_grid, tile_field_grid)
+        menu_selection, button_selection = menu_moving(menu_selection, button_selection)
+        master_game_menu_draw(screen, dispay_size, menu_selection, button_selection)
         
-        person = Person([2, 2], [2, 2], [], [chunk_size//2, chunk_size//2], [chunk_size//2, chunk_size//2])
-        calculation_assemblage_point(global_map, person, chunk_size)
-        enemy_list = [Horseman([len(global_map)//2, len(global_map)//2], [chunk_size//2, chunk_size//2], 5),
-                      Horseman([len(global_map)//3, len(global_map)//3], [chunk_size//2, chunk_size//2], 5),
-                      Riffleman([len(global_map)//4, len(global_map)//4], [chunk_size//2, chunk_size//2], 2),
-                      Coyot([len(global_map)//5, len(global_map)//5], [chunk_size//2, chunk_size//2], 0)]
-        world = World() #Описание текущего состояния игрового мира
+        if menu_selection == 'new_game' and button_selection: #Подготовка и запуск новой игры
+            preparing_a_new_game(global_region_grid, region_grid, chunks_grid, mini_region_grid, tile_field_grid, chunk_size, screen)
 
-        #Создание миникарты
-        minimap = pygame.sprite.Group()
-        size_tile = 30
-        size_tile_minimap = 15
-        for number_minimap_line, raw_minimap_line in enumerate(raw_minimap):
-            for number_minimap_tile, minimap_tile in enumerate(raw_minimap_line):
-                minimap.add(All_tiles(number_minimap_tile*size_tile_minimap + (26*size_tile), number_minimap_line*size_tile_minimap, size_tile_minimap,
-                                        tiles_image_dict, minimap_tile.icon, minimap_tile.type))
-
-        game_loop(global_map, person, chunk_size, enemy_list, world, screen, tiles_image_dict, minimap, raw_minimap)
+        if menu_selection == 'exit_game' and button_selection: #Закрытие игры
+            sys.exit()
+        #Если ничего не произошло, то выбранная кнопка сбрасывается
+        button_selection = False
+        
         
 
 def game_loop(global_map:list, person, chunk_size:int, enemy_list:list, world, screen, tiles_image_dict, minimap, raw_minimap):
@@ -3918,7 +4002,6 @@ def game_loop(global_map:list, person, chunk_size:int, enemy_list:list, world, s
 
     pygame.display.flip()
 
-    fontObj = pygame.font.Font('freesansbold.ttf', 10)
     #Загрузка и создание поверхностей всех спрайтов
     sprites_dict = loading_all_sprites()
 
@@ -3931,6 +4014,12 @@ def game_loop(global_map:list, person, chunk_size:int, enemy_list:list, world, s
     finishing_surface = pygame.Surface(((chunk_size + 1)*30, (chunk_size + 1)*30))
 
     settings_for_intermediate_steps = [5, 6]
+
+    #Предварительная отрисовка игрового окна
+    screen, landscape_layer, activity_layer, entities_layer, offset_sprites, finishing_surface = master_pygame_draw(person, chunk_size,
+                                            go_to_print, global_map, mode_action, enemy_list, activity_list, screen, tiles_image_dict, minimap,
+                                            all_sprites, dynamic_sprites, minimap_sprite, sprites_dict, offset_sprites, landscape_layer, activity_layer,
+                                            entities_layer, finishing_surface, settings_for_intermediate_steps)
     
   
     while game_loop:
@@ -3946,25 +4035,11 @@ def game_loop(global_map:list, person, chunk_size:int, enemy_list:list, world, s
         #all_pass_step_calculations(person, enemy_list, mode_action, interaction)
         if not person.enemy_pass_step:
             master_game_events(global_map, enemy_list, person, go_to_print, step, activity_list, chunk_size, interaction, new_step, world)
-        time_1 = time.time() #проверка времени выполнения
         screen, landscape_layer, activity_layer, entities_layer, offset_sprites, finishing_surface = master_pygame_draw(person, chunk_size,
                                             go_to_print, global_map, mode_action, enemy_list, activity_list, screen, tiles_image_dict, minimap,
                                             all_sprites, dynamic_sprites, minimap_sprite, sprites_dict, offset_sprites, landscape_layer, activity_layer,
                                             entities_layer, finishing_surface, settings_for_intermediate_steps)
-        time_2 = time.time() #проверка времени выполнения
         
-        #Рассчёт количества промежуточных шагов в зависимости от скорости вывода основного шага
-        frames_per_cycle_and_delays(person, time_1, time_2, settings_for_intermediate_steps)
-        
-        end = time.time() #проверка времени выполнения
-        
-        print_time = f"{round(time_1 - start, 4)} - персонажи \n {round(time_2 - time_1, 4)} - отрисовка \n {round(end - start, 4)} - общее время \n {settings_for_intermediate_steps} - скорость шага"
-
-        textSurfaceObj = fontObj.render(print_time, True, (0, 0, 0), (255, 255, 255))
-        textRectObj = textSurfaceObj.get_rect()
-        textRectObj.center = (30*34, 15*31)
-        screen.blit(textSurfaceObj, textRectObj)            
-        pygame.display.flip()
 
         
 
