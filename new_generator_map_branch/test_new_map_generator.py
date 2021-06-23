@@ -2,6 +2,7 @@ import random
 import time
 import copy
 import math
+import pygame
 from new_generator_map_branch import map_patch
 
 
@@ -109,7 +110,7 @@ def timeit(func):
 
 
 @timeit
-def master_map_generate(global_region_grid, region_grid, chunks_grid, mini_grid, tiles_field_size):
+def master_map_generate(global_region_grid, region_grid, chunks_grid, mini_grid, tiles_field_size, screen):
     """
         Новый генератор игровой карты, изначально учитывающий все особенности, определенные при создании и расширении предыдущего генератора.
 
@@ -123,40 +124,64 @@ def master_map_generate(global_region_grid, region_grid, chunks_grid, mini_grid,
         6) режет полную тайловую карту на отдельные локации.
         
     """
+    
     #Глобальные регионы
+    progress_bar(screen, 0, 'Глобальные регионы')
     global_region_map = global_region_generate(global_region_grid)
+    
 
     #Регионы
+    progress_bar(screen, 5, 'Регионы')
     region_map = region_generate(global_region_map, global_region_grid, region_grid)
+    
 
     #Карта локаций. Содержит в себе описание локации
-    chunks_map = chunks_map_generate(region_map, (global_region_grid*region_grid), chunks_grid) 
+    progress_bar(screen, 11, 'Карта локаций. Содержит в себе описание локации')
+    chunks_map = chunks_map_generate(region_map, (global_region_grid*region_grid), chunks_grid)
+
 
     #Карта мини-регионов
+    progress_bar(screen, 16, 'Карта мини-регионов')
     mini_region_map = mini_region_map_generate(chunks_map, (global_region_grid*region_grid*chunks_grid), mini_grid)
+    
 
     #Генерация больших структур по методу горных озёр
+    progress_bar(screen, 22, 'Генерация больших структур по методу горных озёр')
     big_structures_generate(mini_region_map, global_region_map)
     
+    
     #Готовая глобальная тайловая карта
+    progress_bar(screen, 27, 'Готовая глобальная тайловая карта')
     all_tiles_map = tiles_map_generate(mini_region_map, (global_region_grid*region_grid*chunks_grid*mini_grid), tiles_field_size)
+    
 
     #Отрисовка больших структур на карте локаций
+    progress_bar(screen, 23, 'Отрисовка больших структур на карте локаций')
     big_structures_writer(chunks_map, mini_region_map)
     
+    
     #Добавление тайлов из списка рандомного заполнения
+    progress_bar(screen, 28, 'Добавление тайлов из списка рандомного заполнения')
     add_random_all_tiles_map = add_random_tiles(all_tiles_map, chunks_map)
+    
 
     #Генерация гор и озёр по методу горных озёр
+    progress_bar(screen, 34, 'Генерация гор и озёр по методу горных озёр')
     mountains_generate(add_random_all_tiles_map, chunks_map)
+    
 
     #Рисование продвинутой реки
+    progress_bar(screen, 39, 'Рисование продвинутой реки')
     rivers_waypoints = advanced_river_generation(add_random_all_tiles_map, chunks_map, 1)
     
+    
     #Конвертирование тайлов в класс
+    progress_bar(screen, 45, 'Конвертирование тайлов в класс')
     all_class_tiles_map = convert_tiles_to_class(add_random_all_tiles_map, chunks_map)
     
+    
     #Рассчёт уровней, склонов и лестниц
+    progress_bar(screen, 50, 'Рассчёт уровней, склонов и лестниц')
     levelness_calculation(all_class_tiles_map, ('~', '▲', 'C', ':', 'o', ',', '„', '`'), False, False)
     levelness_calculation(all_class_tiles_map, ('~', 'C', '`'), True, False)
     levelness_calculation(all_class_tiles_map, ('▲'), True, True)
@@ -167,29 +192,82 @@ def master_map_generate(global_region_grid, region_grid, chunks_grid, mini_grid,
     levelness_calculation(all_class_tiles_map, ('▲'), True, True)
     levelness_calculation(all_class_tiles_map, ('▲'), True, True)
     levelness_calculation(all_class_tiles_map, ('▲'), True, True)
+    
 
 
     #Разнообразие тайловых полей, не требующих границ
+    progress_bar(screen, 56, 'Разнообразие тайловых полей, не требующих границ')
     diversity_field_tiles(all_class_tiles_map)
+    
 
     #Разрезание глобальной карты на карту классов Location
+    progress_bar(screen, 62, 'Разрезание глобальной карты на карту классов Location')
     ready_global_map = cutting_tiles_map(all_class_tiles_map, chunks_map)
     
+    
     #Добавление бродов в реки
+    progress_bar(screen, 67, 'Добавление бродов в реки')
     add_fords_in_rivers(ready_global_map, rivers_waypoints)
+    
 
     #Определение независимых областей на локациях
+    progress_bar(screen, 74, 'Определение независимых областей на локациях')
     defining_vertices(ready_global_map)
+    
 
     #Определение связей между локациями
+    progress_bar(screen, 80, 'Определение связей между локациями')
     defining_zone_relationships(ready_global_map)
+    
 
     #Создание миникарты
+    progress_bar(screen, 90, 'Создание миникарты')
     minimap = minimap_create(ready_global_map)
+    
+    progress_bar(screen, 100, 'Карта готова')
 
     return ready_global_map, minimap
 
+"""
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+    Визуализация генерации карты
+        
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+"""
+class button_rect(pygame.sprite.Sprite):
+    """ Содержит спрайты миникарты """
+
+    def __init__(self, y, x, size_y, size_x, color):
+        pygame.sprite.Sprite.__init__(self)
+        self.y = y
+        self.x = x
+        self.image = pygame.Surface((size_x, size_y))
+        self.image.fill(color)
+        self.rect = self.image.get_rect()
+        self.rect.center = (x, y)
+        self.speed = 0
+        
+    def draw(self, surface):
+        surface.blit(self.image, self.rect)
+        
+def progress_bar(screen, percent, description):
+    """
+        Отрисовывает прогресс-бар для визуализации генерации карты
+    """
+    screen.fill((255, 255, 255))
+    x_size, y_size = pygame.display.Info().current_w, pygame.display.Info().current_h
+    button_rect(y_size//2, x_size//2, 200, 1000, (150, 150, 150)).draw(screen)
+    button_rect(y_size//2, x_size//2, 200, percent*10, (200, 100, 100)).draw(screen)
+    
+    fontObj = pygame.font.Font('freesansbold.ttf', 10)
+    textSurfaceObj = fontObj.render(description, True, (0, 0, 0), (255, 255, 255))
+    textRectObj = textSurfaceObj.get_rect()
+    textRectObj.center = (x_size//2, y_size//2 - 125)
+    screen.blit(textSurfaceObj, textRectObj) 
+    
+    pygame.display.flip()
 
             
 
@@ -984,9 +1062,9 @@ def mountains_generate(all_tiles_map, chunks_map):
             elif chunks_map[number_line][number_tile][0] == 'P' and random.randrange(20)//10 > 0:
                 mountain_gen(all_tiles_map, number_line*chunk_size + random.randrange(chunk_size//2),
                              number_tile*chunk_size + random.randrange(chunk_size//2), random.randrange(10, 20), 1, 2, '~', ('u'))
-            elif chunks_map[number_line][number_tile][0] == '~' and random.randrange(20)//18 > 0:
-                file_draw_map = open("new_generator_map_branch\draw_map\island_1.txt", encoding="utf-8")
-                draw_ready_map(all_tiles_map, file_draw_map, number_line, number_tile, chunk_size)
+            #elif chunks_map[number_line][number_tile][0] == '~' and random.randrange(20)//18 > 0:
+                #file_draw_map = open("new_generator_map_branch\draw_map\island_1.txt", encoding="utf-8")
+                #draw_ready_map(all_tiles_map, file_draw_map, number_line, number_tile, chunk_size)
 
 """
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
