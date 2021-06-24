@@ -3863,25 +3863,18 @@ def master_game_menu_draw(screen, dispay_size, menu_selection, button_selection)
         Отрисовывает игровое меню
     """
     screen.fill((255, 255, 255))
-    if menu_selection == 'new_game':
-        button_rect(dispay_size[1]/2 - 200, dispay_size[0]/2, 80, 200, (200, 155, 155), 'Новая игра').draw(screen)
-    else:
-        button_rect(dispay_size[1]/2 - 200, dispay_size[0]/2, 80, 200, (155, 155, 155), 'Новая игра').draw(screen)
-        
-    if menu_selection == 'settings':    
-        button_rect(dispay_size[1]/2 - 100, dispay_size[0]/2, 80, 200, (200, 155, 155), 'Настройки').draw(screen)
-    else:
-        button_rect(dispay_size[1]/2 - 100, dispay_size[0]/2, 80, 200, (155, 155, 155), 'Настройки').draw(screen)
+    menu_tuple = ('new_game', 'settings', 'about', 'exit_game')
+    step = 0
+    for menu in menu_tuple:
+        if menu == menu_selection:
+            if button_selection:
+                button_rect(dispay_size[1]/2 - 200 + step, dispay_size[0]/2, 80, 200, (155, 200, 155), menu).draw(screen)
+            else:
+                button_rect(dispay_size[1]/2 - 200 + step, dispay_size[0]/2, 80, 200, (200, 155, 155), menu).draw(screen)
+        else:
+            button_rect(dispay_size[1]/2 - 200 + step, dispay_size[0]/2, 80, 200, (155, 155, 155), menu).draw(screen)
+        step += 100
 
-    if menu_selection == 'about':     
-        button_rect(dispay_size[1]/2, dispay_size[0]/2, 80, 200, (200, 155, 155), 'О игре').draw(screen)
-    else:
-        button_rect(dispay_size[1]/2, dispay_size[0]/2, 80, 200, (155, 155, 155), 'О игре').draw(screen)
-
-    if menu_selection == 'exit_game': 
-        button_rect(dispay_size[1]/2 + 100, dispay_size[0]/2, 80, 200, (200, 155, 155), 'Закрыть игру').draw(screen)
-    else:
-        button_rect(dispay_size[1]/2 + 100, dispay_size[0]/2, 80, 200, (155, 155, 155), 'Закрыть игру').draw(screen)
     pygame.display.flip()
 def menu_moving(menu_selection, button_selection):
     """
