@@ -110,7 +110,7 @@ def timeit(func):
 
 
 @timeit
-def master_map_generate(global_region_grid, region_grid, chunks_grid, mini_grid, tiles_field_size, screen):
+def master_map_generate(global_region_grid, region_grid, chunks_grid, mini_grid, tiles_field_size, screen, tiles_image_dict):
     """
         Новый генератор игровой карты, изначально учитывающий все особенности, определенные при создании и расширении предыдущего генератора.
 
@@ -124,59 +124,68 @@ def master_map_generate(global_region_grid, region_grid, chunks_grid, mini_grid,
         6) режет полную тайловую карту на отдельные локации.
         
     """
+    simple_draw_map_generation(screen, [[0]], 'none', 'Старт генерации')
     
     #Глобальные регионы
     progress_bar(screen, 0, 'Глобальные регионы')
     global_region_map = global_region_generate(global_region_grid)
+    simple_draw_map_generation(screen, global_region_map, 'Global_regions')
     
-
     #Регионы
-    progress_bar(screen, 5, 'Регионы')
+    #progress_bar(screen, 5, 'Регионы')
     region_map = region_generate(global_region_map, global_region_grid, region_grid)
+    simple_draw_map_generation(screen, region_map, 'Regions', 'Регионы')
     
 
     #Карта локаций. Содержит в себе описание локации
-    progress_bar(screen, 11, 'Карта локаций. Содержит в себе описание локации')
+    #progress_bar(screen, 11, 'Карта локаций. Содержит в себе описание локации')
     chunks_map = chunks_map_generate(region_map, (global_region_grid*region_grid), chunks_grid)
+    simple_draw_map_generation(screen, chunks_map, 'Locations', 'Карта локаций. Содержит в себе описание локации')
 
 
     #Карта мини-регионов
-    progress_bar(screen, 16, 'Карта мини-регионов')
+    #progress_bar(screen, 16, 'Карта мини-регионов')
     mini_region_map = mini_region_map_generate(chunks_map, (global_region_grid*region_grid*chunks_grid), mini_grid)
+    simple_draw_map_generation(screen, mini_region_map, 'Mini_regions', 'Карта мини-регионов')
     
 
     #Генерация больших структур по методу горных озёр
-    progress_bar(screen, 22, 'Генерация больших структур по методу горных озёр')
+    #progress_bar(screen, 22, 'Генерация больших структур по методу горных озёр')
     big_structures_generate(mini_region_map, global_region_map)
+    simple_draw_map_generation(screen, mini_region_map, 'Mini_regions', 'Генерация больших структур по методу горных озёр')
     
     
     #Готовая глобальная тайловая карта
-    progress_bar(screen, 27, 'Готовая глобальная тайловая карта')
+    #progress_bar(screen, 27, 'Готовая глобальная тайловая карта')
     all_tiles_map = tiles_map_generate(mini_region_map, (global_region_grid*region_grid*chunks_grid*mini_grid), tiles_field_size)
+    simple_draw_map_generation(screen, all_tiles_map, 'All_tiles', 'Готовая глобальная тайловая карта')
     
 
     #Отрисовка больших структур на карте локаций
-    progress_bar(screen, 23, 'Отрисовка больших структур на карте локаций')
+    #progress_bar(screen, 23, 'Отрисовка больших структур на карте локаций')
     big_structures_writer(chunks_map, mini_region_map)
     
     
     #Добавление тайлов из списка рандомного заполнения
     progress_bar(screen, 28, 'Добавление тайлов из списка рандомного заполнения')
     add_random_all_tiles_map = add_random_tiles(all_tiles_map, chunks_map)
+    simple_draw_map_generation(screen, all_tiles_map, 'All_tiles', 'Добавление тайлов из списка рандомного заполнения')
     
 
     #Генерация гор и озёр по методу горных озёр
     progress_bar(screen, 34, 'Генерация гор и озёр по методу горных озёр')
     mountains_generate(add_random_all_tiles_map, chunks_map)
+    simple_draw_map_generation(screen, all_tiles_map, 'All_tiles', 'Генерация гор и озёр по методу горных озёр')
     
 
     #Рисование продвинутой реки
     progress_bar(screen, 39, 'Рисование продвинутой реки')
     rivers_waypoints = advanced_river_generation(add_random_all_tiles_map, chunks_map, 1)
+    simple_draw_map_generation(screen, all_tiles_map, 'All_tiles', 'Рисование продвинутой реки')
     
     
     #Конвертирование тайлов в класс
-    progress_bar(screen, 45, 'Конвертирование тайлов в класс')
+    #progress_bar(screen, 45, 'Конвертирование тайлов в класс')
     all_class_tiles_map = convert_tiles_to_class(add_random_all_tiles_map, chunks_map)
     
     
@@ -236,8 +245,8 @@ def master_map_generate(global_region_grid, region_grid, chunks_grid, mini_grid,
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 """
-class button_rect(pygame.sprite.Sprite):
-    """ Содержит спрайты миникарты """
+class Button_rect(pygame.sprite.Sprite):
+    """ Отрисовывает поверхности """
 
     def __init__(self, y, x, size_y, size_x, color):
         pygame.sprite.Sprite.__init__(self)
@@ -251,15 +260,124 @@ class button_rect(pygame.sprite.Sprite):
         
     def draw(self, surface):
         surface.blit(self.image, self.rect)
+
+class Draw_region(pygame.sprite.Sprite):
+    """ Содержит спрайты миникарты """
+
+    def __init__(self, y, x, size_tile, key, type_region):
+        pygame.sprite.Sprite.__init__(self)
+        self.x = x
+        self.y = y
+        self.image = pygame.Surface((size_tile, size_tile))
+        self.image.fill(self.color_dict(key, type_region))
+        self.rect = self.image.get_rect()
+        self.rect.left = x
+        self.rect.top = y
+        self.speed = 0
+    def draw( self, surface ):
+        surface.blit(self.image, self.rect)
+    def color_dict(self, key, type_region):
+        """
+                                    0 - пустынный
+                                    1 - горный
+                                    2 - зелёный
+                                    3 - солёный
+                                    4 - каньонный
+                                    5 - водяной
+        """
+        global_region_dict =   {
+                        0: (255, 255, 0),
+                        1: (50, 50, 50),
+                        2: (0, 255, 0),
+                        3: (230, 230, 230),
+                        4: (255, 150, 0),
+                        5: (0, 0, 255),
+                        }
+
+        location_dict = {
+                        'j': (255, 255, 0),
+                        '.': (200, 200, 0),
+                        'F': (200, 100, 0),
+                        'P': (0, 255, 0),
+                        ',': (150, 255, 0),
+                        '„': (100, 255, 0),
+                        'A': (200, 200, 100),
+                        'S': (200, 200, 150),
+                        '▲': (150, 150, 150),
+                        '~': (0, 0, 200),
+                        'C': (255, 150, 0),
+                        ';': (220, 220, 220),
+                       }
+        tiles_dict = {  
+                        '.': (200, 200, 0),
+                        ',': (150, 255, 0),
+                        '„': (100, 255, 0),
+                        'A': (200, 200, 100),
+                        '▲': (150, 150, 150),
+                        'C': (255, 150, 0),
+                        ':': (245, 245, 245),
+                        ';': (235, 235, 235),
+                        'S': (200, 200, 150),
+                        'o': (170, 170, 170),
+                        'F': (200, 100, 0),
+                        'P': (0, 255, 0),
+                        '~': (0, 0, 200),
+                        '`': (0, 0, 210),
+                        'u': (80, 235, 0),
+                        's': (255, 255, 255),
+                        }
+        if type_region == 'none':
+            return (150, 150, 150)               
+        elif type_region == 'Global_regions':
+            if key in global_region_dict:
+                return global_region_dict[key]
+            else:
+                return (random.randrange(256), random.randrange(256), random.randrange(256))
+        elif type_region == 'Regions':
+            if key in location_dict:
+                return location_dict[key]
+            else:
+                return (random.randrange(256), random.randrange(256), random.randrange(256))
+        elif type_region == 'Locations':
+            if key[0] in location_dict:
+                return location_dict[key[0]]
+            else:
+                return (random.randrange(256), random.randrange(256), random.randrange(256))
+        elif type_region == 'Mini_regions' or type_region == 'All_tiles':
+            if key in tiles_dict:
+                return tiles_dict[key]
+            else:
+                return (random.randrange(256), random.randrange(256), random.randrange(256))
+
+def simple_draw_map_generation(screen, draw_map, type_map, description):
+    """
+        Отрисовывает этапы генерации карты
+    """
+    size_tile = 750/len(draw_map)
+    screen.fill((255, 255, 255))
+    
+    for number_line, line in enumerate(draw_map):
+        for number_tile, tile in enumerate(line):
+            Draw_region(number_line*size_tile, number_tile*size_tile, size_tile, tile, type_map).draw(screen)
+
+    fontObj = pygame.font.Font('freesansbold.ttf', 10)
+    textSurfaceObj = fontObj.render(description, True, (0, 0, 0), (255, 255, 255))
+    textRectObj = textSurfaceObj.get_rect()
+    textRectObj.top = 100
+    textRectObj.left = 760
+    screen.blit(textSurfaceObj, textRectObj) 
+            
+    pygame.display.flip()
+            
         
 def progress_bar(screen, percent, description):
     """
         Отрисовывает прогресс-бар для визуализации генерации карты
     """
-    screen.fill((255, 255, 255))
+    #screen.fill((255, 255, 255))
     x_size, y_size = pygame.display.Info().current_w, pygame.display.Info().current_h
-    button_rect(y_size//2, x_size//2, 200, 1000, (150, 150, 150)).draw(screen)
-    button_rect(y_size//2, x_size//2, 200, percent*10, (200, 100, 100)).draw(screen)
+    #Button_rect(y_size//2, x_size//2, 200, 1000, (150, 150, 150)).draw(screen)
+    #Button_rect(y_size//2, x_size//2, 200, percent*10, (200, 100, 100)).draw(screen)
     
     fontObj = pygame.font.Font('freesansbold.ttf', 10)
     textSurfaceObj = fontObj.render(description, True, (0, 0, 0), (255, 255, 255))
