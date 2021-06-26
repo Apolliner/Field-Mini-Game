@@ -227,7 +227,8 @@ def master_map_generate(global_region_grid, region_grid, chunks_grid, mini_grid,
     #Определение независимых областей на локациях
     #progress_bar(screen, 74, 'Определение независимых областей на локациях')
     defining_vertices(ready_global_map)
-    simple_draw_map_generation(screen, 'Определение связей между локациями')
+    draw_vertices_generation(screen, ready_global_map, 'Определение связей между локациями')
+    #simple_draw_map_generation(screen, 'Определение связей между локациями')
     
 
     #Определение связей между локациями
@@ -240,6 +241,8 @@ def master_map_generate(global_region_grid, region_grid, chunks_grid, mini_grid,
     #progress_bar(screen, 90, 'Создание миникарты')
     minimap = minimap_create(ready_global_map)
     simple_draw_map_generation(screen, 'Карта готова')
+
+    request_for_a_key_press(screen)
     
     #progress_bar(screen, 100, 'Карта готова')
 
@@ -358,6 +361,114 @@ class Draw_region(pygame.sprite.Sprite):
             else:
                 return (random.randrange(256), random.randrange(256), random.randrange(256))
 
+class Island_friends(pygame.sprite.Sprite):
+    """ Содержит спрайты вершин """
+
+    def __init__(self, y, x, size_tile, number):
+        pygame.sprite.Sprite.__init__(self)
+        self.x = x
+        self.y = y
+        self.image = pygame.Surface((size_tile, size_tile))
+        self.image.fill(self.color_dict(number))
+        self.image.set_alpha(60)
+        self.rect = self.image.get_rect()
+        self.rect.left = x
+        self.rect.top = y
+        self.speed = 0
+    def draw( self, surface ):
+        surface.blit(self.image, self.rect)
+    def color_dict(self, number):
+        color_dict =   {
+                        -1: (0, 0, 0),
+                        0: (255, 255, 0),
+                        1: (255, 255, 150),
+                        2: (0, 255, 255),
+                        3: (150, 255, 255),
+                        4: (255, 0, 255),
+                        5: (255, 150, 255),
+                        6: (0, 0, 255),
+                        7: (0, 255, 0),
+                        8: (255, 200, 255),
+                        9: (0, 255, 0),
+                        10: (0, 128, 0),
+                        11: (0, 100, 0),
+                        12: (128, 128, 0),
+                        13: (128, 128, 0),
+                        14: (255, 255, 255),
+                        15: (235, 255, 255),
+                        16: (200, 255, 255),
+                        17: (200, 200, 100),
+                        18: (100, 200, 100),
+                        19: (200, 100, 100),
+                        20: (245, 245, 0),
+                        21: (245, 245, 140),
+                        22: (0, 245, 245),
+                        23: (140, 245, 245),
+                        24: (245, 0, 245),
+                        25: (245, 140, 245),
+                        26: (0, 0, 245),
+                        27: (0, 245, 0),
+                        28: (245, 200, 245),
+                        29: (0, 245, 0),
+                        30: (0, 148, 0),
+                        31: (0, 140, 0),
+                        32: (120, 120, 0),
+                        33: (120, 120, 0),
+                        34: (245, 245, 245),
+                        35: (235, 245, 245),
+                        36: (200, 245, 245),
+                        37: (200, 200, 140),
+                        38: (140, 200, 140),
+                        39: (200, 140, 140),
+                        40: (140, 140, 200),
+                        41: (245, 245, 140),
+                        42: (0, 235, 235),
+                        43: (130, 235, 235),
+                        44: (235, 0, 235),
+                        45: (235, 130, 235),
+                        46: (0, 0, 235),
+                        47: (0, 235, 0),
+                        48: (235, 200, 235),
+                        49: (0, 235, 0),
+                        50: (0, 123, 0),
+                        51: (0, 130, 0),
+                        52: (123, 123, 0),
+                        53: (123, 123, 0),
+                        54: (235, 235, 235),
+                        55: (205, 235, 235),
+                        56: (200, 235, 235),
+                        57: (210, 210, 100),
+                        58: (100, 210, 100),
+                        59: (210, 100, 100),
+                        60: (100, 100, 210),
+                        61: (225, 225, 150),
+                        62: (0, 225, 225),
+                        63: (150, 225, 225),
+                        64: (225, 0, 225),
+                        65: (225, 150, 225),
+                        66: (0, 0, 225),
+                        67: (0, 225, 0),
+                        68: (225, 200, 225),
+                        69: (0, 225, 0),
+                        70: (0, 128, 0),
+                        71: (0, 100, 0),
+                        72: (128, 128, 0),
+                        73: (128, 128, 0),
+                        74: (225, 225, 225),
+                        75: (235, 225, 225),
+                        76: (200, 225, 225),
+                        77: (200, 200, 100),
+                        78: (100, 200, 100),
+                        79: (200, 100, 100),
+                        80: (100, 100, 200),
+                        255: (255, 0, 0),
+                        }
+
+        if number in color_dict:
+            return color_dict[number]
+        else:
+            return (random.randrange(256), random.randrange(256), random.randrange(256))
+
 def draw_map_generation(screen, draw_map, type_map, description):
     """
         Отрисовывает этапы генерации карты
@@ -382,7 +493,7 @@ def simple_draw_map_generation(screen, description):
     """
         Отрисовывает этапы генерации карты без перерисовки карты
     """
-    Button_rect(750, 50, 100, 1000, (255, 255, 255)).draw(screen)
+    Button_rect(50, 750, 100, 1000, (255, 255, 255)).draw(screen)
     fontObj = pygame.font.Font('freesansbold.ttf', 10)
     textSurfaceObj = fontObj.render(description, True, (0, 0, 0), (255, 255, 255))
     textRectObj = textSurfaceObj.get_rect()
@@ -391,7 +502,52 @@ def simple_draw_map_generation(screen, description):
     screen.blit(textSurfaceObj, textRectObj) 
             
     pygame.display.flip()
+
+def draw_vertices_generation(screen, draw_map, description):
+    """
+        Отрисовывает определённые зоны доступности
+    """
+    size_tile = 750/(len(draw_map) * len(draw_map[0][0].chunk))
+    chunk_size = len(draw_map[0][0].chunk)
+    Button_rect(50, 750, 100, 1000, (255, 255, 255)).draw(screen)
     
+    for number_global_line, global_line in enumerate(draw_map):
+        for number_global_tile, global_tile in enumerate(global_line):
+            for number_line, line in enumerate(global_tile.chunk):
+                for number_tile, tile in enumerate(line):
+                    Island_friends((number_global_line*chunk_size + number_line)*size_tile, (number_global_tile*chunk_size + number_tile)*size_tile, size_tile, tile.vertices).draw(screen)
+                    #pygame.display.flip()
+
+    fontObj = pygame.font.Font('freesansbold.ttf', 10)
+    textSurfaceObj = fontObj.render(description, True, (0, 0, 0), (255, 255, 255))
+    textRectObj = textSurfaceObj.get_rect()
+    textRectObj.top = 100
+    textRectObj.left = 760
+    screen.blit(textSurfaceObj, textRectObj) 
+            
+    pygame.display.flip()
+
+def request_for_a_key_press(screen):
+    """
+        Спрашивает ввод space перед началом игры
+    """
+    Button_rect(50, 750, 100, 1000, (255, 255, 255)).draw(screen)
+    fontObj = pygame.font.Font('freesansbold.ttf', 10)
+    textSurfaceObj = fontObj.render('Для продолжения нажмите "SPACE"', True, (0, 0, 0), (255, 255, 255))
+    textRectObj = textSurfaceObj.get_rect()
+    textRectObj.top = 100
+    textRectObj.left = 760
+    screen.blit(textSurfaceObj, textRectObj) 
+            
+    pygame.display.flip()
+    request = True
+    while request:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                sys.exit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                        request = False
         
 def progress_bar(screen, percent, description):
     """
