@@ -4011,7 +4011,7 @@ def in_game_main_loop(screen):
     menu_selection = 'continue the game'
     button_selection = False
     menu_tuple = ('continue the game', 'game settings', 'leave the game')
-    screen.fill((255, 255, 255, 0.2))
+    screen.fill((255, 255, 255, .2))
     master_game_menu_draw(screen, [1200, 750], menu_selection, button_selection, menu_tuple, False)
     in_game_main_loop = True
     while in_game_main_loop:

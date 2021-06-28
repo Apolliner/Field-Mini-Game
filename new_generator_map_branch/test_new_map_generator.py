@@ -3,7 +3,12 @@ import time
 import copy
 import math
 import pygame
-from new_generator_map_branch import map_patch
+if __name__ == '__main__':
+    import map_patch
+    from pygame.locals import *
+    import sys
+else:
+    from new_generator_map_branch import map_patch
 
 
 """
@@ -248,6 +253,7 @@ def master_map_generate(global_region_grid, region_grid, chunks_grid, mini_grid,
 
     return ready_global_map, minimap
 
+
 """
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -298,7 +304,7 @@ class Draw_region(pygame.sprite.Sprite):
                                     5 - водяной
         """
         global_region_dict =   {
-                        0: (255, 255, 0),
+                        0: (239, 228, 176),
                         1: (50, 50, 50),
                         2: (0, 255, 0),
                         3: (230, 230, 230),
@@ -307,26 +313,26 @@ class Draw_region(pygame.sprite.Sprite):
                         }
 
         location_dict = {
-                        'j': (255, 255, 0),
-                        '.': (200, 200, 0),
+                        'j': (239, 228, 200),
+                        '.': (239, 228, 176),
                         'F': (200, 100, 0),
                         'P': (0, 255, 0),
-                        ',': (150, 255, 0),
+                        ',': (209, 169, 126),
                         '„': (100, 255, 0),
                         'A': (200, 200, 100),
                         'S': (200, 200, 150),
                         '▲': (150, 150, 150),
                         '~': (0, 0, 200),
-                        'C': (255, 150, 0),
+                        'C': (185, 122, 87),
                         ';': (220, 220, 220),
                        }
         tiles_dict = {  
-                        '.': (200, 200, 0),
-                        ',': (150, 255, 0),
+                        '.': (239, 228, 176),
+                        ',': (209, 169, 126),
                         '„': (100, 255, 0),
                         'A': (200, 200, 100),
                         '▲': (150, 150, 150),
-                        'C': (255, 150, 0),
+                        'C': (185, 122, 87),
                         ':': (245, 245, 245),
                         ';': (235, 235, 235),
                         'S': (200, 200, 150),
@@ -1863,7 +1869,19 @@ def minimap_create(global_map):
 """
 =========================================================================================================================================================
 """
+if __name__ == '__main__':
+    """
+        Запуск генератора отдельно от игры
+    """
+    pygame.init()
 
-#                                global_region_grid | region_grid | chunks_grid | mini_region_grid | tile_field_grid
-#global_map = master_map_generate(        2,                2,            2,            2,                 2)
+    dispay_size = [1200, 750]
+    screen = pygame.display.set_mode(dispay_size, FULLSCREEN | DOUBLEBUF)
+    pygame.display.set_caption("My Game")
+
+    tiles_image_dict = []
+
+    #                                global_region_grid | region_grid | chunks_grid | mini_region_grid | tile_field_grid
+    global_map = master_map_generate(        2,                2,            2,            20,                 2,    screen, tiles_image_dict)
+    sys.exit()
 
