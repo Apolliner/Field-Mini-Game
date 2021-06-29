@@ -3,6 +3,7 @@ import time
 import copy
 import math
 import pygame
+import pickle
 if __name__ == '__main__':
     import map_patch
     from pygame.locals import *
@@ -76,6 +77,30 @@ class Tile:
                         }
         return ground_dict[icon][number]
 
+    def __getstate__(self) -> dict:
+        """ Сохранение класса """
+        state = {}
+        state["icon"] = self.icon
+        state["description"] = self.description
+        state["list_of_features"] = self.list_of_features
+        state["price_move"] = self.price_move
+        state["type"] = self.type
+        state["level"] = self.level
+        state["stairs"] = self.stairs
+        state["vertices"] = self.vertices
+        return state
+
+    def __setstate__(self, state: dict):
+        """ Восстановление класса """
+        self.icon = state["icon"] 
+        self.description = state["description"]
+        self.list_of_features = state["list_of_features"]
+        self.price_move = state["price_move"]
+        self.type = state["type"]
+        self.level = state["level"]
+        self.stairs = state["stairs"]
+        self.vertices = state["vertices"]
+
 class Tile_minimap:
     """ Содержит изображение, описание, особое содержание тайла миникарты"""
     __slots__ = ('icon', 'description', 'list_of_features', 'price_move', 'type', 'level', 'stairs', 'vertices', 'temperature')
@@ -101,6 +126,27 @@ class Location:
         self.price_move = price_move
         self.vertices = []
         self.position = position
+    def __getstate__(self) -> dict:
+        """ Сохранение класса """
+        state = {}
+        state["name"] = self.name
+        state["temperature"] = self.temperature
+        state["chunk"] = pickle.dumps(self.chunk)
+        state["icon"] = self.icon
+        state["price_move"] = self.price_move
+        state["vertices"] = self.vertices
+        state["position"] = self.position
+        return state
+
+    def __setstate__(self, state: dict):
+        """ Восстановление класса """
+        self.name = state["name"]
+        self.temperature = state["temperature"]
+        self.chunk = pickle.loads(state["chunk"])
+        self.icon = state["icon"]
+        self.price_move = state["price_move"]
+        self.vertices = state["vertices"]
+        self.position = state["position"]
 
 def timeit(func):
     """

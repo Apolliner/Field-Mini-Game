@@ -7,9 +7,11 @@ import time
 import math
 import pygame
 import sys
+import pickle
 from pygame.locals import *
 from new_generator_map_branch import test_new_map_generator as map_generator
 from new_generator_map_branch import old_map_generator
+
 
 garbage = ['░', '▒', '▓', '█', '☺']
 
@@ -3806,6 +3808,20 @@ def new_step_calculation(enemy_list, person, step):
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 """
+
+def save_game(global_map):
+    """
+        Сохранение игровой карты через pickle
+    """
+    serialized_map = []
+    for number_line, line in enumerate(global_map):
+        line = []
+        for number_tile, tile in enumerate(line):
+            line.append(pickle.dumps(tile))
+        serialized_map.append(line)
+    with open("file.pkl", "wb") as fp:
+        pickle.dump(serialized_map, fp)
+
 def frames_per_cycle_and_delays(person, time_1, time_2, settings_for_intermediate_steps):
     """
         Рассчёт количества промежуточных шагов в зависимости от скорости вывода основного шага и
@@ -4086,6 +4102,8 @@ def game_loop(global_map:list, person, chunk_size:int, enemy_list:list, world, s
     minimap_sprite  = pygame.sprite.Group()
 
     pygame.display.flip()
+
+    save_game(global_map) #тестовое сохранение карты
 
     #Загрузка и создание поверхностей всех спрайтов
     sprites_dict = loading_all_sprites()
