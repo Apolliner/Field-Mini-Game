@@ -114,6 +114,31 @@ class Tile_minimap:
         self.level = 0
         self.stairs = False
         self.vertices = -1
+    def __getstate__(self) -> dict:
+        """ Сохранение класса """
+        state = {}
+        state["icon"] = self.icon
+        state["description"] = self.description
+        state["list_of_features"] = self.list_of_features
+        state["price_move"] = self.price_move
+        state["temperature"] = self.temperature
+        state["type"] = self.type
+        state["level"] = self.level
+        state["stairs"] = self.stairs
+        state["vertices"] = self.vertices
+        return state
+
+    def __setstate__(self, state: dict):
+        """ Восстановление класса """
+        self.icon = state["icon"] 
+        self.description = state["description"]
+        self.list_of_features = state["list_of_features"]
+        self.price_move = state["price_move"]
+        self.temperature = state["temperature"]
+        self.type = state["type"]
+        self.level = state["level"]
+        self.stairs = state["stairs"]
+        self.vertices = state["vertices"]
 
 class Location:
     """ Содержит описание локации """

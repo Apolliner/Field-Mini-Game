@@ -3809,18 +3809,25 @@ def new_step_calculation(enemy_list, person, step):
 
 """
 
-def save_game(global_map):
+def save_game(global_map, minimap):
     """
         Сохранение игровой карты через pickle
     """
-    serialized_map = []
-    for number_line, line in enumerate(global_map):
-        line = []
-        for number_tile, tile in enumerate(line):
-            line.append(pickle.dumps(tile))
-        serialized_map.append(line)
-    with open("file.pkl", "wb") as fp:
-        pickle.dump(serialized_map, fp)
+    all_save = [global_map, minimap]
+
+    with open("saved_map.pkl", "wb") as fp:
+        pickle.dump(all_save, fp)
+
+def load_game():
+    """
+        Загрузка игровой карты через pickle
+    """
+    with open("saved_map.pkl", "rb") as fp:
+        all_load = pickle.load(fp)
+    
+    return all_load[0], all_load[1]
+            
+        
 
 def frames_per_cycle_and_delays(person, time_1, time_2, settings_for_intermediate_steps):
     """
@@ -3908,6 +3915,8 @@ def menu_moving(menu_selection, button_selection):
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_DOWN:
                     if menu_selection == 'new_game':
+                        return 'load_map', button_selection
+                    if menu_selection == 'load_map':
                         return 'settings', button_selection
                     if menu_selection == 'settings':
                         return 'about', button_selection
@@ -3918,8 +3927,10 @@ def menu_moving(menu_selection, button_selection):
                 if event.key == pygame.K_UP:
                     if menu_selection == 'new_game':
                         return 'exit_game', button_selection
-                    if menu_selection == 'settings':
+                    if menu_selection == 'load_map':
                         return 'new_game', button_selection
+                    if menu_selection == 'settings':
+                        return 'load_map', button_selection
                     if menu_selection == 'about':
                         return 'settings', button_selection
                     if menu_selection == 'exit_game':
@@ -4062,7 +4073,7 @@ def main_loop():
     fast_generation = False #Переключение отображения генерации между прогресс-баром и полным выводом на экран генерирующейся карты
     menu_selection = 'new_game'
     button_selection = False
-    menu_tuple = ('new_game', 'settings', 'about', 'exit_game')
+    menu_tuple = ('new_game', 'load_map', 'settings', 'about', 'exit_game')
     #Предварительная отрисовка игрового меню
     master_game_menu_draw(screen, dispay_size, menu_selection, button_selection, menu_tuple)
 
@@ -4073,6 +4084,29 @@ def main_loop():
         
         if menu_selection == 'new_game' and button_selection: #Подготовка и запуск новой игры
             preparing_a_new_game(global_region_grid, region_grid, chunks_grid, mini_region_grid, tile_field_grid, chunk_size, screen)
+        if menu_selection == 'load_map' and button_selection:
+            global_map, raw_minimap = load_game()
+
+            tiles_image_dict = Tiles_image_dict() #Загружаются тайлы
+                
+            person = Person([2, 2], [2, 2], [], [chunk_size//2, chunk_size//2], [chunk_size//2, chunk_size//2])
+            calculation_assemblage_point(global_map, person, chunk_size)
+            enemy_list = [Horseman([len(global_map)//2, len(global_map)//2], [chunk_size//2, chunk_size//2], 5),
+                          Horseman([len(global_map)//3, len(global_map)//3], [chunk_size//2, chunk_size//2], 5),
+                          Riffleman([len(global_map)//4, len(global_map)//4], [chunk_size//2, chunk_size//2], 2),
+                          Coyot([len(global_map)//5, len(global_map)//5], [chunk_size//2, chunk_size//2], 0)]
+            world = World() #Описание текущего состояния игрового мира
+
+            #Создание миникарты
+            minimap = pygame.sprite.Group()
+            size_tile = 30
+            size_tile_minimap = 15
+            for number_minimap_line, raw_minimap_line in enumerate(raw_minimap):
+                for number_minimap_tile, minimap_tile in enumerate(raw_minimap_line):
+                    minimap.add(All_tiles(number_minimap_tile*size_tile_minimap + (26*size_tile), number_minimap_line*size_tile_minimap, size_tile_minimap,
+                                            tiles_image_dict, minimap_tile.icon, minimap_tile.type))
+
+            game_loop(global_map, person, chunk_size, enemy_list, world, screen, tiles_image_dict, minimap, raw_minimap)
 
         if menu_selection == 'exit_game' and button_selection: #Закрытие игры
             sys.exit()
@@ -4103,7 +4137,7 @@ def game_loop(global_map:list, person, chunk_size:int, enemy_list:list, world, s
 
     pygame.display.flip()
 
-    save_game(global_map) #тестовое сохранение карты
+    save_game(global_map, raw_minimap) #тестовое сохранение карты
 
     #Загрузка и создание поверхностей всех спрайтов
     sprites_dict = loading_all_sprites()
