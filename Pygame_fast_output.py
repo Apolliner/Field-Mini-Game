@@ -4679,11 +4679,13 @@ def main_loop():
         master_game_menu_draw(screen, dispay_size, menu_selection, button_selection, menu_tuple)
         
         if menu_selection == 'new_game' and button_selection: #Подготовка и запуск новой игры
+            button_selection = False
             preparing_a_new_game(global_region_grid, region_grid, chunks_grid, mini_region_grid, tile_field_grid, chunk_size, screen)
             master_game_menu_draw(screen, dispay_size, menu_selection, button_selection, menu_tuple)
 
         if menu_selection == 'load_game' and button_selection:
             menu_selection = 'new_game'
+            button_selection = False
             global_map, person, chunk_size, enemy_list, raw_minimap, activity_list, step = load_game()
 
             tiles_image_dict = Tiles_image_dict() #Загружаются тайлы
@@ -4697,11 +4699,12 @@ def main_loop():
                     minimap.add(All_tiles(number_minimap_tile*size_tile_minimap + (26*size_tile), number_minimap_line*size_tile_minimap, size_tile_minimap,
                                             tiles_image_dict, minimap_tile.icon, minimap_tile.type))
 
-            game_loop(global_map, person, chunk_size, enemy_list, world, screen, tiles_image_dict, minimap, raw_minimap, True, [activity_list, step])
+            game_loop(global_map, person, chunk_size, enemy_list, world, screen, tiles_image_dict, minimap, raw_minimap, False, [activity_list, step])
             master_game_menu_draw(screen, dispay_size, menu_selection, button_selection, menu_tuple)
             
         if menu_selection == 'load_map' and button_selection:
             menu_selection = 'new_game'
+            button_selection = False
             global_map, raw_minimap = load_map()
 
             tiles_image_dict = Tiles_image_dict() #Загружаются тайлы
