@@ -86,6 +86,7 @@ class Person:
         state["environment_temperature"] = self.environment_temperature
         state["person_temperature"] = self.person_temperature
         state["person_pass_step"] = self.person_pass_step
+        state["enemy_pass_step"] = self.enemy_pass_step
         state["speed"] = self.speed
         state["test_visible"] = self.test_visible
         state["level"] = self.level
@@ -112,6 +113,7 @@ class Person:
         self.environment_temperature = state["environment_temperature"]
         self.person_temperature = state["person_temperature"]
         self.person_pass_step = state["person_pass_step"]
+        self.enemy_pass_step = state["enemy_pass_step"]
         self.speed = state["speed"]
         self.test_visible = state["test_visible"]
         self.level = state["level"]
@@ -1097,6 +1099,27 @@ class Horseman(Enemy):
     def __getstate__(self) -> dict:
         """ Сохранение класса """
         state = {}
+        state["global_position"] = self.global_position
+        state["local_position"] = self.local_position
+        state["action_points"] = self.action_points
+        state["dynamic_chunk"] = self.dynamic_chunk
+        state["dynamic_chunk_position"] = self.dynamic_chunk_position
+        state["old_position_assemblage_point"] = self.old_position_assemblage_point
+        state["step_exit_from_assemblage_point"] = self.step_exit_from_assemblage_point
+        state["waypoints"] = self.waypoints
+        state["dynamic_waypoints"] = self.dynamic_waypoints
+        state["local_waypoints"] = self.local_waypoints
+        state["alarm"] = self.alarm
+        state["pass_step"] = self.pass_step
+        state["on_the_screen"] = self.on_the_screen
+        state["steps_to_new_step"] = self.steps_to_new_step
+        state["type"] = self.type
+        state["level"] = self.level
+        state["vertices"] = self.vertices
+        state["target"] = self.target
+        state["visible"] = self.visible
+        state["direction"] = self.direction
+        state["offset"] = self.offset
         state["name"] = self.name
         state["name_npc"] = self.name_npc
         state["priority_biom"] = self.priority_biom
@@ -1117,6 +1140,27 @@ class Horseman(Enemy):
 
     def __setstate__(self, state: dict):
         """ Восстановление класса """
+        self.global_position = state["global_position"]
+        self.local_position = state["local_position"]
+        self.action_points = state["action_points"]
+        self.dynamic_chunk = state["dynamic_chunk"]
+        self.dynamic_chunk_position = state["dynamic_chunk_position"]
+        self.old_position_assemblage_point = state["old_position_assemblage_point"]
+        self.step_exit_from_assemblage_point = state["step_exit_from_assemblage_point"]
+        self.waypoints = state["waypoints"]
+        self.dynamic_waypoints = state["dynamic_waypoints"]
+        self.local_waypoints = state["local_waypoints"]
+        self.alarm = state["alarm"]
+        self.pass_step = state["pass_step"]
+        self.on_the_screen = state["on_the_screen"]
+        self.steps_to_new_step = state["steps_to_new_step"]
+        self.type = state["type"]
+        self.level = state["level"]
+        self.vertices = state["vertices"]
+        self.target = state["target"]
+        self.visible = state["visible"]
+        self.direction = state["direction"]
+        self.offset = state["offset"]
         self.name = state["name"]
         self.name_npc = state["name_npc"]
         self.priority_biom = state["priority_biom"]
@@ -1166,6 +1210,27 @@ class Riffleman(Enemy):
     def __getstate__(self) -> dict:
         """ Сохранение класса """
         state = {}
+        state["global_position"] = self.global_position
+        state["local_position"] = self.local_position
+        state["action_points"] = self.action_points
+        state["dynamic_chunk"] = self.dynamic_chunk
+        state["dynamic_chunk_position"] = self.dynamic_chunk_position
+        state["old_position_assemblage_point"] = self.old_position_assemblage_point
+        state["step_exit_from_assemblage_point"] = self.step_exit_from_assemblage_point
+        state["waypoints"] = self.waypoints
+        state["dynamic_waypoints"] = self.dynamic_waypoints
+        state["local_waypoints"] = self.local_waypoints
+        state["alarm"] = self.alarm
+        state["pass_step"] = self.pass_step
+        state["on_the_screen"] = self.on_the_screen
+        state["steps_to_new_step"] = self.steps_to_new_step
+        state["type"] = self.type
+        state["level"] = self.level
+        state["vertices"] = self.vertices
+        state["target"] = self.target
+        state["visible"] = self.visible
+        state["direction"] = self.direction
+        state["offset"] = self.offset
         state["name"] = self.name
         state["name_npc"] = self.name_npc
         state["priority_biom"] = self.priority_biom
@@ -1186,6 +1251,27 @@ class Riffleman(Enemy):
 
     def __setstate__(self, state: dict):
         """ Восстановление класса """
+        self.global_position = state["global_position"]
+        self.local_position = state["local_position"]
+        self.action_points = state["action_points"]
+        self.dynamic_chunk = state["dynamic_chunk"]
+        self.dynamic_chunk_position = state["dynamic_chunk_position"]
+        self.old_position_assemblage_point = state["old_position_assemblage_point"]
+        self.step_exit_from_assemblage_point = state["step_exit_from_assemblage_point"]
+        self.waypoints = state["waypoints"]
+        self.dynamic_waypoints = state["dynamic_waypoints"]
+        self.local_waypoints = state["local_waypoints"]
+        self.alarm = state["alarm"]
+        self.pass_step = state["pass_step"]
+        self.on_the_screen = state["on_the_screen"]
+        self.steps_to_new_step = state["steps_to_new_step"]
+        self.type = state["type"]
+        self.level = state["level"]
+        self.vertices = state["vertices"]
+        self.target = state["target"]
+        self.visible = state["visible"]
+        self.direction = state["direction"]
+        self.offset = state["offset"]
         self.name = state["name"]
         self.name_npc = state["name_npc"]
         self.priority_biom = state["priority_biom"]
@@ -1235,6 +1321,27 @@ class Gold_digger(Enemy):
     def __getstate__(self) -> dict:
         """ Сохранение класса """
         state = {}
+        state["global_position"] = self.global_position
+        state["local_position"] = self.local_position
+        state["action_points"] = self.action_points
+        state["dynamic_chunk"] = self.dynamic_chunk
+        state["dynamic_chunk_position"] = self.dynamic_chunk_position
+        state["old_position_assemblage_point"] = self.old_position_assemblage_point
+        state["step_exit_from_assemblage_point"] = self.step_exit_from_assemblage_point
+        state["waypoints"] = self.waypoints
+        state["dynamic_waypoints"] = self.dynamic_waypoints
+        state["local_waypoints"] = self.local_waypoints
+        state["alarm"] = self.alarm
+        state["pass_step"] = self.pass_step
+        state["on_the_screen"] = self.on_the_screen
+        state["steps_to_new_step"] = self.steps_to_new_step
+        state["type"] = self.type
+        state["level"] = self.level
+        state["vertices"] = self.vertices
+        state["target"] = self.target
+        state["visible"] = self.visible
+        state["direction"] = self.direction
+        state["offset"] = self.offset
         state["name"] = self.name
         state["name_npc"] = self.name_npc
         state["priority_biom"] = self.priority_biom
@@ -1255,6 +1362,27 @@ class Gold_digger(Enemy):
 
     def __setstate__(self, state: dict):
         """ Восстановление класса """
+        self.global_position = state["global_position"]
+        self.local_position = state["local_position"]
+        self.action_points = state["action_points"]
+        self.dynamic_chunk = state["dynamic_chunk"]
+        self.dynamic_chunk_position = state["dynamic_chunk_position"]
+        self.old_position_assemblage_point = state["old_position_assemblage_point"]
+        self.step_exit_from_assemblage_point = state["step_exit_from_assemblage_point"]
+        self.waypoints = state["waypoints"]
+        self.dynamic_waypoints = state["dynamic_waypoints"]
+        self.local_waypoints = state["local_waypoints"]
+        self.alarm = state["alarm"]
+        self.pass_step = state["pass_step"]
+        self.on_the_screen = state["on_the_screen"]
+        self.steps_to_new_step = state["steps_to_new_step"]
+        self.type = state["type"]
+        self.level = state["level"]
+        self.vertices = state["vertices"]
+        self.target = state["target"]
+        self.visible = state["visible"]
+        self.direction = state["direction"]
+        self.offset = state["offset"]
         self.name = state["name"]
         self.name_npc = state["name_npc"]
         self.priority_biom = state["priority_biom"]
@@ -1304,6 +1432,27 @@ class Horse(Enemy):
     def __getstate__(self) -> dict:
         """ Сохранение класса """
         state = {}
+        state["global_position"] = self.global_position
+        state["local_position"] = self.local_position
+        state["action_points"] = self.action_points
+        state["dynamic_chunk"] = self.dynamic_chunk
+        state["dynamic_chunk_position"] = self.dynamic_chunk_position
+        state["old_position_assemblage_point"] = self.old_position_assemblage_point
+        state["step_exit_from_assemblage_point"] = self.step_exit_from_assemblage_point
+        state["waypoints"] = self.waypoints
+        state["dynamic_waypoints"] = self.dynamic_waypoints
+        state["local_waypoints"] = self.local_waypoints
+        state["alarm"] = self.alarm
+        state["pass_step"] = self.pass_step
+        state["on_the_screen"] = self.on_the_screen
+        state["steps_to_new_step"] = self.steps_to_new_step
+        state["type"] = self.type
+        state["level"] = self.level
+        state["vertices"] = self.vertices
+        state["target"] = self.target
+        state["visible"] = self.visible
+        state["direction"] = self.direction
+        state["offset"] = self.offset
         state["name"] = self.name
         state["name_npc"] = self.name_npc
         state["priority_biom"] = self.priority_biom
@@ -1324,6 +1473,27 @@ class Horse(Enemy):
 
     def __setstate__(self, state: dict):
         """ Восстановление класса """
+        self.global_position = state["global_position"]
+        self.local_position = state["local_position"]
+        self.action_points = state["action_points"]
+        self.dynamic_chunk = state["dynamic_chunk"]
+        self.dynamic_chunk_position = state["dynamic_chunk_position"]
+        self.old_position_assemblage_point = state["old_position_assemblage_point"]
+        self.step_exit_from_assemblage_point = state["step_exit_from_assemblage_point"]
+        self.waypoints = state["waypoints"]
+        self.dynamic_waypoints = state["dynamic_waypoints"]
+        self.local_waypoints = state["local_waypoints"]
+        self.alarm = state["alarm"]
+        self.pass_step = state["pass_step"]
+        self.on_the_screen = state["on_the_screen"]
+        self.steps_to_new_step = state["steps_to_new_step"]
+        self.type = state["type"]
+        self.level = state["level"]
+        self.vertices = state["vertices"]
+        self.target = state["target"]
+        self.visible = state["visible"]
+        self.direction = state["direction"]
+        self.offset = state["offset"]
         self.name = state["name"]
         self.name_npc = state["name_npc"]
         self.priority_biom = state["priority_biom"]
@@ -1340,7 +1510,7 @@ class Horse(Enemy):
         self.person_description = state["person_description"]
         self.description = state["description"]
         self.speed = state["speed"]
-
+        
 class Coyot(Enemy):
     """ Отвечает за койотов """
         
@@ -1373,6 +1543,27 @@ class Coyot(Enemy):
     def __getstate__(self) -> dict:
         """ Сохранение класса """
         state = {}
+        state["global_position"] = self.global_position
+        state["local_position"] = self.local_position
+        state["action_points"] = self.action_points
+        state["dynamic_chunk"] = self.dynamic_chunk
+        state["dynamic_chunk_position"] = self.dynamic_chunk_position
+        state["old_position_assemblage_point"] = self.old_position_assemblage_point
+        state["step_exit_from_assemblage_point"] = self.step_exit_from_assemblage_point
+        state["waypoints"] = self.waypoints
+        state["dynamic_waypoints"] = self.dynamic_waypoints
+        state["local_waypoints"] = self.local_waypoints
+        state["alarm"] = self.alarm
+        state["pass_step"] = self.pass_step
+        state["on_the_screen"] = self.on_the_screen
+        state["steps_to_new_step"] = self.steps_to_new_step
+        state["type"] = self.type
+        state["level"] = self.level
+        state["vertices"] = self.vertices
+        state["target"] = self.target
+        state["visible"] = self.visible
+        state["direction"] = self.direction
+        state["offset"] = self.offset
         state["name"] = self.name
         state["name_npc"] = self.name_npc
         state["priority_biom"] = self.priority_biom
@@ -1393,6 +1584,27 @@ class Coyot(Enemy):
 
     def __setstate__(self, state: dict):
         """ Восстановление класса """
+        self.global_position = state["global_position"]
+        self.local_position = state["local_position"]
+        self.action_points = state["action_points"]
+        self.dynamic_chunk = state["dynamic_chunk"]
+        self.dynamic_chunk_position = state["dynamic_chunk_position"]
+        self.old_position_assemblage_point = state["old_position_assemblage_point"]
+        self.step_exit_from_assemblage_point = state["step_exit_from_assemblage_point"]
+        self.waypoints = state["waypoints"]
+        self.dynamic_waypoints = state["dynamic_waypoints"]
+        self.local_waypoints = state["local_waypoints"]
+        self.alarm = state["alarm"]
+        self.pass_step = state["pass_step"]
+        self.on_the_screen = state["on_the_screen"]
+        self.steps_to_new_step = state["steps_to_new_step"]
+        self.type = state["type"]
+        self.level = state["level"]
+        self.vertices = state["vertices"]
+        self.target = state["target"]
+        self.visible = state["visible"]
+        self.direction = state["direction"]
+        self.offset = state["offset"]
         self.name = state["name"]
         self.name_npc = state["name_npc"]
         self.priority_biom = state["priority_biom"]
@@ -1409,7 +1621,7 @@ class Coyot(Enemy):
         self.person_description = state["person_description"]
         self.description = state["description"]
         self.speed = state["speed"]
-
+        
 def master_npc_calculation(global_map, enemy_list, person, go_to_print, step, activity_list, chunk_size, interaction, new_step, world):
     """
         Здесь происходят все события, связанные с NPC
@@ -4167,11 +4379,11 @@ def load_map():
     
     return all_load[0], all_load[1]
 
-def save_game(global_map, person, chunk_size, enemy_list, world, screen, tiles_image_dict, raw_minimap, activity_list, step):
+def save_game(global_map, person, chunk_size, enemy_list, raw_minimap, activity_list, step):
     """
         Сохраняет игровой процесс
     """
-    all_save = [global_map, person, chunk_size, enemy_list, world, screen, tiles_image_dict, raw_minimap, activity_list, step]
+    all_save = [global_map, person, chunk_size, enemy_list, raw_minimap, activity_list, step]
 
     with open("save_game.pkl", "wb") as fp:
         pickle.dump(all_save, fp)
@@ -4180,10 +4392,10 @@ def load_game():
     """
         Загружает игровой процесс
     """
-    with open("saved_map.pkl", "rb") as fp:
+    with open("save_game.pkl", "rb") as fp:
         all_load = pickle.load(fp)
         
-    return all_load[0], all_load[1], all_load[2], all_load[3], all_load[4], all_load[5], all_load[6], all_load[7], all_load[8], all_load[9]
+    return all_load[0], all_load[1], all_load[2], all_load[3], all_load[4], all_load[5], all_load[6]
                   
 
 def frames_per_cycle_and_delays(person, time_1, time_2, settings_for_intermediate_steps):
@@ -4370,6 +4582,7 @@ def in_game_menu_moving(menu_selection, button_selection):
     """
         Выбор кнопки игрового меню
     """
+    pygame.event.clear()
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -4396,26 +4609,28 @@ def in_game_menu_moving(menu_selection, button_selection):
                 if event.key == pygame.K_SPACE:
                     return menu_selection, True
 
-def in_game_main_loop(global_map, person, chunk_size, enemy_list, world, screen, tiles_image_dict, raw_minimap, activity_list, step):
+def in_game_main_loop(screen, global_map, person, chunk_size, enemy_list, raw_minimap, activity_list, step):
     """
         Меню в уже загруженной игре
     """
     menu_selection = 'continue the game'
     button_selection = False
     menu_tuple = ('continue the game', 'save game', 'game settings', 'leave the game')
-    screen.fill((255, 255, 255, .2))
+    screen.fill((255, 255, 255))
+    screen.set_alpha(60)
     master_game_menu_draw(screen, [1200, 750], menu_selection, button_selection, menu_tuple, False)
     in_game_main_loop = True
     while in_game_main_loop:
         menu_selection, button_selection = in_game_menu_moving(menu_selection, button_selection)
+        master_game_menu_draw(screen, [1200, 750], menu_selection, button_selection, menu_tuple, False)
+        time.sleep(0.2)
         if menu_selection == 'continue the game' and button_selection:
             in_game_main_loop = False
         if menu_selection == 'leave the game' and button_selection: #Закрытие игры
             sys.exit()
         if menu_selection == 'save game' and button_selection:
-            save_game(global_map, person, chunk_size, enemy_list, world, screen, tiles_image_dict, raw_minimap, activity_list, step)
+            save_game(global_map, person, chunk_size, enemy_list, raw_minimap, activity_list, step)
             in_game_main_loop = False
-        master_game_menu_draw(screen, [1200, 750], menu_selection, button_selection, menu_tuple, False)
         button_selection = False
         
             
@@ -4454,11 +4669,14 @@ def main_loop():
             preparing_a_new_game(global_region_grid, region_grid, chunks_grid, mini_region_grid, tile_field_grid, chunk_size, screen)
 
         if menu_selection == 'load_game' and button_selection:
-            global_map, person, chunk_size, enemy_list, world, screen, tiles_image_dict, raw_minimap, activity_list, step = load_game()
+            global_map, person, chunk_size, enemy_list, raw_minimap, activity_list, step = load_game()
+
+            tiles_image_dict = Tiles_image_dict() #Загружаются тайлы
 
             minimap = pygame.sprite.Group()
             size_tile = 30
             size_tile_minimap = 15
+            world = World()
             for number_minimap_line, raw_minimap_line in enumerate(raw_minimap):
                 for number_minimap_tile, minimap_tile in enumerate(raw_minimap_line):
                     minimap.add(All_tiles(number_minimap_tile*size_tile_minimap + (26*size_tile), number_minimap_line*size_tile_minimap, size_tile_minimap,
@@ -4555,7 +4773,7 @@ def game_loop(global_map:list, person, chunk_size:int, enemy_list:list, world, s
             mode_action = master_player_action(global_map, person, chunk_size, go_to_print, mode_action, interaction, activity_list, step,
                                                enemy_list)
         if mode_action == 'in_game_menu':
-            in_game_main_loop(global_map, person, chunk_size, enemy_list, world, screen, tiles_image_dict, raw_minimap, activity_list, step)
+            in_game_main_loop(screen, global_map, person, chunk_size, enemy_list, raw_minimap, activity_list, step)
             
             mode_action = 'move'
         start = time.time() #проверка времени выполнения
