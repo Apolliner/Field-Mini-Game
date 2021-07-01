@@ -4477,6 +4477,7 @@ def menu_moving(menu_selection, button_selection):
     """
         Выбор кнопки игрового меню
     """
+    pygame.event.clear()
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -4515,6 +4516,7 @@ def settings_moving(menu_selection, button_selection):
     """
         Выбор кнопки настроек
     """
+    pygame.event.clear()
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -4594,6 +4596,8 @@ def in_game_menu_moving(menu_selection, button_selection):
                     if menu_selection == 'save game':
                         return 'game settings', button_selection
                     if menu_selection == 'game settings':
+                        return 'end game', button_selection
+                    if menu_selection == 'end game':
                         return 'leave the game', button_selection
                     if menu_selection == 'leave the game':
                         return 'continue the game', button_selection
@@ -4604,8 +4608,10 @@ def in_game_menu_moving(menu_selection, button_selection):
                         return 'continue the game', button_selection
                     if menu_selection == 'game settings':
                         return 'save game', button_selection
-                    if menu_selection == 'leave the game':
+                    if menu_selection == 'end game':
                         return 'game settings', button_selection
+                    if menu_selection == 'leave the game':
+                        return 'end game', button_selection
                 if event.key == pygame.K_SPACE:
                     return menu_selection, True
 
@@ -4615,23 +4621,29 @@ def in_game_main_loop(screen, global_map, person, chunk_size, enemy_list, raw_mi
     """
     menu_selection = 'continue the game'
     button_selection = False
-    menu_tuple = ('continue the game', 'save game', 'game settings', 'leave the game')
+    menu_tuple = ('continue the game', 'save game', 'game settings', 'end game', 'leave the game')
     screen.fill((255, 255, 255))
     screen.set_alpha(60)
     master_game_menu_draw(screen, [1200, 750], menu_selection, button_selection, menu_tuple, False)
     in_game_main_loop = True
+    game_loop = True
     while in_game_main_loop:
         menu_selection, button_selection = in_game_menu_moving(menu_selection, button_selection)
         master_game_menu_draw(screen, [1200, 750], menu_selection, button_selection, menu_tuple, False)
         time.sleep(0.2)
         if menu_selection == 'continue the game' and button_selection:
             in_game_main_loop = False
-        if menu_selection == 'leave the game' and button_selection: #Закрытие игры
-            sys.exit()
         if menu_selection == 'save game' and button_selection:
             save_game(global_map, person, chunk_size, enemy_list, raw_minimap, activity_list, step)
             in_game_main_loop = False
+        if menu_selection == 'end game' and button_selection: #Закрытие игры
+            in_game_main_loop = False
+            game_loop = False
+        if menu_selection == 'leave the game' and button_selection: #Закрытие игры
+            sys.exit()
+        
         button_selection = False
+    return game_loop
         
             
 def main_loop():
@@ -4661,14 +4673,17 @@ def main_loop():
     master_game_menu_draw(screen, dispay_size, menu_selection, button_selection, menu_tuple)
 
     while main_loop:
+        button_selection = False
 
         menu_selection, button_selection = menu_moving(menu_selection, button_selection)
         master_game_menu_draw(screen, dispay_size, menu_selection, button_selection, menu_tuple)
         
         if menu_selection == 'new_game' and button_selection: #Подготовка и запуск новой игры
             preparing_a_new_game(global_region_grid, region_grid, chunks_grid, mini_region_grid, tile_field_grid, chunk_size, screen)
+            master_game_menu_draw(screen, dispay_size, menu_selection, button_selection, menu_tuple)
 
         if menu_selection == 'load_game' and button_selection:
+            menu_selection = 'new_game'
             global_map, person, chunk_size, enemy_list, raw_minimap, activity_list, step = load_game()
 
             tiles_image_dict = Tiles_image_dict() #Загружаются тайлы
@@ -4683,8 +4698,10 @@ def main_loop():
                                             tiles_image_dict, minimap_tile.icon, minimap_tile.type))
 
             game_loop(global_map, person, chunk_size, enemy_list, world, screen, tiles_image_dict, minimap, raw_minimap, True, [activity_list, step])
+            master_game_menu_draw(screen, dispay_size, menu_selection, button_selection, menu_tuple)
             
         if menu_selection == 'load_map' and button_selection:
+            menu_selection = 'new_game'
             global_map, raw_minimap = load_map()
 
             tiles_image_dict = Tiles_image_dict() #Загружаются тайлы
@@ -4707,6 +4724,7 @@ def main_loop():
                                             tiles_image_dict, minimap_tile.icon, minimap_tile.type))
 
             game_loop(global_map, person, chunk_size, enemy_list, world, screen, tiles_image_dict, minimap, raw_minimap, True, [])
+            master_game_menu_draw(screen, dispay_size, menu_selection, button_selection, menu_tuple)
 
         if menu_selection == 'exit_game' and button_selection: #Закрытие игры
             sys.exit()
@@ -4714,8 +4732,6 @@ def main_loop():
             settings_loop(screen, dispay_size, fast_generation, global_region_grid, region_grid, chunks_grid, mini_region_grid, tile_field_grid)
             button_selection = False
             master_game_menu_draw(screen, dispay_size, menu_selection, button_selection, menu_tuple)
-        #Если ничего не произошло, то выбранная кнопка сбрасывается
-        button_selection = False
 
 def game_loop(global_map:list, person, chunk_size:int, enemy_list:list, world, screen, tiles_image_dict, minimap, raw_minimap,
               new_game:bool, load_pack:list):
@@ -4763,6 +4779,7 @@ def game_loop(global_map:list, person, chunk_size:int, enemy_list:list, world, s
                                             entities_layer, finishing_surface, settings_for_intermediate_steps)
     
     print('game_loop запущен')
+    game_loop = True
     while game_loop:
         clock.tick(game_fps)
         interaction = []
@@ -4773,7 +4790,7 @@ def game_loop(global_map:list, person, chunk_size:int, enemy_list:list, world, s
             mode_action = master_player_action(global_map, person, chunk_size, go_to_print, mode_action, interaction, activity_list, step,
                                                enemy_list)
         if mode_action == 'in_game_menu':
-            in_game_main_loop(screen, global_map, person, chunk_size, enemy_list, raw_minimap, activity_list, step)
+            game_loop = in_game_main_loop(screen, global_map, person, chunk_size, enemy_list, raw_minimap, activity_list, step)
             
             mode_action = 'move'
         start = time.time() #проверка времени выполнения
