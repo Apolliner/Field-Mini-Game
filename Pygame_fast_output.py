@@ -71,6 +71,58 @@ class Person:
         self.type = '0'
         self.icon = '☺'
 
+    def __getstate__(self) -> dict:
+        """ Сохранение класса """
+        state = {}
+        state["name"] = self.name
+        state["assemblage_point"] = self.assemblage_point
+        state["dynamic"] = self.dynamic
+        state["chunks_use_map"] = self.chunks_use_map
+        state["pointer"] = self.pointer
+        state["gun"] = self.gun
+        state["global_position"] = self.global_position
+        state["number_chunk"] = self.number_chunk
+        state["check_encounter_position"] = self.check_encounter_position
+        state["environment_temperature"] = self.environment_temperature
+        state["person_temperature"] = self.person_temperature
+        state["person_pass_step"] = self.person_pass_step
+        state["speed"] = self.speed
+        state["test_visible"] = self.test_visible
+        state["level"] = self.level
+        state["vertices"] = self.vertices
+        state["local_position"] = self.local_position
+        state["direction"] = self.direction
+        state["pass_draw_move"] = self.pass_draw_move
+        state["recalculating_the_display"] = self.recalculating_the_display
+        state["type"] = self.type
+        state["icon"] = self.icon
+        return state
+
+    def __setstate__(self, state: dict):
+        """ Восстановление класса """
+        self.name = state["name"]
+        self.assemblage_point = state["assemblage_point"]
+        self.dynamic = state["dynamic"]
+        self.chunks_use_map = state["chunks_use_map"]
+        self.pointer = state["pointer"]
+        self.gun = state["gun"]
+        self.global_position = state["global_position"]
+        self.number_chunk = state["number_chunk"]
+        self.check_encounter_position = state["check_encounter_position"]
+        self.environment_temperature = state["environment_temperature"]
+        self.person_temperature = state["person_temperature"]
+        self.person_pass_step = state["person_pass_step"]
+        self.speed = state["speed"]
+        self.test_visible = state["test_visible"]
+        self.level = state["level"]
+        self.vertices = state["vertices"]
+        self.local_position = state["local_position"]
+        self.direction = state["direction"]
+        self.pass_draw_move = state["pass_draw_move"]
+        self.recalculating_the_display = state["recalculating_the_display"]
+        self.type = state["type"]
+        self.icon = state["icon"]
+
 
     def check_local_position(self):
         local_position = []
@@ -861,6 +913,41 @@ class Action_in_map:
         self.type = '0'
         self.level = 0
 
+    def __getstate__(self) -> dict:
+        """ Сохранение класса """
+        state = {}
+        state["name"] = self.name
+        state["icon"] = self.icon
+        state["lifetime"] = self.lifetime
+        state["birth"] = self.birth
+        state["global_position"] = self.global_position
+        state["local_position"] = self.local_position
+        state["global_position"] = self.global_position
+        state["caused"] = self.caused
+        state["lifetime_description"] = self.lifetime_description
+        state["description"] = self.description
+        state["visible"] = self.visible
+        state["type"] = self.type
+        state["level"] = self.level
+        
+        return state
+
+    def __setstate__(self, state: dict):
+        """ Восстановление класса """
+        self.name = state["name"]
+        self.icon = state["icon"]
+        self.lifetime = state["lifetime"]
+        self.birth = state["birth"]
+        self.global_position = state["global_position"]
+        self.local_position = state["local_position"]
+        self.global_position = state["global_position"]
+        self.caused = state["caused"]
+        self.lifetime_description = state["lifetime_description"]
+        self.description = state["description"]
+        self.visible = state["visible"]
+        self.type = state["type"]
+        self.level = state["level"]
+
     def all_description(self):
         self.description = f'{self.lifetime_description} {self.action_dict(1)} похоже на {self.caused}'
 
@@ -925,6 +1012,59 @@ class Enemy:
     def all_description_calculation(self):
         self.description = f"{self.pass_description} {self.person_description}"
 
+    def __getstate__(self) -> dict:
+        """ Сохранение класса """
+        state = {}
+        state["global_position"] = self.global_position
+        state["local_position"] = self.local_position
+        state["action_points"] = self.action_points
+        state["dynamic_chunk"] = self.dynamic_chunk
+        state["dynamic_chunk_position"] = self.dynamic_chunk_position
+        state["old_position_assemblage_point"] = self.old_position_assemblage_point
+        state["step_exit_from_assemblage_point"] = self.step_exit_from_assemblage_point
+        state["waypoints"] = self.waypoints
+        state["dynamic_waypoints"] = self.dynamic_waypoints
+        state["local_waypoints"] = self.local_waypoints
+        state["alarm"] = self.alarm
+        state["pass_step"] = self.pass_step
+        state["on_the_screen"] = self.on_the_screen
+        state["steps_to_new_step"] = self.steps_to_new_step
+        state["level"] = self.visible
+        state["type"] = self.type
+        state["level"] = self.level
+        state["vertices"] = self.description
+        state["target"] = self.visible
+        state["visible"] = self.type
+        state["direction"] = self.level
+        state["offset"] = self.level
+        
+        return state
+
+    def __setstate__(self, state: dict):
+        """ Восстановление класса """
+        self.global_position = state["global_position"]
+        self.local_position = state["local_position"]
+        self.action_points = state["action_points"]
+        self.dynamic_chunk = state["dynamic_chunk"]
+        self.dynamic_chunk_position = state["dynamic_chunk_position"]
+        self.old_position_assemblage_point = state["old_position_assemblage_point"]
+        self.step_exit_from_assemblage_point = state["step_exit_from_assemblage_point"]
+        self.waypoints = state["waypoints"]
+        self.dynamic_waypoints = state["dynamic_waypoints"]
+        self.local_waypoints = state["local_waypoints"]
+        self.alarm = state["alarm"]
+        self.pass_step = state["pass_step"]
+        self.on_the_screen = state["on_the_screen"]
+        self.steps_to_new_step = state["steps_to_new_step"]
+        self.visible = state["level"]
+        self.type = state["type"]
+        self.level = state["level"]
+        self.description = state["vertices"]
+        self.visible = state["target"]
+        self.type = state["visible"]
+        self.level = state["direction"]
+        self.level = state["offset"]
+
 class Horseman(Enemy):
     """ Отвечает за всадников """
     
@@ -953,6 +1093,46 @@ class Horseman(Enemy):
         self.person_description = f"Знаменитый охотник за головами {self.name_npc}"
         self.description = ''
         self.speed = 2
+
+    def __getstate__(self) -> dict:
+        """ Сохранение класса """
+        state = {}
+        state["name"] = self.name
+        state["name_npc"] = self.name_npc
+        state["priority_biom"] = self.priority_biom
+        state["banned_biom"] = self.banned_biom
+        state["icon"] = self.icon
+        state["activity_map"] = self.activity_map
+        state["hunger"] = self.hunger
+        state["thirst"] = self.thirst
+        state["fatigue"] = self.fatigue
+        state["reserves"] = self.reserves
+        state["type_npc"] = self.type_npc
+        state["type"] = self.type
+        state["pass_description"] = self.pass_description
+        state["person_description"] = self.person_description
+        state["description"] = self.description
+        state["speed"] = self.speed
+        return state
+
+    def __setstate__(self, state: dict):
+        """ Восстановление класса """
+        self.name = state["name"]
+        self.name_npc = state["name_npc"]
+        self.priority_biom = state["priority_biom"]
+        self.banned_biom = state["banned_biom"]
+        self.icon = state["icon"]
+        self.activity_map = state["activity_map"]
+        self.hunger = state["hunger"]
+        self.thirst = state["thirst"]
+        self.fatigue = state["fatigue"]
+        self.reserves = state["reserves"]
+        self.type_npc = state["type_npc"]
+        self.type = state["type"]
+        self.pass_description = state["pass_description"]
+        self.person_description = state["person_description"]
+        self.description = state["description"]
+        self.speed = state["speed"]
 
 class Riffleman(Enemy):
     """ Отвечает за стрелков """
@@ -983,6 +1163,46 @@ class Riffleman(Enemy):
         self.description = ''
         self.speed = 1
 
+    def __getstate__(self) -> dict:
+        """ Сохранение класса """
+        state = {}
+        state["name"] = self.name
+        state["name_npc"] = self.name_npc
+        state["priority_biom"] = self.priority_biom
+        state["banned_biom"] = self.banned_biom
+        state["icon"] = self.icon
+        state["activity_map"] = self.activity_map
+        state["hunger"] = self.hunger
+        state["thirst"] = self.thirst
+        state["fatigue"] = self.fatigue
+        state["reserves"] = self.reserves
+        state["type_npc"] = self.type_npc
+        state["type"] = self.type
+        state["pass_description"] = self.pass_description
+        state["person_description"] = self.person_description
+        state["description"] = self.description
+        state["speed"] = self.speed
+        return state
+
+    def __setstate__(self, state: dict):
+        """ Восстановление класса """
+        self.name = state["name"]
+        self.name_npc = state["name_npc"]
+        self.priority_biom = state["priority_biom"]
+        self.banned_biom = state["banned_biom"]
+        self.icon = state["icon"]
+        self.activity_map = state["activity_map"]
+        self.hunger = state["hunger"]
+        self.thirst = state["thirst"]
+        self.fatigue = state["fatigue"]
+        self.reserves = state["reserves"]
+        self.type_npc = state["type_npc"]
+        self.type = state["type"]
+        self.pass_description = state["pass_description"]
+        self.person_description = state["person_description"]
+        self.description = state["description"]
+        self.speed = state["speed"]
+
 class Gold_digger(Enemy):
     """ Отвечает за золотоискателей """
         
@@ -1011,6 +1231,46 @@ class Gold_digger(Enemy):
         self.person_description = f"Отчаяный золотоискатель {self.name_npc}"
         self.description = ''
         self.speed = 1
+
+    def __getstate__(self) -> dict:
+        """ Сохранение класса """
+        state = {}
+        state["name"] = self.name
+        state["name_npc"] = self.name_npc
+        state["priority_biom"] = self.priority_biom
+        state["banned_biom"] = self.banned_biom
+        state["icon"] = self.icon
+        state["activity_map"] = self.activity_map
+        state["hunger"] = self.hunger
+        state["thirst"] = self.thirst
+        state["fatigue"] = self.fatigue
+        state["reserves"] = self.reserves
+        state["type_npc"] = self.type_npc
+        state["type"] = self.type
+        state["pass_description"] = self.pass_description
+        state["person_description"] = self.person_description
+        state["description"] = self.description
+        state["speed"] = self.speed
+        return state
+
+    def __setstate__(self, state: dict):
+        """ Восстановление класса """
+        self.name = state["name"]
+        self.name_npc = state["name_npc"]
+        self.priority_biom = state["priority_biom"]
+        self.banned_biom = state["banned_biom"]
+        self.icon = state["icon"]
+        self.activity_map = state["activity_map"]
+        self.hunger = state["hunger"]
+        self.thirst = state["thirst"]
+        self.fatigue = state["fatigue"]
+        self.reserves = state["reserves"]
+        self.type_npc = state["type_npc"]
+        self.type = state["type"]
+        self.pass_description = state["pass_description"]
+        self.person_description = state["person_description"]
+        self.description = state["description"]
+        self.speed = state["speed"]
 
 class Horse(Enemy):
     """ Отвечает за коней """
@@ -1041,6 +1301,46 @@ class Horse(Enemy):
         self.description = ''
         self.speed = 2
 
+    def __getstate__(self) -> dict:
+        """ Сохранение класса """
+        state = {}
+        state["name"] = self.name
+        state["name_npc"] = self.name_npc
+        state["priority_biom"] = self.priority_biom
+        state["banned_biom"] = self.banned_biom
+        state["icon"] = self.icon
+        state["activity_map"] = self.activity_map
+        state["hunger"] = self.hunger
+        state["thirst"] = self.thirst
+        state["fatigue"] = self.fatigue
+        state["reserves"] = self.reserves
+        state["type_npc"] = self.type_npc
+        state["type"] = self.type
+        state["pass_description"] = self.pass_description
+        state["person_description"] = self.person_description
+        state["description"] = self.description
+        state["speed"] = self.speed
+        return state
+
+    def __setstate__(self, state: dict):
+        """ Восстановление класса """
+        self.name = state["name"]
+        self.name_npc = state["name_npc"]
+        self.priority_biom = state["priority_biom"]
+        self.banned_biom = state["banned_biom"]
+        self.icon = state["icon"]
+        self.activity_map = state["activity_map"]
+        self.hunger = state["hunger"]
+        self.thirst = state["thirst"]
+        self.fatigue = state["fatigue"]
+        self.reserves = state["reserves"]
+        self.type_npc = state["type_npc"]
+        self.type = state["type"]
+        self.pass_description = state["pass_description"]
+        self.person_description = state["person_description"]
+        self.description = state["description"]
+        self.speed = state["speed"]
+
 class Coyot(Enemy):
     """ Отвечает за койотов """
         
@@ -1069,6 +1369,46 @@ class Coyot(Enemy):
         self.person_description = f"Голодный и злой {self.name_npc}"
         self.description = ''
         self.speed = 1
+
+    def __getstate__(self) -> dict:
+        """ Сохранение класса """
+        state = {}
+        state["name"] = self.name
+        state["name_npc"] = self.name_npc
+        state["priority_biom"] = self.priority_biom
+        state["banned_biom"] = self.banned_biom
+        state["icon"] = self.icon
+        state["activity_map"] = self.activity_map
+        state["hunger"] = self.hunger
+        state["thirst"] = self.thirst
+        state["fatigue"] = self.fatigue
+        state["reserves"] = self.reserves
+        state["type_npc"] = self.type_npc
+        state["type"] = self.type
+        state["pass_description"] = self.pass_description
+        state["person_description"] = self.person_description
+        state["description"] = self.description
+        state["speed"] = self.speed
+        return state
+
+    def __setstate__(self, state: dict):
+        """ Восстановление класса """
+        self.name = state["name"]
+        self.name_npc = state["name_npc"]
+        self.priority_biom = state["priority_biom"]
+        self.banned_biom = state["banned_biom"]
+        self.icon = state["icon"]
+        self.activity_map = state["activity_map"]
+        self.hunger = state["hunger"]
+        self.thirst = state["thirst"]
+        self.fatigue = state["fatigue"]
+        self.reserves = state["reserves"]
+        self.type_npc = state["type_npc"]
+        self.type = state["type"]
+        self.pass_description = state["pass_description"]
+        self.person_description = state["person_description"]
+        self.description = state["description"]
+        self.speed = state["speed"]
 
 def master_npc_calculation(global_map, enemy_list, person, go_to_print, step, activity_list, chunk_size, interaction, new_step, world):
     """
@@ -3809,7 +4149,7 @@ def new_step_calculation(enemy_list, person, step):
 
 """
 
-def save_game(global_map, minimap):
+def save_map(global_map, minimap):
     """
         Сохранение игровой карты через pickle
     """
@@ -3818,7 +4158,7 @@ def save_game(global_map, minimap):
     with open("saved_map.pkl", "wb") as fp:
         pickle.dump(all_save, fp)
 
-def load_game():
+def load_map():
     """
         Загрузка игровой карты через pickle
     """
@@ -3826,8 +4166,25 @@ def load_game():
         all_load = pickle.load(fp)
     
     return all_load[0], all_load[1]
-            
+
+def save_game(global_map, person, chunk_size, enemy_list, world, screen, tiles_image_dict, raw_minimap, activity_list, step):
+    """
+        Сохраняет игровой процесс
+    """
+    all_save = [global_map, person, chunk_size, enemy_list, world, screen, tiles_image_dict, raw_minimap, activity_list, step]
+
+    with open("save_game.pkl", "wb") as fp:
+        pickle.dump(all_save, fp)
+
+def load_game():
+    """
+        Загружает игровой процесс
+    """
+    with open("saved_map.pkl", "rb") as fp:
+        all_load = pickle.load(fp)
         
+    return all_load[0], all_load[1], all_load[2], all_load[3], all_load[4], all_load[5], all_load[6], all_load[7], all_load[8], all_load[9]
+                  
 
 def frames_per_cycle_and_delays(person, time_1, time_2, settings_for_intermediate_steps):
     """
@@ -3915,6 +4272,8 @@ def menu_moving(menu_selection, button_selection):
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_DOWN:
                     if menu_selection == 'new_game':
+                        return 'load_game', button_selection
+                    if menu_selection == 'load_game':
                         return 'load_map', button_selection
                     if menu_selection == 'load_map':
                         return 'settings', button_selection
@@ -3927,8 +4286,10 @@ def menu_moving(menu_selection, button_selection):
                 if event.key == pygame.K_UP:
                     if menu_selection == 'new_game':
                         return 'exit_game', button_selection
-                    if menu_selection == 'load_map':
+                    if menu_selection == 'load_game':
                         return 'new_game', button_selection
+                    if menu_selection == 'load_map':
+                        return 'load_game', button_selection
                     if menu_selection == 'settings':
                         return 'load_map', button_selection
                     if menu_selection == 'about':
@@ -4003,7 +4364,7 @@ def preparing_a_new_game(global_region_grid, region_grid, chunks_grid, mini_regi
             minimap.add(All_tiles(number_minimap_tile*size_tile_minimap + (26*size_tile), number_minimap_line*size_tile_minimap, size_tile_minimap,
                                     tiles_image_dict, minimap_tile.icon, minimap_tile.type))
 
-    game_loop(global_map, person, chunk_size, enemy_list, world, screen, tiles_image_dict, minimap, raw_minimap)
+    game_loop(global_map, person, chunk_size, enemy_list, world, screen, tiles_image_dict, minimap, raw_minimap, True, [])
 
 def in_game_menu_moving(menu_selection, button_selection):
     """
@@ -4016,6 +4377,8 @@ def in_game_menu_moving(menu_selection, button_selection):
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_DOWN:
                     if menu_selection == 'continue the game':
+                        return 'save game', button_selection
+                    if menu_selection == 'save game':
                         return 'game settings', button_selection
                     if menu_selection == 'game settings':
                         return 'leave the game', button_selection
@@ -4024,20 +4387,22 @@ def in_game_menu_moving(menu_selection, button_selection):
                 if event.key == pygame.K_UP:
                     if menu_selection == 'continue the game':
                         return 'leave the game', button_selection
-                    if menu_selection == 'game settings':
+                    if menu_selection == 'save game':
                         return 'continue the game', button_selection
+                    if menu_selection == 'game settings':
+                        return 'save game', button_selection
                     if menu_selection == 'leave the game':
                         return 'game settings', button_selection
                 if event.key == pygame.K_SPACE:
                     return menu_selection, True
 
-def in_game_main_loop(screen):
+def in_game_main_loop(global_map, person, chunk_size, enemy_list, world, screen, tiles_image_dict, raw_minimap, activity_list, step):
     """
         Меню в уже загруженной игре
     """
     menu_selection = 'continue the game'
     button_selection = False
-    menu_tuple = ('continue the game', 'game settings', 'leave the game')
+    menu_tuple = ('continue the game', 'save game', 'game settings', 'leave the game')
     screen.fill((255, 255, 255, .2))
     master_game_menu_draw(screen, [1200, 750], menu_selection, button_selection, menu_tuple, False)
     in_game_main_loop = True
@@ -4047,6 +4412,9 @@ def in_game_main_loop(screen):
             in_game_main_loop = False
         if menu_selection == 'leave the game' and button_selection: #Закрытие игры
             sys.exit()
+        if menu_selection == 'save game' and button_selection:
+            save_game(global_map, person, chunk_size, enemy_list, world, screen, tiles_image_dict, raw_minimap, activity_list, step)
+            in_game_main_loop = False
         master_game_menu_draw(screen, [1200, 750], menu_selection, button_selection, menu_tuple, False)
         button_selection = False
         
@@ -4073,7 +4441,7 @@ def main_loop():
     fast_generation = False #Переключение отображения генерации между прогресс-баром и полным выводом на экран генерирующейся карты
     menu_selection = 'new_game'
     button_selection = False
-    menu_tuple = ('new_game', 'load_map', 'settings', 'about', 'exit_game')
+    menu_tuple = ('new_game', 'load_game', 'load_map', 'settings', 'about', 'exit_game')
     #Предварительная отрисовка игрового меню
     master_game_menu_draw(screen, dispay_size, menu_selection, button_selection, menu_tuple)
 
@@ -4084,8 +4452,22 @@ def main_loop():
         
         if menu_selection == 'new_game' and button_selection: #Подготовка и запуск новой игры
             preparing_a_new_game(global_region_grid, region_grid, chunks_grid, mini_region_grid, tile_field_grid, chunk_size, screen)
+
+        if menu_selection == 'load_game' and button_selection:
+            global_map, person, chunk_size, enemy_list, world, screen, tiles_image_dict, raw_minimap, activity_list, step = load_game()
+
+            minimap = pygame.sprite.Group()
+            size_tile = 30
+            size_tile_minimap = 15
+            for number_minimap_line, raw_minimap_line in enumerate(raw_minimap):
+                for number_minimap_tile, minimap_tile in enumerate(raw_minimap_line):
+                    minimap.add(All_tiles(number_minimap_tile*size_tile_minimap + (26*size_tile), number_minimap_line*size_tile_minimap, size_tile_minimap,
+                                            tiles_image_dict, minimap_tile.icon, minimap_tile.type))
+
+            game_loop(global_map, person, chunk_size, enemy_list, world, screen, tiles_image_dict, minimap, raw_minimap, True, [activity_list, step])
+            
         if menu_selection == 'load_map' and button_selection:
-            global_map, raw_minimap = load_game()
+            global_map, raw_minimap = load_map()
 
             tiles_image_dict = Tiles_image_dict() #Загружаются тайлы
                 
@@ -4106,7 +4488,7 @@ def main_loop():
                     minimap.add(All_tiles(number_minimap_tile*size_tile_minimap + (26*size_tile), number_minimap_line*size_tile_minimap, size_tile_minimap,
                                             tiles_image_dict, minimap_tile.icon, minimap_tile.type))
 
-            game_loop(global_map, person, chunk_size, enemy_list, world, screen, tiles_image_dict, minimap, raw_minimap)
+            game_loop(global_map, person, chunk_size, enemy_list, world, screen, tiles_image_dict, minimap, raw_minimap, True, [])
 
         if menu_selection == 'exit_game' and button_selection: #Закрытие игры
             sys.exit()
@@ -4117,15 +4499,21 @@ def main_loop():
         #Если ничего не произошло, то выбранная кнопка сбрасывается
         button_selection = False
 
-def game_loop(global_map:list, person, chunk_size:int, enemy_list:list, world, screen, tiles_image_dict, minimap, raw_minimap):
+def game_loop(global_map:list, person, chunk_size:int, enemy_list:list, world, screen, tiles_image_dict, minimap, raw_minimap,
+              new_game:bool, load_pack:list):
     """
         Здесь происходят все игровые события
         
     """
+    if new_game:
+        activity_list = []
+        step = 0
+        save_map(global_map, raw_minimap) #тестовое сохранение карты
+    else:
+        activity_list = load_pack[0]
+        step = load_pack[1]
+        
     go_to_print = Interfase([], [], True)
-    activity_list = []
-    step = 0
-    print('game_loop запущен')
     global changing_step
     mode_action = 'move'
     clock = pygame.time.Clock()#
@@ -4136,8 +4524,6 @@ def game_loop(global_map:list, person, chunk_size:int, enemy_list:list, world, s
     minimap_sprite  = pygame.sprite.Group()
 
     pygame.display.flip()
-
-    save_game(global_map, raw_minimap) #тестовое сохранение карты
 
     #Загрузка и создание поверхностей всех спрайтов
     sprites_dict = loading_all_sprites()
@@ -4158,7 +4544,7 @@ def game_loop(global_map:list, person, chunk_size:int, enemy_list:list, world, s
                                             all_sprites, dynamic_sprites, minimap_sprite, sprites_dict, offset_sprites, landscape_layer, activity_layer,
                                             entities_layer, finishing_surface, settings_for_intermediate_steps)
     
-  
+    print('game_loop запущен')
     while game_loop:
         clock.tick(game_fps)
         interaction = []
@@ -4166,9 +4552,11 @@ def game_loop(global_map:list, person, chunk_size:int, enemy_list:list, world, s
         master_pass_step(person)
         new_step, step = new_step_calculation(enemy_list, person, step)
         if not person.person_pass_step:
-            mode_action = master_player_action(global_map, person, chunk_size, go_to_print, mode_action, interaction, activity_list, step, enemy_list)
+            mode_action = master_player_action(global_map, person, chunk_size, go_to_print, mode_action, interaction, activity_list, step,
+                                               enemy_list)
         if mode_action == 'in_game_menu':
-            in_game_main_loop(screen)
+            in_game_main_loop(global_map, person, chunk_size, enemy_list, world, screen, tiles_image_dict, raw_minimap, activity_list, step)
+            
             mode_action = 'move'
         start = time.time() #проверка времени выполнения
         calculation_assemblage_point(global_map, person, chunk_size) # Рассчёт динамического чанка
