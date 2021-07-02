@@ -534,9 +534,6 @@ def loading_all_sprites():
                     }
     return sprites_dict
 
-
-
-
 """
 
     ТЕХНИЧЕСКИЕ ФУНКЦИИ И КЛАССЫ
@@ -586,7 +583,7 @@ class Tile:
                         '`': ['солёная вода', 50],
                         'C': ['каньон', 20],
                         '??':['ничего', 10],
-                        '0': ['пусто', 0],
+                        '0': ['', 0],
                         '☺': ['персонаж', 0],
                         }
         return ground_dict[icon][number]
@@ -2314,7 +2311,7 @@ def enemy_emulation_life(global_map, enemy, go_to_print, step, activity_list, ch
 
 """
 
-def master_player_action(global_map, person, chunk_size, go_to_print, mode_action, interaction, activity_list, step, enemy_list):
+def master_player_action(global_map, person, chunk_size, go_to_print, mode_action, interaction, activity_list, step, enemy_list, mouse_position):
 
     person.level = person.chunks_use_map[person.dynamic[0]][person.dynamic[1]].level # Определение высоты персонажа
     person.vertices = person.chunks_use_map[person.dynamic[0]][person.dynamic[1]].vertices
@@ -2323,7 +2320,8 @@ def master_player_action(global_map, person, chunk_size, go_to_print, mode_actio
     person.direction = 'center'
         
     
-    mode_action, pressed_button = request_press_button(global_map, person, chunk_size, go_to_print, mode_action, interaction)
+    mode_action, pressed_button, mouse_position = request_press_button(global_map, person, chunk_size, go_to_print, mode_action,
+                                                                       interaction, mouse_position)
     if pressed_button != 'none':
         if mode_action == 'move':
             activity_list.append(Action_in_map('faint_footprints', step, person.global_position, person.dynamic, chunk_size, person.name))
@@ -2342,117 +2340,119 @@ def master_player_action(global_map, person, chunk_size, go_to_print, mode_actio
             go_to_print.minimap_on = (go_to_print.minimap_on == False)
         request_processing(pressed_button)
     
-    return mode_action
+    return mode_action, mouse_position
 
-def wait_keyboard():
+def wait_keyboard(mouse_position):
     pygame.key.set_repeat(1, 2)
-    
     while True:
+        for event in pygame.event.get():
+            if event.type == pygame.MOUSEMOTION:
+                mouse_position = event.pos
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 sys.exit()
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_LEFT:
-                    return 'a'
+                    return 'a', mouse_position
                 if event.key == pygame.K_RIGHT:
-                    return 'd'
+                    return 'd', mouse_position
                 if event.key == pygame.K_UP:
-                    return 'w'
+                    return 'w', mouse_position
                 if event.key == pygame.K_DOWN:
-                    return 's'
+                    return 's', mouse_position
                 if event.key == pygame.K_SPACE:
-                    return 'space'
+                    return 'space', mouse_position
                 if event.key == pygame.K_ESCAPE:
-                    return 'escape'
+                    return 'escape', mouse_position
                 if event.key == pygame.K_t:
-                    return 't'
+                    return 't', mouse_position
                 if event.key == pygame.K_p:
-                    return 'p'
+                    return 'p', mouse_position
                 if event.key == pygame.K_v:
-                    return 'v'
+                    return 'v', mouse_position
                 if event.key == pygame.K_c:
-                    return 'c'
+                    return 'c', mouse_position
                 if event.key == pygame.K_h:
-                    return 'h'
+                    return 'h', mouse_position
     
-def request_press_button(global_map, person, chunk_size, go_to_print, mode_action, interaction):
+def request_press_button(global_map, person, chunk_size, go_to_print, mode_action, interaction, mouse_position):
     """
         Спрашивает ввод, возвращает тип активности и нажимаемую кнопку
 
     """
     pygame.event.clear()
-    key = wait_keyboard()
+    key, mouse_position = wait_keyboard(mouse_position)
    
     #key = keyboard.read_key()
     #key = 'right'
     if key == 'w' or key == 'up' or key == 'ц':
-        return (mode_action, 'up')
+        return (mode_action, 'up', mouse_position)
     elif key == 'a' or key == 'left' or key == 'ф':
-        return (mode_action, 'left')
+        return (mode_action, 'left', mouse_position)
     elif key == 's' or key == 'down' or key == 'ы':
-        return (mode_action, 'down')
+        return (mode_action, 'down', mouse_position)
     elif key == 'd' or key == 'right' or key == 'в':
-        return (mode_action, 'right')
+        return (mode_action, 'right', mouse_position)
     elif key == 'space':
-        return (mode_action, 'space')
+        return (mode_action, 'space', mouse_position)
     elif key == 'escape':
-        return ('in_game_menu', 'escape')
+        return ('in_game_menu', 'escape', mouse_position)
     elif key == 'k' or key == 'л':
         if mode_action == 'move':
             person.pointer = [chunk_size//2, chunk_size//2]
-            return ('pointer', 'button_pointer')
+            return ('pointer', 'button_pointer', mouse_position)
         elif mode_action == 'pointer':
             person.pointer = [chunk_size//2, chunk_size//2]
-            return ('move', 'button_pointer')
+            return ('move', 'button_pointer', mouse_position)
         else:
             person.pointer = [chunk_size//2, chunk_size//2]
             person.gun = [chunk_size//2, chunk_size//2]
-            return ('move', 'button_pointer')
+            return ('move', 'button_pointer', mouse_position)
     elif key == 'g' or key == 'п':
         if mode_action == 'move':
             person.gun = [chunk_size//2, chunk_size//2]
-            return ('gun', 'button_gun')
+            return ('gun', 'button_gun', mouse_position)
         elif mode_action == 'gun':
             person.gun = [chunk_size//2, chunk_size//2]
-            return ('move', 'button_gun')
+            return ('move', 'button_gun', mouse_position)
         else:
             person.pointer = [chunk_size//2, chunk_size//2]
             person.gun = [chunk_size//2, chunk_size//2]
-            return ('move', 'button_gun')
+            return ('move', 'button_gun', mouse_position)
     elif key == 'm' or key == 'ь':
-        return (mode_action, 'button_map')
+        return (mode_action, 'button_map', mouse_position)
     elif key == 't' or key == 'е':
         if mode_action == 'test_move':
-            return ('move', 'button_test')
+            return ('move', 'button_test', mouse_position)
         else:
-            return ('test_move', 'button_test')
+            return ('test_move', 'button_test', mouse_position)
     elif key == 'p' or key == 'з':
         if mode_action == 'test_move':
-            return ('test_move', 'button_purpose_task')
+            return ('test_move', 'button_purpose_task', mouse_position)
         else:
-            return (mode_action, 'none')
+            return (mode_action, 'none', mouse_position)
     elif key == 'v' or key == 'м':
         if mode_action == 'test_move':
-            return ('test_move', 'button_test_visible')
+            return ('test_move', 'button_test_visible', mouse_position)
         else:
-            return (mode_action, 'none')
+            return (mode_action, 'none', mouse_position)
     elif key == 'b' or key == 'и':
         if mode_action == 'test_move':
-            return ('test_move', 'button_add_beacon')
+            return ('test_move', 'button_add_beacon', mouse_position)
         else:
-            return (mode_action, 'none')
+            return (mode_action, 'none', mouse_position)
     elif key == 'c' or key == 'с':
         if mode_action == 'test_move':
-            return ('test_move', 'add_coyot')
+            return ('test_move', 'add_coyot', mouse_position)
         else:
-            return (mode_action, 'none')
+            return (mode_action, 'none', mouse_position)
     elif key == 'h' or key == 'р':
         if mode_action == 'test_move':
-            return ('test_move', 'add_hunter')
+            return ('test_move', 'add_hunter', mouse_position)
         else:
-            return (mode_action, 'none')
+            return (mode_action, 'none', mouse_position)
     else:
-        return (mode_action, 'none')
+        return (mode_action, 'none', mouse_position)
 
 def request_move(global_map:list, person, chunk_size:int, go_to_print, pressed_button):
     """
@@ -2829,10 +2829,6 @@ class Minimap_temperature(pygame.sprite.Sprite):
 
         return color_dict[key]
 
-
-
-
-
 def landscape_layer_calculations(person, chunk_size, go_to_print):
     """
         Формирует изображение ландшафта на печать
@@ -2890,8 +2886,6 @@ def activity_layer_calculations(person, chunk_size:int, go_to_print, activity_li
         activity_layer.append(new_line)
 
     return activity_layer
-
-
 
 def entities_layer_calculations(person, chunk_size:int, go_to_print, entities_list):
     """
@@ -3971,7 +3965,7 @@ def person_walk_draw(enemy, person, settings_for_intermediate_steps):
 
 def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action, enemy_list, activity_list, screen, tiles_image_dict,
                         minimap, all_sprites, dynamic_sprites, minimap_sprite, sprites_dict, offset_sprites, landscape_layer, activity_layer,
-                        entities_layer, finishing_surface, settings_for_intermediate_steps):
+                        entities_layer, finishing_surface, settings_for_intermediate_steps, mouse_position):
     """
         Работает с классом Interfase, содержащимся в go_to_print
 
@@ -4280,18 +4274,63 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
     #Рассчёт количества промежуточных шагов в зависимости от скорости вывода основного шага
     frames_per_cycle_and_delays(person, time_1, time_2, settings_for_intermediate_steps)
     
-    end = time.time() #проверка времени выполнения
+    end = time.time() #проверка времени выполнения 
     
-    print_time = f"{round(time_2 - time_1, 4)} - отрисовка \n {round(end - time_1, 4)} - общее время \n {settings_for_intermediate_steps} - скорость шага"
-
+    print_time = f"{round(time_2 - time_1, 4)} - отрисовка \n {round(end - time_1, 4)} - общее время \n {settings_for_intermediate_steps} - скорость шага, {mouse_position} - mouse_position"
+    
     fontObj = pygame.font.Font('freesansbold.ttf', 10)
     textSurfaceObj = fontObj.render(print_time, True, (0, 0, 0), (255, 255, 255))
     textRectObj = textSurfaceObj.get_rect()
     textRectObj.center = (30*34, 15*31)
-    screen.blit(textSurfaceObj, textRectObj)            
+    screen.blit(textSurfaceObj, textRectObj)
+
+    print_pointer = F"Под ногами {pointer_description(landscape_layer, activity_layer, entities_layer, chunk_size, size_tile, mouse_position,'ground')}"
+
+    textSurfaceObj = fontObj.render(print_pointer, True, (0, 0, 0), (255, 255, 255))
+    textRectObj = textSurfaceObj.get_rect()
+    textRectObj.center = (30*34, 16*31)
+    screen.blit(textSurfaceObj, textRectObj)
+    
+    print_pointer = F"Вы видите {pointer_description(landscape_layer, activity_layer, entities_layer, chunk_size, size_tile, mouse_position, 'pointer')}"
+
+    textSurfaceObj = fontObj.render(print_pointer, True, (0, 0, 0), (255, 255, 255))
+    textRectObj = textSurfaceObj.get_rect()
+    textRectObj.center = (30*34, 17*31)
+    screen.blit(textSurfaceObj, textRectObj)
+    
     pygame.display.flip()
             
     return screen, landscape_layer, activity_layer, entities_layer, offset_sprites, finishing_surface
+
+def pointer_description(landscape_layer, activity_layer, entities_layer, chunk_size, size_tile, mouse_position, type_descrption):
+    """
+        Собирает описание того что под ногами и того, куда указывает указатель
+        coords - [x, y]
+    """
+    def coords_description(coords, area, chunk_size):
+        """
+            Принимает координаты и карту, возвращает описание.
+        """
+        if coords[0] < chunk_size and coords[1] < chunk_size:
+            return area[coords[1]][coords[0]].description
+        else:
+            return ''
+    
+    person_coords = [chunk_size//2, chunk_size//2]
+    mouse_coords = []
+    for axis_position in mouse_position:
+        mouse_coords.append(axis_position//size_tile)
+    ground_description = ''
+    pointer_description = ''
+    for area in (landscape_layer, activity_layer, entities_layer):
+        ground_description += coords_description(person_coords, area, chunk_size)
+        pointer_description += coords_description(mouse_coords, area, chunk_size)
+    if type_descrption == 'ground':
+        return ground_description
+    else:
+        return pointer_description
+
+
 
 """
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -4774,12 +4813,13 @@ def game_loop(global_map:list, person, chunk_size:int, enemy_list:list, world, s
     finishing_surface = pygame.Surface(((chunk_size + 1)*30, (chunk_size + 1)*30))
 
     settings_for_intermediate_steps = [5, 6]
+    mouse_position = (0, 0)
 
     #Предварительная отрисовка игрового окна
     screen, landscape_layer, activity_layer, entities_layer, offset_sprites, finishing_surface = master_pygame_draw(person, chunk_size,
                                             go_to_print, global_map, mode_action, enemy_list, activity_list, screen, tiles_image_dict, minimap,
                                             all_sprites, dynamic_sprites, minimap_sprite, sprites_dict, offset_sprites, landscape_layer, activity_layer,
-                                            entities_layer, finishing_surface, settings_for_intermediate_steps)
+                                            entities_layer, finishing_surface, settings_for_intermediate_steps, mouse_position)
     
     print('game_loop запущен')
     game_loop = True
@@ -4790,8 +4830,8 @@ def game_loop(global_map:list, person, chunk_size:int, enemy_list:list, world, s
         master_pass_step(person)
         new_step, step = new_step_calculation(enemy_list, person, step)
         if not person.person_pass_step:
-            mode_action = master_player_action(global_map, person, chunk_size, go_to_print, mode_action, interaction, activity_list, step,
-                                               enemy_list)
+            mode_action, mouse_position = master_player_action(global_map, person, chunk_size, go_to_print, mode_action, interaction, activity_list, step,
+                                               enemy_list, mouse_position)
         if mode_action == 'in_game_menu':
             game_loop = in_game_main_loop(screen, global_map, person, chunk_size, enemy_list, raw_minimap, activity_list, step)
             
@@ -4804,7 +4844,7 @@ def game_loop(global_map:list, person, chunk_size:int, enemy_list:list, world, s
         screen, landscape_layer, activity_layer, entities_layer, offset_sprites, finishing_surface = master_pygame_draw(person, chunk_size,
                                             go_to_print, global_map, mode_action, enemy_list, activity_list, screen, tiles_image_dict, minimap,
                                             all_sprites, dynamic_sprites, minimap_sprite, sprites_dict, offset_sprites, landscape_layer, activity_layer,
-                                            entities_layer, finishing_surface, settings_for_intermediate_steps)
+                                            entities_layer, finishing_surface, settings_for_intermediate_steps, mouse_position)
         
 
         
