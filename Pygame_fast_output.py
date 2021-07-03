@@ -41,7 +41,8 @@ class Person:
     """ Содержит в себе глобальное местоположение персонажа, расположение в пределах загруженного участка карты и координаты используемых чанков """
     __slots__ = ('name', 'assemblage_point', 'dynamic', 'chunks_use_map', 'pointer', 'gun', 'global_position', 'number_chunk',
                  'check_encounter_position', 'environment_temperature', 'person_temperature', 'person_pass_step', 'enemy_pass_step',
-                 'speed', 'test_visible', 'level', 'vertices', 'local_position', 'direction', 'pass_draw_move', 'recalculating_the_display', 'type', 'icon')
+                 'speed', 'test_visible', 'level', 'vertices', 'local_position', 'direction', 'pass_draw_move', 'recalculating_the_display', 'type',
+                 'icon', 'pointer_step')
     def __init__(self, assemblage_point:list, dynamic:list, chunks_use_map:list, pointer:list, gun:list):
         self.name = 'person'
         self.assemblage_point = assemblage_point
@@ -70,6 +71,7 @@ class Person:
         self.recalculating_the_display = True #Перессчёт игрового экрана
         self.type = '0'
         self.icon = '☺'
+        self.pointer_step = False
 
     def __getstate__(self) -> dict:
         """ Сохранение класса """
@@ -97,6 +99,7 @@ class Person:
         state["recalculating_the_display"] = self.recalculating_the_display
         state["type"] = self.type
         state["icon"] = self.icon
+        state["pointer_step"] = self.pointer_step
         return state
 
     def __setstate__(self, state: dict):
@@ -124,6 +127,7 @@ class Person:
         self.recalculating_the_display = state["recalculating_the_display"]
         self.type = state["type"]
         self.icon = state["icon"]
+        self.pointer_step = state["pointer_step"]
 
 
     def check_local_position(self):
@@ -530,7 +534,8 @@ def loading_all_sprites():
                     '№': {'0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_rest_stop.png')))},
                     '#': {'0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_gnawed_bones.png')))},
                     '$': {'0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_animal_rest_stop.png')))},
-                    'W': {'0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_warning.jpg')))}
+                    'W': {'0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_warning.jpg')))},
+                    'П': {'0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'pointer_0.png')))},
                     }
     return sprites_dict
 
@@ -2342,7 +2347,10 @@ def master_player_action(global_map, person, chunk_size, go_to_print, mode_actio
     
     return mode_action, mouse_position
 
-def wait_keyboard(mouse_position):
+def wait_keyboard(person, mouse_position):
+    """
+        Ждёт нажатия клавиши или изменения положения указателя мыши
+    """       
     pygame.key.set_repeat(1, 2)
     while True:
         for event in pygame.event.get():
@@ -2374,6 +2382,12 @@ def wait_keyboard(mouse_position):
                     return 'c', mouse_position
                 if event.key == pygame.K_h:
                     return 'h', mouse_position
+            if event.type == pygame.MOUSEMOTION:
+                person.pointer_step = True
+                return 'none', event.pos
+
+    
+                
     
 def request_press_button(global_map, person, chunk_size, go_to_print, mode_action, interaction, mouse_position):
     """
@@ -2381,7 +2395,7 @@ def request_press_button(global_map, person, chunk_size, go_to_print, mode_actio
 
     """
     pygame.event.clear()
-    key, mouse_position = wait_keyboard(mouse_position)
+    key, mouse_position = wait_keyboard(person, mouse_position)
    
     #key = keyboard.read_key()
     #key = 'right'
@@ -3961,7 +3975,20 @@ def person_walk_draw(enemy, person, settings_for_intermediate_steps):
     elif settings_for_intermediate_steps == [30, 1]:
         pass
         
-    
+class Draw_open_image(pygame.sprite.Sprite):
+    """ Отрисовывает полученное изображение """
+
+    def __init__(self, x, y, image):
+        pygame.sprite.Sprite.__init__(self)
+        self.x = x
+        self.y = y
+        self.image = image
+        self.rect = self.image.get_rect()
+        self.rect.left = x
+        self.rect.top = y
+        self.speed = 0
+    def draw( self, surface ):
+        surface.blit(self.image, self.rect)    
 
 def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action, enemy_list, activity_list, screen, tiles_image_dict,
                         minimap, all_sprites, dynamic_sprites, minimap_sprite, sprites_dict, offset_sprites, landscape_layer, activity_layer,
@@ -3993,288 +4020,293 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
     
     number_intermediate_steps = settings_for_intermediate_steps[0] #Количество промежуточных шагов
     step_direction = settings_for_intermediate_steps[1] #Смещение промежуточного шага
-    
-    if person.pass_draw_move: #Промежуточный кадр
-        #Рассчет кадра движения персонажа
-        if person.direction in ('left', 'right', 'down', 'up'):
-            person_walk_draw(person, person, settings_for_intermediate_steps)
+
+    if not person.pointer_step: #Если не шаг указателя
+        if person.pass_draw_move: #Промежуточный кадр
+            #Рассчет кадра движения персонажа
+            if person.direction in ('left', 'right', 'down', 'up'):
+                person_walk_draw(person, person, settings_for_intermediate_steps)
+                
             
-        
-        blit_coordinates = (0, 0)
-        
-        
-        if person.direction == 'up':
-            offset_sprites.all[0] += step_direction
-            blit_coordinates = (0, step_direction)
-        elif person.direction == 'down':
-            offset_sprites.all[0] -= step_direction
-            blit_coordinates = (0, 0 - step_direction)
-        elif person.direction == 'left':
-            offset_sprites.all[1] += step_direction
-            blit_coordinates = (step_direction, 0)
-        elif person.direction == 'right':
-            offset_sprites.all[1] -= step_direction
-            blit_coordinates = (0 - step_direction, 0)
-        
-        working_surface = pygame.Surface.copy(finishing_surface)
-        finishing_surface.blit(working_surface, blit_coordinates)
-
-        '''
-        for number_line in range(chunk_size):
-                for number_tile in range(chunk_size):
-                    print_sprite = sprites_dict[landscape_layer[number_line][number_tile].icon][landscape_layer[number_line][number_tile].type]
-                    print_sprite.rect.top = number_line*size_tile + offset_sprites.all[0]
-                    print_sprite.rect.left = number_tile*size_tile + offset_sprites.all[1]
-                    print_sprite.draw(finishing_surface)
-                    
-                    if landscape_layer[number_line][number_tile].level > 1:
-                        Level_tiles(number_tile*size_tile + offset_sprites.all[1], number_line*size_tile + offset_sprites.all[0], size_tile,
-                                                    landscape_layer[number_line][number_tile].level - 1).draw(finishing_surface)
-        '''
-        screen.blit(finishing_surface, (0, 0))
-
-        #Отрисовка активностей
-        for number_line in range(chunk_size):
-            for number_tile in range(chunk_size):
-                if activity_layer[number_line][number_tile].icon != '0':
-                    print_sprite = sprites_dict[activity_layer[number_line][number_tile].icon][activity_layer[number_line][number_tile].type]
-                    print_sprite.rect.top = number_line*size_tile + offset_sprites.all[0]
-                    print_sprite.rect.left = number_tile*size_tile + offset_sprites.all[1]
-                    print_sprite.draw(screen)
-
-        #Отрисовка зон доступности
-        if person.test_visible:
-            for number_line in range(chunk_size):
-                for number_tile in range(chunk_size):
-                    Island_friends(number_tile*size_tile + offset_sprites.all[1], number_line*size_tile + offset_sprites.all[0], size_tile,
-                                           landscape_layer[number_line][number_tile].vertices).draw(screen)
-        # Печать миникарты
-                    
-        All_tiles(person.global_position[1]*size_tile_minimap + (26*size_tile), person.global_position[0]*size_tile_minimap,
-                                      size_tile_minimap, tiles_image_dict, '☺', '0').draw(screen)
-        for enemy in enemy_list:
-            All_tiles(enemy.global_position[0]*size_tile_minimap + (26*size_tile), enemy.global_position[0]*size_tile_minimap,
-                                          size_tile_minimap, tiles_image_dict, enemy.icon, enemy.type).draw(screen)
-
-        #Отрисовка температуры на миникарте
-        if person.test_visible:
-            for number_minimap_line, minimap_line in enumerate(minimap):
-                for number_minimap_tile, minimap_tile in enumerate(minimap_line):
-                    Minimap_temperature(number_minimap_tile*size_tile_minimap + (26*size_tile), number_minimap_line*size_tile_minimap,
-                                                            size_tile_minimap, minimap_tile.temperature).draw(screen)
-        #Отрисовка НПЦ
-        entities_layer = entities_layer_calculations(person, chunk_size, go_to_print, enemy_list)
-                    
-        for number_line in range(chunk_size):
-            for number_tile in range(chunk_size):
-                if entities_layer[number_line][number_tile].icon != '0':
-                    if entities_layer[number_line][number_tile].name == 'riffleman':
-                        if entities_layer[number_line][number_tile].direction in ('left', 'right', 'down', 'up'):
-                            person_walk_draw(entities_layer[number_line][number_tile], person, settings_for_intermediate_steps)
-
-                    offset_enemy = entities_layer[number_line][number_tile].offset
-                    
-                    if entities_layer[number_line][number_tile].direction == 'left':
-                       offset_enemy[1] -= step_direction
-                    elif entities_layer[number_line][number_tile].direction == 'right':
-                        offset_enemy[1] += step_direction
-                    elif entities_layer[number_line][number_tile].direction == 'up':
-                        offset_enemy[0] -= step_direction
-                    elif entities_layer[number_line][number_tile].direction == 'down':
-                        offset_enemy[0] += step_direction
-                    else:
-                        offset_enemy = [0, 0]
-
-                    print_sprite = sprites_dict[entities_layer[number_line][number_tile].icon][entities_layer[number_line][number_tile].type]
-                    print_sprite.rect.top = number_line*size_tile + offset_sprites.all[0] + offset_enemy[0]
-                    print_sprite.rect.left = number_tile*size_tile + offset_sprites.all[1] + offset_enemy[1]
-                    print_sprite.draw(screen)
-
-        person.pass_draw_move -= 1
+            blit_coordinates = (0, 0)
             
-    else: #Основной кадр
+            
+            if person.direction == 'up':
+                offset_sprites.all[0] += step_direction
+                blit_coordinates = (0, step_direction)
+            elif person.direction == 'down':
+                offset_sprites.all[0] -= step_direction
+                blit_coordinates = (0, 0 - step_direction)
+            elif person.direction == 'left':
+                offset_sprites.all[1] += step_direction
+                blit_coordinates = (step_direction, 0)
+            elif person.direction == 'right':
+                offset_sprites.all[1] -= step_direction
+                blit_coordinates = (0 - step_direction, 0)
+            
+            working_surface = pygame.Surface.copy(finishing_surface)
+            finishing_surface.blit(working_surface, blit_coordinates)
 
-        screen.fill((255, 255, 255))
-        #Перерисовка миникарты
-        minimap.draw(screen)
-        
-        #Количество промежуточных кадров
-        person.pass_draw_move = number_intermediate_steps
-
-        dynamic_sprites = pygame.sprite.Group()
-
-        #Определение смещения
-        offset_y = 0
-        offset_x = 0
-        if person.direction == 'left':
-            offset_x -= size_tile
-        elif person.direction == 'right':
-            offset_x += size_tile
-        elif person.direction == 'up':
-            offset_y -= size_tile
-        elif person.direction == 'down':
-            offset_y += size_tile
-
-        offset_sprites.all = [offset_y, offset_x]
-        
-        minimap_sprite = pygame.sprite.Group()
-        
-        landscape_layer = landscape_layer_calculations(person, chunk_size, go_to_print)
-
-        activity_layer = entities_layer_calculations(person, chunk_size, go_to_print, activity_list)
-
-        #sky_layer = sky_layer_calculations(chunk_size)
-
-        if person.recalculating_the_display: #Если нужно перерисовывать весь экран
-
-            #Отрисовка ландшафта
+            '''
             for number_line in range(chunk_size):
-                for number_tile in range(chunk_size):
-                    print_sprite = sprites_dict[landscape_layer[number_line][number_tile].icon][landscape_layer[number_line][number_tile].type]
-                    print_sprite.rect.top = number_line*size_tile + offset_y
-                    print_sprite.rect.left = number_tile*size_tile + offset_x
-                    print_sprite.draw(finishing_surface)
-                    
-                    if landscape_layer[number_line][number_tile].level > 1:
-                        Level_tiles(number_tile*size_tile + offset_x, number_line*size_tile + offset_y, size_tile,
-                                                    landscape_layer[number_line][number_tile].level - 1).draw(finishing_surface)
-
-            #Отрисовка зон доступности
-            if person.test_visible:
-                for number_line in range(chunk_size):
                     for number_tile in range(chunk_size):
-                        Island_friends(number_tile*size_tile + offset_x, number_line*size_tile + offset_y, size_tile,
-                                               landscape_layer[number_line][number_tile].vertices).draw(finishing_surface)
-
-            screen.blit(finishing_surface, (0, 0)) #Отрисовка финишной поверхности
+                        print_sprite = sprites_dict[landscape_layer[number_line][number_tile].icon][landscape_layer[number_line][number_tile].type]
+                        print_sprite.rect.top = number_line*size_tile + offset_sprites.all[0]
+                        print_sprite.rect.left = number_tile*size_tile + offset_sprites.all[1]
+                        print_sprite.draw(finishing_surface)
+                        
+                        if landscape_layer[number_line][number_tile].level > 1:
+                            Level_tiles(number_tile*size_tile + offset_sprites.all[1], number_line*size_tile + offset_sprites.all[0], size_tile,
+                                                        landscape_layer[number_line][number_tile].level - 1).draw(finishing_surface)
+            '''
+            screen.blit(finishing_surface, (0, 0))
 
             #Отрисовка активностей
             for number_line in range(chunk_size):
                 for number_tile in range(chunk_size):
                     if activity_layer[number_line][number_tile].icon != '0':
-                        activity_sprite = sprites_dict[activity_layer[number_line][number_tile].icon][activity_layer[number_line][number_tile].type]
-                        activity_sprite.rect.top = number_line*size_tile + offset_y
-                        activity_sprite.rect.left = number_tile*size_tile + offset_x
-                        activity_sprite.draw(screen)
+                        print_sprite = sprites_dict[activity_layer[number_line][number_tile].icon][activity_layer[number_line][number_tile].type]
+                        print_sprite.rect.top = number_line*size_tile + offset_sprites.all[0]
+                        print_sprite.rect.left = number_tile*size_tile + offset_sprites.all[1]
+                        print_sprite.draw(screen)
 
+            #Отрисовка зон доступности
+            if person.test_visible:
+                for number_line in range(chunk_size):
+                    for number_tile in range(chunk_size):
+                        Island_friends(number_tile*size_tile + offset_sprites.all[1], number_line*size_tile + offset_sprites.all[0], size_tile,
+                                               landscape_layer[number_line][number_tile].vertices).draw(screen)
+            # Печать миникарты
+                        
+            All_tiles(person.global_position[1]*size_tile_minimap + (26*size_tile), person.global_position[0]*size_tile_minimap,
+                                          size_tile_minimap, tiles_image_dict, '☺', '0').draw(screen)
+            for enemy in enemy_list:
+                All_tiles(enemy.global_position[0]*size_tile_minimap + (26*size_tile), enemy.global_position[0]*size_tile_minimap,
+                                              size_tile_minimap, tiles_image_dict, enemy.icon, enemy.type).draw(screen)
+
+            #Отрисовка температуры на миникарте
+            if person.test_visible:
+                for number_minimap_line, minimap_line in enumerate(minimap):
+                    for number_minimap_tile, minimap_tile in enumerate(minimap_line):
+                        Minimap_temperature(number_minimap_tile*size_tile_minimap + (26*size_tile), number_minimap_line*size_tile_minimap,
+                                                                size_tile_minimap, minimap_tile.temperature).draw(screen)
+            #Отрисовка НПЦ
+            entities_layer = entities_layer_calculations(person, chunk_size, go_to_print, enemy_list)
+                        
+            for number_line in range(chunk_size):
+                for number_tile in range(chunk_size):
+                    if entities_layer[number_line][number_tile].icon != '0':
+                        if entities_layer[number_line][number_tile].name == 'riffleman':
+                            if entities_layer[number_line][number_tile].direction in ('left', 'right', 'down', 'up'):
+                                person_walk_draw(entities_layer[number_line][number_tile], person, settings_for_intermediate_steps)
+
+                        offset_enemy = entities_layer[number_line][number_tile].offset
+                        
+                        if entities_layer[number_line][number_tile].direction == 'left':
+                           offset_enemy[1] -= step_direction
+                        elif entities_layer[number_line][number_tile].direction == 'right':
+                            offset_enemy[1] += step_direction
+                        elif entities_layer[number_line][number_tile].direction == 'up':
+                            offset_enemy[0] -= step_direction
+                        elif entities_layer[number_line][number_tile].direction == 'down':
+                            offset_enemy[0] += step_direction
+                        else:
+                            offset_enemy = [0, 0]
+
+                        print_sprite = sprites_dict[entities_layer[number_line][number_tile].icon][entities_layer[number_line][number_tile].type]
+                        print_sprite.rect.top = number_line*size_tile + offset_sprites.all[0] + offset_enemy[0]
+                        print_sprite.rect.left = number_tile*size_tile + offset_sprites.all[1] + offset_enemy[1]
+                        print_sprite.draw(screen)
+
+            person.pass_draw_move -= 1
+                
+        else: #Основной кадр
+
+            screen.fill((255, 255, 255))
+            #Перерисовка миникарты
+            minimap.draw(screen)
             
+            #Количество промежуточных кадров
+            person.pass_draw_move = number_intermediate_steps
 
-        else: #Если нужно перерисовывать только линии или столбцы
-            
-            working_surface = pygame.Surface.copy(finishing_surface)
+            dynamic_sprites = pygame.sprite.Group()
 
-            number_line = 0
-            number_tile = 0
+            #Определение смещения
+            offset_y = 0
+            offset_x = 0
             if person.direction == 'left':
-                number_line = 0
-                number_tile = chunk_size
+                offset_x -= size_tile
             elif person.direction == 'right':
-                number_line = 0
-                number_tile = chunk_size - 1
+                offset_x += size_tile
             elif person.direction == 'up':
-                number_line = chunk_size
-                number_tile = 0
+                offset_y -= size_tile
             elif person.direction == 'down':
-                number_line = chunk_size - 1
-                number_tile = 0
+                offset_y += size_tile
 
-            #working_surface.scroll(number_line, number_tile)
-            finishing_surface.blit(working_surface, (number_line, number_tile))
+            offset_sprites.all = [offset_y, offset_x]
             
+            minimap_sprite = pygame.sprite.Group()
+            
+            landscape_layer = landscape_layer_calculations(person, chunk_size, go_to_print)
 
-            for number_len in range(len(landscape_layer)):
+            activity_layer = entities_layer_calculations(person, chunk_size, go_to_print, activity_list)
+
+            #sky_layer = sky_layer_calculations(chunk_size)
+
+            if person.recalculating_the_display: #Если нужно перерисовывать весь экран
+
+                #Отрисовка ландшафта
+                for number_line in range(chunk_size):
+                    for number_tile in range(chunk_size):
+                        print_sprite = sprites_dict[landscape_layer[number_line][number_tile].icon][landscape_layer[number_line][number_tile].type]
+                        print_sprite.rect.top = number_line*size_tile + offset_y
+                        print_sprite.rect.left = number_tile*size_tile + offset_x
+                        print_sprite.draw(finishing_surface)
+                        
+                        if landscape_layer[number_line][number_tile].level > 1:
+                            Level_tiles(number_tile*size_tile + offset_x, number_line*size_tile + offset_y, size_tile,
+                                                        landscape_layer[number_line][number_tile].level - 1).draw(finishing_surface)
+
+                #Отрисовка зон доступности
+                if person.test_visible:
+                    for number_line in range(chunk_size):
+                        for number_tile in range(chunk_size):
+                            Island_friends(number_tile*size_tile + offset_x, number_line*size_tile + offset_y, size_tile,
+                                                   landscape_layer[number_line][number_tile].vertices).draw(finishing_surface)
+
+                screen.blit(finishing_surface, (0, 0)) #Отрисовка финишной поверхности
+
+                #Отрисовка активностей
+                for number_line in range(chunk_size):
+                    for number_tile in range(chunk_size):
+                        if activity_layer[number_line][number_tile].icon != '0':
+                            activity_sprite = sprites_dict[activity_layer[number_line][number_tile].icon][activity_layer[number_line][number_tile].type]
+                            activity_sprite.rect.top = number_line*size_tile + offset_y
+                            activity_sprite.rect.left = number_tile*size_tile + offset_x
+                            activity_sprite.draw(screen)
+
+                
+
+            else: #Если нужно перерисовывать только линии или столбцы
+                
+                working_surface = pygame.Surface.copy(finishing_surface)
+
                 number_line = 0
                 number_tile = 0
                 if person.direction == 'left':
-                    number_line = number_len
-                    number_tile = 0
+                    number_line = 0
+                    number_tile = chunk_size
                 elif person.direction == 'right':
-                    number_line = number_len
+                    number_line = 0
                     number_tile = chunk_size - 1
                 elif person.direction == 'up':
-                    number_line = 0
-                    number_tile = number_len
+                    number_line = chunk_size
+                    number_tile = 0
                 elif person.direction == 'down':
                     number_line = chunk_size - 1
-                    number_tile = number_len
+                    number_tile = 0
 
-                #Отрисовка рассчитаных линий и столбцов    
-                Image_tile(number_tile*size_tile + offset_x, number_line*size_tile + offset_y, size_tile, tiles_image_dict,
-                                               landscape_layer[number_line][number_tile].icon,
-                                               landscape_layer[number_line][number_tile].type).draw(finishing_surface)
-                if landscape_layer[number_line][number_tile].level > 1:
-                    Level_tiles(number_tile*size_tile + offset_x, number_line*size_tile + offset_y, size_tile,
-                                                    landscape_layer[number_line][number_tile].level - 1).draw(finishing_surface)
-                if activity_layer[number_line][number_tile].icon != '0':
+                #working_surface.scroll(number_line, number_tile)
+                finishing_surface.blit(working_surface, (number_line, number_tile))
+                
+
+                for number_len in range(len(landscape_layer)):
+                    number_line = 0
+                    number_tile = 0
+                    if person.direction == 'left':
+                        number_line = number_len
+                        number_tile = 0
+                    elif person.direction == 'right':
+                        number_line = number_len
+                        number_tile = chunk_size - 1
+                    elif person.direction == 'up':
+                        number_line = 0
+                        number_tile = number_len
+                    elif person.direction == 'down':
+                        number_line = chunk_size - 1
+                        number_tile = number_len
+
+                    #Отрисовка рассчитаных линий и столбцов    
                     Image_tile(number_tile*size_tile + offset_x, number_line*size_tile + offset_y, size_tile, tiles_image_dict,
-                                               activity_layer[number_line][number_tile].icon,
-                                               activity_layer[number_line][number_tile].type).draw(finishing_surface)
-            
-        # Печать миникарты
-                    
-        All_tiles(person.global_position[1]*size_tile_minimap + (26*size_tile), person.global_position[0]*size_tile_minimap,
-                                      size_tile_minimap, tiles_image_dict, '☺', '0').draw(screen)
-        for enemy in enemy_list:
-            All_tiles(enemy.global_position[0]*size_tile_minimap + (26*size_tile), enemy.global_position[0]*size_tile_minimap,
-                                          size_tile_minimap, tiles_image_dict, enemy.icon, enemy.type).draw(screen)
+                                                   landscape_layer[number_line][number_tile].icon,
+                                                   landscape_layer[number_line][number_tile].type).draw(finishing_surface)
+                    if landscape_layer[number_line][number_tile].level > 1:
+                        Level_tiles(number_tile*size_tile + offset_x, number_line*size_tile + offset_y, size_tile,
+                                                        landscape_layer[number_line][number_tile].level - 1).draw(finishing_surface)
+                    if activity_layer[number_line][number_tile].icon != '0':
+                        Image_tile(number_tile*size_tile + offset_x, number_line*size_tile + offset_y, size_tile, tiles_image_dict,
+                                                   activity_layer[number_line][number_tile].icon,
+                                                   activity_layer[number_line][number_tile].type).draw(finishing_surface)
+                
+            # Печать миникарты
+                        
+            All_tiles(person.global_position[1]*size_tile_minimap + (26*size_tile), person.global_position[0]*size_tile_minimap,
+                                          size_tile_minimap, tiles_image_dict, '☺', '0').draw(screen)
+            for enemy in enemy_list:
+                All_tiles(enemy.global_position[0]*size_tile_minimap + (26*size_tile), enemy.global_position[0]*size_tile_minimap,
+                                              size_tile_minimap, tiles_image_dict, enemy.icon, enemy.type).draw(screen)
 
-        #Отрисовка температуры на миникарте
-        if person.test_visible:
-            for number_minimap_line, minimap_line in enumerate(minimap):
-                for number_minimap_tile, minimap_tile in enumerate(minimap_line):
-                    Minimap_temperature(number_minimap_tile*size_tile_minimap + (26*size_tile), number_minimap_line*size_tile_minimap,
-                                                            size_tile_minimap, minimap_tile.temperature).draw(screen)
-        #Отрисовка НПЦ
-        entities_layer = entities_layer_calculations(person, chunk_size, go_to_print, enemy_list) #Использование функции для отображения активностей
-                    
-        for number_line in range(chunk_size):
-            for number_tile in range(chunk_size):
-                if entities_layer[number_line][number_tile].icon != '0':
-                    enemy_offset_x = 0
-                    enemy_offset_y = 0
-                    if entities_layer[number_line][number_tile].direction == 'left':
-                        enemy_offset_x = size_tile
+            #Отрисовка температуры на миникарте
+            if person.test_visible:
+                for number_minimap_line, minimap_line in enumerate(minimap):
+                    for number_minimap_tile, minimap_tile in enumerate(minimap_line):
+                        Minimap_temperature(number_minimap_tile*size_tile_minimap + (26*size_tile), number_minimap_line*size_tile_minimap,
+                                                                size_tile_minimap, minimap_tile.temperature).draw(screen)
+            #Отрисовка НПЦ
+            entities_layer = entities_layer_calculations(person, chunk_size, go_to_print, enemy_list) #Использование функции для отображения активностей
+                        
+            for number_line in range(chunk_size):
+                for number_tile in range(chunk_size):
+                    if entities_layer[number_line][number_tile].icon != '0':
+                        enemy_offset_x = 0
+                        enemy_offset_y = 0
+                        if entities_layer[number_line][number_tile].direction == 'left':
+                            enemy_offset_x = size_tile
 
-                    elif entities_layer[number_line][number_tile].direction == 'right':
-                        enemy_offset_x = 0 - size_tile
+                        elif entities_layer[number_line][number_tile].direction == 'right':
+                            enemy_offset_x = 0 - size_tile
 
-                    elif entities_layer[number_line][number_tile].direction == 'up':
-                        enemy_offset_y = size_tile
+                        elif entities_layer[number_line][number_tile].direction == 'up':
+                            enemy_offset_y = size_tile
 
-                    elif entities_layer[number_line][number_tile].direction == 'down':
-                        enemy_offset_y = 0 - size_tile
+                        elif entities_layer[number_line][number_tile].direction == 'down':
+                            enemy_offset_y = 0 - size_tile
 
-                    entities_layer[number_line][number_tile].offset = [enemy_offset_y, enemy_offset_x]
-                    print_sprite = sprites_dict[entities_layer[number_line][number_tile].icon][entities_layer[number_line][number_tile].type]
-                    print_sprite.rect.top = number_line*size_tile + offset_sprites.all[0] + enemy_offset_y
-                    print_sprite.rect.left = number_tile*size_tile + offset_sprites.all[1] + enemy_offset_x
-                    print_sprite.draw(screen)
-                    
-    
-    #Отрисовка персонажа
-    person_sprite = sprites_dict[person.icon][person.type]
-    person_sprite.rect.top = chunk_size//2*size_tile
-    person_sprite.rect.left = chunk_size//2*size_tile
-    person_sprite.draw(screen)
+                        entities_layer[number_line][number_tile].offset = [enemy_offset_y, enemy_offset_x]
+                        print_sprite = sprites_dict[entities_layer[number_line][number_tile].icon][entities_layer[number_line][number_tile].type]
+                        print_sprite.rect.top = number_line*size_tile + offset_sprites.all[0] + enemy_offset_y
+                        print_sprite.rect.left = number_tile*size_tile + offset_sprites.all[1] + enemy_offset_x
+                        print_sprite.draw(screen)
+                        
+        
+        #Отрисовка персонажа
+        person_sprite = sprites_dict[person.icon][person.type]
+        person_sprite.rect.top = chunk_size//2*size_tile
+        person_sprite.rect.left = chunk_size//2*size_tile
+        person_sprite.draw(screen)
 
-    #Рисование белой рамки, закрывающей смещение
-    #for number_line in range(chunk_size + 1):
-    #    for number_tile in range(chunk_size + 1):
-    #        if 0 == number_line or number_line == chunk_size:
-    #            Color_rect(number_line*size_tile, number_tile*size_tile, size_tile, (255, 255, 255)).draw(screen)
-    #        if 0 == number_tile or number_tile == chunk_size:
-    #            Color_rect(number_line*size_tile, number_tile*size_tile, size_tile, (255, 255, 255)).draw(screen)
+        #Рисование белой рамки, закрывающей смещение
+        #for number_line in range(chunk_size + 1):
+        #    for number_tile in range(chunk_size + 1):
+        #        if 0 == number_line or number_line == chunk_size:
+        #            Color_rect(number_line*size_tile, number_tile*size_tile, size_tile, (255, 255, 255)).draw(screen)
+        #        if 0 == number_tile or number_tile == chunk_size:
+        #            Color_rect(number_line*size_tile, number_tile*size_tile, size_tile, (255, 255, 255)).draw(screen)
 
 
-
-    #Вставка части из game_loop
 
     time_2 = time.time() #проверка времени выполнения
-        
-    #Рассчёт количества промежуточных шагов в зависимости от скорости вывода основного шага
-    frames_per_cycle_and_delays(person, time_1, time_2, settings_for_intermediate_steps)
+
+    #Рассчёт количества промежуточных шагов в зависимости от скорости вывода основного шага    
+    if not person.pointer_step:
+        frames_per_cycle_and_delays(person, time_1, time_2, settings_for_intermediate_steps)
     
     end = time.time() #проверка времени выполнения 
+
+    #if person.pointer_step:
+    #    Draw_open_image(0, 0, pygame.image.load('output.png')).draw(screen)
+    #else:
+    #    pygame.image.save(screen, 'output.png')
     
     print_time = f"{round(time_2 - time_1, 4)} - отрисовка \n {round(end - time_1, 4)} - общее время \n {settings_for_intermediate_steps} - скорость шага, {mouse_position} - mouse_position"
     
@@ -4297,6 +4329,13 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
     textRectObj = textSurfaceObj.get_rect()
     textRectObj.center = (30*34, 17*31)
     screen.blit(textSurfaceObj, textRectObj)
+
+    #Отрисовка указателя мыши
+    #axis_x_pointer, axis_y_pointer = mouse_position
+    #print_sprite = sprites_dict['П']['0']
+    #print_sprite.rect.top = axis_y_pointer - axis_y_pointer%size_tile
+    #print_sprite.rect.left = axis_x_pointer - axis_x_pointer%size_tile
+    #print_sprite.draw(screen)
     
     pygame.display.flip()
             
@@ -4826,6 +4865,7 @@ def game_loop(global_map:list, person, chunk_size:int, enemy_list:list, world, s
     while game_loop:
         clock.tick(game_fps)
         interaction = []
+        person.pointer_step = False #Сбрасывается перехват шага выводом описания указателя
         world.npc_path_calculation = False #Сброс предыдущего состояния поиска пути NPC персонажами
         master_pass_step(person)
         new_step, step = new_step_calculation(enemy_list, person, step)
@@ -4839,7 +4879,7 @@ def game_loop(global_map:list, person, chunk_size:int, enemy_list:list, world, s
         start = time.time() #проверка времени выполнения
         calculation_assemblage_point(global_map, person, chunk_size) # Рассчёт динамического чанка
         #all_pass_step_calculations(person, enemy_list, mode_action, interaction)
-        if not person.enemy_pass_step:
+        if not person.enemy_pass_step and not person.pointer_step:
             master_game_events(global_map, enemy_list, person, go_to_print, step, activity_list, chunk_size, interaction, new_step, world)
         screen, landscape_layer, activity_layer, entities_layer, offset_sprites, finishing_surface = master_pygame_draw(person, chunk_size,
                                             go_to_print, global_map, mode_action, enemy_list, activity_list, screen, tiles_image_dict, minimap,
