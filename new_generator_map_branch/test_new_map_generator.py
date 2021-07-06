@@ -1460,10 +1460,11 @@ def global_region_generate(global_grid):
                                     3 - солёный
                                     4 - каньонный
                                     5 - водяной
+                                    6 - пустыня
     """
     global_region_map = []
     for i in range(global_grid):
-        global_region_map.append([random.randrange(6) for x in range(global_grid)])
+        global_region_map.append([random.randrange(7) for x in range(global_grid)])
     return global_region_map
 
 @timeit
@@ -1477,7 +1478,8 @@ def region_generate(global_region_map, global_region_grid, region_grid):
                     2: [['„', ',', 'P']],           # Живой
                     3: [[';', '.']],                # Солёный
                     4: [['A', '.']],                # Каньонный
-                    5: [['S', '▲']]                 # Водяной
+                    5: [['S', '▲']],                # Водяной
+                    6: [['j', '.']],                # Пустыня
                 }
 
     raw_region_map = all_map_master_generate(global_region_map, region_grid, False, seed_dict, 0, False)

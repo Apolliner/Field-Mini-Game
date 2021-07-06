@@ -1036,11 +1036,12 @@ class Enemy:
         state["level"] = self.visible
         state["type"] = self.type
         state["level"] = self.level
-        state["vertices"] = self.description
-        state["target"] = self.visible
-        state["visible"] = self.type
-        state["direction"] = self.level
-        state["offset"] = self.level
+        state["vertices"] = self.vertices
+        state["target"] = self.target
+        state["visible"] = self.visible
+        state["direction"] = self.direction
+        state["offset"] = self.offset
+        state["description"] = self.description
         
         return state
 
@@ -1063,11 +1064,14 @@ class Enemy:
         self.visible = state["level"]
         self.type = state["type"]
         self.level = state["level"]
-        self.description = state["vertices"]
-        self.visible = state["target"]
-        self.type = state["visible"]
-        self.level = state["direction"]
-        self.level = state["offset"]
+
+        self.level = state["level"]
+        self.vertices = state["vertices"]
+        self.target = state["target"]
+        self.visible = state["visible"]
+        self.direction = state["direction"]
+        self.offset = state["offset"]
+        self.description = state["description"]
 
 class Horseman(Enemy):
     """ Отвечает за всадников """
@@ -1095,7 +1099,7 @@ class Horseman(Enemy):
         self.type = 'h'
         self.pass_description = ''
         self.person_description = f"Знаменитый охотник за головами {self.name_npc}"
-        self.description = ''
+        self.description = f"Знаменитый охотник за головами {self.name_npc}"
         self.speed = 2
 
     def __getstate__(self) -> dict:
@@ -1206,7 +1210,7 @@ class Riffleman(Enemy):
         self.type = 'd0'
         self.pass_description = ''
         self.person_description = f"Шериф одного мрачного города {self.name_npc}"
-        self.description = ''
+        self.description = f"Шериф одного мрачного города {self.name_npc}"
         self.speed = 1
 
     def __getstate__(self) -> dict:
@@ -1317,7 +1321,7 @@ class Gold_digger(Enemy):
         self.type = '-'
         self.pass_description = ''
         self.person_description = f"Отчаяный золотоискатель {self.name_npc}"
-        self.description = ''
+        self.description = f"Отчаяный золотоискатель {self.name_npc}"
         self.speed = 1
 
     def __getstate__(self) -> dict:
@@ -1428,7 +1432,7 @@ class Horse(Enemy):
         self.type = '0'
         self.pass_description = ''
         self.person_description = f"{self.name_npc}"
-        self.description = ''
+        self.description = f"{self.name_npc}"
         self.speed = 2
 
     def __getstate__(self) -> dict:
@@ -1539,7 +1543,7 @@ class Coyot(Enemy):
         self.type = '0'
         self.pass_description = ''
         self.person_description = f"Голодный и злой {self.name_npc}"
-        self.description = ''
+        self.description = f"Голодный и злой {self.name_npc}"
         self.speed = 1
 
     def __getstate__(self) -> dict:
@@ -1633,11 +1637,9 @@ def master_npc_calculation(global_map, enemy_list, person, go_to_print, step, ac
     """
     for enemy in enemy_list:
 
-        #print(f"{enemy.name_npc} - на начало обработки имеет: \n global_position - {enemy.global_position} {enemy.vertices}, local_position - {enemy.local_position} \n global - {enemy.waypoints} \n local - {enemy.local_waypoints}")
         enemy.direction = 'center'
         enemy.level = global_map[enemy.global_position[0]][enemy.global_position[1]].chunk[enemy.local_position[0]][enemy.local_position[0]].level
         enemy.vertices = global_map[enemy.global_position[0]][enemy.global_position[1]].chunk[enemy.local_position[0]][enemy.local_position[1]].vertices
-        #print(f"global_map[enemy.global_position[0]][enemy.global_position[1]].chunk[enemy.local_position[0]][enemy.local_position[1]].vertices - {global_map[enemy.global_position[0]][enemy.global_position[1]].chunk[enemy.local_position[0]][enemy.local_position[1]].vertices}")
         #Удаление реализованного глобального вейпоинта
         if enemy.waypoints and [enemy.global_position[0], enemy.global_position[1], enemy.vertices] == enemy.waypoints[0]:
             enemy.waypoints.pop(0)
@@ -1645,19 +1647,15 @@ def master_npc_calculation(global_map, enemy_list, person, go_to_print, step, ac
         #Удаление реализованной цели
         if enemy.target and enemy.target == [enemy.global_position, enemy.vertices, enemy.local_position]:
             enemy.target = []
-            #print(F"xxx {enemy.name_npc} удалена реализованнная цель")
             
         if not world.npc_path_calculation: #Если никто не считал вейпоинты на этом шаге
             
             #Если есть цель, но нет динамических вейпоинтов.
             if enemy.target and not(enemy.local_waypoints):
-                #print(F"xxx {enemy.name_npc} есть цель, но нет динамических вейпоинтов")
                 enemy_move_calculaton(global_map, enemy)
                 world.npc_path_calculation = True
-                #print(F"\n \n На этом шаге, вейпоинты считает {enemy.name_npc} \n \n ")
             #Если цели нет и нет динамических вейпоинтов
             if not enemy.target and not enemy.local_waypoints:
-                #print(F"xxx {enemy.name_npc} цели нет и нет динамических вейпоинтов")
                 for vertices in global_map[enemy.global_position[0]][enemy.global_position[1]].vertices:
                     if vertices.number == enemy.vertices:
                         if vertices.connections:
@@ -1675,25 +1673,16 @@ def master_npc_calculation(global_map, enemy_list, person, go_to_print, step, ac
             if len(enemy.waypoints) > 1 and len(enemy.local_waypoints) < 3: 
                 enemy_move_calculaton(global_map, enemy)
                 world.npc_path_calculation = True
-                #print(F"\n \n На этом шаге, заранее считает вейпоинты {enemy.name_npc} \n \n ")
         #Если есть динамические вейпоинты
         if enemy.local_waypoints:
-            #print(F"xxx {enemy.name_npc} есть динамические вейпоинты")
             #Добавляются следы
             if random.randrange(21)//18 > 0:
                 activity_list.append(Action_in_map(enemy.activity_map['move'][0][1], step, enemy.global_position, enemy.local_position, chunk_size, enemy.name_npc))
             activity_list.append(Action_in_map('faint_footprints', step, enemy.global_position, enemy.local_position, chunk_size, enemy.name_npc))
-            #print(f"??? {enemy.name_npc} собирается поменять глобальную позицию enemy.global_position - {enemy.global_position}")
-            #print(f"его динамические вейпоинты enemy.local_waypoints - {enemy.local_waypoints}")
             enemy_direction_calculation(enemy)
             enemy.global_position = enemy.local_waypoints[0][3]
-            #print(f"??? {enemy.name_npc} поменял глобальную позицию enemy.global_position - {enemy.global_position} меняя локальную позицию - {enemy.local_position}")
             enemy.local_position = [enemy.local_waypoints[0][0], enemy.local_waypoints[0][1]]
             enemy.local_waypoints.pop(0)
-            #print(F"??? {enemy.name_npc} поменял локальную позицию - {enemy.local_position}")
-            
-        #print(f"{enemy.name_npc} - на конец обработки имеет: \n global_position - {enemy.global_position} {enemy.vertices}, local_position - {enemy.local_position} \n global - {enemy.waypoints} \n local - {enemy.local_waypoints} \n ||||||||||||||||||||||||||")
-
 
 def enemy_direction_calculation(enemy):
     """
@@ -2076,71 +2065,6 @@ def enemy_on_the_screen(enemy, person, chunk_size):
         enemy.on_the_screen = True
     else:
         enemy.on_the_screen = False
-
-
-def enemy_in_dynamic_chunk(global_map, enemy, person, chunk_size, step, activity_list, new_step, max_speed_enemy_visible):
-    """
-        Обрабатывает поведение NPC на динамическом чанке игрока
-    """
-    enemy_recalculation_dynamic_chank_position(global_map, enemy, person, chunk_size, step)
-    enemy.all_description_calculation()
-    enemy_on_the_screen(enemy, person, chunk_size)
-    count_speed = enemy.speed
-    if new_step:
-        enemy.steps_to_new_step = enemy.speed
-    #print(f"{enemy.name} имеет динамические вейпоинты - {enemy.dynamic_waypoints}")
-
-    if enemy.on_the_screen or max_speed_enemy_visible:
-        if enemy.steps_to_new_step:
-            if len(enemy.waypoints) > 0:
-                if enemy.global_position == enemy.waypoints[0]:
-                    enemy.waypoints.pop(0)
-            if len(enemy.waypoints) > 0:
-                if len(enemy.dynamic_waypoints) > 0:
-                    if enemy.pass_step == 0:
-                        enemy.pass_description = ''
-                        enemy.dynamic_chunk_position = enemy.dynamic_waypoints[0]
-                        enemy.dynamic_waypoints.pop(0)
-                        if random.randrange(21)//18 > 0:
-                            activity_list.append(Action_in_map(enemy.activity_map['move'][0][1], step, enemy.global_position, enemy.dynamic_chunk_position, chunk_size, enemy.name_npc))
-                        activity_list.append(Action_in_map('faint_footprints', step, enemy.global_position, enemy.dynamic_chunk_position, chunk_size, enemy.name_npc))
-                        if random.randrange(101)//99 > 0:
-                            action_in_dynamic_chank(global_map, enemy, activity_list, step, chunk_size)
-                    else:
-                        enemy.pass_step -= 1
-                else:
-                    enemy_a_star_move_dynamic_calculations(global_map, enemy, chunk_size, 'moving_between_locations', [chunk_size//2, chunk_size//2])
-            else:
-                move_biom_enemy(global_map, enemy)
-                #print(f'{enemy.name} Посчитались новые вейпоинты {enemy.waypoints}')
-            enemy.steps_to_new_step -= 1
-        
-    else:
-        count_speed = enemy.speed
-        while count_speed != 0:
-            count_speed -= 1
-            if len(enemy.waypoints) > 0:
-                if enemy.global_position == enemy.waypoints[0]:
-                    enemy.waypoints.pop(0)
-            if len(enemy.waypoints) > 0:
-                if len(enemy.dynamic_waypoints) > 0:
-                    if enemy.pass_step == 0:
-                        enemy.pass_description = ''
-                        enemy.dynamic_chunk_position = enemy.dynamic_waypoints[0]
-                        enemy.dynamic_waypoints.pop(0)
-                        if random.randrange(21)//18 > 0:
-                            activity_list.append(Action_in_map(enemy.activity_map['move'][0][1], step, enemy.global_position, enemy.dynamic_chunk_position, chunk_size, enemy.name_npc))
-                        activity_list.append(Action_in_map('faint_footprints', step, enemy.global_position, enemy.dynamic_chunk_position, chunk_size, enemy.name_npc))
-                        if random.randrange(101)//99 > 0:
-                            action_in_dynamic_chank(global_map, enemy, activity_list, step, chunk_size)
-                    else:
-                        enemy.pass_step -= 1
-                else:
-                    enemy_a_star_move_dynamic_calculations(global_map, enemy, chunk_size, 'moving_between_locations', [chunk_size//2, chunk_size//2])
-            else:
-                move_biom_enemy(global_map, enemy)
-    enemy_global_position_recalculation(global_map, enemy, person, chunk_size)
-
 
 def enemy_ideal_move_calculation(start_point, finish_point): #В ДАННЫЙ МОМЕНТ НЕ ИСПОЛЬЗУЕТСЯ
     """
@@ -3980,15 +3904,27 @@ class Draw_open_image(pygame.sprite.Sprite):
 
     def __init__(self, x, y, image):
         pygame.sprite.Sprite.__init__(self)
-        self.x = x
-        self.y = y
         self.image = image
         self.rect = self.image.get_rect()
         self.rect.left = x
         self.rect.top = y
         self.speed = 0
     def draw( self, surface ):
-        surface.blit(self.image, self.rect)    
+        surface.blit(self.image, self.rect)
+
+class Draw_rect(pygame.sprite.Sprite):
+    """ Отрисовывает любую поверхность """
+
+    def __init__(self, x, y, x_size, y_size, color):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = pygame.Surface((x_size, y_size))
+        self.image.fill(color)
+        self.rect = self.image.get_rect()
+        self.rect.left = x
+        self.rect.top = y
+        self.speed = 0
+    def draw( self, surface ):
+        surface.blit(self.image, self.rect)
 
 def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action, enemy_list, activity_list, screen, tiles_image_dict,
                         minimap, all_sprites, dynamic_sprites, minimap_sprite, sprites_dict, offset_sprites, landscape_layer, activity_layer,
@@ -4307,13 +4243,15 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
     #    Draw_open_image(0, 0, pygame.image.load('output.png')).draw(screen)
     #else:
     #    pygame.image.save(screen, 'output.png')
+
+    Draw_rect(30*26, 30*14, 1000, 500, (255, 255, 255)).draw(screen)
     
     print_time = f"{round(time_2 - time_1, 4)} - отрисовка \n {round(end - time_1, 4)} - общее время \n {settings_for_intermediate_steps} - скорость шага, {mouse_position} - mouse_position"
     
     fontObj = pygame.font.Font('freesansbold.ttf', 10)
     textSurfaceObj = fontObj.render(print_time, True, (0, 0, 0), (255, 255, 255))
     textRectObj = textSurfaceObj.get_rect()
-    textRectObj.center = (30*34, 15*31)
+    textRectObj.center = (30*34, 15*30)
     screen.blit(textSurfaceObj, textRectObj)
 
     print_pointer = F"Под ногами {pointer_description(landscape_layer, activity_layer, entities_layer, chunk_size, size_tile, mouse_position,'ground')}"
