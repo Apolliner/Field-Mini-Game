@@ -2,7 +2,14 @@ import random
 import time
 import copy
 import math
-from new_generator_map_branch import map_patch
+import pygame
+import pickle
+if __name__ == '__main__':
+    import map_patch
+    from pygame.locals import *
+    import sys
+else:
+    from new_generator_map_branch import map_patch
 
 
 """
@@ -70,6 +77,30 @@ class Tile:
                         }
         return ground_dict[icon][number]
 
+    def __getstate__(self) -> dict:
+        """ Сохранение класса """
+        state = {}
+        state["icon"] = self.icon
+        state["description"] = self.description
+        state["list_of_features"] = self.list_of_features
+        state["price_move"] = self.price_move
+        state["type"] = self.type
+        state["level"] = self.level
+        state["stairs"] = self.stairs
+        state["vertices"] = self.vertices
+        return state
+
+    def __setstate__(self, state: dict):
+        """ Восстановление класса """
+        self.icon = state["icon"] 
+        self.description = state["description"]
+        self.list_of_features = state["list_of_features"]
+        self.price_move = state["price_move"]
+        self.type = state["type"]
+        self.level = state["level"]
+        self.stairs = state["stairs"]
+        self.vertices = state["vertices"]
+
 class Tile_minimap:
     """ Содержит изображение, описание, особое содержание тайла миникарты"""
     __slots__ = ('icon', 'description', 'list_of_features', 'price_move', 'type', 'level', 'stairs', 'vertices', 'temperature')
@@ -83,6 +114,31 @@ class Tile_minimap:
         self.level = 0
         self.stairs = False
         self.vertices = -1
+    def __getstate__(self) -> dict:
+        """ Сохранение класса """
+        state = {}
+        state["icon"] = self.icon
+        state["description"] = self.description
+        state["list_of_features"] = self.list_of_features
+        state["price_move"] = self.price_move
+        state["temperature"] = self.temperature
+        state["type"] = self.type
+        state["level"] = self.level
+        state["stairs"] = self.stairs
+        state["vertices"] = self.vertices
+        return state
+
+    def __setstate__(self, state: dict):
+        """ Восстановление класса """
+        self.icon = state["icon"] 
+        self.description = state["description"]
+        self.list_of_features = state["list_of_features"]
+        self.price_move = state["price_move"]
+        self.temperature = state["temperature"]
+        self.type = state["type"]
+        self.level = state["level"]
+        self.stairs = state["stairs"]
+        self.vertices = state["vertices"]
 
 class Location:
     """ Содержит описание локации """
@@ -95,6 +151,27 @@ class Location:
         self.price_move = price_move
         self.vertices = []
         self.position = position
+    def __getstate__(self) -> dict:
+        """ Сохранение класса """
+        state = {}
+        state["name"] = self.name
+        state["temperature"] = self.temperature
+        state["chunk"] = pickle.dumps(self.chunk)
+        state["icon"] = self.icon
+        state["price_move"] = self.price_move
+        state["vertices"] = self.vertices
+        state["position"] = self.position
+        return state
+
+    def __setstate__(self, state: dict):
+        """ Восстановление класса """
+        self.name = state["name"]
+        self.temperature = state["temperature"]
+        self.chunk = pickle.loads(state["chunk"])
+        self.icon = state["icon"]
+        self.price_move = state["price_move"]
+        self.vertices = state["vertices"]
+        self.position = state["position"]
 
 def timeit(func):
     """
@@ -109,7 +186,7 @@ def timeit(func):
 
 
 @timeit
-def master_map_generate(global_region_grid, region_grid, chunks_grid, mini_grid, tiles_field_size):
+def master_map_generate(global_region_grid, region_grid, chunks_grid, mini_grid, tiles_field_size, screen, tiles_image_dict):
     """
         Новый генератор игровой карты, изначально учитывающий все особенности, определенные при создании и расширении предыдущего генератора.
 
@@ -123,40 +200,75 @@ def master_map_generate(global_region_grid, region_grid, chunks_grid, mini_grid,
         6) режет полную тайловую карту на отдельные локации.
         
     """
+    draw_map_generation(screen, [[0]], 'none', 'Генерация глобальных регионов')
+    
     #Глобальные регионы
+    #progress_bar(screen, 0, 'Глобальные регионы')
     global_region_map = global_region_generate(global_region_grid)
-
+    draw_map_generation(screen, global_region_map, 'Global_regions', 'Генерация регионов')
+    
     #Регионы
+    #progress_bar(screen, 5, 'Регионы')
     region_map = region_generate(global_region_map, global_region_grid, region_grid)
+    draw_map_generation(screen, region_map, 'Regions', 'Генерация локаций')
+    
 
     #Карта локаций. Содержит в себе описание локации
-    chunks_map = chunks_map_generate(region_map, (global_region_grid*region_grid), chunks_grid) 
+    #progress_bar(screen, 11, 'Карта локаций. Содержит в себе описание локации')
+    chunks_map = chunks_map_generate(region_map, (global_region_grid*region_grid), chunks_grid)
+    draw_map_generation(screen, chunks_map, 'Locations', 'Генерация карты мини-регионов')
+
 
     #Карта мини-регионов
+    #progress_bar(screen, 16, 'Карта мини-регионов')
     mini_region_map = mini_region_map_generate(chunks_map, (global_region_grid*region_grid*chunks_grid), mini_grid)
+    draw_map_generation(screen, mini_region_map, 'Mini_regions', 'Генерация больших структур по методу горных озёр')
+    
 
     #Генерация больших структур по методу горных озёр
+    #progress_bar(screen, 22, 'Генерация больших структур по методу горных озёр')
     big_structures_generate(mini_region_map, global_region_map)
+    draw_map_generation(screen, mini_region_map, 'Mini_regions', 'Генерация готовой глобальной тайловой карты')
+    
     
     #Готовая глобальная тайловая карта
+    #progress_bar(screen, 27, 'Готовая глобальная тайловая карта')
     all_tiles_map = tiles_map_generate(mini_region_map, (global_region_grid*region_grid*chunks_grid*mini_grid), tiles_field_size)
+    draw_map_generation(screen, all_tiles_map, 'All_tiles', 'Отрисовка больших структур на карте локаций')
+    
 
     #Отрисовка больших структур на карте локаций
+    #progress_bar(screen, 23, 'Отрисовка больших структур на карте локаций')
     big_structures_writer(chunks_map, mini_region_map)
+    simple_draw_map_generation(screen, 'Добавление тайлов из списка рандомного заполнения')
+    
     
     #Добавление тайлов из списка рандомного заполнения
+    #progress_bar(screen, 28, 'Добавление тайлов из списка рандомного заполнения')
     add_random_all_tiles_map = add_random_tiles(all_tiles_map, chunks_map)
+    draw_map_generation(screen, all_tiles_map, 'All_tiles', 'Генерация гор и озёр по методу горных озёр')
+    
 
     #Генерация гор и озёр по методу горных озёр
+    #progress_bar(screen, 34, 'Генерация гор и озёр по методу горных озёр')
     mountains_generate(add_random_all_tiles_map, chunks_map)
+    draw_map_generation(screen, all_tiles_map, 'All_tiles', 'Генерация продвинутой реки')
+    
 
     #Рисование продвинутой реки
+    #progress_bar(screen, 39, 'Рисование продвинутой реки')
     rivers_waypoints = advanced_river_generation(add_random_all_tiles_map, chunks_map, 1)
+    draw_map_generation(screen, all_tiles_map, 'All_tiles', 'Конвертирование тайлов в класс')
+    
     
     #Конвертирование тайлов в класс
+    #progress_bar(screen, 45, 'Конвертирование тайлов в класс')
     all_class_tiles_map = convert_tiles_to_class(add_random_all_tiles_map, chunks_map)
+    simple_draw_map_generation(screen, 'Рассчёт уровней, склонов и лестниц')
+    
     
     #Рассчёт уровней, склонов и лестниц
+    #progress_bar(screen, 50, 'Рассчёт уровней, склонов и лестниц')
     levelness_calculation(all_class_tiles_map, ('~', '▲', 'C', ':', 'o', ',', '„', '`'), False, False)
     levelness_calculation(all_class_tiles_map, ('~', 'C', '`'), True, False)
     levelness_calculation(all_class_tiles_map, ('▲'), True, True)
@@ -167,29 +279,369 @@ def master_map_generate(global_region_grid, region_grid, chunks_grid, mini_grid,
     levelness_calculation(all_class_tiles_map, ('▲'), True, True)
     levelness_calculation(all_class_tiles_map, ('▲'), True, True)
     levelness_calculation(all_class_tiles_map, ('▲'), True, True)
-
+    simple_draw_map_generation(screen, 'Разнообразие тайловых полей, не требующих границ')
+    
 
     #Разнообразие тайловых полей, не требующих границ
+    #progress_bar(screen, 56, 'Разнообразие тайловых полей, не требующих границ')
     diversity_field_tiles(all_class_tiles_map)
+    simple_draw_map_generation(screen, 'Разрезание глобальной карты на карту классов Location')
+    
 
     #Разрезание глобальной карты на карту классов Location
+    #progress_bar(screen, 62, 'Разрезание глобальной карты на карту классов Location')
     ready_global_map = cutting_tiles_map(all_class_tiles_map, chunks_map)
+    simple_draw_map_generation(screen, 'Добавление бродов в реки')
+    
     
     #Добавление бродов в реки
+    #progress_bar(screen, 67, 'Добавление бродов в реки')
     add_fords_in_rivers(ready_global_map, rivers_waypoints)
+    simple_draw_map_generation(screen, 'Определение независимых областей на локациях')
+    
 
     #Определение независимых областей на локациях
+    #progress_bar(screen, 74, 'Определение независимых областей на локациях')
     defining_vertices(ready_global_map)
+    draw_vertices_generation(screen, ready_global_map, 'Определение связей между локациями')
+    #simple_draw_map_generation(screen, 'Определение связей между локациями')
+    
 
     #Определение связей между локациями
+    #progress_bar(screen, 80, 'Определение связей между локациями')
     defining_zone_relationships(ready_global_map)
+    simple_draw_map_generation(screen, 'Создание миникарты')
+    
 
     #Создание миникарты
+    #progress_bar(screen, 90, 'Создание миникарты')
     minimap = minimap_create(ready_global_map)
+    simple_draw_map_generation(screen, 'Карта готова')
+
+    request_for_a_key_press(screen)
+    
+    #progress_bar(screen, 100, 'Карта готова')
 
     return ready_global_map, minimap
 
 
+"""
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+    Визуализация генерации карты
+        
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+"""
+class Button_rect(pygame.sprite.Sprite):
+    """ Отрисовывает поверхности """
+
+    def __init__(self, y, x, size_y, size_x, color):
+        pygame.sprite.Sprite.__init__(self)
+        self.y = y
+        self.x = x
+        self.image = pygame.Surface((size_x, size_y))
+        self.image.fill(color)
+        self.rect = self.image.get_rect()
+        self.rect.top = y
+        self.rect.left = x
+        self.speed = 0
+        
+    def draw(self, surface):
+        surface.blit(self.image, self.rect)
+
+class Draw_region(pygame.sprite.Sprite):
+    """ Содержит спрайты миникарты """
+
+    def __init__(self, y, x, size_tile, key, type_region):
+        pygame.sprite.Sprite.__init__(self)
+        self.x = x
+        self.y = y
+        self.image = pygame.Surface((size_tile, size_tile))
+        self.image.fill(self.color_dict(key, type_region))
+        self.rect = self.image.get_rect()
+        self.rect.left = x
+        self.rect.top = y
+        self.speed = 0
+    def draw( self, surface ):
+        surface.blit(self.image, self.rect)
+    def color_dict(self, key, type_region):
+        """
+                                    0 - пустынный
+                                    1 - горный
+                                    2 - зелёный
+                                    3 - солёный
+                                    4 - каньонный
+                                    5 - водяной
+        """
+        global_region_dict =   {
+                        0: (239, 228, 176),
+                        1: (50, 50, 50),
+                        2: (0, 255, 0),
+                        3: (230, 230, 230),
+                        4: (255, 150, 0),
+                        5: (0, 0, 255),
+                        }
+
+        location_dict = {
+                        'j': (239, 228, 200),
+                        '.': (239, 228, 176),
+                        'F': (200, 100, 0),
+                        'P': (0, 255, 0),
+                        ',': (209, 169, 126),
+                        '„': (100, 255, 0),
+                        'A': (200, 200, 100),
+                        'S': (200, 200, 150),
+                        '▲': (150, 150, 150),
+                        '~': (0, 0, 200),
+                        'C': (185, 122, 87),
+                        ';': (220, 220, 220),
+                       }
+        tiles_dict = {  
+                        '.': (239, 228, 176),
+                        ',': (209, 169, 126),
+                        '„': (100, 255, 0),
+                        'A': (200, 200, 100),
+                        '▲': (150, 150, 150),
+                        'C': (185, 122, 87),
+                        ':': (245, 245, 245),
+                        ';': (235, 235, 235),
+                        'S': (200, 200, 150),
+                        'o': (170, 170, 170),
+                        'F': (200, 100, 0),
+                        'P': (0, 255, 0),
+                        '~': (0, 0, 200),
+                        '`': (0, 0, 210),
+                        'u': (80, 235, 0),
+                        's': (255, 255, 255),
+                        }
+        if type_region == 'none':
+            return (150, 150, 150)               
+        elif type_region == 'Global_regions':
+            if key in global_region_dict:
+                return global_region_dict[key]
+            else:
+                return (random.randrange(256), random.randrange(256), random.randrange(256))
+        elif type_region == 'Regions':
+            if key in location_dict:
+                return location_dict[key]
+            else:
+                return (random.randrange(256), random.randrange(256), random.randrange(256))
+        elif type_region == 'Locations':
+            if key[0] in location_dict:
+                return location_dict[key[0]]
+            else:
+                return (random.randrange(256), random.randrange(256), random.randrange(256))
+        elif type_region == 'Mini_regions' or type_region == 'All_tiles':
+            if key in tiles_dict:
+                return tiles_dict[key]
+            else:
+                return (random.randrange(256), random.randrange(256), random.randrange(256))
+
+class Island_friends(pygame.sprite.Sprite):
+    """ Содержит спрайты вершин """
+
+    def __init__(self, y, x, size_tile, number):
+        pygame.sprite.Sprite.__init__(self)
+        self.x = x
+        self.y = y
+        self.image = pygame.Surface((size_tile, size_tile))
+        self.image.fill(self.color_dict(number))
+        self.image.set_alpha(60)
+        self.rect = self.image.get_rect()
+        self.rect.left = x
+        self.rect.top = y
+        self.speed = 0
+    def draw( self, surface ):
+        surface.blit(self.image, self.rect)
+    def color_dict(self, number):
+        color_dict =   {
+                        -1: (0, 0, 0),
+                        0: (255, 255, 0),
+                        1: (255, 255, 150),
+                        2: (0, 255, 255),
+                        3: (150, 255, 255),
+                        4: (255, 0, 255),
+                        5: (255, 150, 255),
+                        6: (0, 0, 255),
+                        7: (0, 255, 0),
+                        8: (255, 200, 255),
+                        9: (0, 255, 0),
+                        10: (0, 128, 0),
+                        11: (0, 100, 0),
+                        12: (128, 128, 0),
+                        13: (128, 128, 0),
+                        14: (255, 255, 255),
+                        15: (235, 255, 255),
+                        16: (200, 255, 255),
+                        17: (200, 200, 100),
+                        18: (100, 200, 100),
+                        19: (200, 100, 100),
+                        20: (245, 245, 0),
+                        21: (245, 245, 140),
+                        22: (0, 245, 245),
+                        23: (140, 245, 245),
+                        24: (245, 0, 245),
+                        25: (245, 140, 245),
+                        26: (0, 0, 245),
+                        27: (0, 245, 0),
+                        28: (245, 200, 245),
+                        29: (0, 245, 0),
+                        30: (0, 148, 0),
+                        31: (0, 140, 0),
+                        32: (120, 120, 0),
+                        33: (120, 120, 0),
+                        34: (245, 245, 245),
+                        35: (235, 245, 245),
+                        36: (200, 245, 245),
+                        37: (200, 200, 140),
+                        38: (140, 200, 140),
+                        39: (200, 140, 140),
+                        40: (140, 140, 200),
+                        41: (245, 245, 140),
+                        42: (0, 235, 235),
+                        43: (130, 235, 235),
+                        44: (235, 0, 235),
+                        45: (235, 130, 235),
+                        46: (0, 0, 235),
+                        47: (0, 235, 0),
+                        48: (235, 200, 235),
+                        49: (0, 235, 0),
+                        50: (0, 123, 0),
+                        51: (0, 130, 0),
+                        52: (123, 123, 0),
+                        53: (123, 123, 0),
+                        54: (235, 235, 235),
+                        55: (205, 235, 235),
+                        56: (200, 235, 235),
+                        57: (210, 210, 100),
+                        58: (100, 210, 100),
+                        59: (210, 100, 100),
+                        60: (100, 100, 210),
+                        61: (225, 225, 150),
+                        62: (0, 225, 225),
+                        63: (150, 225, 225),
+                        64: (225, 0, 225),
+                        65: (225, 150, 225),
+                        66: (0, 0, 225),
+                        67: (0, 225, 0),
+                        68: (225, 200, 225),
+                        69: (0, 225, 0),
+                        70: (0, 128, 0),
+                        71: (0, 100, 0),
+                        72: (128, 128, 0),
+                        73: (128, 128, 0),
+                        74: (225, 225, 225),
+                        75: (235, 225, 225),
+                        76: (200, 225, 225),
+                        77: (200, 200, 100),
+                        78: (100, 200, 100),
+                        79: (200, 100, 100),
+                        80: (100, 100, 200),
+                        255: (255, 0, 0),
+                        }
+
+        if number in color_dict:
+            return color_dict[number]
+        else:
+            return (random.randrange(256), random.randrange(256), random.randrange(256))
+
+def draw_map_generation(screen, draw_map, type_map, description):
+    """
+        Отрисовывает этапы генерации карты
+    """
+    size_tile = 750/len(draw_map)
+    screen.fill((255, 255, 255))
+    
+    for number_line, line in enumerate(draw_map):
+        for number_tile, tile in enumerate(line):
+            Draw_region(number_line*size_tile, number_tile*size_tile, size_tile, tile, type_map).draw(screen)
+
+    fontObj = pygame.font.Font('freesansbold.ttf', 10)
+    textSurfaceObj = fontObj.render(description, True, (0, 0, 0), (255, 255, 255))
+    textRectObj = textSurfaceObj.get_rect()
+    textRectObj.top = 100
+    textRectObj.left = 760
+    screen.blit(textSurfaceObj, textRectObj) 
+            
+    pygame.display.flip()
+    
+def simple_draw_map_generation(screen, description):
+    """
+        Отрисовывает этапы генерации карты без перерисовки карты
+    """
+    Button_rect(50, 750, 100, 1000, (255, 255, 255)).draw(screen)
+    fontObj = pygame.font.Font('freesansbold.ttf', 10)
+    textSurfaceObj = fontObj.render(description, True, (0, 0, 0), (255, 255, 255))
+    textRectObj = textSurfaceObj.get_rect()
+    textRectObj.top = 100
+    textRectObj.left = 760
+    screen.blit(textSurfaceObj, textRectObj) 
+            
+    pygame.display.flip()
+
+def draw_vertices_generation(screen, draw_map, description):
+    """
+        Отрисовывает определённые зоны доступности
+    """
+    size_tile = 750/(len(draw_map) * len(draw_map[0][0].chunk))
+    chunk_size = len(draw_map[0][0].chunk)
+    Button_rect(50, 750, 100, 1000, (255, 255, 255)).draw(screen)
+    
+    for number_global_line, global_line in enumerate(draw_map):
+        for number_global_tile, global_tile in enumerate(global_line):
+            for number_line, line in enumerate(global_tile.chunk):
+                for number_tile, tile in enumerate(line):
+                    Island_friends((number_global_line*chunk_size + number_line)*size_tile, (number_global_tile*chunk_size + number_tile)*size_tile, size_tile, tile.vertices).draw(screen)
+                    #pygame.display.flip()
+
+    fontObj = pygame.font.Font('freesansbold.ttf', 10)
+    textSurfaceObj = fontObj.render(description, True, (0, 0, 0), (255, 255, 255))
+    textRectObj = textSurfaceObj.get_rect()
+    textRectObj.top = 100
+    textRectObj.left = 760
+    screen.blit(textSurfaceObj, textRectObj) 
+            
+    pygame.display.flip()
+
+def request_for_a_key_press(screen):
+    """
+        Спрашивает ввод space перед началом игры
+    """
+    Button_rect(50, 750, 100, 1000, (255, 255, 255)).draw(screen)
+    fontObj = pygame.font.Font('freesansbold.ttf', 10)
+    textSurfaceObj = fontObj.render('Для продолжения нажмите "SPACE"', True, (0, 0, 0), (255, 255, 255))
+    textRectObj = textSurfaceObj.get_rect()
+    textRectObj.top = 100
+    textRectObj.left = 760
+    screen.blit(textSurfaceObj, textRectObj) 
+            
+    pygame.display.flip()
+    request = True
+    while request:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                sys.exit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                        request = False
+        
+def progress_bar(screen, percent, description):
+    """
+        Отрисовывает прогресс-бар для визуализации генерации карты
+    """
+    screen.fill((255, 255, 255))
+    x_size, y_size = pygame.display.Info().current_w, pygame.display.Info().current_h
+    Button_rect(y_size//2, x_size//2, 200, 1000, (150, 150, 150)).draw(screen)
+    Button_rect(y_size//2, x_size//2, 200, percent*10, (200, 100, 100)).draw(screen)
+    
+    fontObj = pygame.font.Font('freesansbold.ttf', 10)
+    textSurfaceObj = fontObj.render(description, True, (0, 0, 0), (255, 255, 255))
+    textRectObj = textSurfaceObj.get_rect()
+    textRectObj.center = (x_size//2, y_size//2 - 125)
+    screen.blit(textSurfaceObj, textRectObj) 
+    
+    pygame.display.flip()
 
             
 
@@ -984,9 +1436,9 @@ def mountains_generate(all_tiles_map, chunks_map):
             elif chunks_map[number_line][number_tile][0] == 'P' and random.randrange(20)//10 > 0:
                 mountain_gen(all_tiles_map, number_line*chunk_size + random.randrange(chunk_size//2),
                              number_tile*chunk_size + random.randrange(chunk_size//2), random.randrange(10, 20), 1, 2, '~', ('u'))
-            elif chunks_map[number_line][number_tile][0] == '~' and random.randrange(20)//18 > 0:
-                file_draw_map = open("new_generator_map_branch\draw_map\island_1.txt", encoding="utf-8")
-                draw_ready_map(all_tiles_map, file_draw_map, number_line, number_tile, chunk_size)
+            #elif chunks_map[number_line][number_tile][0] == '~' and random.randrange(20)//18 > 0:
+                #file_draw_map = open("new_generator_map_branch\draw_map\island_1.txt", encoding="utf-8")
+                #draw_ready_map(all_tiles_map, file_draw_map, number_line, number_tile, chunk_size)
 
 """
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1008,10 +1460,11 @@ def global_region_generate(global_grid):
                                     3 - солёный
                                     4 - каньонный
                                     5 - водяной
+                                    6 - пустыня
     """
     global_region_map = []
     for i in range(global_grid):
-        global_region_map.append([random.randrange(6) for x in range(global_grid)])
+        global_region_map.append([random.randrange(7) for x in range(global_grid)])
     return global_region_map
 
 @timeit
@@ -1025,7 +1478,8 @@ def region_generate(global_region_map, global_region_grid, region_grid):
                     2: [['„', ',', 'P']],           # Живой
                     3: [[';', '.']],                # Солёный
                     4: [['A', '.']],                # Каньонный
-                    5: [['S', '▲']]                 # Водяной
+                    5: [['S', '▲']],                # Водяной
+                    6: [['j', '.']],                # Пустыня
                 }
 
     raw_region_map = all_map_master_generate(global_region_map, region_grid, False, seed_dict, 0, False)
@@ -1488,7 +1942,19 @@ def minimap_create(global_map):
 """
 =========================================================================================================================================================
 """
+if __name__ == '__main__':
+    """
+        Запуск генератора отдельно от игры
+    """
+    pygame.init()
 
-#                                global_region_grid | region_grid | chunks_grid | mini_region_grid | tile_field_grid
-#global_map = master_map_generate(        2,                2,            2,            2,                 2)
+    dispay_size = [1200, 750]
+    screen = pygame.display.set_mode(dispay_size, FULLSCREEN | DOUBLEBUF)
+    pygame.display.set_caption("My Game")
+
+    tiles_image_dict = []
+
+    #                                global_region_grid | region_grid | chunks_grid | mini_region_grid | tile_field_grid
+    global_map = master_map_generate(        2,                2,            2,            20,                 2,    screen, tiles_image_dict)
+    sys.exit()
 
