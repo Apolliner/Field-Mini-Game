@@ -656,7 +656,7 @@ def minimap_dict_create():
                                 'E': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_saline_1_E.jpg'))),
                                 'F': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_saline_1_F.jpg'))),
                              },
-                        ';': {'0': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_saline_2.jpg')))},
+                        ':': {'0': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_saline_2.jpg')))},
                         '„': {
                                 '0': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_grass_4.jpg'))),
                                 '1': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_grass_0.jpg'))),
@@ -4228,7 +4228,7 @@ class Draw_rect(pygame.sprite.Sprite):
 
 def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action, enemy_list, activity_list, screen, tiles_image_dict,
                         minimap_surface, all_sprites, dynamic_sprites, minimap_dict, sprites_dict, offset_sprites, landscape_layer, activity_layer,
-                        entities_layer, finishing_surface, settings_for_intermediate_steps, mouse_position):
+                        entities_layer, finishing_surface, settings_for_intermediate_steps, mouse_position, raw_minimap):
     """
         Работает с классом Interfase, содержащимся в go_to_print
 
@@ -4317,17 +4317,17 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
             # Печать персонажей на миникарту
 
             person_sprite = minimap_dict[person.icon][person.type]
-            person_sprite.rect.top = person.global_position[0]*minimap_size_tile
-            person_sprite.rect.left = person.global_position[1]*minimap_size_tile
+            person_sprite.rect.top = person.global_position[0]*size_tile_minimap
+            person_sprite.rect.left = person.global_position[1]*size_tile_minimap
             person_sprite.draw(working_minimap_surface)
             
             for enemy in enemy_list:
-                enemy_sprite = minimap_dict[person.icon][person.type]
-                enemy_sprite.rect.top = enemy.global_position[0]*minimap_size_tile
-                enemy_sprite.rect.left = enemy.global_position[1]*minimap_size_tile
+                enemy_sprite = minimap_dict[enemy.icon][enemy.type]
+                enemy_sprite.rect.top = enemy.global_position[0]*size_tile_minimap
+                enemy_sprite.rect.left = enemy.global_position[1]*size_tile_minimap
                 enemy_sprite.draw(working_minimap_surface)
                     
-            screen.blit(working_minimap_surface, (0, len(global_map)*size_tile + 1))
+            screen.blit(working_minimap_surface, ((len(global_map) - 1)*size_tile, 0))
 
             #Отрисовка температуры на миникарте
             if person.test_visible:
@@ -4486,17 +4486,17 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
             # Печать персонажей на миникарту
 
             person_sprite = minimap_dict[person.icon][person.type]
-            person_sprite.rect.top = person.global_position[0]*minimap_size_tile
-            person_sprite.rect.left = person.global_position[1]*minimap_size_tile
+            person_sprite.rect.top = person.global_position[0]*size_tile_minimap
+            person_sprite.rect.left = person.global_position[1]*size_tile_minimap
             person_sprite.draw(working_minimap_surface)
             
             for enemy in enemy_list:
-                enemy_sprite = minimap_dict[person.icon][person.type]
-                enemy_sprite.rect.top = enemy.global_position[0]*minimap_size_tile
-                enemy_sprite.rect.left = enemy.global_position[1]*minimap_size_tile
+                enemy_sprite = minimap_dict[enemy.icon][enemy.type]
+                enemy_sprite.rect.top = enemy.global_position[0]*size_tile_minimap
+                enemy_sprite.rect.left = enemy.global_position[1]*size_tile_minimap
                 enemy_sprite.draw(working_minimap_surface)
                     
-            screen.blit(working_minimap_surface, (0, len(global_map)*size_tile + 1))
+            screen.blit(working_minimap_surface, ((len(global_map) - 1)*size_tile, 0))
 
             #Отрисовка температуры на миникарте
             #if person.test_visible:
@@ -4553,7 +4553,7 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
     if not person.pointer_step:
         frames_per_cycle_and_delays(person, time_1, time_2, settings_for_intermediate_steps)
     
-    end = time.time() #проверка времени выполнения 
+    end = time.time() #проверка времени выполнения
 
     #if person.pointer_step:
     #    Draw_open_image(0, 0, pygame.image.load('output.png')).draw(screen)
@@ -4570,14 +4570,14 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
     textRectObj.center = (30*34, 15*30)
     screen.blit(textSurfaceObj, textRectObj)
 
-    print_pointer = F"Под ногами {pointer_description(landscape_layer, activity_layer, entities_layer, chunk_size, size_tile, mouse_position,'ground')}"
+    print_pointer = F"Под ногами {pointer_description(landscape_layer, activity_layer, entities_layer, chunk_size, size_tile, mouse_position,'ground', raw_minimap)}"
 
     textSurfaceObj = fontObj.render(print_pointer, True, (0, 0, 0), (255, 255, 255))
     textRectObj = textSurfaceObj.get_rect()
     textRectObj.center = (30*34, 16*31)
     screen.blit(textSurfaceObj, textRectObj)
     
-    print_pointer = F"Вы видите {pointer_description(landscape_layer, activity_layer, entities_layer, chunk_size, size_tile, mouse_position, 'pointer')}"
+    print_pointer = F"Вы видите {pointer_description(landscape_layer, activity_layer, entities_layer, chunk_size, size_tile, mouse_position, 'pointer', raw_minimap)}"
 
     textSurfaceObj = fontObj.render(print_pointer, True, (0, 0, 0), (255, 255, 255))
     textRectObj = textSurfaceObj.get_rect()
@@ -4595,7 +4595,7 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
             
     return screen, landscape_layer, activity_layer, entities_layer, offset_sprites, finishing_surface
 
-def pointer_description(landscape_layer, activity_layer, entities_layer, chunk_size, size_tile, mouse_position, type_descrption):
+def pointer_description(landscape_layer, activity_layer, entities_layer, chunk_size, size_tile, mouse_position, type_descrption, raw_minimap):
     """
         Собирает описание того что под ногами и того, куда указывает указатель
         coords - [x, y]
@@ -4618,6 +4618,13 @@ def pointer_description(landscape_layer, activity_layer, entities_layer, chunk_s
     for area in (landscape_layer, activity_layer, entities_layer):
         ground_description += coords_description(person_coords, area, chunk_size)
         pointer_description += coords_description(mouse_coords, area, chunk_size)
+    if mouse_coords[0] > chunk_size:
+        minimap_coords = []
+        axis_position_x, axis_position_y = mouse_position
+        minimap_coords.append((axis_position_x - (chunk_size + 1)*size_tile)//15)
+        minimap_coords.append(axis_position_y//15)
+        pointer_description += coords_description(minimap_coords, raw_minimap, len(raw_minimap))
+        
     if type_descrption == 'ground':
         return ground_description
     else:
@@ -4991,7 +4998,6 @@ def minimap_create(raw_map, minimap_dict, size_tile):
             print_sprite.rect.top = number_line*size_tile
             print_sprite.rect.left = number_tile*size_tile
             print_sprite.draw(minimap_surface)
-
     return minimap_surface
             
             
@@ -5135,7 +5141,7 @@ def game_loop(global_map:list, person, chunk_size:int, enemy_list:list, world, s
     screen, landscape_layer, activity_layer, entities_layer, offset_sprites, finishing_surface = master_pygame_draw(person, chunk_size,
                                             go_to_print, global_map, mode_action, enemy_list, activity_list, screen, tiles_image_dict, minimap_surface,
                                             all_sprites, dynamic_sprites, minimap_dict, sprites_dict, offset_sprites, landscape_layer, activity_layer,
-                                            entities_layer, finishing_surface, settings_for_intermediate_steps, mouse_position)
+                                            entities_layer, finishing_surface, settings_for_intermediate_steps, mouse_position, raw_minimap)
     
     print('game_loop запущен')
     game_loop = True
@@ -5161,7 +5167,7 @@ def game_loop(global_map:list, person, chunk_size:int, enemy_list:list, world, s
         screen, landscape_layer, activity_layer, entities_layer, offset_sprites, finishing_surface = master_pygame_draw(person, chunk_size,
                                             go_to_print, global_map, mode_action, enemy_list, activity_list, screen, tiles_image_dict, minimap_surface,
                                             all_sprites, dynamic_sprites, minimap_dict, sprites_dict, offset_sprites, landscape_layer, activity_layer,
-                                            entities_layer, finishing_surface, settings_for_intermediate_steps, mouse_position)
+                                            entities_layer, finishing_surface, settings_for_intermediate_steps, mouse_position, raw_minimap)
         
 
         
