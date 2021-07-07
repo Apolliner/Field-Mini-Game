@@ -537,6 +537,307 @@ def loading_all_sprites():
                     'П': {'0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'pointer_0.png')))},
                     }
     return sprites_dict
+class Fast_minimap_tile(pygame.sprite.Sprite):
+    """ Содержит заранее созданную поверхность спрайта """
+    def __init__(self, image_tile):
+        pygame.sprite.Sprite.__init__(self)
+        self.img = image_tile
+        self.image = pygame.transform.scale(self.img, (15, 15))
+        self.rect = self.image.get_rect()
+        self.rect.top = 0
+        self.rect.left = 0
+        self.speed = 0
+    def draw(self, surface):
+        surface.blit(self.image, self.rect)
+
+def minimap_dict_create():
+
+        minimap_dict =  {
+                        'j': {
+                                '0': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dune_0.jpg'))),
+                                '1': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dune_1.jpg'))),
+                             },
+                        '.': {'0': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_sand.jpg')))},
+                        ',': {
+                                '0': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_grass_5.jpg'))),
+                                '1': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_grass_0.jpg'))),
+                                '2': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_grass_2.jpg'))),
+                                '3': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_grass_1.jpg'))),
+                                '4': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_grass_2.jpg'))),
+                                '5': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_grass_2.jpg'))),
+                                '6': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_grass_4.jpg'))),
+                                '7': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_grass_3.jpg'))),
+                                '8': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_grass_2.jpg'))),
+                                '9': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_grass_3.jpg'))),
+                                'A': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_grass_4.jpg'))),
+                                'B': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_grass_4.jpg'))),
+                                'C': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_grass_5.jpg'))),
+                                'D': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_grass_2.jpg'))),
+                                'E': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_grass_3.jpg'))),
+                                'F': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_grass_4.jpg'))),
+                             },
+                        'S': {
+                                '0': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_stone_4.jpg'))),
+                                '1': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_stone_0.jpg'))),
+                                '2': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_stone_2.jpg'))),
+                                '3': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_stone_3.jpg'))),
+                                '4': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_stone_4.jpg'))),
+                                '5': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_stone_2.jpg'))),
+                                '6': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_stone_3.jpg'))),
+                                '7': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_stone_4.jpg'))),
+                                '8': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_stone_2.jpg'))),
+                                '9': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_stone_3.jpg'))),
+                                'A': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_stone_4.jpg'))),
+                                'B': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_stone_2.jpg'))),
+                                'C': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_stone_3.jpg'))),
+                                'D': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_stone_4.jpg'))),
+                                'E': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_stone_2.jpg'))),
+                                'F': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_stone_3.jpg'))),
+                             },
+                        'A': {
+                                '0': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_bump_0.jpg'))),
+                                '1': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_bump_1.jpg'))),
+
+                             },
+                        '▲': {
+                                '0': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_0.jpg'))),
+                                '1': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_1.jpg'))),
+                                '2': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_2.jpg'))),
+                                '3': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_3.jpg'))),
+                                '4': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_4.jpg'))),
+                                '5': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_5.jpg'))),
+                                '6': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_6.jpg'))),
+                                '7': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_7.jpg'))),
+                                '8': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_8.jpg'))),
+                                '9': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_9.jpg'))),
+                                'A': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_A.jpg'))),
+                                'B': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_B.jpg'))),
+                                'C': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_C.jpg'))),
+                                'D': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_D.jpg'))),
+                                'E': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_E.jpg'))),
+                                'F': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_F.jpg'))),
+                                'G': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_G.jpg'))),
+                                'H': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_H.jpg'))),
+                                'I': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_I.jpg'))),
+                                'J': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_J.jpg'))),
+                                'K': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_K.jpg'))),
+                                'L': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_L.jpg'))),
+                                'M': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_M.jpg'))),
+                                'N': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_N.jpg'))),
+                                'O': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_O.jpg'))),
+                                'P': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_P.jpg'))),
+                                'Q': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_Q.jpg'))),
+                                'R': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_R.jpg'))),
+                                'S': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_S.jpg'))),
+                                'T': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_T.jpg'))),
+                                'U': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_hills_U.jpg'))),
+                             },
+                        'i': {
+                                '0': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_cactus_0.jpg'))),
+                                '1': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_cactus_1.jpg'))),
+                                '2': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_cactus_2.jpg'))),
+                                '3': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_cactus_3.jpg'))),
+                             },
+                        ';': {
+                                '0': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_saline_1_0.jpg'))),
+                                '1': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_saline_1_1.jpg'))),
+                                '2': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_saline_1_2.jpg'))),
+                                '3': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_saline_1_3.jpg'))),
+                                '4': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_saline_1_4.jpg'))),
+                                '5': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_saline_1_5.jpg'))),
+                                '6': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_saline_1_6.jpg'))),
+                                '7': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_saline_1_7.jpg'))),
+                                '8': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_saline_1_8.jpg'))),
+                                '9': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_saline_1_9.jpg'))),
+                                'A': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_saline_1_A.jpg'))),
+                                'B': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_saline_1_B.jpg'))),
+                                'C': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_saline_1_C.jpg'))),
+                                'D': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_saline_1_D.jpg'))),
+                                'E': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_saline_1_E.jpg'))),
+                                'F': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_saline_1_F.jpg'))),
+                             },
+                        ';': {'0': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_saline_2.jpg')))},
+                        '„': {
+                                '0': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_grass_4.jpg'))),
+                                '1': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_grass_0.jpg'))),
+                                '2': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_grass_2.jpg'))),
+                                '3': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_grass_3.jpg'))),
+                                '4': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_grass_4.jpg'))),
+                                '5': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_grass_2.jpg'))),
+                                '6': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_grass_3.jpg'))),
+                                '7': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_grass_4.jpg'))),
+                                '8': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_grass_2.jpg'))),
+                                '9': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_grass_3.jpg'))),
+                                'A': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_grass_4.jpg'))),
+                                'B': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_grass_2.jpg'))),
+                                'C': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_grass_3.jpg'))),
+                                'D': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_grass_4.jpg'))),
+                                'E': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_grass_2.jpg'))),
+                                'F': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_grass_3.jpg'))),
+                             },
+                        'u': {
+                                '0': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_tall_grass_0.jpg'))),
+                                '1': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_tall_grass_1.jpg'))),
+                             },
+                        'ü': {'0': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_prickly_grass.jpg')))},
+                        'F': {
+                                '0': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_tree_0.jpg'))),
+                                '1': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_tree_1.jpg'))),
+                                '2': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_tree_2.jpg'))),
+                                '3': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_tree_3.jpg'))),
+                                '4': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_tree_4.jpg'))),
+                                '5': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_tree_5.jpg'))),
+                                '6': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_tree_6.jpg'))),
+                                '7': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dry_tree_7.jpg'))),
+                             },
+                        'P': {'0': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_live_tree.jpg')))},
+                        '~': {
+                                '0': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_0.jpg'))),
+                                '1': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_1.jpg'))),
+                                '2': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_2.jpg'))),
+                                '3': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_3.jpg'))),
+                                '4': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_4.jpg'))),
+                                '5': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_5.jpg'))),
+                                '6': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_6.jpg'))),
+                                '7': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_7.jpg'))),
+                                '8': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_8.jpg'))),
+                                '9': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_9.jpg'))),
+                                'A': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_A.jpg'))),
+                                'B': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_B.jpg'))),
+                                'C': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_C.jpg'))),
+                                'D': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_D.jpg'))),
+                                'E': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_E.jpg'))),
+                                'F': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_F.jpg'))),
+                                'G': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_G.jpg'))),
+                                'H': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_H.jpg'))),
+                                'I': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_I.jpg'))),
+                                'J': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_J.jpg'))),
+                                'K': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_K.jpg'))),
+                                'L': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_L.jpg'))),
+                                'M': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_M.jpg'))),
+                                'N': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_N.jpg'))),
+                                'O': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_O.jpg'))),
+                                'P': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_P.jpg'))),
+                                'Q': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_Q.jpg'))),
+                                'R': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_R.jpg'))),
+                                'S': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_S.jpg'))),
+                                'T': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_T.jpg'))),
+                                'U': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_water_U.jpg'))),
+                             },
+                        'f': {
+                                '0': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_0.jpg'))),
+                                '1': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_1.jpg'))),
+                                '2': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_2.jpg'))),
+                                '3': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_3.jpg'))),
+                                '4': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_4.jpg'))),
+                                '5': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_5.jpg'))),
+                                '6': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_6.jpg'))),
+                                '7': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_7.jpg'))),
+                                '8': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_8.jpg'))),
+                                '9': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_9.jpg'))),
+                                'A': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_A.jpg'))),
+                                'B': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_B.jpg'))),
+                                'C': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_C.jpg'))),
+                                'D': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_D.jpg'))),
+                                'E': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_E.jpg'))),
+                                'F': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_F.jpg'))),
+                                'G': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_G.jpg'))),
+                                'H': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_H.jpg'))),
+                                'I': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_I.jpg'))),
+                                'J': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_J.jpg'))),
+                                'K': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_K.jpg'))),
+                                'L': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_L.jpg'))),
+                                'M': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_M.jpg'))),
+                                'N': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_N.jpg'))),
+                                'O': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_O.jpg'))),
+                                'P': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_P.jpg'))),
+                                'Q': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_Q.jpg'))),
+                                'R': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_R.jpg'))),
+                                'S': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_S.jpg'))),
+                                'T': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_T.jpg'))),
+                                'U': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_ford_river_U.jpg'))),
+                             },
+                        'C': {
+                                '0': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_0.jpg'))),
+                                '1': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_1.jpg'))),
+                                '2': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_2.jpg'))),
+                                '3': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_3.jpg'))),
+                                '4': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_4.jpg'))),
+                                '5': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_5.jpg'))),
+                                '6': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_6.jpg'))),
+                                '7': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_7.jpg'))),
+                                '8': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_8.jpg'))),
+                                '9': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_9.jpg'))),
+                                'A': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_A.jpg'))),
+                                'B': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_B.jpg'))),
+                                'C': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_C.jpg'))),
+                                'D': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_D.jpg'))),
+                                'E': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_E.jpg'))),
+                                'F': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_F.jpg'))),
+                                'G': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_G.jpg'))),
+                                'H': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_H.jpg'))),
+                                'I': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_I.jpg'))),
+                                'J': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_J.jpg'))),
+                                'K': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_K.jpg'))),
+                                'L': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_L.jpg'))),
+                                'M': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_M.jpg'))),
+                                'N': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_N.jpg'))),
+                                'O': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_O.jpg'))),
+                                'P': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_P.jpg'))),
+                                'Q': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_Q.jpg'))),
+                                'R': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_R.jpg'))),
+                                'S': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_S.jpg'))),
+                                'T': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_T.jpg'))),
+                                'U': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_canyons_U.jpg'))),
+                             },
+                        '☺': {
+                                '0': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_person_down_0.png'))),
+                                '1': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_person_right_0.png'))),
+                                '2': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_person_left_0.png'))),
+                                '3': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_person_up_0.png'))),
+                                'l0': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_person_left_0.png'))),
+                                'l1': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_person_left_1.png'))),
+                                'l2': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_person_left_2.png'))),
+                                'l3': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_person_left_3.png'))),
+                                'r0': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_person_right_0.png'))),
+                                'r1': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_person_right_1.png'))),
+                                'r2': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_person_right_2.png'))),
+                                'r3': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_person_right_3.png'))),
+                                'd0': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_person_down_0.png'))),
+                                'd1': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_person_down_1.png'))),
+                                'd2': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_person_down_2.png'))),
+                                'd3': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_person_down_3.png'))),
+                                'u0': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_person_up_0.png'))),
+                                'u1': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_person_up_1.png'))),
+                                'u2': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_person_up_2.png'))),
+                                'u3': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_person_up_3.png'))),
+
+                             },
+                        '☻': {
+                                
+                                'l0': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_enemy_riffleman_left_0.png'))),
+                                'l1': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_enemy_riffleman_left_1.png'))),
+                                'l2': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_enemy_riffleman_left_2.png'))),
+                                'l3': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_enemy_riffleman_left_3.png'))),
+                                'r0': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_enemy_riffleman_right_0.png'))),
+                                'r1': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_enemy_riffleman_right_1.png'))),
+                                'r2': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_enemy_riffleman_right_2.png'))),
+                                'r3': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_enemy_riffleman_right_3.png'))),
+                                'd0': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_enemy_riffleman_down_0.png'))),
+                                'd1': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_enemy_riffleman_down_1.png'))),
+                                'd2': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_enemy_riffleman_down_2.png'))),
+                                'd3': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_enemy_riffleman_down_3.png'))),
+                                'u0': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_enemy_riffleman_up_0.png'))),
+                                'u1': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_enemy_riffleman_up_1.png'))),
+                                'u2': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_enemy_riffleman_up_2.png'))),
+                                'u3': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_enemy_riffleman_up_3.png'))),
+                                
+                                'h': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_enemy_horseman.png'))),
+                                
+                             },
+                        'c': {'0': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_enemy_coyot.png')))},
+                        }
+        return minimap_dict
 
 """
 
@@ -3926,7 +4227,7 @@ class Draw_rect(pygame.sprite.Sprite):
         surface.blit(self.image, self.rect)
 
 def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action, enemy_list, activity_list, screen, tiles_image_dict,
-                        minimap, all_sprites, dynamic_sprites, minimap_sprite, sprites_dict, offset_sprites, landscape_layer, activity_layer,
+                        minimap_surface, all_sprites, dynamic_sprites, minimap_dict, sprites_dict, offset_sprites, landscape_layer, activity_layer,
                         entities_layer, finishing_surface, settings_for_intermediate_steps, mouse_position):
     """
         Работает с классом Interfase, содержащимся в go_to_print
@@ -3961,6 +4262,8 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
             #Рассчет кадра движения персонажа
             if person.direction in ('left', 'right', 'down', 'up'):
                 person_walk_draw(person, person, settings_for_intermediate_steps)
+                
+            working_minimap_surface = pygame.Surface.copy(minimap_surface) #Копирование поверхности миникарты
                 
             
             blit_coordinates = (0, 0)
@@ -4011,13 +4314,20 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
                     for number_tile in range(chunk_size):
                         Island_friends(number_tile*size_tile + offset_sprites.all[1], number_line*size_tile + offset_sprites.all[0], size_tile,
                                                landscape_layer[number_line][number_tile].vertices).draw(screen)
-            # Печать миникарты
-                        
-            All_tiles(person.global_position[1]*size_tile_minimap + (26*size_tile), person.global_position[0]*size_tile_minimap,
-                                          size_tile_minimap, tiles_image_dict, '☺', '0').draw(screen)
+            # Печать персонажей на миникарту
+
+            person_sprite = minimap_dict[person.icon][person.type]
+            person_sprite.rect.top = person.global_position[0]*minimap_size_tile
+            person_sprite.rect.left = person.global_position[1]*minimap_size_tile
+            person_sprite.draw(working_minimap_surface)
+            
             for enemy in enemy_list:
-                All_tiles(enemy.global_position[0]*size_tile_minimap + (26*size_tile), enemy.global_position[0]*size_tile_minimap,
-                                              size_tile_minimap, tiles_image_dict, enemy.icon, enemy.type).draw(screen)
+                enemy_sprite = minimap_dict[person.icon][person.type]
+                enemy_sprite.rect.top = enemy.global_position[0]*minimap_size_tile
+                enemy_sprite.rect.left = enemy.global_position[1]*minimap_size_tile
+                enemy_sprite.draw(working_minimap_surface)
+                    
+            screen.blit(working_minimap_surface, (0, len(global_map)*size_tile + 1))
 
             #Отрисовка температуры на миникарте
             if person.test_visible:
@@ -4059,7 +4369,7 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
 
             screen.fill((255, 255, 255))
             #Перерисовка миникарты
-            minimap.draw(screen)
+            working_minimap_surface = pygame.Surface.copy(minimap_surface) 
             
             #Количество промежуточных кадров
             person.pass_draw_move = number_intermediate_steps
@@ -4173,20 +4483,27 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
                                                    activity_layer[number_line][number_tile].icon,
                                                    activity_layer[number_line][number_tile].type).draw(finishing_surface)
                 
-            # Печать миникарты
-                        
-            All_tiles(person.global_position[1]*size_tile_minimap + (26*size_tile), person.global_position[0]*size_tile_minimap,
-                                          size_tile_minimap, tiles_image_dict, '☺', '0').draw(screen)
+            # Печать персонажей на миникарту
+
+            person_sprite = minimap_dict[person.icon][person.type]
+            person_sprite.rect.top = person.global_position[0]*minimap_size_tile
+            person_sprite.rect.left = person.global_position[1]*minimap_size_tile
+            person_sprite.draw(working_minimap_surface)
+            
             for enemy in enemy_list:
-                All_tiles(enemy.global_position[0]*size_tile_minimap + (26*size_tile), enemy.global_position[0]*size_tile_minimap,
-                                              size_tile_minimap, tiles_image_dict, enemy.icon, enemy.type).draw(screen)
+                enemy_sprite = minimap_dict[person.icon][person.type]
+                enemy_sprite.rect.top = enemy.global_position[0]*minimap_size_tile
+                enemy_sprite.rect.left = enemy.global_position[1]*minimap_size_tile
+                enemy_sprite.draw(working_minimap_surface)
+                    
+            screen.blit(working_minimap_surface, (0, len(global_map)*size_tile + 1))
 
             #Отрисовка температуры на миникарте
-            if person.test_visible:
-                for number_minimap_line, minimap_line in enumerate(minimap):
-                    for number_minimap_tile, minimap_tile in enumerate(minimap_line):
-                        Minimap_temperature(number_minimap_tile*size_tile_minimap + (26*size_tile), number_minimap_line*size_tile_minimap,
-                                                                size_tile_minimap, minimap_tile.temperature).draw(screen)
+            #if person.test_visible:
+            #    for number_minimap_line, minimap_line in enumerate(minimap):
+            #        for number_minimap_tile, minimap_tile in enumerate(minimap_line):
+            #            Minimap_temperature(number_minimap_tile*size_tile_minimap + (26*size_tile), number_minimap_line*size_tile_minimap,
+            #                                                    size_tile_minimap, minimap_tile.temperature).draw(screen)
             #Отрисовка НПЦ
             entities_layer = entities_layer_calculations(person, chunk_size, go_to_print, enemy_list) #Использование функции для отображения активностей
                         
@@ -4569,7 +4886,8 @@ def settings_loop(screen, dispay_size, fast_generation:bool, global_region_grid,
         button_selection = False
         
                     
-def preparing_a_new_game(global_region_grid, region_grid, chunks_grid, mini_region_grid, tile_field_grid, chunk_size, screen):
+def preparing_a_new_game(global_region_grid, region_grid, chunks_grid, mini_region_grid, tile_field_grid, chunk_size, screen,
+                         sprites_dict, minimap_dict):
     """
         Производит подготовку к началу новой игры и её запуск
     """
@@ -4593,7 +4911,8 @@ def preparing_a_new_game(global_region_grid, region_grid, chunks_grid, mini_regi
             minimap.add(All_tiles(number_minimap_tile*size_tile_minimap + (26*size_tile), number_minimap_line*size_tile_minimap, size_tile_minimap,
                                     tiles_image_dict, minimap_tile.icon, minimap_tile.type))
 
-    game_loop(global_map, person, chunk_size, enemy_list, world, screen, tiles_image_dict, minimap, raw_minimap, True, [])
+    game_loop(global_map, person, chunk_size, enemy_list, world, screen, tiles_image_dict, raw_minimap, True, [],
+              sprites_dict, minimap_dict)
 
 def in_game_menu_moving(menu_selection, button_selection):
     """
@@ -4659,7 +4978,22 @@ def in_game_main_loop(screen, global_map, person, chunk_size, enemy_list, raw_mi
         
         button_selection = False
     return game_loop
-        
+
+
+def minimap_create(raw_map, minimap_dict, size_tile):
+    """
+        Создаёт игровую миникарту для постоянного использования
+    """
+    minimap_surface = pygame.Surface((len(raw_map)*size_tile, len(raw_map)*size_tile))
+    for number_line, line in enumerate(raw_map):
+        for number_tile, tile in enumerate(line):
+            print_sprite = minimap_dict[tile.icon][tile.type]
+            print_sprite.rect.top = number_line*size_tile
+            print_sprite.rect.left = number_tile*size_tile
+            print_sprite.draw(minimap_surface)
+
+    return minimap_surface
+            
             
 def main_loop():
     """
@@ -4680,6 +5014,10 @@ def main_loop():
     screen = pygame.display.set_mode(dispay_size, FULLSCREEN | DOUBLEBUF)
     pygame.display.set_caption("My Game")
 
+    #Загрузка и создание поверхностей всех спрайтов
+    sprites_dict = loading_all_sprites()
+    minimap_dict = minimap_dict_create()
+
     fast_generation = False #Переключение отображения генерации между прогресс-баром и полным выводом на экран генерирующейся карты
     menu_selection = 'new_game'
     button_selection = False
@@ -4695,7 +5033,8 @@ def main_loop():
         
         if menu_selection == 'new_game' and button_selection: #Подготовка и запуск новой игры
             button_selection = False
-            preparing_a_new_game(global_region_grid, region_grid, chunks_grid, mini_region_grid, tile_field_grid, chunk_size, screen)
+            preparing_a_new_game(global_region_grid, region_grid, chunks_grid, mini_region_grid, tile_field_grid, chunk_size, screen,
+                                 sprites_dict, minimap_dict)
             master_game_menu_draw(screen, dispay_size, menu_selection, button_selection, menu_tuple)
 
         if menu_selection == 'load_game' and button_selection:
@@ -4714,7 +5053,8 @@ def main_loop():
                     minimap.add(All_tiles(number_minimap_tile*size_tile_minimap + (26*size_tile), number_minimap_line*size_tile_minimap, size_tile_minimap,
                                             tiles_image_dict, minimap_tile.icon, minimap_tile.type))
 
-            game_loop(global_map, person, chunk_size, enemy_list, world, screen, tiles_image_dict, minimap, raw_minimap, False, [activity_list, step])
+            game_loop(global_map, person, chunk_size, enemy_list, world, screen, tiles_image_dict, raw_minimap, False,
+                      [activity_list, step], sprites_dict, minimap_dict)
             master_game_menu_draw(screen, dispay_size, menu_selection, button_selection, menu_tuple)
             
         if menu_selection == 'load_map' and button_selection:
@@ -4741,7 +5081,8 @@ def main_loop():
                     minimap.add(All_tiles(number_minimap_tile*size_tile_minimap + (26*size_tile), number_minimap_line*size_tile_minimap, size_tile_minimap,
                                             tiles_image_dict, minimap_tile.icon, minimap_tile.type))
 
-            game_loop(global_map, person, chunk_size, enemy_list, world, screen, tiles_image_dict, minimap, raw_minimap, True, [])
+            game_loop(global_map, person, chunk_size, enemy_list, world, screen, tiles_image_dict, raw_minimap, True, [],
+                      sprites_dict, minimap_dict)
             master_game_menu_draw(screen, dispay_size, menu_selection, button_selection, menu_tuple)
 
         if menu_selection == 'exit_game' and button_selection: #Закрытие игры
@@ -4751,8 +5092,8 @@ def main_loop():
             button_selection = False
             master_game_menu_draw(screen, dispay_size, menu_selection, button_selection, menu_tuple)
 
-def game_loop(global_map:list, person, chunk_size:int, enemy_list:list, world, screen, tiles_image_dict, minimap, raw_minimap,
-              new_game:bool, load_pack:list):
+def game_loop(global_map:list, person, chunk_size:int, enemy_list:list, world, screen, tiles_image_dict, raw_minimap,
+              new_game:bool, load_pack:list, sprites_dict:dict, minimap_dict:dict):
     """
         Здесь происходят все игровые события
         
@@ -4777,15 +5118,14 @@ def game_loop(global_map:list, person, chunk_size:int, enemy_list:list, world, s
 
     pygame.display.flip()
 
-    #Загрузка и создание поверхностей всех спрайтов
-    sprites_dict = loading_all_sprites()
 
     offset_sprites = Offset_sprites()
 
     landscape_layer = [[[]]]
     activity_layer = [[[]]]
     entities_layer = [[[]]]
-
+    
+    minimap_surface = minimap_create(raw_minimap, minimap_dict, 15)
     finishing_surface = pygame.Surface(((chunk_size + 1)*30, (chunk_size + 1)*30))
 
     settings_for_intermediate_steps = [5, 6]
@@ -4793,8 +5133,8 @@ def game_loop(global_map:list, person, chunk_size:int, enemy_list:list, world, s
 
     #Предварительная отрисовка игрового окна
     screen, landscape_layer, activity_layer, entities_layer, offset_sprites, finishing_surface = master_pygame_draw(person, chunk_size,
-                                            go_to_print, global_map, mode_action, enemy_list, activity_list, screen, tiles_image_dict, minimap,
-                                            all_sprites, dynamic_sprites, minimap_sprite, sprites_dict, offset_sprites, landscape_layer, activity_layer,
+                                            go_to_print, global_map, mode_action, enemy_list, activity_list, screen, tiles_image_dict, minimap_surface,
+                                            all_sprites, dynamic_sprites, minimap_dict, sprites_dict, offset_sprites, landscape_layer, activity_layer,
                                             entities_layer, finishing_surface, settings_for_intermediate_steps, mouse_position)
     
     print('game_loop запущен')
@@ -4819,8 +5159,8 @@ def game_loop(global_map:list, person, chunk_size:int, enemy_list:list, world, s
         if not person.enemy_pass_step and not person.pointer_step:
             master_game_events(global_map, enemy_list, person, go_to_print, step, activity_list, chunk_size, interaction, new_step, world)
         screen, landscape_layer, activity_layer, entities_layer, offset_sprites, finishing_surface = master_pygame_draw(person, chunk_size,
-                                            go_to_print, global_map, mode_action, enemy_list, activity_list, screen, tiles_image_dict, minimap,
-                                            all_sprites, dynamic_sprites, minimap_sprite, sprites_dict, offset_sprites, landscape_layer, activity_layer,
+                                            go_to_print, global_map, mode_action, enemy_list, activity_list, screen, tiles_image_dict, minimap_surface,
+                                            all_sprites, dynamic_sprites, minimap_dict, sprites_dict, offset_sprites, landscape_layer, activity_layer,
                                             entities_layer, finishing_surface, settings_for_intermediate_steps, mouse_position)
         
 
