@@ -742,6 +742,7 @@ def advanced_river_generation(global_tiles_map, chunks_map, number_of_rivers):
             #Отрисовка реки на будущей миникарте
             for step_path in river.global_path:
                 chunks_map[step_path[0]][step_path[1]][0] = '~'
+                chunks_map[step_path[0]][step_path[1]][1] += ' - river'
 
             for number_step_path, step_path in enumerate(river.global_path):
                 
