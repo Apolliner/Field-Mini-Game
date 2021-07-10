@@ -3565,7 +3565,7 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
 
     #Рассчёт количества промежуточных шагов в зависимости от скорости вывода основного шага    
     if not person.pointer_step:
-        frames_per_cycle_and_delays(person, time_1, time_2, settings_for_intermediate_steps)
+        settings_for_intermediate_steps = frames_per_cycle_and_delays(person, time_1, time_2, settings_for_intermediate_steps)
     
     end = time.time() #проверка времени выполнения
 
@@ -3595,7 +3595,7 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
     
     pygame.display.flip()
             
-    return screen, landscape_layer, activity_layer, entities_layer, offset_sprites, finishing_surface
+    return screen, landscape_layer, activity_layer, entities_layer, offset_sprites, finishing_surface, settings_for_intermediate_steps
 
 def pointer_description(landscape_layer, activity_layer, entities_layer, chunk_size, size_tile, mouse_position, type_descrption, raw_minimap):
     """
@@ -3761,10 +3761,10 @@ def frames_per_cycle_and_delays(person, time_1, time_2, settings_for_intermediat
         person.pass_draw_move = settings_for_intermediate_steps[0]
 
     elif person.person_pass_step and person.enemy_pass_step: #Установка задержек на промежуточные кадры для плавности перемещения
-        if settings_for_intermediate_steps == [2, 15] and (time_2 - time_1) < 0.075:
-            time.sleep(0.075 - (time_2 - time_1))
-        elif settings_for_intermediate_steps == [3, 10] and (time_2 - time_1) < 0.05:
-            time.sleep(0.05 - (time_2 - time_1))
+        if settings_for_intermediate_steps == [2, 15] and (time_2 - time_1) < 0.1:
+            time.sleep(0.1 - (time_2 - time_1))
+        elif settings_for_intermediate_steps == [3, 10] and (time_2 - time_1) < 0.08:
+            time.sleep(0.08 - (time_2 - time_1))
         elif settings_for_intermediate_steps == [5, 6] and (time_2 - time_1) < 0.03:
             time.sleep(0.03 - (time_2 - time_1))
         elif settings_for_intermediate_steps == [6, 5] and (time_2 - time_1) < 0.025:
@@ -3775,6 +3775,7 @@ def frames_per_cycle_and_delays(person, time_1, time_2, settings_for_intermediat
             time.sleep(0.01 - (time_2 - time_1))
         elif settings_for_intermediate_steps == [30, 1] and (time_2 - time_1) < 0.005:
             time.sleep(0.005 - (time_2 - time_1))
+    return settings_for_intermediate_steps
 
 class button_rect(pygame.sprite.Sprite):
     """ Содержит спрайты поверхностей """
@@ -3975,7 +3976,7 @@ def main_loop():
             menu_selection = 'new_game'
             button_selection = False
             global_map, person, chunk_size, enemy_list, raw_minimap, activity_list, step = load_game()
-            world = World() #Описание текущего состояния игрового мира
+            world = World() #Описание текущего состояния игрового мира\
 
             game_loop(global_map, person, chunk_size, enemy_list, world, screen, raw_minimap, False,
                       [activity_list, step], sprites_dict, minimap_dict)
@@ -4044,7 +4045,7 @@ def game_loop(global_map:list, person, chunk_size:int, enemy_list:list, world, s
     mouse_position = (0, 0)
 
     #Предварительная отрисовка игрового окна
-    screen, landscape_layer, activity_layer, entities_layer, offset_sprites, finishing_surface = master_pygame_draw(person, chunk_size,
+    screen, landscape_layer, activity_layer, entities_layer, offset_sprites, finishing_surface, settings_for_intermediate_steps = master_pygame_draw(person, chunk_size,
                                             go_to_print, global_map, mode_action, enemy_list, activity_list, screen, minimap_surface,
                                             all_sprites, dynamic_sprites, minimap_dict, sprites_dict, offset_sprites, landscape_layer, activity_layer,
                                             entities_layer, finishing_surface, settings_for_intermediate_steps, mouse_position, raw_minimap)
@@ -4070,7 +4071,7 @@ def game_loop(global_map:list, person, chunk_size:int, enemy_list:list, world, s
         #all_pass_step_calculations(person, enemy_list, mode_action, interaction)
         if not person.enemy_pass_step and not person.pointer_step:
             master_game_events(global_map, enemy_list, person, go_to_print, step, activity_list, chunk_size, interaction, new_step, world)
-        screen, landscape_layer, activity_layer, entities_layer, offset_sprites, finishing_surface = master_pygame_draw(person, chunk_size,
+        screen, landscape_layer, activity_layer, entities_layer, offset_sprites, finishing_surface, settings_for_intermediate_steps = master_pygame_draw(person, chunk_size,
                                             go_to_print, global_map, mode_action, enemy_list, activity_list, screen, minimap_surface,
                                             all_sprites, dynamic_sprites, minimap_dict, sprites_dict, offset_sprites, landscape_layer, activity_layer,
                                             entities_layer, finishing_surface, settings_for_intermediate_steps, mouse_position, raw_minimap)
