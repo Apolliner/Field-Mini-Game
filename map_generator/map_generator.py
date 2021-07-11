@@ -186,7 +186,7 @@ def timeit(func):
 
 
 @timeit
-def master_map_generate(global_region_grid, region_grid, chunks_grid, mini_grid, tiles_field_size, screen, tiles_image_dict):
+def master_map_generate(global_region_grid, region_grid, chunks_grid, mini_grid, tiles_field_size, screen):
     """
         Новый генератор игровой карты, изначально учитывающий все особенности, определенные при создании и расширении предыдущего генератора.
 
@@ -1953,9 +1953,7 @@ if __name__ == '__main__':
     screen = pygame.display.set_mode(dispay_size, FULLSCREEN | DOUBLEBUF)
     pygame.display.set_caption("My Game")
 
-    tiles_image_dict = []
-
     #                                global_region_grid | region_grid | chunks_grid | mini_region_grid | tile_field_grid
-    global_map = master_map_generate(        2,                2,            2,            20,                 2,    screen, tiles_image_dict)
+    global_map = master_map_generate(        2,                2,            2,            20,                 2,    screen)
     sys.exit()
 

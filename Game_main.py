@@ -20,7 +20,7 @@ garbage = ['░', '▒', '▓', '█', '☺']
 
     РЕАЛИЗОВАТЬ:
 
-    1)При смене кадра не перессчитывать весь кадр, а убирать или добавлять только крайние линии или столбцы.
+    1)При смене кадра не перессчитывать весь кадр, а убирать или добавлять только крайние линии или столбцы. РЕАЛИЗОВАНО
 
     
     ТЕМАТИКА:
@@ -33,8 +33,6 @@ class World:
     """ Содержит в себе описание текущего состояния игрового мира """
     def __init__(self):
         self.npc_path_calculation = False #Считал ли какой-либо NPC глобальный или локальный путь на этом шаге
-
-
 
 class Person:
     """ Содержит в себе глобальное местоположение персонажа, расположение в пределах загруженного участка карты и координаты используемых чанков """
@@ -524,7 +522,8 @@ def loading_all_sprites():
                             'h': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_enemy_horseman.png'))),
                             
                          },
-                    'c': {'0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_enemy_coyot.png')))},
+                    'co': {'0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_enemy_coyot.png')))},
+                    'un': {'0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_warning.jpg')))},
                     '8': {'0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_human_traces.png')))},
                     '%': {'0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_horse_traces.png')))},
                     '@': {'0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_animal_traces.png')))},
@@ -835,7 +834,8 @@ def minimap_dict_create():
                                 'h': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_enemy_horseman.png'))),
                                 
                              },
-                        'c': {'0': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_enemy_coyot.png')))},
+                        'co': {'0': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_enemy_coyot.png')))},
+                        'un': {'0': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_warning.jpg')))},
                         }
         return minimap_dict
 
@@ -1056,20 +1056,15 @@ class Action_in_map:
         else:
             self.lifetime_description = f'[{self.birth + self.lifetime - step}]'
         
-
-
 class Enemy:
     """ Отвечает за всех NPC """
-    def __init__(self, global_position, local_position, action_points):
+    """ activity_map содержит следующие значения [описание активности, название активности, добавляемые очки, количество пропускаемых шагов] """
+    def __init__(self, global_position, local_position, name, name_npc, icon, type, activity_map, person_description, speed):
         self.global_position = global_position
         self.local_position = local_position
-        self.action_points = action_points
+        self.action_points = 10
         self.dynamic_chunk = False
-        self.dynamic_chunk_position = [0, 0]  #УСТАРЕЛО
-        self.old_position_assemblage_point = [1, 1]
-        self.step_exit_from_assemblage_point = 0
         self.waypoints = []
-        self.dynamic_waypoints = [] #УСТАРЕЛО
         self.local_waypoints = [] # [[local_y, local_x], vertices, [global_y, global_x]]
         self.alarm = False
         self.pass_step = 0
@@ -1081,96 +1076,23 @@ class Enemy:
         self.visible = True
         self.direction = 'center'
         self.offset = [0, 0]
-
-    def all_description_calculation(self):
-        self.description = f"{self.pass_description} {self.person_description}"
-
-    def __getstate__(self) -> dict:
-        """ Сохранение класса """
-        state = {}
-        state["global_position"] = self.global_position
-        state["local_position"] = self.local_position
-        state["action_points"] = self.action_points
-        state["dynamic_chunk"] = self.dynamic_chunk
-        state["dynamic_chunk_position"] = self.dynamic_chunk_position
-        state["old_position_assemblage_point"] = self.old_position_assemblage_point
-        state["step_exit_from_assemblage_point"] = self.step_exit_from_assemblage_point
-        state["waypoints"] = self.waypoints
-        state["dynamic_waypoints"] = self.dynamic_waypoints
-        state["local_waypoints"] = self.local_waypoints
-        state["alarm"] = self.alarm
-        state["pass_step"] = self.pass_step
-        state["on_the_screen"] = self.on_the_screen
-        state["steps_to_new_step"] = self.steps_to_new_step
-        state["level"] = self.visible
-        state["type"] = self.type
-        state["level"] = self.level
-        state["vertices"] = self.vertices
-        state["target"] = self.target
-        state["visible"] = self.visible
-        state["direction"] = self.direction
-        state["offset"] = self.offset
-        state["description"] = self.description
-        
-        return state
-
-    def __setstate__(self, state: dict):
-        """ Восстановление класса """
-        self.global_position = state["global_position"]
-        self.local_position = state["local_position"]
-        self.action_points = state["action_points"]
-        self.dynamic_chunk = state["dynamic_chunk"]
-        self.dynamic_chunk_position = state["dynamic_chunk_position"]
-        self.old_position_assemblage_point = state["old_position_assemblage_point"]
-        self.step_exit_from_assemblage_point = state["step_exit_from_assemblage_point"]
-        self.waypoints = state["waypoints"]
-        self.dynamic_waypoints = state["dynamic_waypoints"]
-        self.local_waypoints = state["local_waypoints"]
-        self.alarm = state["alarm"]
-        self.pass_step = state["pass_step"]
-        self.on_the_screen = state["on_the_screen"]
-        self.steps_to_new_step = state["steps_to_new_step"]
-        self.visible = state["level"]
-        self.type = state["type"]
-        self.level = state["level"]
-
-        self.level = state["level"]
-        self.vertices = state["vertices"]
-        self.target = state["target"]
-        self.visible = state["visible"]
-        self.direction = state["direction"]
-        self.offset = state["offset"]
-        self.description = state["description"]
-
-class Horseman(Enemy):
-    """ Отвечает за всадников """
     
-    """ activity_map содержит следующие значения [описание активности, название активности, добавляемые очки, количество пропускаемых шагов] """
-    def __init__(self, global_position, local_position, action_points):
-        super().__init__(global_position, local_position, action_points)
-        self.name = 'horseman'
-        self.name_npc = random.choice(['Малыш Билли', 'Буффало Билл', 'Маленькая Верная Рука Энни Окли', 'Дикий Билл Хикок'])
-        self.priority_biom = [',', '„', 'P']
-        self.banned_biom = ['▲']
-        self.icon = '☻'
-        self.activity_map = {
-                            'move': [['передвигается', 'horse_tracks', 0, 0]],
-                            'hunger': [['перекусывает', 'rest_stop', 40, 5], ['готовит еду', 'bonfire', 80, 10]],
-                            'thirst': [['пьёт', 'horse_tracks', 80, 3]],
-                            'fatigue': [['отдыхает', 'rest_stop', 30, 10], ['разбил лагерь', 'camp', 80, 20]],
-                            'other': [['кормит лошадь', 'horse_tracks', 0, 5], ['чистит оружие', 'rest_stop', 0, 10]],
-                            }
+        self.name = name
+        self.name_npc = name_npc
+        self.icon = icon
+        self.type = type
+        self.activity_map = activity_map
+        self.person_description = person_description
+        self.speed = speed
         self.hunger = 100
         self.thirst = 100
         self.fatigue = 100
         self.reserves = 10
         self.type_npc = 'hunter'
-        self.type = 'h'
         self.pass_description = ''
-        self.person_description = f"Знаменитый охотник за головами {self.name_npc}"
-        self.description = f"Знаменитый охотник за головами {self.name_npc}"
-        self.speed = 2
-
+        self.description = ''
+    def all_description_calculation(self):
+        self.description = f"{self.person_description} {self.name_npc}"
     def __getstate__(self) -> dict:
         """ Сохранение класса """
         state = {}
@@ -1178,11 +1100,7 @@ class Horseman(Enemy):
         state["local_position"] = self.local_position
         state["action_points"] = self.action_points
         state["dynamic_chunk"] = self.dynamic_chunk
-        state["dynamic_chunk_position"] = self.dynamic_chunk_position
-        state["old_position_assemblage_point"] = self.old_position_assemblage_point
-        state["step_exit_from_assemblage_point"] = self.step_exit_from_assemblage_point
         state["waypoints"] = self.waypoints
-        state["dynamic_waypoints"] = self.dynamic_waypoints
         state["local_waypoints"] = self.local_waypoints
         state["alarm"] = self.alarm
         state["pass_step"] = self.pass_step
@@ -1197,8 +1115,6 @@ class Horseman(Enemy):
         state["offset"] = self.offset
         state["name"] = self.name
         state["name_npc"] = self.name_npc
-        state["priority_biom"] = self.priority_biom
-        state["banned_biom"] = self.banned_biom
         state["icon"] = self.icon
         state["activity_map"] = self.activity_map
         state["hunger"] = self.hunger
@@ -1219,11 +1135,7 @@ class Horseman(Enemy):
         self.local_position = state["local_position"]
         self.action_points = state["action_points"]
         self.dynamic_chunk = state["dynamic_chunk"]
-        self.dynamic_chunk_position = state["dynamic_chunk_position"]
-        self.old_position_assemblage_point = state["old_position_assemblage_point"]
-        self.step_exit_from_assemblage_point = state["step_exit_from_assemblage_point"]
         self.waypoints = state["waypoints"]
-        self.dynamic_waypoints = state["dynamic_waypoints"]
         self.local_waypoints = state["local_waypoints"]
         self.alarm = state["alarm"]
         self.pass_step = state["pass_step"]
@@ -1238,8 +1150,6 @@ class Horseman(Enemy):
         self.offset = state["offset"]
         self.name = state["name"]
         self.name_npc = state["name_npc"]
-        self.priority_biom = state["priority_biom"]
-        self.banned_biom = state["banned_biom"]
         self.icon = state["icon"]
         self.activity_map = state["activity_map"]
         self.hunger = state["hunger"]
@@ -1253,449 +1163,87 @@ class Horseman(Enemy):
         self.description = state["description"]
         self.speed = state["speed"]
 
-class Riffleman(Enemy):
-    """ Отвечает за стрелков """
-        
-    """ activity_map содержит следующие значения [описание активности, название активности, добавляемые очки, количество пропускаемых шагов] """
-    def __init__(self, global_position, local_position, action_points):
-        super().__init__(global_position, local_position, action_points)
-        self.name = 'riffleman'
-        self.name_npc = random.choice(['Бедовая Джейн', 'Бутч Кэссиди', 'Сандэнс Кид', 'Черный Барт'])
-        self.priority_biom = ['.', 'A', '▲']
-        self.banned_biom = ['~']
-        self.icon = '☻'
-        self.activity_map = {
-                            'move': [['передвигается', 'human_tracks', 0, 0]],
-                            'hunger': [['перекусывает', 'rest_stop', 40, 5], ['готовит еду', 'bonfire', 80, 10]],
-                            'thirst': [['пьёт', 'human_tracks', 80, 3]],
-                            'fatigue': [['отдыхает', 'rest_stop', 30, 10], ['разбил лагерь', 'camp', 80, 20]],
-                            'other': [['чистит оружие', 'rest_stop', 0, 10]],
-                            }
-        self.hunger = 100
-        self.thirst = 100
-        self.fatigue = 100
-        self.reserves = 5
-        self.type_npc = 'hunter'
-        self.type = 'd0'
-        self.pass_description = ''
-        self.person_description = f"Шериф одного мрачного города {self.name_npc}"
-        self.description = f"Шериф одного мрачного города {self.name_npc}"
-        self.speed = 1
 
-    def __getstate__(self) -> dict:
-        """ Сохранение класса """
-        state = {}
-        state["global_position"] = self.global_position
-        state["local_position"] = self.local_position
-        state["action_points"] = self.action_points
-        state["dynamic_chunk"] = self.dynamic_chunk
-        state["dynamic_chunk_position"] = self.dynamic_chunk_position
-        state["old_position_assemblage_point"] = self.old_position_assemblage_point
-        state["step_exit_from_assemblage_point"] = self.step_exit_from_assemblage_point
-        state["waypoints"] = self.waypoints
-        state["dynamic_waypoints"] = self.dynamic_waypoints
-        state["local_waypoints"] = self.local_waypoints
-        state["alarm"] = self.alarm
-        state["pass_step"] = self.pass_step
-        state["on_the_screen"] = self.on_the_screen
-        state["steps_to_new_step"] = self.steps_to_new_step
-        state["type"] = self.type
-        state["level"] = self.level
-        state["vertices"] = self.vertices
-        state["target"] = self.target
-        state["visible"] = self.visible
-        state["direction"] = self.direction
-        state["offset"] = self.offset
-        state["name"] = self.name
-        state["name_npc"] = self.name_npc
-        state["priority_biom"] = self.priority_biom
-        state["banned_biom"] = self.banned_biom
-        state["icon"] = self.icon
-        state["activity_map"] = self.activity_map
-        state["hunger"] = self.hunger
-        state["thirst"] = self.thirst
-        state["fatigue"] = self.fatigue
-        state["reserves"] = self.reserves
-        state["type_npc"] = self.type_npc
-        state["type"] = self.type
-        state["pass_description"] = self.pass_description
-        state["person_description"] = self.person_description
-        state["description"] = self.description
-        state["speed"] = self.speed
-        return state
-
-    def __setstate__(self, state: dict):
-        """ Восстановление класса """
-        self.global_position = state["global_position"]
-        self.local_position = state["local_position"]
-        self.action_points = state["action_points"]
-        self.dynamic_chunk = state["dynamic_chunk"]
-        self.dynamic_chunk_position = state["dynamic_chunk_position"]
-        self.old_position_assemblage_point = state["old_position_assemblage_point"]
-        self.step_exit_from_assemblage_point = state["step_exit_from_assemblage_point"]
-        self.waypoints = state["waypoints"]
-        self.dynamic_waypoints = state["dynamic_waypoints"]
-        self.local_waypoints = state["local_waypoints"]
-        self.alarm = state["alarm"]
-        self.pass_step = state["pass_step"]
-        self.on_the_screen = state["on_the_screen"]
-        self.steps_to_new_step = state["steps_to_new_step"]
-        self.type = state["type"]
-        self.level = state["level"]
-        self.vertices = state["vertices"]
-        self.target = state["target"]
-        self.visible = state["visible"]
-        self.direction = state["direction"]
-        self.offset = state["offset"]
-        self.name = state["name"]
-        self.name_npc = state["name_npc"]
-        self.priority_biom = state["priority_biom"]
-        self.banned_biom = state["banned_biom"]
-        self.icon = state["icon"]
-        self.activity_map = state["activity_map"]
-        self.hunger = state["hunger"]
-        self.thirst = state["thirst"]
-        self.fatigue = state["fatigue"]
-        self.reserves = state["reserves"]
-        self.type_npc = state["type_npc"]
-        self.type = state["type"]
-        self.pass_description = state["pass_description"]
-        self.person_description = state["person_description"]
-        self.description = state["description"]
-        self.speed = state["speed"]
-
-class Gold_digger(Enemy):
-    """ Отвечает за золотоискателей """
-        
-    """ activity_map содержит следующие значения [описание активности, название активности, добавляемые очки, количество пропускаемых шагов] """
-    def __init__(self, global_position, local_position, action_points):
-        super().__init__(global_position, local_position, action_points)
-        self.name = 'gold_digger'
-        self.name_npc = random.choice(['Бедовая Джейн', 'Бутч Кэссиди', 'Сандэнс Кид', 'Черный Барт'])
-        self.priority_biom = ['.', 'A', '▲']
-        self.banned_biom = ['~']
-        self.icon = '☻'
-        self.activity_map = {
-                            'move': [['передвигается', 'human_tracks', 0, 0]],
-                            'hunger': [['перекусывает', 'rest_stop', 40, 5], ['готовит еду', 'bonfire', 80, 10]],
-                            'thirst': [['пьёт', 'human_tracks', 80, 3]],
-                            'fatigue': [['отдыхает', 'rest_stop', 30, 10], ['разбил лагерь', 'camp', 80, 20]],
-                            'other': [['чистит оружие', 'rest_stop', 0, 10]],
-                            }
-        self.hunger = 100
-        self.thirst = 100
-        self.fatigue = 100
-        self.reserves = 5
-        self.type_npc = 'chaotic'
-        self.type = '-'
-        self.pass_description = ''
-        self.person_description = f"Отчаяный золотоискатель {self.name_npc}"
-        self.description = f"Отчаяный золотоискатель {self.name_npc}"
-        self.speed = 1
-
-    def __getstate__(self) -> dict:
-        """ Сохранение класса """
-        state = {}
-        state["global_position"] = self.global_position
-        state["local_position"] = self.local_position
-        state["action_points"] = self.action_points
-        state["dynamic_chunk"] = self.dynamic_chunk
-        state["dynamic_chunk_position"] = self.dynamic_chunk_position
-        state["old_position_assemblage_point"] = self.old_position_assemblage_point
-        state["step_exit_from_assemblage_point"] = self.step_exit_from_assemblage_point
-        state["waypoints"] = self.waypoints
-        state["dynamic_waypoints"] = self.dynamic_waypoints
-        state["local_waypoints"] = self.local_waypoints
-        state["alarm"] = self.alarm
-        state["pass_step"] = self.pass_step
-        state["on_the_screen"] = self.on_the_screen
-        state["steps_to_new_step"] = self.steps_to_new_step
-        state["type"] = self.type
-        state["level"] = self.level
-        state["vertices"] = self.vertices
-        state["target"] = self.target
-        state["visible"] = self.visible
-        state["direction"] = self.direction
-        state["offset"] = self.offset
-        state["name"] = self.name
-        state["name_npc"] = self.name_npc
-        state["priority_biom"] = self.priority_biom
-        state["banned_biom"] = self.banned_biom
-        state["icon"] = self.icon
-        state["activity_map"] = self.activity_map
-        state["hunger"] = self.hunger
-        state["thirst"] = self.thirst
-        state["fatigue"] = self.fatigue
-        state["reserves"] = self.reserves
-        state["type_npc"] = self.type_npc
-        state["type"] = self.type
-        state["pass_description"] = self.pass_description
-        state["person_description"] = self.person_description
-        state["description"] = self.description
-        state["speed"] = self.speed
-        return state
-
-    def __setstate__(self, state: dict):
-        """ Восстановление класса """
-        self.global_position = state["global_position"]
-        self.local_position = state["local_position"]
-        self.action_points = state["action_points"]
-        self.dynamic_chunk = state["dynamic_chunk"]
-        self.dynamic_chunk_position = state["dynamic_chunk_position"]
-        self.old_position_assemblage_point = state["old_position_assemblage_point"]
-        self.step_exit_from_assemblage_point = state["step_exit_from_assemblage_point"]
-        self.waypoints = state["waypoints"]
-        self.dynamic_waypoints = state["dynamic_waypoints"]
-        self.local_waypoints = state["local_waypoints"]
-        self.alarm = state["alarm"]
-        self.pass_step = state["pass_step"]
-        self.on_the_screen = state["on_the_screen"]
-        self.steps_to_new_step = state["steps_to_new_step"]
-        self.type = state["type"]
-        self.level = state["level"]
-        self.vertices = state["vertices"]
-        self.target = state["target"]
-        self.visible = state["visible"]
-        self.direction = state["direction"]
-        self.offset = state["offset"]
-        self.name = state["name"]
-        self.name_npc = state["name_npc"]
-        self.priority_biom = state["priority_biom"]
-        self.banned_biom = state["banned_biom"]
-        self.icon = state["icon"]
-        self.activity_map = state["activity_map"]
-        self.hunger = state["hunger"]
-        self.thirst = state["thirst"]
-        self.fatigue = state["fatigue"]
-        self.reserves = state["reserves"]
-        self.type_npc = state["type_npc"]
-        self.type = state["type"]
-        self.pass_description = state["pass_description"]
-        self.person_description = state["person_description"]
-        self.description = state["description"]
-        self.speed = state["speed"]
-
-class Horse(Enemy):
-    """ Отвечает за коней """
-        
-    """ activity_map содержит следующие значения [описание активности, название активности, добавляемые очки, количество пропускаемых шагов] """
-    def __init__(self, global_position, local_position, action_points):
-        super().__init__(global_position, local_position, action_points)
-        self.name = 'horse'
-        self.name_npc = random.choice(['Стреноженая белая лошадь', 'Стреноженая гнедая лошадь', 'Стреноженая черная лошадь'])
-        self.priority_biom = [',', '„', 'P']
-        self.banned_biom = ['~', ';']
-        self.icon = 'h'
-        self.activity_map = {
+def return_npc(global_position, local_position, key):
+    """
+        Возвращает NPC указанного типа в указанных координатах
+    """
+    npc_dict = {
+                'horseman': Enemy(global_position, local_position,
+                            'horseman',
+                            random.choice(['Малыш Билли', 'Буффало Билл', 'Маленькая Верная Рука Энни Окли', 'Дикий Билл Хикок']),
+                            '☻',
+                            'h',
+                            {
                             'move': [['передвигается', 'horse_tracks', 0, 0]],
-                            'hunger': [['ест траву', 'horse_tracks', 80, 5]],
-                            'thirst': [['пьёт', 'horse_tracks', 80, 5]],
-                            'fatigue': [['отдыхает', 'animal_rest_stop', 80, 20]],
-                            'other': [['пугатся и убегает', 'horse_tracks', 0, 0]],
-                            }
-        self.hunger = 100
-        self.thirst = 100
-        self.fatigue = 100
-        self.reserves = 0
-        self.type_npc = 'chaotic'
-        self.type = '0'
-        self.pass_description = ''
-        self.person_description = f"{self.name_npc}"
-        self.description = f"{self.name_npc}"
-        self.speed = 2
-
-    def __getstate__(self) -> dict:
-        """ Сохранение класса """
-        state = {}
-        state["global_position"] = self.global_position
-        state["local_position"] = self.local_position
-        state["action_points"] = self.action_points
-        state["dynamic_chunk"] = self.dynamic_chunk
-        state["dynamic_chunk_position"] = self.dynamic_chunk_position
-        state["old_position_assemblage_point"] = self.old_position_assemblage_point
-        state["step_exit_from_assemblage_point"] = self.step_exit_from_assemblage_point
-        state["waypoints"] = self.waypoints
-        state["dynamic_waypoints"] = self.dynamic_waypoints
-        state["local_waypoints"] = self.local_waypoints
-        state["alarm"] = self.alarm
-        state["pass_step"] = self.pass_step
-        state["on_the_screen"] = self.on_the_screen
-        state["steps_to_new_step"] = self.steps_to_new_step
-        state["type"] = self.type
-        state["level"] = self.level
-        state["vertices"] = self.vertices
-        state["target"] = self.target
-        state["visible"] = self.visible
-        state["direction"] = self.direction
-        state["offset"] = self.offset
-        state["name"] = self.name
-        state["name_npc"] = self.name_npc
-        state["priority_biom"] = self.priority_biom
-        state["banned_biom"] = self.banned_biom
-        state["icon"] = self.icon
-        state["activity_map"] = self.activity_map
-        state["hunger"] = self.hunger
-        state["thirst"] = self.thirst
-        state["fatigue"] = self.fatigue
-        state["reserves"] = self.reserves
-        state["type_npc"] = self.type_npc
-        state["type"] = self.type
-        state["pass_description"] = self.pass_description
-        state["person_description"] = self.person_description
-        state["description"] = self.description
-        state["speed"] = self.speed
-        return state
-
-    def __setstate__(self, state: dict):
-        """ Восстановление класса """
-        self.global_position = state["global_position"]
-        self.local_position = state["local_position"]
-        self.action_points = state["action_points"]
-        self.dynamic_chunk = state["dynamic_chunk"]
-        self.dynamic_chunk_position = state["dynamic_chunk_position"]
-        self.old_position_assemblage_point = state["old_position_assemblage_point"]
-        self.step_exit_from_assemblage_point = state["step_exit_from_assemblage_point"]
-        self.waypoints = state["waypoints"]
-        self.dynamic_waypoints = state["dynamic_waypoints"]
-        self.local_waypoints = state["local_waypoints"]
-        self.alarm = state["alarm"]
-        self.pass_step = state["pass_step"]
-        self.on_the_screen = state["on_the_screen"]
-        self.steps_to_new_step = state["steps_to_new_step"]
-        self.type = state["type"]
-        self.level = state["level"]
-        self.vertices = state["vertices"]
-        self.target = state["target"]
-        self.visible = state["visible"]
-        self.direction = state["direction"]
-        self.offset = state["offset"]
-        self.name = state["name"]
-        self.name_npc = state["name_npc"]
-        self.priority_biom = state["priority_biom"]
-        self.banned_biom = state["banned_biom"]
-        self.icon = state["icon"]
-        self.activity_map = state["activity_map"]
-        self.hunger = state["hunger"]
-        self.thirst = state["thirst"]
-        self.fatigue = state["fatigue"]
-        self.reserves = state["reserves"]
-        self.type_npc = state["type_npc"]
-        self.type = state["type"]
-        self.pass_description = state["pass_description"]
-        self.person_description = state["person_description"]
-        self.description = state["description"]
-        self.speed = state["speed"]
-        
-class Coyot(Enemy):
-    """ Отвечает за койотов """
-        
-    """ activity_map содержит следующие значения [описание активности, название активности, добавляемые очки, количество пропускаемых шагов] """
-    def __init__(self, global_position, local_position, action_points):
-        super().__init__(global_position, local_position, action_points)
-        self.name = 'coyot'
-        self.name_npc = random.choice(['плешивый койот', 'молодой койот', 'подраный койот'])
-        self.priority_biom = ['.', ',', '„', 'P', 'A']
-        self.banned_biom = ['~', ';']
-        self.icon = 'c'
-        self.activity_map = {
+                            'hunger': [['перекусывает', 'rest_stop', 40, 5], ['готовит еду', 'bonfire', 80, 10]],
+                            'thirst': [['пьёт', 'horse_tracks', 80, 3]],
+                            'fatigue': [['отдыхает', 'rest_stop', 30, 10], ['разбил лагерь', 'camp', 80, 20]],
+                            'other': [['кормит лошадь', 'horse_tracks', 0, 5], ['чистит оружие', 'rest_stop', 0, 10]],
+                            },
+                            "Знаменитый охотник за головами",
+                            2),
+                'riffleman': Enemy(global_position, local_position,
+                            'riffleman',
+                            random.choice(['Бедовая Джейн', 'Бутч Кэссиди', 'Сандэнс Кид', 'Черный Барт']),
+                            '☻',
+                            'd0',
+                            {
+                            'move': [['передвигается', 'human_tracks', 0, 0]],
+                            'hunger': [['перекусывает', 'rest_stop', 40, 5], ['готовит еду', 'bonfire', 80, 10]],
+                            'thirst': [['пьёт', 'human_tracks', 80, 3]],
+                            'fatigue': [['отдыхает', 'rest_stop', 30, 10], ['разбил лагерь', 'camp', 80, 20]],
+                            'other': [['чистит оружие', 'rest_stop', 0, 10]],
+                            },
+                            "Шериф одного мрачного города",
+                            1),
+                'coyot':    Enemy(global_position, local_position,
+                            'coyot',
+                            random.choice(['плешивый койот', 'молодой койот', 'подраный койот']),
+                            'co',
+                            '0',
+                            {
                             'move': [['передвигается', 'animal_traces', 0, 0]],
                             'hunger': [['охотится', 'gnawed bones', 80, 15], ['ест', 'animal_traces', 30, 10]],
                             'thirst': [['пьёт', 'animal_traces', 80, 5]],
                             'fatigue': [['отдыхает', 'animal_rest_stop', 80, 15]],
                             'other': [['чешется', 'animal_traces', 0, 0]],
-                            }
-        self.hunger = 200
-        self.thirst = 200
-        self.fatigue = 200
-        self.reserves = 0
-        self.type_npc = 'chaotic'
-        self.type = '0'
-        self.pass_description = ''
-        self.person_description = f"Голодный и злой {self.name_npc}"
-        self.description = f"Голодный и злой {self.name_npc}"
-        self.speed = 1
-
-    def __getstate__(self) -> dict:
-        """ Сохранение класса """
-        state = {}
-        state["global_position"] = self.global_position
-        state["local_position"] = self.local_position
-        state["action_points"] = self.action_points
-        state["dynamic_chunk"] = self.dynamic_chunk
-        state["dynamic_chunk_position"] = self.dynamic_chunk_position
-        state["old_position_assemblage_point"] = self.old_position_assemblage_point
-        state["step_exit_from_assemblage_point"] = self.step_exit_from_assemblage_point
-        state["waypoints"] = self.waypoints
-        state["dynamic_waypoints"] = self.dynamic_waypoints
-        state["local_waypoints"] = self.local_waypoints
-        state["alarm"] = self.alarm
-        state["pass_step"] = self.pass_step
-        state["on_the_screen"] = self.on_the_screen
-        state["steps_to_new_step"] = self.steps_to_new_step
-        state["type"] = self.type
-        state["level"] = self.level
-        state["vertices"] = self.vertices
-        state["target"] = self.target
-        state["visible"] = self.visible
-        state["direction"] = self.direction
-        state["offset"] = self.offset
-        state["name"] = self.name
-        state["name_npc"] = self.name_npc
-        state["priority_biom"] = self.priority_biom
-        state["banned_biom"] = self.banned_biom
-        state["icon"] = self.icon
-        state["activity_map"] = self.activity_map
-        state["hunger"] = self.hunger
-        state["thirst"] = self.thirst
-        state["fatigue"] = self.fatigue
-        state["reserves"] = self.reserves
-        state["type_npc"] = self.type_npc
-        state["type"] = self.type
-        state["pass_description"] = self.pass_description
-        state["person_description"] = self.person_description
-        state["description"] = self.description
-        state["speed"] = self.speed
-        return state
-
-    def __setstate__(self, state: dict):
-        """ Восстановление класса """
-        self.global_position = state["global_position"]
-        self.local_position = state["local_position"]
-        self.action_points = state["action_points"]
-        self.dynamic_chunk = state["dynamic_chunk"]
-        self.dynamic_chunk_position = state["dynamic_chunk_position"]
-        self.old_position_assemblage_point = state["old_position_assemblage_point"]
-        self.step_exit_from_assemblage_point = state["step_exit_from_assemblage_point"]
-        self.waypoints = state["waypoints"]
-        self.dynamic_waypoints = state["dynamic_waypoints"]
-        self.local_waypoints = state["local_waypoints"]
-        self.alarm = state["alarm"]
-        self.pass_step = state["pass_step"]
-        self.on_the_screen = state["on_the_screen"]
-        self.steps_to_new_step = state["steps_to_new_step"]
-        self.type = state["type"]
-        self.level = state["level"]
-        self.vertices = state["vertices"]
-        self.target = state["target"]
-        self.visible = state["visible"]
-        self.direction = state["direction"]
-        self.offset = state["offset"]
-        self.name = state["name"]
-        self.name_npc = state["name_npc"]
-        self.priority_biom = state["priority_biom"]
-        self.banned_biom = state["banned_biom"]
-        self.icon = state["icon"]
-        self.activity_map = state["activity_map"]
-        self.hunger = state["hunger"]
-        self.thirst = state["thirst"]
-        self.fatigue = state["fatigue"]
-        self.reserves = state["reserves"]
-        self.type_npc = state["type_npc"]
-        self.type = state["type"]
-        self.pass_description = state["pass_description"]
-        self.person_description = state["person_description"]
-        self.description = state["description"]
-        self.speed = state["speed"]
+                            },
+                            "Голодный и злой",
+                            1),
+                'horse':    Enemy(global_position, local_position,
+                            'horse',
+                            random.choice(['Стреноженая белая лошадь', 'Стреноженая гнедая лошадь', 'Стреноженая черная лошадь']),       
+                            'ho',
+                            '0',
+                            {
+                            'move': [['передвигается', 'horse_tracks', 0, 0]],
+                            'hunger': [['ест траву', 'horse_tracks', 80, 5]],
+                            'thirst': [['пьёт', 'horse_tracks', 80, 5]],
+                            'fatigue': [['отдыхает', 'animal_rest_stop', 80, 20]],
+                            'other': [['пугатся и убегает', 'horse_tracks', 0, 0]],
+                            },
+                            "",
+                            2),
+                'unknown':  Enemy(global_position, local_position,
+                            'unknown',
+                            'Неизвестный',
+                            'un',
+                            '0',
+                            {
+                            'move': [['передвигается', 'human_tracks', 0, 0]],
+                            'hunger': [['перекусывает', 'rest_stop', 40, 5]],
+                            'thirst': [['пьёт', 'human_tracks', 80, 3]],
+                            'fatigue': [['отдыхает', 'rest_stop', 30, 10]],
+                            'other': [['говорит об ошибке', 'rest_stop', 0, 10]],
+                            },
+                            "Своим присутствием говорящий о тесте",
+                            3),
+                }
+    if key in npc_dict:
+        return npc_dict[key]
+    else:
+        return npc_dict['unknown']
         
 def master_npc_calculation(global_map, enemy_list, person, go_to_print, step, activity_list, chunk_size, interaction, new_step, world):
     """
@@ -1709,6 +1257,7 @@ def master_npc_calculation(global_map, enemy_list, person, go_to_print, step, ac
         enemy.direction = 'center'
         enemy.level = global_map[enemy.global_position[0]][enemy.global_position[1]].chunk[enemy.local_position[0]][enemy.local_position[0]].level
         enemy.vertices = global_map[enemy.global_position[0]][enemy.global_position[1]].chunk[enemy.local_position[0]][enemy.local_position[1]].vertices
+        enemy.all_description_calculation()
         #Удаление реализованного глобального вейпоинта
         if enemy.waypoints and [enemy.global_position[0], enemy.global_position[1], enemy.vertices] == enemy.waypoints[0]:
             enemy.waypoints.pop(0)
@@ -3823,6 +3372,7 @@ def settings_loop(screen, dispay_size, fast_generation:bool, global_region_grid,
     master_game_menu_draw(screen, dispay_size, menu_selection, button_selection, menu_list)
     settings_loop = True
     while settings_loop:
+        time.sleep(0.2)
         menu_selection, button_selection = menu_calculation(menu_list, menu_selection, button_selection)
         if menu_selection == 'exit_settings' and button_selection: #Выход из настроек
             settings_loop = False
@@ -3837,24 +3387,17 @@ def preparing_a_new_game(global_region_grid, region_grid, chunks_grid, mini_regi
     """
         Производит подготовку к началу новой игры и её запуск
     """
-    global_map, raw_minimap = map_generator.master_map_generate(global_region_grid, region_grid, chunks_grid, mini_region_grid, tile_field_grid, screen, tiles_image_dict)
+    global_map, raw_minimap = map_generator.master_map_generate(global_region_grid, region_grid, chunks_grid, mini_region_grid, tile_field_grid, screen)
         
     person = Person([2, 2], [2, 2], [], [chunk_size//2, chunk_size//2], [chunk_size//2, chunk_size//2])
     calculation_assemblage_point(global_map, person, chunk_size)
-    enemy_list = [Horseman([len(global_map)//2, len(global_map)//2], [chunk_size//2, chunk_size//2], 5),
-                  Horseman([len(global_map)//3, len(global_map)//3], [chunk_size//2, chunk_size//2], 5),
-                  Riffleman([len(global_map)//4, len(global_map)//4], [chunk_size//2, chunk_size//2], 2),
-                  Coyot([len(global_map)//5, len(global_map)//5], [chunk_size//2, chunk_size//2], 0)]
+    enemy_list = [
+                    return_npc([len(global_map)//2, len(global_map)//2], [chunk_size//2, chunk_size//2], 'horseman'),
+                    return_npc([len(global_map)//3, len(global_map)//3], [chunk_size//2, chunk_size//2], 'riffleman'),
+                    return_npc([len(global_map)//4, len(global_map)//4], [chunk_size//2, chunk_size//2], 'coyot'),
+                    return_npc([len(global_map)//5, len(global_map)//5], [chunk_size//2, chunk_size//2], 'unknown'),
+                 ]
     world = World() #Описание текущего состояния игрового мира
-
-    #Создание миникарты
-    minimap = pygame.sprite.Group()
-    size_tile = 30
-    size_tile_minimap = 15
-    for number_minimap_line, raw_minimap_line in enumerate(raw_minimap):
-        for number_minimap_tile, minimap_tile in enumerate(raw_minimap_line):
-            minimap.add(All_tiles(number_minimap_tile*size_tile_minimap + (26*size_tile), number_minimap_line*size_tile_minimap, size_tile_minimap,
-                                    tiles_image_dict, minimap_tile.icon, minimap_tile.type))
 
     game_loop(global_map, person, chunk_size, enemy_list, world, screen, raw_minimap, True, [],
               sprites_dict, minimap_dict)
@@ -3962,7 +3505,7 @@ def main_loop():
 
     while main_loop:
         button_selection = False
-
+        time.sleep(0.2)
         menu_selection, button_selection = menu_calculation(menu_list, menu_selection, button_selection)
         master_game_menu_draw(screen, dispay_size, menu_selection, button_selection, menu_list)
         
@@ -3989,10 +3532,11 @@ def main_loop():
                 
             person = Person([2, 2], [2, 2], [], [chunk_size//2, chunk_size//2], [chunk_size//2, chunk_size//2])
             calculation_assemblage_point(global_map, person, chunk_size)
-            enemy_list = [Horseman([len(global_map)//2, len(global_map)//2], [chunk_size//2, chunk_size//2], 5),
-                          Horseman([len(global_map)//3, len(global_map)//3], [chunk_size//2, chunk_size//2], 5),
-                          Riffleman([len(global_map)//4, len(global_map)//4], [chunk_size//2, chunk_size//2], 2),
-                          Coyot([len(global_map)//5, len(global_map)//5], [chunk_size//2, chunk_size//2], 0)]
+            enemy_list = [
+                    return_npc([len(global_map)//2, len(global_map)//2], [chunk_size//2, chunk_size//2], 'horseman'),
+                    return_npc([len(global_map)//3, len(global_map)//3], [chunk_size//2, chunk_size//2], 'riffleman'),
+                    return_npc([len(global_map)//4, len(global_map)//4], [chunk_size//2, chunk_size//2], 'coyot'),
+                    return_npc([len(global_map)//5, len(global_map)//5], [chunk_size//2, chunk_size//2], 'unknown'),]
             world = World() #Описание текущего состояния игрового мира
 
             game_loop(global_map, person, chunk_size, enemy_list, world, screen, raw_minimap, True, [],
