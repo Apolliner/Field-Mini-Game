@@ -924,13 +924,13 @@ def gluing_location(raw_gluing_map, grid, count_block):
 
 """
 
-def master_game_events(global_map, enemy_list, person, go_to_print, step, activity_list, chunk_size, interaction, new_step, world):
+def master_game_events(global_map, enemy_list, person, go_to_print, step, activity_list, chunk_size, interaction, world):
     """
         Здесь происходят все события, не связанные с пользовательским вводом
     """
     interaction_processing(global_map, interaction, enemy_list)
     activity_list_check(activity_list, step)
-    master_npc_calculation(global_map, enemy_list, person, go_to_print, step, activity_list, chunk_size, interaction, new_step, world)
+    master_npc_calculation(global_map, enemy_list, person, go_to_print, step, activity_list, chunk_size, interaction, world)
 
 def interaction_processing(global_map, interaction, enemy_list):
     """
@@ -1245,7 +1245,7 @@ def return_npc(global_position, local_position, key):
     else:
         return npc_dict['unknown']
         
-def master_npc_calculation(global_map, enemy_list, person, go_to_print, step, activity_list, chunk_size, interaction, new_step, world):
+def master_npc_calculation(global_map, enemy_list, person, go_to_print, step, activity_list, chunk_size, interaction, world):
     """
         Здесь происходят все события, связанные с NPC
 
@@ -3230,16 +3230,9 @@ def new_step_calculation(enemy_list, person, step):
     """
         Считает когда начинается новый шаг
     """
-    new_step = True
-    #person.person_pass_step = False
-    #for enemy in enemy_list:
-    #    if (enemy.on_the_screen and enemy.steps_to_new_step):
-    #        new_step = False
-    #        person.person_pass_step = True
-    if new_step:
+    if not person.pointer_step and not person.pass_draw_move:
         step += 1
-            
-    return new_step, step
+    return step
 
 """
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -3602,19 +3595,21 @@ def game_loop(global_map:list, person, chunk_size:int, enemy_list:list, world, s
         person.pointer_step = False #Сбрасывается перехват шага выводом описания указателя
         world.npc_path_calculation = False #Сброс предыдущего состояния поиска пути NPC персонажами
         master_pass_step(person)
-        new_step, step = new_step_calculation(enemy_list, person, step)
+        
         if not person.person_pass_step:
             mode_action, mouse_position = master_player_action(global_map, person, chunk_size, go_to_print, mode_action, interaction, activity_list, step,
                                                enemy_list, mouse_position)
         if mode_action == 'in_game_menu':
             game_loop = in_game_main_loop(screen, global_map, person, chunk_size, enemy_list, raw_minimap, activity_list, step)
-            
             mode_action = 'move'
+            
+        step = new_step_calculation(enemy_list, person, step)
+            
         start = time.time() #проверка времени выполнения
         calculation_assemblage_point(global_map, person, chunk_size) # Рассчёт динамического чанка
         #all_pass_step_calculations(person, enemy_list, mode_action, interaction)
-        if not person.enemy_pass_step and not person.pointer_step:
-            master_game_events(global_map, enemy_list, person, go_to_print, step, activity_list, chunk_size, interaction, new_step, world)
+        if not person.enemy_pass_step:
+            master_game_events(global_map, enemy_list, person, go_to_print, step, activity_list, chunk_size, interaction, world)
         screen, landscape_layer, activity_layer, entities_layer, offset_sprites, finishing_surface, settings_for_intermediate_steps = master_pygame_draw(person, chunk_size,
                                             go_to_print, global_map, mode_action, enemy_list, activity_list, screen, minimap_surface,
                                             all_sprites, dynamic_sprites, minimap_dict, sprites_dict, offset_sprites, landscape_layer, activity_layer,
