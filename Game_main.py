@@ -15,7 +15,7 @@ from map_generator import map_generator
 garbage = ['░', '▒', '▓', '█', '☺']
 
 """
-    ВЕРСИЯ ДЛЯ ОТРАБОТКИ ВЫВОДА В PYGAME С ПОДКЛЮЧЕНИЕМ КАК СТАРОГО ТАК И НОВОГО ГЕНЕРАТОРА
+    ВЕРСИЯ ДЛЯ РЕФАКТОРИНГА И БАГФИКСА
 
 
     РЕАЛИЗОВАТЬ:
@@ -1002,7 +1002,6 @@ class Action_in_map:
         state["visible"] = self.visible
         state["type"] = self.type
         state["level"] = self.level
-        
         return state
 
     def __setstate__(self, state: dict):
@@ -1681,170 +1680,6 @@ def enemy_on_the_screen(enemy, person, chunk_size):
     else:
         enemy.on_the_screen = False
 
-def enemy_ideal_move_calculation(start_point, finish_point): #В ДАННЫЙ МОМЕНТ НЕ ИСПОЛЬЗУЕТСЯ
-    """
-        Рассчитывает идеальную траекторию движения NPC. 
-    """
-    
-    axis_y = finish_point[0] - start_point[0] # длинна стороны и количество шагов
-    axis_x = finish_point[1] - start_point[1] # длинна стороны и количество шагов
-    if abs(axis_y) > abs(axis_x):
-        if axis_x != 0:
-            length_step = abs(axis_y)//abs(axis_x) # на один X столько то Y
-        else:
-            length_step = abs(axis_y)
-        long_side = 'y'
-    else:
-        if axis_y != 0:
-            length_step = abs(axis_x)//abs(axis_y) # на один Y столько то X
-        else:
-            length_step = abs(axis_x)
-        long_side = 'x'
-        
-    waypoints = [start_point]
-        
-    for step in range((abs(axis_y) + abs(axis_x))):
-        if (step + 1)%(length_step + 1) == 0:
-            if long_side == 'y':
-                if axis_y >= 0 and axis_x >= 0 or axis_y < 0 and axis_x >= 0:
-                    waypoints.append([waypoints[step][0], waypoints[step][1] + 1])
-                else:
-                    waypoints.append([waypoints[step][0], waypoints[step][1] - 1])    
-            elif long_side == 'x':
-                if axis_x >= 0 and axis_y >= 0 or axis_x < 0 and axis_y >= 0:
-                    waypoints.append([waypoints[step][0] + 1, waypoints[step][1]])
-                else:
-                    waypoints.append([waypoints[step][0] - 1, waypoints[step][1]])
-        else:
-            if long_side == 'y':
-                if axis_y >= 0 and axis_x >= 0 or axis_y >= 0 and axis_x < 0:
-                    waypoints.append([waypoints[step][0] + 1, waypoints[step][1]])
-                else:
-                    waypoints.append([waypoints[step][0] - 1, waypoints[step][1]])
-            elif long_side == 'x':
-                if axis_x >= 0 and axis_y >= 0 or axis_x >= 0 and axis_y < 0:
-                    waypoints.append([waypoints[step][0], waypoints[step][1] + 1])
-                else:
-                    waypoints.append([waypoints[step][0], waypoints[step][1] - 1])
-
-    return waypoints
-
-def checking_the_path(calculation_map, waypoints, banned_list):  #В ДАННЫЙ МОМЕНТ НЕ ИСПОЛЬЗУЕТСЯ
-        """
-            Проверяет путь на отсутствие преград.
-        """
-        not_ok = False
-        for number_waypoint in range(len(waypoints)):
-            #print(f'number_waypoint - {number_waypoint}, waypoints - {waypoints}')
-            if waypoints[number_waypoint][0] >= len(calculation_map) or waypoints[number_waypoint][1] >= len(calculation_map):
-                if calculation_map[waypoints[number_waypoint][0]][waypoints[number_waypoint][1]].icon in banned_list or calculation_map[waypoints[number_waypoint][0]][waypoints[number_waypoint][1]].price_move > 10:
-                    not_ok = True
-                    if number_waypoint != 0:
-                        waypoints = waypoints[0: number_waypoint]
-                    else:
-                        waypoints = waypoints[0: (number_waypoint + 1)]
-                        break
-            else:
-                not_ok = True
-                if number_waypoint != 0:
-                    waypoints = waypoints[0: number_waypoint]
-                else:
-                    waypoints = waypoints[0: (number_waypoint + 1)]
-                    break
-        return not_ok, waypoints 
-    
-
-def action_in_dynamic_chank(global_map, enemy, activity_list, step, chunk_size):  #В ДАННЫЙ МОМЕНТ НЕ ИСПОЛЬЗУЕТСЯ
-    """
-        Обрабатывает появление активностей на динамическом чанке
-    """
-    request_activity = []
-    if enemy.hunger < 20:
-        request_activity.append('hunger')
-    if enemy.thirst < 20:
-        request_activity.append('thirst')
-    if enemy.fatigue < 20:
-        request_activity.append('fatigue')
-    if random.randrange(10)//8 >= 1:
-        request_activity.append('other')
-        
-    if request_activity:
-        type_activity = random.choice(request_activity)
-        activity = random.choice(enemy.activity_map[type_activity])
-        if type_activity == 'hunger': 
-            activity_list.append(Action_in_map(activity[1], step, enemy.global_position, enemy.dynamic_chunk_position, chunk_size, enemy.name_npc))
-            enemy.hunger += activity[2]
-        elif type_activity == 'thirst':
-            activity_list.append(Action_in_map(activity[1], step, enemy.global_position, enemy.dynamic_chunk_position, chunk_size, enemy.name_npc))
-            enemy.thirst += activity[2]
-        elif type_activity == 'fatigue':
-            activity_list.append(Action_in_map(activity[1], step, enemy.global_position, enemy.dynamic_chunk_position, chunk_size, enemy.name_npc))
-            enemy.fatigue += activity[2]
-        elif type_activity == 'other':
-            activity_list.append(Action_in_map(activity[1], step, enemy.global_position, enemy.dynamic_chunk_position, chunk_size, enemy.name_npc))
-            
-        enemy.pass_step += activity[3] # Пропуск указанного количества шагов
-        enemy.pass_description = activity[0]
-
-
-
-def enemy_emulation_life(global_map, enemy, go_to_print, step, activity_list, chunk_size):  #В ДАННЫЙ МОМЕНТ НЕ ИСПОЛЬЗУЕТСЯ
-    """
-        Обрабатывает жизнь NPC за кадром, на глобальной карте
-        step нужен для запоминания следами деятельности времени в которое появились
-    """
-
-    enemy.action_points += 1
-    enemy.hunger -= 1
-    enemy.thirst -= 1
-    enemy.fatigue -= 1
-    
-    if enemy.action_points >= chunk_size//enemy.speed:
-        if len(enemy.waypoints) == 0 and len(enemy.dynamic_waypoints) == 0:
-            if random.randrange(10)//6 > 0:
-                enemy.waypoints.append(enemy.global_position)
-                enemy.action_points -= 5
-            else:
-                move_biom_enemy(global_map, enemy)
-                enemy.action_points -= chunk_size//enemy.speed
-        else:
-            if not enemy.dynamic_chunk:
-                move_enemy_waypoints(global_map, enemy)
-            
-    if enemy.action_points >= 15:
-        if enemy.fatigue < 0:
-            enemy.fatigue = 50
-            enemy.action_points -= 30
-            go_to_print.text5 += str(enemy.name_npc)+ ' уснул от усталости \n'
-            activity_list.append(Action_in_map(random.choice(enemy.activity_map['fatigue'])[1], step, enemy.global_position, [random.randrange(chunk_size), random.randrange(chunk_size)], chunk_size, enemy.name_npc))
-        else:
-            request_activity = []
-            if enemy.hunger < 20:
-                request_activity.append('hunger')
-            if enemy.thirst < 20:
-                request_activity.append('thirst')
-            if enemy.fatigue < 20:
-                request_activity.append('fatigue')
-            if random.randrange(10)//8 >= 1:
-                request_activity.append('other')
-        
-            if request_activity:
-                type_activity = random.choice(request_activity)
-                activity = random.choice(enemy.activity_map[type_activity])
-                if type_activity == 'hunger': 
-                    activity_list.append(Action_in_map(activity[1], step, enemy.global_position, [random.randrange(chunk_size), random.randrange(chunk_size)], chunk_size, enemy.name_npc))
-                    enemy.hunger += activity[2]
-                elif type_activity == 'thirst':
-                    activity_list.append(Action_in_map(activity[1], step, enemy.global_position, [random.randrange(chunk_size), random.randrange(chunk_size)], chunk_size, enemy.name_npc))
-                    enemy.thirst += activity[2]
-                elif type_activity == 'fatigue':
-                    activity_list.append(Action_in_map(activity[1], step, enemy.global_position, [random.randrange(chunk_size), random.randrange(chunk_size)], chunk_size, enemy.name_npc))
-                    enemy.fatigue += activity[2]
-                elif type_activity == 'other':
-                    activity_list.append(Action_in_map(activity[1], step, enemy.global_position, [random.randrange(chunk_size), random.randrange(chunk_size)], chunk_size, enemy.name_npc))
-                enemy.action_points -= activity[2]//3
-
-
 
 """
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1925,9 +1760,6 @@ def wait_keyboard(person, mouse_position):
                 person.pointer_step = True
                 return 'none', event.pos
 
-    
-                
-    
 def request_press_button(global_map, person, chunk_size, go_to_print, mode_action, interaction, mouse_position):
     """
         Спрашивает ввод, возвращает тип активности и нажимаемую кнопку
@@ -1936,8 +1768,6 @@ def request_press_button(global_map, person, chunk_size, go_to_print, mode_actio
     pygame.event.clear()
     key, mouse_position = wait_keyboard(person, mouse_position)
    
-    #key = keyboard.read_key()
-    #key = 'right'
     if key == 'w' or key == 'up' or key == 'ц':
         return (mode_action, 'up', mouse_position)
     elif key == 'a' or key == 'left' or key == 'ф':
@@ -2056,7 +1886,6 @@ def request_move(global_map:list, person, chunk_size:int, go_to_print, pressed_b
                 person.type = 'r3'
     
     person.global_position_calculation(chunk_size) #Рассчитывает глобальное положение и номер чанка через метод
-    #person.check_encounter() #Рассчитывает порядок и координаты точек проверки
 
 def test_request_move(global_map:list, person, chunk_size:int, go_to_print, pressed_button, interaction, activity_list, step, enemy_list): #тестовый быстрый режим премещения
     """
@@ -2099,9 +1928,9 @@ def test_request_move(global_map:list, person, chunk_size:int, go_to_print, pres
         person.test_visible = not person.test_visible
 
     elif pressed_button == 'add_hunter':
-        enemy_list.append(Riffleman(copy.deepcopy(person.global_position), copy.deepcopy(person.local_position), 2))
+        enemy_list.append(return_npc(copy.deepcopy(person.global_position), copy.deepcopy(person.local_position), 'riffleman'))
     elif pressed_button == 'add_coyot':
-        enemy_list.append(Coyot(copy.deepcopy(person.global_position), copy.deepcopy(person.local_position), 0))
+        enemy_list.append(return_npc(copy.deepcopy(person.global_position), copy.deepcopy(person.local_position), 'coyot'))
 
          
 
@@ -2188,7 +2017,7 @@ def request_processing(pressed_button):
 
 """
 class Island_friends(pygame.sprite.Sprite):
-    """ Содержит спрайты миникарты """
+    """ Содержит спрайты зон доступности """
 
     def __init__(self, x, y, size_tile, number):
         pygame.sprite.Sprite.__init__(self)
@@ -2355,8 +2184,6 @@ class Minimap_temperature(pygame.sprite.Sprite):
             key = 11
         elif temperature > 50:
             key = 15
-
-
         return color_dict[key]
 
 def landscape_layer_calculations(person, chunk_size, go_to_print):
@@ -2526,289 +2353,41 @@ class Offset_sprites:
     def __init__(self):
         self.all = [0, 0]
 
-def person_walk_draw(enemy, person, settings_for_intermediate_steps):
+def person_walk_draw(entity, person, settings_for_intermediate_steps):
     """
         Меняет кадры анимации персонажа во время промежуточных кадров
     """
-    if settings_for_intermediate_steps == [2, 15]:
-        frame_dict = {
-                        1: {
-                            'left': 'l0',
-                            'right': 'r0',
-                            'down': 'd0',
-                            'up': 'u0',
-                            },
-                        2: {
-                            'left': 'l1',
-                            'right': 'r1',
-                            'down': 'd1',
-                            'up': 'u1',
-                            },
+    direction_dict = {
+                        'left': {0: 'l0',
+                                 1: 'l1',
+                                 2: 'l2',
+                                 3: 'l3'},
+                        'right':{0: 'r0',
+                                 1: 'r1',
+                                 2: 'r2',
+                                 3: 'r3'},
+                        'up':   {0: 'u0',
+                                 1: 'u1',
+                                 2: 'u2',
+                                 3: 'u3'},
+                        'down': {0: 'd0',
+                                 1: 'd1',
+                                 2: 'd2',
+                                 3: 'd3'}
                      }
-        enemy.type = frame_dict[person.pass_draw_move][enemy.direction]
-        
-    elif settings_for_intermediate_steps == [3, 10]:
-        frame_dict = {
-                        1: {
-                            'left': 'l0',
-                            'right': 'r0',
-                            'down': 'd0',
-                            'up': 'u0',
-                            },
-                        2: {
-                            'left': 'l1',
-                            'right': 'r1',
-                            'down': 'd1',
-                            'up': 'u1',
-                            },
-                        3: {
-                            'left': 'l2',
-                            'right': 'r2',
-                            'down': 'd2',
-                            'up': 'u2',
-                            },
-                     }
-        enemy.type = frame_dict[person.pass_draw_move][enemy.direction]
-        
-    elif settings_for_intermediate_steps == [5, 6]:
-        frame_dict = {
-                        1: {
-                            'left': 'l0',
-                            'right': 'r0',
-                            'down': 'd0',
-                            'up': 'u0',
-                            },
-                        2: {
-                            'left': 'l1',
-                            'right': 'r1',
-                            'down': 'd1',
-                            'up': 'u1',
-                            },
-                        3: {
-                            'left': 'l1',
-                            'right': 'r1',
-                            'down': 'd1',
-                            'up': 'u1',
-                            },
-                        4: {
-                            'left': 'l2',
-                            'right': 'r2',
-                            'down': 'd2',
-                            'up': 'u2',
-                            },
-                        5: {
-                            'left': 'l3',
-                            'right': 'r3',
-                            'down': 'd3',
-                            'up': 'u3',
-                            },
-                     }
-        enemy.type = frame_dict[person.pass_draw_move][enemy.direction]
-        
-    elif settings_for_intermediate_steps == [6, 5]:
-        frame_dict = {
-                        1: {
-                            'left': 'l10',
-                            'right': 'r0',
-                            'down': 'd0',
-                            'up': 'u0',
-                            },
-                        2: {
-                            'left': 'l1',
-                            'right': 'r1',
-                            'down': 'd1',
-                            'up': 'u1',
-                            },
-                        3: {
-                            'left': 'l1',
-                            'right': 'r1',
-                            'down': 'd1',
-                            'up': 'u1',
-                            },
-                        4: {
-                            'left': 'l2',
-                            'right': 'r2',
-                            'down': 'd2',
-                            'up': 'u2',
-                            },
-                        5: {
-                            'left': 'l2',
-                            'right': 'r2',
-                            'down': 'd2',
-                            'up': 'u2',
-                            },
-                        6: {
-                            'left': 'l3',
-                            'right': 'r3',
-                            'down': 'd3',
-                            'up': 'u3',
-                            },
-                     }
-        enemy.type = frame_dict[person.pass_draw_move][enemy.direction]
-        
-    elif settings_for_intermediate_steps == [10, 3]:
-        frame_dict = {
-                        1: {
-                            'left': 'l0',
-                            'right': 'r0',
-                            'down': 'd0',
-                            'up': 'u0',
-                            },
-                        2: {
-                            'left': 'l0',
-                            'right': 'r0',
-                            'down': 'd0',
-                            'up': 'u0',
-                            },
-                        3: {
-                            'left': 'l1',
-                            'right': 'r1',
-                            'down': 'd1',
-                            'up': 'u1',
-                            },
-                        4: {
-                            'left': 'l1',
-                            'right': 'r1',
-                            'down': 'd1',
-                            'up': 'u1',
-                            },
-                        5: {
-                            'left': 'l1',
-                            'right': 'r1',
-                            'down': 'd1',
-                            'up': 'u1',
-                            },
-                        6: {
-                            'left': 'l2',
-                            'right': 'r2',
-                            'down': 'd2',
-                            'up': 'u2',
-                            },
-                        7: {
-                            'left': 'l2',
-                            'right': 'r2',
-                            'down': 'd2',
-                            'up': 'u2',
-                            },
-                        8: {
-                            'left': 'l2',
-                            'right': 'r2',
-                            'down': 'd2',
-                            'up': 'u2',
-                            },
-                        9: {
-                            'left': 'l3',
-                            'right': 'r3',
-                            'down': 'd3',
-                            'up': 'u3',
-                            },
-                        10: {
-                            'left': 'l3',
-                            'right': 'r3',
-                            'down': 'd3',
-                            'up': 'u3',
-                            },
-                     }
-        enemy.type = frame_dict[person.pass_draw_move][enemy.direction]
-        
-    elif settings_for_intermediate_steps == [15, 2]:
-        frame_dict = {
-                        1: {
-                            'left': 'l0',
-                            'right': 'r0',
-                            'down': 'd0',
-                            'up': 'u0',
-                            },
-                        2: {
-                            'left': 'l0',
-                            'right': 'r0',
-                            'down': 'd0',
-                            'up': 'u0',
-                            },
-                        3: {
-                            'left': 'l0',
-                            'right': 'r0',
-                            'down': 'd0',
-                            'up': 'u0',
-                            },
-                        4: {
-                            'left': 'l0',
-                            'right': 'r0',
-                            'down': 'd0',
-                            'up': 'u0',
-                            },
-                        5: {
-                            'left': 'l1',
-                            'right': 'r1',
-                            'down': 'd1',
-                            'up': 'u1',
-                            },
-                        6: {
-                            'left': 'l1',
-                            'right': 'r1',
-                            'down': 'd1',
-                            'up': 'u1',
-                            },
-                        7: {
-                            'left': 'l1',
-                            'right': 'r1',
-                            'down': 'd1',
-                            'up': 'u1',
-                            },
-                        8: {
-                            'left': 'l1',
-                            'right': 'r1',
-                            'down': 'd1',
-                            'up': 'u1',
-                            },
-                        9: {
-                            'left': 'l2',
-                            'right': 'r2',
-                            'down': 'd2',
-                            'up': 'u0',
-                            },
-                        10: {
-                            'left': 'l2',
-                            'right': 'r2',
-                            'down': 'd2',
-                            'up': 'u2',
-                            },
-                        11: {
-                            'left': 'l2',
-                            'right': 'r2',
-                            'down': 'd2',
-                            'up': 'u2',
-                            },
-                        12: {
-                            'left': 'l2',
-                            'right': 'r2',
-                            'down': 'd2',
-                            'up': 'u2',
-                            },
-                        13: {
-                            'left': 'l3',
-                            'right': 'r3',
-                            'down': 'd3',
-                            'up': 'u3',
-                            },
-                        14: {
-                            'left': 'l3',
-                            'right': 'r3',
-                            'down': 'd3',
-                            'up': 'u3',
-                            },
-                        15: {
-                            'left': 'l3',
-                            'right': 'r3',
-                            'down': 'd3',
-                            'up': 'u3',
-                            },
-                     }
-        enemy.type = frame_dict[person.pass_draw_move][enemy.direction]
-        
-    elif settings_for_intermediate_steps == [30, 1]:
-        pass
-        
+
+    intermediate_steps_dict = {
+                                2: [0, 1],
+                                3: [0, 1, 2],
+                                5: [0, 1, 1, 2, 3],
+                                6: [0, 1, 1, 2, 2, 3],
+                                10:[0, 0, 1, 1, 1, 2, 2, 2, 3, 3],
+                                15:[0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3],
+                                30:[0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3],
+                              }
+
+    entity.type = direction_dict[entity.direction][intermediate_steps_dict[settings_for_intermediate_steps[0]][person.pass_draw_move - 1]]
+
 class Draw_open_image(pygame.sprite.Sprite):
     """ Отрисовывает полученное изображение """
 
