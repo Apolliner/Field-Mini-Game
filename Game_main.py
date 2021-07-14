@@ -533,6 +533,7 @@ def loading_all_sprites():
                     '#': {'0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_gnawed_bones.png')))},
                     '$': {'0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_animal_rest_stop.png')))},
                     'W': {'0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_warning.jpg')))},
+                    '=': {'0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_warning.jpg')))},
                     'П': {'0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'pointer_0.png')))},
                     }
     return sprites_dict
@@ -1236,7 +1237,7 @@ def return_npc(global_position, local_position, key):
                             'fatigue': [['отдыхает', 'rest_stop', 30, 10]],
                             'other': [['говорит об ошибке', 'rest_stop', 0, 10]],
                             },
-                            "Своим присутствием говорящий о тесте",
+                            "Демонстрирующий тест или ошибку",
                             3),
                 }
     if key in npc_dict:
@@ -1294,8 +1295,10 @@ def master_npc_calculation(global_map, enemy_list, person, go_to_print, step, ac
         if enemy.local_waypoints:
             #Добавляются следы
             if random.randrange(21)//18 > 0:
-                activity_list.append(Action_in_map(enemy.activity_map['move'][0][1], step, enemy.global_position, enemy.local_position, chunk_size, enemy.name_npc))
-            activity_list.append(Action_in_map('faint_footprints', step, enemy.global_position, enemy.local_position, chunk_size, enemy.name_npc))
+                activity_list.append(Action_in_map(enemy.activity_map['move'][0][1], step, copy.deepcopy(enemy.global_position),
+                                                   copy.deepcopy(enemy.local_position), chunk_size, enemy.name_npc))
+            activity_list.append(Action_in_map('faint_footprints', step, copy.deepcopy(enemy.global_position), copy.deepcopy(enemy.local_position),
+                                               chunk_size, enemy.name_npc))
             enemy_direction_calculation(enemy)
             enemy.global_position = enemy.local_waypoints[0][3]
             enemy.local_position = [enemy.local_waypoints[0][0], enemy.local_waypoints[0][1]]
@@ -2018,6 +2021,16 @@ def request_processing(pressed_button):
 """
 class Island_friends(pygame.sprite.Sprite):
     """ Содержит спрайты зон доступности """
+    def add_color_dict(size):
+        """ Создаёт единый на все экземпляры, словарь цветов """
+        all_color_dict = {}
+        for number in range(size):
+            all_color_dict[len(all_color_dict)] = (random.randrange(255), random.randrange(255), random.randrange(255))
+        all_color_dict[-1] = (0, 0, 0)
+        all_color_dict[255] = (255, 0, 0)
+        return all_color_dict
+    
+    all_color_dict = add_color_dict(200)
 
     def __init__(self, x, y, size_tile, number):
         pygame.sprite.Sprite.__init__(self)
@@ -2030,95 +2043,10 @@ class Island_friends(pygame.sprite.Sprite):
         self.speed = 0
     def draw( self, surface ):
         surface.blit(self.image, self.rect)
+    
     def color_dict(self, number):
-        color_dict =   {
-                        -1: (0, 0, 0),
-                        0: (255, 255, 0),
-                        1: (255, 255, 150),
-                        2: (0, 255, 255),
-                        3: (150, 255, 255),
-                        4: (255, 0, 255),
-                        5: (255, 150, 255),
-                        6: (0, 0, 255),
-                        7: (0, 255, 0),
-                        8: (255, 200, 255),
-                        9: (0, 255, 0),
-                        10: (0, 128, 0),
-                        11: (0, 100, 0),
-                        12: (128, 128, 0),
-                        13: (128, 128, 0),
-                        14: (255, 255, 255),
-                        15: (235, 255, 255),
-                        16: (200, 255, 255),
-                        17: (200, 200, 100),
-                        18: (100, 200, 100),
-                        19: (200, 100, 100),
-                        20: (245, 245, 0),
-                        21: (245, 245, 140),
-                        22: (0, 245, 245),
-                        23: (140, 245, 245),
-                        24: (245, 0, 245),
-                        25: (245, 140, 245),
-                        26: (0, 0, 245),
-                        27: (0, 245, 0),
-                        28: (245, 200, 245),
-                        29: (0, 245, 0),
-                        30: (0, 148, 0),
-                        31: (0, 140, 0),
-                        32: (120, 120, 0),
-                        33: (120, 120, 0),
-                        34: (245, 245, 245),
-                        35: (235, 245, 245),
-                        36: (200, 245, 245),
-                        37: (200, 200, 140),
-                        38: (140, 200, 140),
-                        39: (200, 140, 140),
-                        40: (140, 140, 200),
-                        41: (245, 245, 140),
-                        42: (0, 235, 235),
-                        43: (130, 235, 235),
-                        44: (235, 0, 235),
-                        45: (235, 130, 235),
-                        46: (0, 0, 235),
-                        47: (0, 235, 0),
-                        48: (235, 200, 235),
-                        49: (0, 235, 0),
-                        50: (0, 123, 0),
-                        51: (0, 130, 0),
-                        52: (123, 123, 0),
-                        53: (123, 123, 0),
-                        54: (235, 235, 235),
-                        55: (205, 235, 235),
-                        56: (200, 235, 235),
-                        57: (210, 210, 100),
-                        58: (100, 210, 100),
-                        59: (210, 100, 100),
-                        60: (100, 100, 210),
-                        61: (225, 225, 150),
-                        62: (0, 225, 225),
-                        63: (150, 225, 225),
-                        64: (225, 0, 225),
-                        65: (225, 150, 225),
-                        66: (0, 0, 225),
-                        67: (0, 225, 0),
-                        68: (225, 200, 225),
-                        69: (0, 225, 0),
-                        70: (0, 128, 0),
-                        71: (0, 100, 0),
-                        72: (128, 128, 0),
-                        73: (128, 128, 0),
-                        74: (225, 225, 225),
-                        75: (235, 225, 225),
-                        76: (200, 225, 225),
-                        77: (200, 200, 100),
-                        78: (100, 200, 100),
-                        79: (200, 100, 100),
-                        80: (100, 100, 200),
-                        255: (255, 0, 0),
-                        }
-
-        if number in color_dict:
-            return color_dict[number]
+        if number in self.all_color_dict:
+            return self.all_color_dict[number]
         else:
             return (random.randrange(256), random.randrange(256), random.randrange(256))
 
@@ -2484,13 +2412,6 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
                         print_sprite.rect.top = number_line*size_tile + offset_sprites.all[0]
                         print_sprite.rect.left = number_tile*size_tile + offset_sprites.all[1]
                         print_sprite.draw(screen)
-
-            #Отрисовка зон доступности
-            if person.test_visible:
-                for number_line in range(chunk_size):
-                    for number_tile in range(chunk_size):
-                        Island_friends(number_tile*size_tile + offset_sprites.all[1], number_line*size_tile + offset_sprites.all[0], size_tile,
-                                               landscape_layer[number_line][number_tile].vertices).draw(screen)
             
             #Отрисовка НПЦ
             entities_layer = entities_layer_calculations(person, chunk_size, go_to_print, enemy_list)
@@ -2560,13 +2481,6 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
                         if landscape_layer[number_line][number_tile].level > 1:
                             Level_tiles(number_tile*size_tile + offset_x, number_line*size_tile + offset_y, size_tile,
                                                         landscape_layer[number_line][number_tile].level - 1).draw(finishing_surface)
-
-                #Отрисовка зон доступности
-                if person.test_visible:
-                    for number_line in range(chunk_size):
-                        for number_tile in range(chunk_size):
-                            Island_friends(number_tile*size_tile + offset_x, number_line*size_tile + offset_y, size_tile,
-                                                   landscape_layer[number_line][number_tile].vertices).draw(finishing_surface)
 
                 screen.blit(finishing_surface, (0, 0)) #Отрисовка финишной поверхности
 
@@ -2653,7 +2567,12 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
                         print_sprite.rect.left = number_tile*size_tile + offset_sprites.all[1] + enemy_offset_x
                         print_sprite.draw(screen)
                         
-        
+        #Отрисовка зон доступности
+        if person.test_visible:
+            for number_line in range(chunk_size):
+                for number_tile in range(chunk_size):
+                    Island_friends(number_tile*size_tile + offset_sprites.all[1], number_line*size_tile + offset_sprites.all[0], size_tile,
+                                           landscape_layer[number_line][number_tile].vertices).draw(screen)
         #Отрисовка персонажа
         person_sprite = sprites_dict[person.icon][person.type]
         person_sprite.rect.top = chunk_size//2*size_tile
@@ -2684,7 +2603,7 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
 
         #Отрисовка температуры на миникарте
         if person.test_visible:
-            for number_minimap_line, minimap_line in enumerate(minimap):
+            for number_minimap_line, minimap_line in enumerate(raw_minimap):
                 for number_minimap_tile, minimap_tile in enumerate(minimap_line):
                     Minimap_temperature(number_minimap_tile*size_tile_minimap + (26*size_tile), number_minimap_line*size_tile_minimap,
                                                             size_tile_minimap, minimap_tile.temperature).draw(screen)
