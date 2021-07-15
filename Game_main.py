@@ -2673,6 +2673,8 @@ def pointer_description(landscape_layer, activity_layer, entities_layer, chunk_s
         minimap_coords.append((axis_position_x - (chunk_size + 1)*size_tile)//15)
         minimap_coords.append(axis_position_y//15)
         pointer_description += coords_description(minimap_coords, raw_minimap, len(raw_minimap))
+        if minimap_coords[0] < len(raw_minimap) and minimap_coords[1] < len(raw_minimap):
+            pointer_description += f" | T = {int(raw_minimap[minimap_coords[1]][minimap_coords[0]].temperature)} градусов"
         
     if type_descrption == 'ground':
         return ground_description
@@ -3106,7 +3108,7 @@ def game_loop(global_map:list, person, chunk_size:int, enemy_list:list, world, s
         start = time.time() #проверка времени выполнения
         calculation_assemblage_point(global_map, person, chunk_size) # Рассчёт динамического чанка
         #all_pass_step_calculations(person, enemy_list, mode_action, interaction)
-        if not person.enemy_pass_step:
+        if not person.enemy_pass_step and not person.pointer_step:
             master_game_events(global_map, enemy_list, person, go_to_print, step, activity_list, chunk_size, interaction, world)
         screen, landscape_layer, activity_layer, entities_layer, offset_sprites, finishing_surface, settings_for_intermediate_steps = master_pygame_draw(person, chunk_size,
                                             go_to_print, global_map, mode_action, enemy_list, activity_list, screen, minimap_surface,

@@ -1876,6 +1876,6 @@ if __name__ == '__main__':
     pygame.display.set_caption("My Game")
 
     #                                global_region_grid | region_grid | chunks_grid | mini_region_grid | tile_field_grid
-    global_map = master_map_generate(        2,                2,            2,            20,                 2,    screen)
+    global_map = master_map_generate(       5,                2,            2,            5,                 5,    screen)
     sys.exit()
 
