@@ -37,7 +37,7 @@ class World:
 class Person:
     """ Содержит в себе глобальное местоположение персонажа, расположение в пределах загруженного участка карты и координаты используемых чанков """
     __slots__ = ('name', 'assemblage_point', 'dynamic', 'chunks_use_map', 'pointer', 'gun', 'global_position', 'number_chunk',
-                 'check_encounter_position', 'environment_temperature', 'person_temperature', 'person_pass_step', 'enemy_pass_step',
+                 'environment_temperature', 'person_temperature', 'person_pass_step', 'enemy_pass_step',
                  'speed', 'test_visible', 'level', 'vertices', 'local_position', 'direction', 'pass_draw_move', 'recalculating_the_display', 'type',
                  'icon', 'pointer_step')
     def __init__(self, assemblage_point:list, dynamic:list, chunks_use_map:list, pointer:list, gun:list):
@@ -49,11 +49,6 @@ class Person:
         self.gun = gun
         self.global_position = assemblage_point
         self.number_chunk = 1
-        self.check_encounter_position = [[self.global_position[0] - 1, self.global_position[1] - 1], [self.global_position[0] - 1, self.global_position[1]],
-                                        [self.global_position[0] - 1, self.global_position[1] + 1], [self.global_position[0], self.global_position[1] - 1],
-                                        [self.global_position[0], self.global_position[1]], [self.global_position[0], self.global_position[1] + 1],
-                                        [self.global_position[0] + 1, self.global_position[1] - 1], [self.global_position[0] + 1, self.global_position[1]],
-                                        [self.global_position[0] + 1, self.global_position[1] + 1]]
         self.environment_temperature = 36.6
         self.person_temperature = 36.6
         self.person_pass_step = 0
@@ -81,7 +76,6 @@ class Person:
         state["gun"] = self.gun
         state["global_position"] = self.global_position
         state["number_chunk"] = self.number_chunk
-        state["check_encounter_position"] = self.check_encounter_position
         state["environment_temperature"] = self.environment_temperature
         state["person_temperature"] = self.person_temperature
         state["person_pass_step"] = self.person_pass_step
@@ -109,7 +103,6 @@ class Person:
         self.gun = state["gun"]
         self.global_position = state["global_position"]
         self.number_chunk = state["number_chunk"]
-        self.check_encounter_position = state["check_encounter_position"]
         self.environment_temperature = state["environment_temperature"]
         self.person_temperature = state["person_temperature"]
         self.person_pass_step = state["person_pass_step"]
@@ -126,7 +119,6 @@ class Person:
         self.icon = state["icon"]
         self.pointer_step = state["pointer_step"]
 
-
     def check_local_position(self):
         local_position = []
         if self.dynamic[0] > len(self.chunks_use_map)//2:
@@ -139,19 +131,6 @@ class Person:
         else:
             local_position.append(self.dynamic[1])
         self.local_position = local_position
-        
-    def check_encounter(self):
-        """
-            Рассчитывает координаты точек проверки. их расположение: 0 1 2
-                                                                     3 4 5
-                                                                     6 7 8
-        """
-        self.check_encounter_position = [[self.global_position[0] - 1, self.global_position[1] - 1], [self.global_position[0] - 1, self.global_position[1]],
-                                        [self.global_position[0] - 1, self.global_position[1] + 1], [self.global_position[0], self.global_position[1] - 1],
-                                        [self.global_position[0], self.global_position[1]], [self.global_position[0], self.global_position[1] + 1],
-                                        [self.global_position[0] + 1, self.global_position[1] - 1], [self.global_position[0] + 1, self.global_position[1]],
-                                        [self.global_position[0] + 1, self.global_position[1] + 1]]
-        
         
     def global_position_calculation(self, chank_size):
         """
@@ -1935,11 +1914,7 @@ def test_request_move(global_map:list, person, chunk_size:int, go_to_print, pres
     elif pressed_button == 'add_coyot':
         enemy_list.append(return_npc(copy.deepcopy(person.global_position), copy.deepcopy(person.local_position), 'coyot'))
 
-         
-
-
     person.global_position_calculation(chunk_size) #Рассчитывает глобальное положение и номер чанка через метод
-    person.check_encounter() #Рассчитывает порядок и координаты точек проверки
 
 def request_pointer(person, chunk_size:int, go_to_print, pressed_button):
     """
@@ -2344,7 +2319,7 @@ class Draw_rect(pygame.sprite.Sprite):
         surface.blit(self.image, self.rect)
 
 def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action, enemy_list, activity_list, screen,
-                        minimap_surface, all_sprites, dynamic_sprites, minimap_dict, sprites_dict, offset_sprites, landscape_layer, activity_layer,
+                        minimap_surface, minimap_dict, sprites_dict, offset_sprites, landscape_layer, activity_layer,
                         entities_layer, finishing_surface, settings_for_intermediate_steps, mouse_position, raw_minimap):
     """
         Работает с классом Interfase, содержащимся в go_to_print
@@ -2369,7 +2344,7 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
     time_1 = time.time() #проверка времени выполнения
     
     size_tile = 30 # Настройка размера тайлов игрового окна
-    size_tile_minimap = 15 # Настройка размера тайлов миникаты
+    size_tile_minimap = 15 # Настройка размера тайлов миникарты
     
     number_intermediate_steps = settings_for_intermediate_steps[0] #Количество промежуточных шагов
     step_direction = settings_for_intermediate_steps[1] #Смещение промежуточного шага
@@ -3062,10 +3037,6 @@ def game_loop(global_map:list, person, chunk_size:int, enemy_list:list, world, s
     mode_action = 'move'
     clock = pygame.time.Clock()#
     game_fps = 100#
-    
-    all_sprites = pygame.sprite.Group()
-    dynamic_sprites = pygame.sprite.Group()
-    minimap_sprite  = pygame.sprite.Group()
 
     pygame.display.flip()
 
@@ -3084,7 +3055,7 @@ def game_loop(global_map:list, person, chunk_size:int, enemy_list:list, world, s
     #Предварительная отрисовка игрового окна
     screen, landscape_layer, activity_layer, entities_layer, offset_sprites, finishing_surface, settings_for_intermediate_steps = master_pygame_draw(person, chunk_size,
                                             go_to_print, global_map, mode_action, enemy_list, activity_list, screen, minimap_surface,
-                                            all_sprites, dynamic_sprites, minimap_dict, sprites_dict, offset_sprites, landscape_layer, activity_layer,
+                                            minimap_dict, sprites_dict, offset_sprites, landscape_layer, activity_layer,
                                             entities_layer, finishing_surface, settings_for_intermediate_steps, mouse_position, raw_minimap)
     
     print('game_loop запущен')
@@ -3110,10 +3081,10 @@ def game_loop(global_map:list, person, chunk_size:int, enemy_list:list, world, s
         #all_pass_step_calculations(person, enemy_list, mode_action, interaction)
         if not person.enemy_pass_step and not person.pointer_step:
             master_game_events(global_map, enemy_list, person, go_to_print, step, activity_list, chunk_size, interaction, world)
-        screen, landscape_layer, activity_layer, entities_layer, offset_sprites, finishing_surface, settings_for_intermediate_steps = master_pygame_draw(person, chunk_size,
-                                            go_to_print, global_map, mode_action, enemy_list, activity_list, screen, minimap_surface,
-                                            all_sprites, dynamic_sprites, minimap_dict, sprites_dict, offset_sprites, landscape_layer, activity_layer,
-                                            entities_layer, finishing_surface, settings_for_intermediate_steps, mouse_position, raw_minimap)
+        screen, landscape_layer, activity_layer, entities_layer, offset_sprites, finishing_surface, settings_for_intermediate_steps = master_pygame_draw(
+                                        person, chunk_size, go_to_print, global_map, mode_action, enemy_list, activity_list, screen, minimap_surface,
+                                        minimap_dict, sprites_dict, offset_sprites, landscape_layer, activity_layer,
+                                        entities_layer, finishing_surface, settings_for_intermediate_steps, mouse_position, raw_minimap)
         
 
         
