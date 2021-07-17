@@ -451,7 +451,7 @@ class Island_friends(pygame.sprite.Sprite):
     
     all_color_dict = add_color_dict(200)
 
-    def __init__(self, x, y, size_tile, number):
+    def __init__(self, y, x, size_tile, number):
         pygame.sprite.Sprite.__init__(self)
         self.image = pygame.Surface((size_tile, size_tile))
         self.image.fill(self.color_dict(number))
@@ -515,7 +515,6 @@ def draw_vertices_generation(screen, draw_map, description):
             for number_line, line in enumerate(global_tile.chunk):
                 for number_tile, tile in enumerate(line):
                     Island_friends((number_global_line*chunk_size + number_line)*size_tile, (number_global_tile*chunk_size + number_tile)*size_tile, size_tile, tile.vertices).draw(screen)
-                    #pygame.display.flip()
 
     fontObj = pygame.font.Font('freesansbold.ttf', 10)
     textSurfaceObj = fontObj.render(description, True, (0, 0, 0), (255, 255, 255))
@@ -1247,11 +1246,12 @@ def big_structures_generate(processed_map, managing_map):
     chunk_size = len(processed_map)//len(managing_map)
     for managing_line in range(len(managing_map)):
         for managing_tile in range(len(managing_map[managing_line])):
-            #if managing_map[managing_line][managing_tile] == 5:
-            #    mountain_gen(processed_map, managing_line*chunk_size + chunk_size//3, managing_tile*chunk_size + chunk_size//3,
-            #                 random.randrange(chunk_size//2, chunk_size), random.randrange(1, 3), random.randrange(1, 3), '~', ('.'))
             if managing_map[managing_line][managing_tile] == 5:
-                lake_gen(processed_map, managing_line*chunk_size + chunk_size//3, managing_tile*chunk_size + chunk_size//3,
+                if random.randrange(10)//5 > 0:
+                    mountain_gen(processed_map, managing_line*chunk_size + chunk_size//3, managing_tile*chunk_size + chunk_size//3,
+                             random.randrange(chunk_size//2, chunk_size), random.randrange(1, 3), random.randrange(1, 3), '~', ('.'))
+                else:
+                    lake_gen(processed_map, managing_line*chunk_size + chunk_size//3, managing_tile*chunk_size + chunk_size//3,
                              random.randrange(2, 5), '~', ('.'))
             if managing_map[managing_line][managing_tile] == 4:
                 mountain_gen(processed_map, managing_line*chunk_size + chunk_size//3, managing_tile*chunk_size + chunk_size//3,
@@ -1259,7 +1259,7 @@ def big_structures_generate(processed_map, managing_map):
 
 def big_structures_writer(processed_map, managing_map):
     """
-        Отрисовывает моря на карте локаций
+        Отрисовывает моря и каньоны на карте локаций
     """
     chunk_size = len(managing_map)//len(processed_map)
     for number_line in range(len(managing_map)):
@@ -1284,19 +1284,20 @@ def lake_gen(processed_map, position_y, position_x, size, add_icon, filling_icon
     
     size_lake = len(lake_dict[size])
     for step in range(size_lake):
-        if random.randrange(21)//20 > 0:
+        if random.randrange(5)//4 > 0:
             position_x += random.randrange(-1, 2)
         offset_x = (size_lake - lake_dict[size][step])//2
         for step_print in range(lake_dict[size][step]):
-            if processed_map[position_y][position_x + offset_x + step_print - 1] != add_icon:
-                processed_map[position_y][position_x + offset_x + step_print - 1] == random.choice(filling_icon)
-            if processed_map[position_y][position_x + offset_x + step_print + 1] != add_icon:
-                processed_map[position_y][position_x + offset_x + step_print + 1] == random.choice(filling_icon)
-            if processed_map[position_y - 1][position_x + offset_x + step_print] != add_icon:
-                processed_map[position_y - 1][position_x + offset_x + step_print] == random.choice(filling_icon)
-            if processed_map[position_y + 1][position_x + offset_x + step_print] != add_icon:
-                processed_map[position_y + 1][position_x + offset_x + step_print] == random.choice(filling_icon)
-            processed_map[position_y][position_x + offset_x + step_print] = add_icon
+            if 1 < position_y < len(processed_map) - 2 and 1 < position_x + offset_x + step_print < len(processed_map) - 2:
+                if processed_map[position_y][position_x + offset_x + step_print - 1] != add_icon:
+                    processed_map[position_y][position_x + offset_x + step_print - 1] = random.choice(filling_icon)
+                if processed_map[position_y][position_x + offset_x + step_print + 1] != add_icon:
+                    processed_map[position_y][position_x + offset_x + step_print + 1] = random.choice(filling_icon)
+                if processed_map[position_y - 1][position_x + offset_x + step_print] != add_icon:
+                    processed_map[position_y - 1][position_x + offset_x + step_print] = random.choice(filling_icon)
+                if processed_map[position_y + 1][position_x + offset_x + step_print] != add_icon:
+                    processed_map[position_y + 1][position_x + offset_x + step_print] = random.choice(filling_icon)
+                processed_map[position_y][position_x + offset_x + step_print] = add_icon
         position_y += 1
         
                 
@@ -1308,14 +1309,15 @@ def mountain_gen(processed_map, position_y, position_x, size, add_position_y_to_
     type_generate = 'evenly'
     direction = random.randrange(2)
     for step in range(size):
-        if len(processed_map) - 2 > position_y >= 1 and len(processed_map[0]) - 2 > position_x >= 1:
-            processed_map[position_y][position_x - 1] = random.choice(filling_icon)
-            processed_map[position_y][position_x - 2] = random.choice(filling_icon)
-            if add_position_y_to_step == 2:
-                processed_map[position_y + 1][position_x - 1] = random.choice(filling_icon)
-                processed_map[position_y + 1][position_x - 2] = random.choice(filling_icon)
+        if len(processed_map) - 2 > position_y >= 1:
+            if 2 < position_x < len(processed_map[0]):
+                processed_map[position_y][position_x - 1] = random.choice(filling_icon)
+                processed_map[position_y][position_x - 2] = random.choice(filling_icon)
+                if add_position_y_to_step == 2:
+                    processed_map[position_y + 1][position_x - 1] = random.choice(filling_icon)
+                    processed_map[position_y + 1][position_x - 2] = random.choice(filling_icon)
             for i in range(quantity_step + 1):
-                if position_x + i + 2 < len(processed_map[0]) - 2 - i:
+                if 1 < position_x + i + 2 < len(processed_map[0]) - 2 - i:
                     processed_map[position_y][position_x + i] = add_icon
                     processed_map[position_y][position_x + i + 1] = random.choice(filling_icon)
                     processed_map[position_y][position_x + i + 2] = random.choice(filling_icon)
@@ -1392,7 +1394,7 @@ def mountains_generate(all_tiles_map, chunks_map):
             #    mountain_gen(all_tiles_map, number_line*chunk_size + random.randrange(chunk_size//2),
             #                 number_tile*chunk_size + random.randrange(chunk_size//2), random.randrange(10, 20), 1, 2, '~', ('u'))
 
-            elif chunks_map[number_line][number_tile][0] == 'P' and random.randrange(20)//10 > 0:
+            elif chunks_map[number_line][number_tile][0] == 'P' and random.randrange(20)//15 > 0:
                 lake_gen(all_tiles_map, number_line*chunk_size + random.randrange(chunk_size//2),
                          number_tile*chunk_size + random.randrange(chunk_size//2), random.randrange(2, 5), '~', ('u'))
 
