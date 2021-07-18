@@ -1071,33 +1071,14 @@ def defining_zone_relationships(processed_map):
 def defining_vertices(processed_map):
     """
         Определение независимых областей на локациях и связей между ними для последующей работы с алгоритмом A*
-    """
-    def repeat_pass(global_tile, number):
-        new_friends_list = []
-        for number_line in range(len(global_tile.chunk)):
-            for number_tile, tile in enumerate(global_tile.chunk[number_line]):
-                if number_line > 0 and tile.vertices != -1 and -1 != global_tile.chunk[number_line - 1][number_tile].vertices != tile.vertices:
-                    if not ([global_tile.chunk[number_line - 1][number_tile].vertices, tile.vertices] in new_friends_list):
-                        new_friends_list.append([global_tile.chunk[number_line - 1][number_tile].vertices, tile.vertices])
-        if new_friends_list:
-            for frends in new_friends_list:
-                master = min(frends[0], frends[1])
-                slave = max(frends[0], frends[1])
-                for number_line in range(1, len(global_tile.chunk)):
-                    for number_tile, tile in enumerate(global_tile.chunk[number_line]):
-                        
-                        if tile.vertices == slave:
-                            if number == 2:
-                                tile.vertices = master
-                        
-    
+    """ 
     class Availability_field:
         def __init__(self, number, tile):
             self.number = number
             self.global_number = number
             self.tiles = [tile]
             
-    banned_tuple = ('~', '▲', 'C')
+    banned_tuple = ('~', '▲')
     for number_global_line, global_line in enumerate(processed_map):
         for number_global_tile, global_tile in enumerate(global_line):
             number_field = 0
@@ -1105,48 +1086,6 @@ def defining_vertices(processed_map):
             for number_line in range(len(global_tile.chunk)):
                 for number_tile, tile in enumerate(global_tile.chunk[number_line]):
                     if not(tile.icon in banned_tuple):
-                            
-                        #Обработка тайла слева
-                        if number_tile > 0 and global_tile.chunk[number_line][number_tile - 1].vertices >= 0:
-                            tile.vertices = global_tile.chunk[number_line][number_tile - 1].vertices
-                            list_availability_fields[tile.vertices].tiles.append([number_line, number_tile])
-
-                        #Обработка тайла сверху
-                        if number_line > 0 and global_tile.chunk[number_line - 1][number_tile].vertices >= 0:
-                            #Обработка крайней левой линии
-                            if number_tile == 0 and number_line > 0:
-                                tile.vertices = global_tile.chunk[number_line - 1][number_tile].vertices
-                                list_availability_fields[tile.vertices].tiles.append([number_line, number_tile])
-                            
-                            #Если тайл обрабатывался
-                            if tile.vertices >= 0:
-
-                                if list_availability_fields[tile.vertices].global_number < list_availability_fields[
-                                        global_tile.chunk[number_line - 1][number_tile].vertices].global_number:
-                                        
-                                    list_availability_fields[global_tile.chunk[number_line - 1][number_tile].vertices
-                                                             ].global_number = list_availability_fields[tile.vertices].global_number
-                                    
-                                elif list_availability_fields[tile.vertices].global_number > list_availability_fields[
-                                        global_tile.chunk[number_line - 1][number_tile].vertices].global_number:
-                                        
-                                    list_availability_fields[tile.vertices].global_number = list_availability_fields[
-                                        global_tile.chunk[number_line - 1][number_tile].vertices].global_number
-                                        
-                            #Если тайл не обрабатывался
-                            elif tile.vertices == -1:
-                                tile.vertices = global_tile.chunk[number_line - 1][number_tile].vertices
-                                list_availability_fields[tile.vertices].tiles.append([number_line, number_tile])
-                                
-                                
-                        #Если тайл еще не обрабатывался
-                        if tile.vertices == -1:
-                            tile.vertices = number_field
-                            list_availability_fields.append(Availability_field(number_field, [number_line, number_tile]))
-                            number_field += 1
-
-                            
-                    if tile.icon == 'C':
                             
                         #Обработка тайла слева
                         if number_tile > 0 and global_tile.chunk[number_line][number_tile - 1].vertices >= 0:
@@ -1164,18 +1103,19 @@ def defining_vertices(processed_map):
                                 
                                 #Если тайл обрабатывался
                                 if tile.vertices >= 0:
-                                    
-                                    if list_availability_fields[tile.vertices].global_number < list_availability_fields[
-                                            global_tile.chunk[number_line - 1][number_tile].vertices].global_number:
-                                            
-                                        list_availability_fields[global_tile.chunk[number_line - 1][number_tile].vertices
-                                                                 ].global_number = list_availability_fields[tile.vertices].global_number
+                                    up = global_tile.chunk[number_line - 1][number_tile].vertices
+                                    if list_availability_fields[tile.vertices].global_number < list_availability_fields[up].global_number:
+                                        check_number = up
+                                        while True: #Цикл, который проверит номер и глобальный номер на одинаковость и если нет, то повторит это с указанным глобальным номером
+                                            if list_availability_fields[check_number].global_number != list_availability_fields[check_number].number:
+                                                check_number = list_availability_fields[list_availability_fields[check_number].global_number].global_number
+                                                list_availability_fields[list_availability_fields[check_number].global_number].global_number = list_availability_fields[tile.vertices].global_number
+                                            else:
+                                                break
+                                        list_availability_fields[up].global_number = list_availability_fields[tile.vertices].global_number
                                         
-                                    elif list_availability_fields[tile.vertices].global_number > list_availability_fields[
-                                            global_tile.chunk[number_line - 1][number_tile].vertices].global_number:
-                                            
-                                        list_availability_fields[tile.vertices].global_number = list_availability_fields[
-                                            global_tile.chunk[number_line - 1][number_tile].vertices].global_number
+                                    elif list_availability_fields[tile.vertices].global_number > list_availability_fields[up].global_number:
+                                        list_availability_fields[tile.vertices].global_number = list_availability_fields[up].global_number
                                             
                                 #Если тайл не обрабатывался
                                 elif tile.vertices == -1:
@@ -1189,13 +1129,15 @@ def defining_vertices(processed_map):
                             list_availability_fields.append(Availability_field(number_field, [number_line, number_tile]))
                             number_field += 1
                     
-
+            for field in list_availability_fields:
+                if field.number != field.global_number:
+                    field.global_number = list_availability_fields[field.global_number].global_number
             
             for availability_field in list_availability_fields:
                 for tile in availability_field.tiles:
                     global_tile.chunk[tile[0]][tile[1]].vertices = availability_field.global_number
 
-            #Повторный проход для определения неопределённых связей
+            '''#Повторный проход для определения неопределённых связей
 
             new_friends_list = []
             for number_line in range(len(global_tile.chunk)):
@@ -1219,10 +1161,8 @@ def defining_vertices(processed_map):
                             
                             if tile.vertices == slave:
                                 tile.vertices = master
+            '''
                             
-
-                        
-
 def diversity_field_tiles(processed_map):
     """
         Делает тайлы разнообразными в тайловых полях, не требующих определения краёв.

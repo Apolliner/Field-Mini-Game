@@ -205,24 +205,26 @@ def defining_vertices(processed_map):
                             
                             #Если тайл обрабатывался
                             if tile.vertices >= 0:
-
-                                if list_availability_fields[tile.vertices].global_number < list_availability_fields[
-                                        global_tile.chunk[number_line - 1][number_tile].vertices].global_number:
-                                        
-                                    list_availability_fields[global_tile.chunk[number_line - 1][number_tile].vertices
-                                                             ].global_number = list_availability_fields[tile.vertices].global_number
+                                up = global_tile.chunk[number_line - 1][number_tile].vertices
+                                if list_availability_fields[tile.vertices].global_number < list_availability_fields[up].global_number:
+                                    check_number = up
+                                    while True: #Цикл, который проверит номер и глобальный номер на одинаковость и если нет, то повторит это с указанным глобальным номером
+                                        if list_availability_fields[check_number].global_number != list_availability_fields[check_number].number:
+                                            check_number = list_availability_fields[list_availability_fields[check_number].global_number].global_number
+                                            list_availability_fields[list_availability_fields[check_number].global_number].global_number = list_availability_fields[tile.vertices].global_number
+                                        else:
+                                            break
+                                    list_availability_fields[up].global_number = list_availability_fields[tile.vertices].global_number
                                     
-                                elif list_availability_fields[tile.vertices].global_number > list_availability_fields[
-                                        global_tile.chunk[number_line - 1][number_tile].vertices].global_number:
-                                        
-                                    list_availability_fields[tile.vertices].global_number = list_availability_fields[
-                                        global_tile.chunk[number_line - 1][number_tile].vertices].global_number
+                                elif list_availability_fields[tile.vertices].global_number > list_availability_fields[up].global_number:
+                                    print(f"Выполняется условие что верхнее значение больше {list_availability_fields[tile.vertices].global_number} - {list_availability_fields[up].global_number}")
+                                    list_availability_fields[tile.vertices].global_number = list_availability_fields[up].global_number
+                                    
                                         
                             #Если тайл не обрабатывался
                             elif tile.vertices == -1:
                                 tile.vertices = global_tile.chunk[number_line - 1][number_tile].vertices
                                 list_availability_fields[tile.vertices].tiles.append([number_line, number_tile])
-                                
                                 
                         #Если тайл еще не обрабатывался
                         if tile.vertices == -1:
@@ -230,10 +232,21 @@ def defining_vertices(processed_map):
                             list_availability_fields.append(Availability_field(number_field, [number_line, number_tile]))
                             number_field += 1
             
+            for field in list_availability_fields:
+                print(f"before number - {field.number}, global_number - {field.global_number}, tiles - field.tiles")
+                if field.number != field.global_number:
+                    field.global_number = list_availability_fields[field.global_number].global_number
+                print(f"after number - {field.number}, global_number - {field.global_number}, tiles - field.tiles")
+            print('\n \n')
+
             for availability_field in list_availability_fields:
+                print(f"number - {availability_field.number}, global_number - {availability_field.global_number}, tiles - availability_field.tiles")
                 for tile in availability_field.tiles:
                     global_tile.chunk[tile[0]][tile[1]].vertices = availability_field.global_number
-        x = '''
+            print('\n \n \n \n')
+            
+                    
+            x = '''
             #Повторный проход для определения неопределённых связей
 
             new_friends_list = []
