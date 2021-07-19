@@ -217,7 +217,6 @@ def defining_vertices(processed_map):
                                     list_availability_fields[up].global_number = list_availability_fields[tile.vertices].global_number
                                     
                                 elif list_availability_fields[tile.vertices].global_number > list_availability_fields[up].global_number:
-                                    print(f"Выполняется условие что верхнее значение больше {list_availability_fields[tile.vertices].global_number} - {list_availability_fields[up].global_number}")
                                     list_availability_fields[tile.vertices].global_number = list_availability_fields[up].global_number
                                     
                                         

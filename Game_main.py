@@ -39,7 +39,7 @@ class Person:
     __slots__ = ('name', 'assemblage_point', 'dynamic', 'chunks_use_map', 'pointer', 'gun', 'global_position', 'number_chunk',
                  'environment_temperature', 'person_temperature', 'person_pass_step', 'enemy_pass_step',
                  'speed', 'test_visible', 'level', 'vertices', 'local_position', 'direction', 'pass_draw_move', 'recalculating_the_display', 'type',
-                 'icon', 'pointer_step')
+                 'icon', 'pointer_step', 'zone_relationships')
     def __init__(self, assemblage_point:list, dynamic:list, chunks_use_map:list, pointer:list, gun:list):
         self.name = 'person'
         self.assemblage_point = assemblage_point
@@ -48,7 +48,7 @@ class Person:
         self.pointer = pointer
         self.gun = gun
         self.global_position = assemblage_point
-        self.number_chunk = 1
+        self.number_chunk = 0
         self.environment_temperature = 36.6
         self.person_temperature = 36.6
         self.person_pass_step = 0
@@ -64,6 +64,7 @@ class Person:
         self.type = '0'
         self.icon = '☺'
         self.pointer_step = False
+        self.zone_relationships = []
 
     def __getstate__(self) -> dict:
         """ Сохранение класса """
@@ -91,6 +92,7 @@ class Person:
         state["type"] = self.type
         state["icon"] = self.icon
         state["pointer_step"] = self.pointer_step
+        state["zone_relationships"] = self.zone_relationships
         return state
 
     def __setstate__(self, state: dict):
@@ -118,6 +120,7 @@ class Person:
         self.type = state["type"]
         self.icon = state["icon"]
         self.pointer_step = state["pointer_step"]
+        self.zone_relationships = state["zone_relationships"]
 
     def check_local_position(self):
         local_position = []
@@ -136,22 +139,22 @@ class Person:
         """
             Рассчитывает глобальное положение по положению динамического чанка и положению внутри его
             Выдаёт глобальные координаты и номер чанка, в котором сейчас находится игрок
-            Номера чанков выглядят так: 1 2
-                                        3 4
+            Номера чанков выглядят так: 0 1
+                                        2 3
         """
         
         if self.dynamic[0] < chank_size > self.dynamic[1]:  
             self.global_position = self.assemblage_point    
+            self.number_chunk = 0
+        elif self.dynamic[0] < chank_size <= self.dynamic[1]:
+            self.global_position = [self.assemblage_point[0], self.assemblage_point[1] + 1]
             self.number_chunk = 1
         elif self.dynamic[0] >= chank_size > self.dynamic[1]:
             self.global_position = [self.assemblage_point[0] + 1, self.assemblage_point[1]]
-            self.number_chunk = 3
-        elif self.dynamic[0] < chank_size <= self.dynamic[1]:
-            self.global_position = [self.assemblage_point[0], self.assemblage_point[1] + 1]
             self.number_chunk = 2
         elif self.dynamic[0] >= chank_size <= self.dynamic[1]:
             self.global_position = [self.assemblage_point[0] + 1, self.assemblage_point[1] + 1]
-            self.number_chunk = 4
+            self.number_chunk = 3
 
 class Interfase:
     """ Содержит элементы для последующего вывода на экран """
@@ -512,7 +515,7 @@ def loading_all_sprites():
                     '#': {'0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_gnawed_bones.png')))},
                     '$': {'0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_animal_rest_stop.png')))},
                     'W': {'0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_warning.jpg')))},
-                    '=': {'0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_warning.jpg')))},
+                    '=': {'0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_faint_traces.png')))},
                     'П': {'0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'pointer_0.png')))},
                     }
     return sprites_dict
@@ -1972,10 +1975,15 @@ def calculation_assemblage_point(global_map:list, person, chunk_size:int):
     for line in line_slice:
         line = line[person.assemblage_point[1]:(person.assemblage_point[1] + 2)]
         assemblage_chunk.append(line)
+        person.zone_relationships = []
     for number_line in range(len(assemblage_chunk)):
         for chunk in range(len(assemblage_chunk)):
+            person.zone_relationships.append(assemblage_chunk[number_line][chunk].vertices)
             assemblage_chunk[number_line][chunk] = assemblage_chunk[number_line][chunk].chunk
+            
     person.chunks_use_map = gluing_location(assemblage_chunk, 2, chunk_size)
+
+    
 
         
 def request_processing(pressed_button):
@@ -2357,9 +2365,7 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
                 
             working_minimap_surface = pygame.Surface.copy(minimap_surface) #Копирование поверхности миникарты
                 
-            
             blit_coordinates = (0, 0)
-            
             
             if person.direction == 'up':
                 offset_sprites.all[0] += step_direction
@@ -2548,6 +2554,32 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
                 for number_tile in range(chunk_size):
                     Island_friends(number_tile*size_tile + offset_sprites.all[1], number_line*size_tile + offset_sprites.all[0], size_tile,
                                            landscape_layer[number_line][number_tile].vertices).draw(screen)
+            if person.zone_relationships:
+                person_offset = [0, 0]
+                if person.direction == 'left':
+                    person_offset = [0, 1]
+                elif person.direction == 'right':
+                    person_offset = [0, -1]
+                elif person.direction == 'up':
+                    person_offset = [1, 0]
+                elif person.direction == 'down':
+                    person_offset = [-1, 0]
+                for number_vertices, vertices in enumerate(person.zone_relationships):
+                    if person.number_chunk == number_vertices:
+                        for vertice in vertices:
+                            if vertice.connections:
+                                for connect in vertice.connections:
+                                    for tile in connect.tiles:
+                                        if (person.local_position[0] - chunk_size//2) < tile[0] < (person.local_position[0] + chunk_size//2) and (
+                                            person.local_position[1] - chunk_size//2) < tile[1] < (person.local_position[1] + chunk_size//2):
+                                            offset = [tile[0] - person.local_position[0], tile[1] - person.local_position[1]]
+                                            Island_friends((chunk_size//2 + offset[1] + person_offset[1])*size_tile + offset_sprites.all[1] + 10,
+                                                           (chunk_size//2 + offset[0] + person_offset[0])*size_tile + offset_sprites.all[0] + 10,
+                                                           10, connect.number).draw(screen)
+                                    
+                                        
+                                    
+                                
         #Отрисовка персонажа
         person_sprite = sprites_dict[person.icon][person.type]
         person_sprite.rect.top = chunk_size//2*size_tile
@@ -2555,14 +2587,14 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
         person_sprite.draw(screen)
 
         #Рисование белой рамки, закрывающей смещение
-        #for number_line in range(chunk_size + 1):
-        #    for number_tile in range(chunk_size + 1):
-        #        if 0 == number_line or number_line == chunk_size:
-        #            Color_rect(number_line*size_tile, number_tile*size_tile, size_tile, (255, 255, 255)).draw(screen)
-        #        if 0 == number_tile or number_tile == chunk_size:
-        #            Color_rect(number_line*size_tile, number_tile*size_tile, size_tile, (255, 255, 255)).draw(screen)
-        # Печать персонажей на миникарту
-
+        for number_line in range(chunk_size + 1):
+            for number_tile in range(chunk_size + 1):
+                if 0 == number_line or number_line == chunk_size:
+                    Draw_rect(number_line*size_tile, number_tile*size_tile, size_tile, size_tile, (255, 255, 255)).draw(screen)
+                if 0 == number_tile or number_tile == chunk_size:
+                    Draw_rect(number_line*size_tile, number_tile*size_tile, size_tile, size_tile, (255, 255, 255)).draw(screen)
+                    
+        #Печать персонажей на миникарту
         person_sprite = minimap_dict[person.icon][person.type]
         person_sprite.rect.top = person.global_position[0]*size_tile_minimap
         person_sprite.rect.left = person.global_position[1]*size_tile_minimap

@@ -1106,12 +1106,16 @@ def defining_vertices(processed_map):
                                     up = global_tile.chunk[number_line - 1][number_tile].vertices
                                     if list_availability_fields[tile.vertices].global_number < list_availability_fields[up].global_number:
                                         check_number = up
+                                        count = 0 
                                         while True: #Цикл, который проверит номер и глобальный номер на одинаковость и если нет, то повторит это с указанным глобальным номером
                                             if list_availability_fields[check_number].global_number != list_availability_fields[check_number].number:
                                                 check_number = list_availability_fields[list_availability_fields[check_number].global_number].global_number
                                                 list_availability_fields[list_availability_fields[check_number].global_number].global_number = list_availability_fields[tile.vertices].global_number
                                             else:
                                                 break
+                                            if count == 10:
+                                                break
+                                            count += 1
                                         list_availability_fields[up].global_number = list_availability_fields[tile.vertices].global_number
                                         
                                     elif list_availability_fields[tile.vertices].global_number > list_availability_fields[up].global_number:
