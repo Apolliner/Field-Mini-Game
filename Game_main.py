@@ -2522,7 +2522,7 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
                         print_sprite = sprites_dict[activity_layer[number_line][number_tile].icon][activity_layer[number_line][number_tile].type]
                         print_sprite.rect.top = number_line*size_tile
                         print_sprite.rect.left = number_tile*size_tile
-                        print_sprite.draw(finishing_surface)
+                        print_sprite.draw(finishing_surface) 
             #Отрисовка НПЦ
             entities_layer = entities_layer_calculations(person, chunk_size, go_to_print, enemy_list) #Использование функции для отображения активностей
                         

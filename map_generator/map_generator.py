@@ -1113,7 +1113,7 @@ def defining_vertices(processed_map):
                                 #Обработка крайней левой линии
                                 if number_tile == 0 and number_line > 0:
                                     tile.vertices = global_tile.chunk[number_line - 1][number_tile].vertices
-                                    list_availability_fields[tile.vertices].tiles.append([number_line, number_tile])
+                                    list_availability_fields[tile.vertices].tiles.append([number_line, number_tile]) 
                                 
                                 #Если тайл обрабатывался
                                 if tile.vertices >= 0:
