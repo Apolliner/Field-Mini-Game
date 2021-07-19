@@ -1031,41 +1031,55 @@ def defining_zone_relationships(processed_map):
                     local_position = [number_line, number_tile]
                     #Обработка верха
                     if number_global_line > 0 and number_line == 0:
-                        defining_local_position = [len(global_tile.chunk) - 1, number_tile]
-                        connect_number = processed_map[number_global_line - 1][number_global_tile].chunk[len(global_tile.chunk) - 1][number_tile].vertices
-                        connect_position = [number_global_line - 1, number_global_tile]
+                        if tile.level == processed_map[number_global_line - 1][number_global_tile].chunk[len(global_tile.chunk) - 1][number_tile
+                                ].level or tile.stairs or processed_map[number_global_line - 1][number_global_tile].chunk[len(global_tile.chunk) - 1][
+                                number_tile].stairs:
+                            defining_local_position = [len(global_tile.chunk) - 1, number_tile]
+                            connect_number = processed_map[number_global_line - 1][number_global_tile].chunk[len(global_tile.chunk) - 1][number_tile].vertices
+                            connect_position = [number_global_line - 1, number_global_tile]
 
-                        defining_connections(processed_map, tile_number, tile_position, defining_local_position, local_position, connect_number, connect_position, global_tile)
+                            defining_connections(processed_map, tile_number, tile_position, defining_local_position, local_position, connect_number,
+                                    connect_position, global_tile)
 
                     #Обработка низа
                     if number_global_line < len(processed_map) - 1 and number_line == len(global_tile.chunk) - 1:
-                        defining_local_position = [0, number_tile]
-                        connect_number = processed_map[number_global_line + 1][number_global_tile].chunk[0][number_tile].vertices
-                        connect_position = [number_global_line + 1, number_global_tile]
+                        if tile.level == processed_map[number_global_line + 1][number_global_tile].chunk[0][number_tile].level or tile.stairs or processed_map[
+                            number_global_line + 1][number_global_tile].chunk[0][number_tile].stairs:
+                            defining_local_position = [0, number_tile]
+                            connect_number = processed_map[number_global_line + 1][number_global_tile].chunk[0][number_tile].vertices
+                            connect_position = [number_global_line + 1, number_global_tile]
 
-                        defining_connections(processed_map, tile_number, tile_position, defining_local_position, local_position, connect_number, connect_position, global_tile)
+                            defining_connections(processed_map, tile_number, tile_position, defining_local_position, local_position, connect_number,
+                                    connect_position, global_tile)
 
             #Обработка правых и левых краёв
             for number_line in range(len(global_tile.chunk)):
-                for number_tile in (0, len(global_tile.chunk[number_line]) - 1):
+                for number_tile, tile in enumerate(global_tile.chunk[number_line]):
                     tile_number = global_tile.chunk[number_line][number_tile].vertices
                     tile_position = [number_global_line, number_global_tile]
                     local_position = [number_line, number_tile]
                     #Обработка левой стороны
                     if number_global_tile > 0 and number_tile == 0:
-                        defining_local_position = [number_line, len(global_tile.chunk) - 1]#
-                        connect_number = processed_map[number_global_line][number_global_tile - 1].chunk[number_line][len(global_tile.chunk) - 1].vertices
-                        connect_position = [number_global_line, number_global_tile - 1]
+                        if tile.level == processed_map[number_global_line][number_global_tile - 1].chunk[number_line][len(global_tile.chunk) - 1
+                                ].level or tile.stairs or processed_map[number_global_line][number_global_tile - 1].chunk[number_line][
+                                len(global_tile.chunk) - 1].stairs:
+                            defining_local_position = [number_line, len(global_tile.chunk) - 1]#
+                            connect_number = processed_map[number_global_line][number_global_tile - 1].chunk[number_line][len(global_tile.chunk) - 1].vertices
+                            connect_position = [number_global_line, number_global_tile - 1]
 
-                        defining_connections(processed_map, tile_number, tile_position, defining_local_position, local_position, connect_number, connect_position, global_tile)
+                            defining_connections(processed_map, tile_number, tile_position, defining_local_position, local_position, connect_number,
+                                connect_position, global_tile)
 
                     #Обработка правой стороны
                     if number_global_tile < len(processed_map[0]) - 1 and number_tile == len(global_tile.chunk[0]) - 1:
-                        defining_local_position = [number_line, 0]
-                        connect_number = processed_map[number_global_line][number_global_tile + 1].chunk[number_line][0].vertices
-                        connect_position = [number_global_line, number_global_tile + 1]
+                        if tile.level == processed_map[number_global_line][number_global_tile + 1].chunk[number_line][0].level or tile.stairs or processed_map[
+                            number_global_line][number_global_tile + 1].chunk[number_line][0].stairs:
+                            defining_local_position = [number_line, 0]
+                            connect_number = processed_map[number_global_line][number_global_tile + 1].chunk[number_line][0].vertices
+                            connect_position = [number_global_line, number_global_tile + 1]
 
-                        defining_connections(processed_map, tile_number, tile_position, defining_local_position, local_position, connect_number, connect_position, global_tile)
+                            defining_connections(processed_map, tile_number, tile_position, defining_local_position, local_position, connect_number,
+                                connect_position, global_tile)
             
 @timeit
 def defining_vertices(processed_map):
@@ -1089,13 +1103,13 @@ def defining_vertices(processed_map):
                             
                         #Обработка тайла слева
                         if number_tile > 0 and global_tile.chunk[number_line][number_tile - 1].vertices >= 0:
-                            if tile.level == global_tile.chunk[number_line][number_tile - 1].level or tile.stairs or tile.level == global_tile.chunk[number_line][number_tile - 1].stairs:
+                            if tile.level == global_tile.chunk[number_line][number_tile - 1].level or tile.stairs or global_tile.chunk[number_line][number_tile - 1].stairs:
                                 tile.vertices = global_tile.chunk[number_line][number_tile - 1].vertices
                                 list_availability_fields[tile.vertices].tiles.append([number_line, number_tile])
 
                         #Обработка тайла сверху
                         if number_line > 0 and global_tile.chunk[number_line - 1][number_tile].vertices >= 0:
-                            if tile.level == global_tile.chunk[number_line - 1][number_tile].level or tile.stairs or tile.level == global_tile.chunk[number_line - 1][number_tile].stairs:
+                            if tile.level == global_tile.chunk[number_line - 1][number_tile].level or tile.stairs or global_tile.chunk[number_line - 1][number_tile].stairs:
                                 #Обработка крайней левой линии
                                 if number_tile == 0 and number_line > 0:
                                     tile.vertices = global_tile.chunk[number_line - 1][number_tile].vertices
@@ -1113,7 +1127,7 @@ def defining_vertices(processed_map):
                                                 list_availability_fields[list_availability_fields[check_number].global_number].global_number = list_availability_fields[tile.vertices].global_number
                                             else:
                                                 break
-                                            if count == 10:
+                                            if count == 20:
                                                 break
                                             count += 1
                                         list_availability_fields[up].global_number = list_availability_fields[tile.vertices].global_number
@@ -1140,32 +1154,6 @@ def defining_vertices(processed_map):
             for availability_field in list_availability_fields:
                 for tile in availability_field.tiles:
                     global_tile.chunk[tile[0]][tile[1]].vertices = availability_field.global_number
-
-            '''#Повторный проход для определения неопределённых связей
-
-            new_friends_list = []
-            for number_line in range(len(global_tile.chunk)):
-                for number_tile, tile in enumerate(global_tile.chunk[number_line]):
-                    if number_line > 0 and tile.vertices != -1 and -1 != global_tile.chunk[number_line - 1][number_tile].vertices != tile.vertices:
-                        if global_tile.chunk[number_line - 1][number_tile].level == tile.level or tile.stairs or global_tile.chunk[number_line - 1][number_tile].stairs:
-                            if not ([global_tile.chunk[number_line - 1][number_tile].vertices, tile.vertices] in new_friends_list):
-                                new_friends_list.append([global_tile.chunk[number_line - 1][number_tile].vertices, tile.vertices])
-                            
-                    elif number_line == 0 and tile.vertices != -1 and -1 != global_tile.chunk[number_line + 1][number_tile].vertices != tile.vertices:
-                        if global_tile.chunk[number_line + 1][number_tile].level == tile.level or tile.stairs or global_tile.chunk[number_line + 1][number_tile].stairs:
-                            if not ([global_tile.chunk[number_line + 1][number_tile].vertices, tile.vertices] in new_friends_list):
-                                new_friends_list.append([global_tile.chunk[number_line + 1][number_tile].vertices, tile.vertices])
-                    
-            if new_friends_list:
-                for frends in new_friends_list:
-                    master = min(frends[0], frends[1])
-                    slave = max(frends[0], frends[1])
-                    for number_line in range(1, len(global_tile.chunk)):
-                        for number_tile, tile in enumerate(global_tile.chunk[number_line]):
-                            
-                            if tile.vertices == slave:
-                                tile.vertices = master
-            '''
                             
 def diversity_field_tiles(processed_map):
     """
@@ -1506,6 +1494,7 @@ def levelness_calculation(processed_map, field_tiles_tuple, not_the_first_layer,
     minus_level_list = ['~', 'C', '`']
     plus_level_list = ['▲']
     stairs_list = ['O', 'A', 'P', 'B', 'Q', 'C', 'R', 'D']
+    white_stairs_list = ['C']
 
     # Поднимание\опускание расчётного слоя на свою высоту.
     detection = ['0']
@@ -1625,7 +1614,7 @@ def levelness_calculation(processed_map, field_tiles_tuple, not_the_first_layer,
                     else:
                         tile.type = '0'
 
-                if tile.type in stairs_list:
+                if tile.type in stairs_list and tile.icon in white_stairs_list:
                     tile.stairs = True
 
 def cutting_tiles_map(processed_map, chunks_map):

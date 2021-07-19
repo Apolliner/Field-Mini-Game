@@ -517,6 +517,7 @@ def loading_all_sprites():
                     'W': {'0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_warning.jpg')))},
                     '=': {'0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_faint_traces.png')))},
                     'П': {'0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'pointer_0.png')))},
+                    'stairs': {'0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_stairs.png')))},
                     }
     return sprites_dict
 class Fast_minimap_tile(pygame.sprite.Sprite):
@@ -2554,6 +2555,12 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
                 for number_tile in range(chunk_size):
                     Island_friends(number_tile*size_tile + offset_sprites.all[1], number_line*size_tile + offset_sprites.all[0], size_tile,
                                            landscape_layer[number_line][number_tile].vertices).draw(screen)
+                    if landscape_layer[number_line][number_tile].stairs:
+                        print_sprite = sprites_dict['stairs']['0']
+                        print_sprite.rect.top = number_line*size_tile + offset_sprites.all[0]
+                        print_sprite.rect.left = number_tile*size_tile + offset_sprites.all[1]
+                        print_sprite.draw(screen)
+                        
             if person.zone_relationships:
                 person_offset = [0, 0]
                 if person.direction == 'left':
@@ -2576,9 +2583,6 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
                                             Island_friends((chunk_size//2 + offset[1] + person_offset[1])*size_tile + offset_sprites.all[1] + 10,
                                                            (chunk_size//2 + offset[0] + person_offset[0])*size_tile + offset_sprites.all[0] + 10,
                                                            10, connect.number).draw(screen)
-                                    
-                                        
-                                    
                                 
         #Отрисовка персонажа
         person_sprite = sprites_dict[person.icon][person.type]
