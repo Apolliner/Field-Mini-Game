@@ -1133,6 +1133,17 @@ def defining_vertices(processed_map):
                                         list_availability_fields[up].global_number = list_availability_fields[tile.vertices].global_number
                                         
                                     elif list_availability_fields[tile.vertices].global_number > list_availability_fields[up].global_number:
+                                        check_number = tile.vertices
+                                        count = 0 
+                                        while True: #Цикл, который проверит номер и глобальный номер на одинаковость и если нет, то повторит это с указанным глобальным номером
+                                            if list_availability_fields[check_number].global_number != list_availability_fields[check_number].number:
+                                                check_number = list_availability_fields[list_availability_fields[check_number].global_number].global_number
+                                                list_availability_fields[list_availability_fields[check_number].global_number].global_number = list_availability_fields[tile.vertices].global_number
+                                            else:
+                                                break
+                                            if count == 20:
+                                                break
+                                            count += 1
                                         list_availability_fields[tile.vertices].global_number = list_availability_fields[up].global_number
                                             
                                 #Если тайл не обрабатывался
@@ -1146,7 +1157,72 @@ def defining_vertices(processed_map):
                             tile.vertices = number_field
                             list_availability_fields.append(Availability_field(number_field, [number_line, number_tile]))
                             number_field += 1
-                    
+            
+            #Повторный проход по лестницам
+            for number_line in range(len(global_tile.chunk)):
+                for number_tile, tile in enumerate(global_tile.chunk[number_line]):
+                    if tile.stairs:
+                        if 0 < number_line and global_tile.chunk[number_line - 1][number_tile].vertices >= 0:
+                            up = global_tile.chunk[number_line - 1][number_tile]
+                            if list_availability_fields[tile.vertices].global_number < list_availability_fields[up.vertices].global_number:
+                                check_number = up.vertices
+                                count = 0 
+                                while True: #Цикл, который проверит номер и глобальный номер на одинаковость и если нет, то повторит это с указанным глобальным номером
+                                    if list_availability_fields[check_number].global_number != list_availability_fields[check_number].number:
+                                        check_number = list_availability_fields[list_availability_fields[check_number].global_number].global_number
+                                        list_availability_fields[list_availability_fields[check_number].global_number].global_number = list_availability_fields[tile.vertices].global_number
+                                    else:
+                                        break
+                                    if count == 20:
+                                        break
+                                    count += 1
+                                list_availability_fields[up.vertices].global_number = list_availability_fields[tile.vertices].global_number
+
+                            elif list_availability_fields[tile.vertices].global_number > list_availability_fields[up.vertices].global_number:
+                                check_number = tile.vertices
+                                count = 0 
+                                while True: #Цикл, который проверит номер и глобальный номер на одинаковость и если нет, то повторит это с указанным глобальным номером
+                                    if list_availability_fields[check_number].global_number != list_availability_fields[check_number].number:
+                                        check_number = list_availability_fields[list_availability_fields[check_number].global_number].global_number
+                                        list_availability_fields[list_availability_fields[check_number].global_number].global_number = list_availability_fields[tile.vertices].global_number
+                                    else:
+                                        break
+                                    if count == 20:
+                                        break
+                                    count += 1
+                                list_availability_fields[tile.vertices].global_number = list_availability_fields[up.vertices].global_number
+
+                        if number_line < (len(global_tile.chunk) - 1) and global_tile.chunk[number_line + 1][number_tile].vertices >= 0:
+                            down = global_tile.chunk[number_line + 1][number_tile]
+                            if list_availability_fields[tile.vertices].global_number < list_availability_fields[down.vertices].global_number:
+                                check_number = down.vertices
+                                count = 0 
+                                while True: #Цикл, который проверит номер и глобальный номер на одинаковость и если нет, то повторит это с указанным глобальным номером
+                                    if list_availability_fields[check_number].global_number != list_availability_fields[check_number].number:
+                                        check_number = list_availability_fields[list_availability_fields[check_number].global_number].global_number
+                                        list_availability_fields[list_availability_fields[check_number].global_number].global_number = list_availability_fields[tile.vertices].global_number
+                                    else:
+                                        break
+                                    if count == 20:
+                                        break
+                                    count += 1
+                                list_availability_fields[down.vertices].global_number = list_availability_fields[tile.vertices].global_number
+
+                            elif list_availability_fields[tile.vertices].global_number > list_availability_fields[down.vertices].global_number:
+                                check_number = tile.vertices
+                                count = 0 
+                                while True: #Цикл, который проверит номер и глобальный номер на одинаковость и если нет, то повторит это с указанным глобальным номером
+                                    if list_availability_fields[check_number].global_number != list_availability_fields[check_number].number:
+                                        check_number = list_availability_fields[list_availability_fields[check_number].global_number].global_number
+                                        list_availability_fields[list_availability_fields[check_number].global_number].global_number = list_availability_fields[tile.vertices].global_number
+                                    else:
+                                        break
+                                    if count == 20:
+                                        break
+                                    count += 1
+                                list_availability_fields[tile.vertices].global_number = list_availability_fields[down.vertices].global_number
+                            
+                   
             for field in list_availability_fields:
                 if field.number != field.global_number:
                     field.global_number = list_availability_fields[field.global_number].global_number
@@ -1773,7 +1849,6 @@ def merge_all_description_for_generator(description_one, description_two):
             description_one[5][1] = random.randrange(description_one[5][1], description_two[5][1])
         elif description_one[5][1] > description_two[5][1]:
             description_one[5][1] = random.randrange(description_two[5][1], description_one[5][1])
-        
 
     return description_one
 
