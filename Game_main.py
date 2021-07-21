@@ -17,12 +17,10 @@ garbage = ['░', '▒', '▓', '█', '☺']
 """
     ВЕРСИЯ ДЛЯ РЕФАКТОРИНГА И БАГФИКСА
 
-
     РЕАЛИЗОВАТЬ:
 
-    1)При смене кадра не перессчитывать весь кадр, а убирать или добавлять только крайние линии или столбцы. РЕАЛИЗОВАНО
+    1)Взрывчатка и разрушения. Добавить тайлам параметры веса и устойчивости. При воздействии, рассчитывать разрушение и/или сползание.
 
-    
     ТЕМАТИКА:
     Всё, что мне нравится. Персонажи как в хороший плохой злой, вяленое конское мясо и гремучие змеи!
 
@@ -517,6 +515,7 @@ def loading_all_sprites():
                     'W': {'0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_warning.jpg')))},
                     '=': {'0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_faint_traces.png')))},
                     'П': {'0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'pointer_0.png')))},
+                    'w': {'0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_waypoint.png')))},
                     'stairs': {'0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_stairs.png')))},
                     }
     return sprites_dict
@@ -912,11 +911,11 @@ def master_game_events(global_map, enemy_list, person, go_to_print, step, activi
     """
         Здесь происходят все события, не связанные с пользовательским вводом
     """
-    interaction_processing(global_map, interaction, enemy_list)
+    interaction_processing(global_map, interaction, enemy_list, step, chunk_size, activity_list)
     activity_list_check(activity_list, step)
     master_npc_calculation(global_map, enemy_list, person, go_to_print, step, activity_list, chunk_size, interaction, world)
 
-def interaction_processing(global_map, interaction, enemy_list):
+def interaction_processing(global_map, interaction, enemy_list, step, chunk_size, activity_list):
     """
         Обрабатывает взаимодействие игрока с миром
     """
@@ -924,14 +923,17 @@ def interaction_processing(global_map, interaction, enemy_list):
         for interact in interaction:
             if interact[0] == 'task_point_all_enemies':
                 for enemy in enemy_list:
-                    if enemy.type_npc == 'hunter':
-                        enemy.target = interact[1]
-                        enemy.waypoints = []
-                        enemy.local_waypoints = []
-                        print(F"{enemy.name_npc} получил задачу {enemy.target}")
+                    enemy.target = interact[1]
+                    enemy.waypoints = []
+                    enemy.local_waypoints = []
+                    print(F"{enemy.name_npc} получил задачу {enemy.target}")
+            if interact[0] == 'view_waypoints':
+                for enemy in enemy_list:
+                    if enemy.local_waypoints:
+                        for waypoint in enemy.local_waypoints: #[local_y, local_x, vertices, [global_y, global_x]]
+                            activity_list.append(Action_in_map('waypoint', step, waypoint[3], [waypoint[0], waypoint[1]],
+                                                       chunk_size, enemy.name_npc))
     interaction = []
-                        
-
 
 def activity_list_check(activity_list, step):
     """
@@ -956,13 +958,13 @@ class Action_in_map:
     """ Содержит в себе описание активности и срок её жизни """
     __slots__ = ('name', 'icon', 'description', 'lifetime', 'birth', 'global_position', 'local_position', 'caused',
                  'lifetime_description', 'visible', 'type', 'level')
-    def __init__(self, name, birth, position_npc, dynamic_position, chunk_size, caused):
+    def __init__(self, name, birth, position_npc, local_position, chunk_size, caused):
         self.name = name
         self.icon = self.action_dict(0)
         self.lifetime = self.action_dict(2)
         self.birth = birth
         self.global_position = copy.deepcopy(position_npc)
-        self.local_position = [dynamic_position[0]%chunk_size, dynamic_position[1]%chunk_size]
+        self.local_position = local_position #[dynamic_position[0]%chunk_size, dynamic_position[1]%chunk_size]
         self.caused = caused
         self.lifetime_description = ''
         self.description = f'{self.action_dict(1)} похоже на {self.caused}'
@@ -1025,6 +1027,7 @@ class Action_in_map:
                         'test_beacon':      ['B', 'маяк для теста',            1000,        True],
                         'unknown':          ['?', 'неизвестно',                 150,        True],
                         'faint_footprints': ['=', 'слабые следы',                50,       False],
+                        'waypoint':         ['w', 'вейпоинт',                    50,       False],
                         }
         if self.name in action_dict:
             return action_dict[self.name][number]
@@ -1048,7 +1051,7 @@ class Enemy:
         self.action_points = 10
         self.dynamic_chunk = False
         self.waypoints = []
-        self.local_waypoints = [] # [[local_y, local_x], vertices, [global_y, global_x]]
+        self.local_waypoints = [] # [local_y, local_x, vertices, [global_y, global_x]]
         self.alarm = False
         self.pass_step = 0
         self.on_the_screen = False
@@ -1689,9 +1692,9 @@ def master_player_action(global_map, person, chunk_size, go_to_print, mode_actio
                                                                        interaction, mouse_position)
     if pressed_button != 'none':
         if mode_action == 'move':
-            activity_list.append(Action_in_map('faint_footprints', step, person.global_position, person.dynamic, chunk_size, person.name))
+            activity_list.append(Action_in_map('faint_footprints', step, person.global_position, person.local_position, chunk_size, person.name))
             if random.randrange(21)//18 > 0: # Оставление персонажем следов
-                activity_list.append(Action_in_map('human_tracks', step, person.global_position, person.dynamic, chunk_size, person.name))
+                activity_list.append(Action_in_map('human_tracks', step, person.global_position, person.local_position, chunk_size, person.name))
             request_move(global_map, person, chunk_size, go_to_print, pressed_button)
     
         elif mode_action == 'test_move':
@@ -1742,6 +1745,8 @@ def wait_keyboard(person, mouse_position):
                     return 'c', mouse_position
                 if event.key == pygame.K_h:
                     return 'h', mouse_position
+                if event.key == pygame.K_o:
+                    return 'o', mouse_position
             if event.type == pygame.MOUSEMOTION:
                 person.pointer_step = True
                 return 'none', event.pos
@@ -1803,6 +1808,11 @@ def request_press_button(global_map, person, chunk_size, go_to_print, mode_actio
     elif key == 'v' or key == 'м':
         if mode_action == 'test_move':
             return ('test_move', 'button_test_visible', mouse_position)
+        else:
+            return (mode_action, 'none', mouse_position)
+    elif key == 'o' or key == 'щ':
+        if mode_action == 'test_move':
+            return ('test_move', 'view_waypoints', mouse_position)
         else:
             return (mode_action, 'none', mouse_position)
     elif key == 'b' or key == 'и':
@@ -1912,6 +1922,9 @@ def test_request_move(global_map:list, person, chunk_size:int, go_to_print, pres
         
     elif pressed_button == 'button_test_visible':
         person.test_visible = not person.test_visible
+
+    elif pressed_button == 'view_waypoints':
+        interaction.append(['view_waypoints'])
 
     elif pressed_button == 'add_hunter':
         enemy_list.append(return_npc(copy.deepcopy(person.global_position), copy.deepcopy(person.local_position), 'riffleman'))
@@ -2117,43 +2130,6 @@ def landscape_layer_calculations(person, chunk_size, go_to_print):
             new_line.append(tile)
         landscape_layer.append(new_line)
     return landscape_layer
-
-def activity_layer_calculations(person, chunk_size:int, go_to_print, activity_list):
-    """
-        Отрисовывает слой активностей или слой персонажей
-    """
-    start_stop = [(person.dynamic[0] - chunk_size//2), (person.dynamic[1] - chunk_size//2),
-                  (person.dynamic[0] + chunk_size//2 + 1),(person.dynamic[1] + chunk_size//2 + 1)]
-    go_draw_activity = []
-    for activity in activity_list:
-        if activity.visible or person.test_visible:
-            if activity.global_position[0] == person.assemblage_point[0] and activity.global_position[1] == person.assemblage_point[1]:
-                go_draw_activity.append([activity.local_position[0], activity.local_position[1], activity])
-
-            elif activity.global_position[0] == person.assemblage_point[0] and activity.global_position[1] == person.assemblage_point[1] + 1:
-                go_draw_activity.append([activity.local_position[0], activity.local_position[1] + chunk_size, activity])
-
-            elif activity.global_position[0] == person.assemblage_point[0] + 1 and activity.global_position[1] == person.assemblage_point[1]:
-                go_draw_activity.append([activity.local_position[0] + chunk_size, activity.local_position[1], activity])
-
-            elif activity.global_position[0] == person.assemblage_point[0] + 1 and activity.global_position[1] == person.assemblage_point[1] + 1:
-                go_draw_activity.append([activity.local_position[0] + chunk_size, activity.local_position[1] + chunk_size, activity])
-
-    activity_layer = []
-    for number_line in range(start_stop[0], start_stop[2]):
-        new_line = []
-        for number_tile in range(start_stop[1], start_stop[3]):
-            no_changes = True
-            for activity in go_draw_activity:
-                if number_line == activity[0] and number_tile == activity[1]:
-                    new_line.append(activity[2])
-                    no_changes = False
-                    break
-            if no_changes:
-                new_line.append(Tile('0'))
-        activity_layer.append(new_line)
-
-    return activity_layer
 
 def entities_layer_calculations(person, chunk_size:int, go_to_print, entities_list):
     """
@@ -2446,7 +2422,7 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
 
             offset_sprites.all = [offset_y, offset_x]
             
-            minimap_sprite = pygame.sprite.Group()
+            #minimap_sprite = pygame.sprite.Group()
             landscape_layer = landscape_layer_calculations(person, chunk_size, go_to_print)
             activity_layer = entities_layer_calculations(person, chunk_size, go_to_print, activity_list)
             #sky_layer = sky_layer_calculations(chunk_size)
