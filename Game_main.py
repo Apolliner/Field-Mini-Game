@@ -516,6 +516,8 @@ def loading_all_sprites():
                     '=': {'0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_faint_traces.png')))},
                     'П': {'0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'pointer_0.png')))},
                     'w': {'0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_waypoint.png')))},
+                    'e': {'0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_explosion.png')))},
+                    'd': {'0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dust.png')))},
                     'stairs': {'0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_stairs.png')))},
                     }
     return sprites_dict
@@ -907,15 +909,16 @@ def gluing_location(raw_gluing_map, grid, count_block):
 
 """
 
-def master_game_events(global_map, enemy_list, person, go_to_print, step, activity_list, chunk_size, interaction, world):
+def master_game_events(global_map, enemy_list, person, go_to_print, step, activity_list, chunk_size, interaction, world, global_interaction):
     """
         Здесь происходят все события, не связанные с пользовательским вводом
     """
-    interaction_processing(global_map, interaction, enemy_list, step, chunk_size, activity_list)
+    interaction_processing(global_map, interaction, enemy_list, step, chunk_size, activity_list, global_interaction)
     activity_list_check(activity_list, step)
     master_npc_calculation(global_map, enemy_list, person, go_to_print, step, activity_list, chunk_size, interaction, world)
+    global_interaction_processing(global_map, enemy_list, step, chunk_size, activity_list, global_interaction)
 
-def interaction_processing(global_map, interaction, enemy_list, step, chunk_size, activity_list):
+def interaction_processing(global_map, interaction, enemy_list, step, chunk_size, activity_list, global_interaction):
     """
         Обрабатывает взаимодействие игрока с миром
     """
@@ -933,6 +936,9 @@ def interaction_processing(global_map, interaction, enemy_list, step, chunk_size
                         for waypoint in enemy.local_waypoints: #[local_y, local_x, vertices, [global_y, global_x]]
                             activity_list.append(Action_in_map('waypoint', step, waypoint[3], [waypoint[0], waypoint[1]],
                                                        chunk_size, enemy.name_npc))
+            if interact[0] == 'add_global_interaction':
+                if interact[1] == 'explosion':
+                    global_interaction.append(Global_interact('explosion', 'взрыв', interact[2], interact[3]))
     interaction = []
 
 def activity_list_check(activity_list, step):
@@ -944,6 +950,125 @@ def activity_list_check(activity_list, step):
         activity.all_description()
         if step - activity.lifetime > activity.birth:
             activity_list.remove(activity)
+
+class Global_interact:
+    """ Описание глобального события """
+    def __init__(self, name, description, global_position, local_position):
+        self.name = name
+        self.description = description
+        self.global_position = global_position
+        self.local_position = local_position
+        self.step = 0
+
+def global_interaction_processing(global_map, enemy_list, step, chunk_size, activity_list, global_interaction):
+    """
+        Обработка глобальных событий
+
+        Глобальные события могут длиться несколько шагов.
+    """
+    if global_interaction:
+        for number_interact, interact in enumerate(global_interaction):
+            if interact.name == 'explosion':
+                explosion_calculation(interact, activity_list, step, chunk_size, global_map)
+                if interact.step == 5:
+                    global_interaction.pop(number_interact)
+                    
+            
+            
+def explosion_calculation(explosion, activity_list, step, chunk_size, global_map):
+    """
+        Обработка взрыва
+    """
+    if explosion.step == 0:
+        explosion_draw = [
+                            '0e0',
+                            'eee',
+                            '0e0',
+                         ]
+                
+    elif explosion.step == 1:
+        explosion_draw = [
+                            '00e00',
+                            '0eee0',
+                            'eeeee',
+                            '0eee0',
+                            '00e00',
+                         ]
+    elif explosion.step == 2:
+        explosion_draw = [
+                            '000e000',
+                            '00eee00',
+                            '0eeeee0',
+                            'eeedeee',
+                            '0eeeee0',
+                            '00eee00',
+                            '000e000',
+                         ]
+    elif explosion.step == 3:
+        explosion_draw = [
+                            '000e000',
+                            '00eee00',
+                            '0eedee0',
+                            'eed0dee',
+                            '0eedee0',
+                            '00eee00',
+                            '000e000',
+                         ]
+        destruction_draw = [
+                                '.D.',
+                                'CUA',
+                                '.B.',
+                           ]
+        destruction_map = global_map[explosion.global_position[0]][explosion.global_position[1]].chunk
+        for number_line, line in enumerate(destruction_draw):
+            for number_tile, tile in enumerate(line):
+                local_position = [explosion.local_position[1] - len(destruction_draw)//2 + number_line,
+                                  explosion.local_position[1] - len(destruction_draw)//2 + number_tile]
+                if tile != '.' and local_position[0] < chunk_size - 1 and local_position[1] < chunk_size - 1:
+                    destruction_map[local_position[0]][local_position[1]].icon = 'C'
+                    destruction_map[local_position[0]][local_position[1]].type = tile
+                    destruction_map[local_position[0]][local_position[1]].level -=1
+    elif explosion.step == 4:
+        explosion_draw = [
+                            '000e000',
+                            '00ede00',
+                            '0ed0de0',
+                            'ed000de',
+                            '0ed0de0',
+                            '00ede00',
+                            '000e000',
+                         ]
+    elif explosion.step == 5:
+        explosion_draw = [
+                            '000d000',
+                            '00d0d00',
+                            '0d000d0',
+                            'd00000d',
+                            '0d000d0',
+                            '00d0d00',
+                            '000d000',
+                         ]
+    else:
+        explosion_draw = [
+                            '0',
+                         ]
+    
+    for number_line, line in enumerate(explosion_draw):
+        for number_tile, tile in enumerate(line):
+            local_position = [explosion.local_position[1] - len(explosion_draw)//2 + number_line,
+                              explosion.local_position[1] - len(explosion_draw)//2 + number_tile]
+            if tile == 'e':
+                activity_list.append(Action_in_map('explosion', step, explosion.global_position, local_position, chunk_size, 'динамит'))
+            elif tile == 'd':
+                activity_list.append(Action_in_map('dust', step, explosion.global_position, local_position, chunk_size, 'последствия взрыва'))
+
+    explosion.step += 1
+
+def destruction_calculation(interact):
+    """
+        Обработка обрушений и разрушений
+    """
+    pass
 
 """
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1028,6 +1153,8 @@ class Action_in_map:
                         'unknown':          ['?', 'неизвестно',                 150,        True],
                         'faint_footprints': ['=', 'слабые следы',                50,       False],
                         'waypoint':         ['w', 'вейпоинт',                    50,       False],
+                        'explosion':        ['e', 'взрыв',                        1,        True],
+                        'dust':             ['d', 'пыль',                        10,        True],
                         }
         if self.name in action_dict:
             return action_dict[self.name][number]
@@ -1386,6 +1513,7 @@ def vertices_enemy_a_star_move_local_calculations(global_map, enemy, target, mov
 
         target:[[local_y, local_x], vertices - номер зоны доступности на следующей или на этой карте в которую нужно прийти]
     """
+    chunk_size = len(global_map[0][0].chunk)
     
     if enemy.local_waypoints: #Если уже есть локальные вейпоинты, то стартовой точкой объявляется последний вейпоинт
         start_point = [enemy.local_waypoints[-1][0], enemy.local_waypoints[-1][1], enemy.local_waypoints[-1][2]]
@@ -1418,16 +1546,19 @@ def vertices_enemy_a_star_move_local_calculations(global_map, enemy, target, mov
                 waypoint.append(enemy.local_waypoints[-1][3])
             else:
                 waypoint.append(enemy.global_position)
-        #Добавление вейпоинта, соседнего последнему, но на другой карте и с указанием других глобальных координат
-        if moving_between_locations and success:
-            if target[0] == [global_axis[0] - 1, global_axis[1]]:
-                raw_local_waypoints.append([len(global_map[0][0].chunk) - 1, raw_local_waypoints[-1][1], target[1], target[0]])
-            elif target[0] == [global_axis[0] + 1, global_axis[1]]:
-                raw_local_waypoints.append([0, raw_local_waypoints[-1][1], target[1], target[0]])
-            elif target[0] == [global_axis[0], global_axis[1] - 1]:
-                raw_local_waypoints.append([raw_local_waypoints[-1][0], len(global_map[0][0].chunk) - 1, target[1], target[0]]) 
-            elif target[0] == [global_axis[0], global_axis[1] + 1]:
-                raw_local_waypoints.append([raw_local_waypoints[-1][0], 0, target[1], target[0]])
+
+        #Если найден путь до края локации
+        if raw_local_waypoints[-1][0] == 0 or raw_local_waypoints[-1][0] == chunk_size - 1 or raw_local_waypoints[-1][1] == 0 or raw_local_waypoints[-1][1] == chunk_size - 1:
+            #Добавление вейпоинта, соседнего последнему, но на другой карте и с указанием других глобальных координат
+            if moving_between_locations and success:
+                if target[0] == [global_axis[0] - 1, global_axis[1]]:
+                    raw_local_waypoints.append([len(global_map[0][0].chunk) - 1, raw_local_waypoints[-1][1], target[1], target[0]])
+                elif target[0] == [global_axis[0] + 1, global_axis[1]]:
+                    raw_local_waypoints.append([0, raw_local_waypoints[-1][1], target[1], target[0]])
+                elif target[0] == [global_axis[0], global_axis[1] - 1]:
+                    raw_local_waypoints.append([raw_local_waypoints[-1][0], len(global_map[0][0].chunk) - 1, target[1], target[0]]) 
+                elif target[0] == [global_axis[0], global_axis[1] + 1]:
+                    raw_local_waypoints.append([raw_local_waypoints[-1][0], 0, target[1], target[0]])
 
         #Добавление новых вейпоинтов в конец списка
         for local_waypoint in raw_local_waypoints:
@@ -1747,6 +1878,8 @@ def wait_keyboard(person, mouse_position):
                     return 'h', mouse_position
                 if event.key == pygame.K_o:
                     return 'o', mouse_position
+                if event.key == pygame.K_e:
+                    return 'e', mouse_position
             if event.type == pygame.MOUSEMOTION:
                 person.pointer_step = True
                 return 'none', event.pos
@@ -1813,6 +1946,11 @@ def request_press_button(global_map, person, chunk_size, go_to_print, mode_actio
     elif key == 'o' or key == 'щ':
         if mode_action == 'test_move':
             return ('test_move', 'view_waypoints', mouse_position)
+        else:
+            return (mode_action, 'none', mouse_position)
+    elif key == 'e' or key == 'у':
+        if mode_action == 'test_move':
+            return ('test_move', 'explosion', mouse_position)
         else:
             return (mode_action, 'none', mouse_position)
     elif key == 'b' or key == 'и':
@@ -1917,7 +2055,7 @@ def test_request_move(global_map:list, person, chunk_size:int, go_to_print, pres
         interaction.append(['task_point_all_enemies', [person.global_position, person.vertices, local_position]])
 
     elif pressed_button == 'button_add_beacon':
-        activity_list.append(Action_in_map('test_beacon', step, person.global_position, person.dynamic, chunk_size,
+        activity_list.append(Action_in_map('test_beacon', step, person.global_position, person.local_position, chunk_size,
                 f'\n оставлен вами в локальной точке - {[person.dynamic[0]%chunk_size, person.dynamic[1]%chunk_size]}| динамической - {person.dynamic}| глобальной - {person.global_position}'))
         
     elif pressed_button == 'button_test_visible':
@@ -1925,6 +2063,9 @@ def test_request_move(global_map:list, person, chunk_size:int, go_to_print, pres
 
     elif pressed_button == 'view_waypoints':
         interaction.append(['view_waypoints'])
+
+    elif pressed_button == 'explosion':
+        interaction.append(['add_global_interaction', 'explosion', person.global_position, person.local_position])
 
     elif pressed_button == 'add_hunter':
         enemy_list.append(return_npc(copy.deepcopy(person.global_position), copy.deepcopy(person.local_position), 'riffleman'))
@@ -3050,6 +3191,8 @@ def game_loop(global_map:list, person, chunk_size:int, enemy_list:list, world, s
     clock = pygame.time.Clock()#
     game_fps = 100#
 
+    global_interaction = [] #Глобальные происшествия
+
     pygame.display.flip()
 
     offset_sprites = Offset_sprites()
@@ -3092,7 +3235,7 @@ def game_loop(global_map:list, person, chunk_size:int, enemy_list:list, world, s
         calculation_assemblage_point(global_map, person, chunk_size) # Рассчёт динамического чанка
         #all_pass_step_calculations(person, enemy_list, mode_action, interaction)
         if not person.enemy_pass_step and not person.pointer_step:
-            master_game_events(global_map, enemy_list, person, go_to_print, step, activity_list, chunk_size, interaction, world)
+            master_game_events(global_map, enemy_list, person, go_to_print, step, activity_list, chunk_size, interaction, world, global_interaction)
         screen, landscape_layer, activity_layer, entities_layer, offset_sprites, finishing_surface, settings_for_intermediate_steps = master_pygame_draw(
                                         person, chunk_size, go_to_print, global_map, mode_action, enemy_list, activity_list, screen, minimap_surface,
                                         minimap_dict, sprites_dict, offset_sprites, landscape_layer, activity_layer,
