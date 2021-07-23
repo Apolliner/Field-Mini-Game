@@ -1022,12 +1022,12 @@ def explosion_calculation(explosion, activity_list, step, chunk_size, global_map
         destruction_map = global_map[explosion.global_position[0]][explosion.global_position[1]].chunk
         for number_line, line in enumerate(destruction_draw):
             for number_tile, tile in enumerate(line):
-                local_position = [explosion.local_position[1] - len(destruction_draw)//2 + number_line,
+                local_position = [explosion.local_position[0] - len(destruction_draw)//2 + number_line,
                                   explosion.local_position[1] - len(destruction_draw)//2 + number_tile]
                 if tile != '.' and local_position[0] < chunk_size - 1 and local_position[1] < chunk_size - 1:
                     destruction_map[local_position[0]][local_position[1]].icon = 'C'
                     destruction_map[local_position[0]][local_position[1]].type = tile
-                    destruction_map[local_position[0]][local_position[1]].level -=1
+                    destruction_map[local_position[0]][local_position[1]].level -= 1
     elif explosion.step == 4:
         explosion_draw = [
                             '000e000',
@@ -1055,7 +1055,7 @@ def explosion_calculation(explosion, activity_list, step, chunk_size, global_map
     
     for number_line, line in enumerate(explosion_draw):
         for number_tile, tile in enumerate(line):
-            local_position = [explosion.local_position[1] - len(explosion_draw)//2 + number_line,
+            local_position = [explosion.local_position[0] - len(explosion_draw)//2 + number_line,
                               explosion.local_position[1] - len(explosion_draw)//2 + number_tile]
             if tile == 'e':
                 activity_list.append(Action_in_map('explosion', step, explosion.global_position, local_position, chunk_size, 'динамит'))
