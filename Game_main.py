@@ -8,6 +8,7 @@ import math
 import pygame
 import sys
 import pickle
+import logging
 from pygame.locals import *
 from map_generator import map_generator
 
@@ -20,6 +21,7 @@ garbage = ['░', '▒', '▓', '█', '☺']
     РЕАЛИЗОВАТЬ:
 
     1)Взрывчатка и разрушения. Добавить тайлам параметры веса и устойчивости. При воздействии, рассчитывать разрушение и/или сползание.
+    2)Так как под тайлами фактически не идет просчёт уровней ниже, добавить им описание коренной породы, которая обнажится при разрушении.
 
     ТЕМАТИКА:
     Всё, что мне нравится. Персонажи как в хороший плохой злой, вяленое конское мясо и гремучие змеи!
@@ -929,7 +931,7 @@ def interaction_processing(global_map, interaction, enemy_list, step, chunk_size
                     enemy.target = interact[1]
                     enemy.waypoints = []
                     enemy.local_waypoints = []
-                    print(F"{enemy.name_npc} получил задачу {enemy.target}")
+                    logging.debug(f"{step}: {enemy.name_npc} получил задачу {enemy.target}")
             if interact[0] == 'view_waypoints':
                 for enemy in enemy_list:
                     if enemy.local_waypoints:
@@ -1383,7 +1385,7 @@ def master_npc_calculation(global_map, enemy_list, person, go_to_print, step, ac
             
             #Если есть цель, но нет динамических вейпоинтов.
             if enemy.target and not(enemy.local_waypoints):
-                enemy_move_calculaton(global_map, enemy)
+                enemy_move_calculaton(global_map, enemy, step)
                 world.npc_path_calculation = True
             #Если цели нет и нет динамических вейпоинтов
             if not enemy.target and not enemy.local_waypoints:
@@ -1402,7 +1404,7 @@ def master_npc_calculation(global_map, enemy_list, person, go_to_print, step, ac
                             enemy.target = [vertices.connections[number_target].position, vertices.connections[number_target].number, target_tiles]
             #Если есть количество глобальных вейпоинтов больше 1 и истекают локальные вейпоинты, то считаются локальные вейпоинты для следующей карты.
             if len(enemy.waypoints) > 1 and len(enemy.local_waypoints) < 3: 
-                enemy_move_calculaton(global_map, enemy)
+                enemy_move_calculaton(global_map, enemy, step)
                 world.npc_path_calculation = True
         #Если есть динамические вейпоинты
         if enemy.local_waypoints:
@@ -1455,7 +1457,7 @@ def enemy_direction_calculation(enemy):
         if enemy.name == 'riffleman':
                 enemy.type = 'l3'
 
-def enemy_move_calculaton(global_map, enemy):
+def enemy_move_calculaton(global_map, enemy, step):
     """
         Запускается каждый раз при наличии цели и истечении динамических вейпоинтов.
 
@@ -1470,18 +1472,22 @@ def enemy_move_calculaton(global_map, enemy):
     """
     #Если есть глобальные вейпоинты, но нет локальных - то считаем локальные вейпоинты
     if enemy.waypoints and not enemy.local_waypoints:
+        logging.debug(f"{step}: {enemy.name_npc} есть глобальные вейпоинты, но нет локальных - считаем локальные вейпоинты. Его задача {enemy.target}")
         vertices_enemy_a_star_move_local_calculations(global_map, enemy,
                                 [[enemy.waypoints[0][0], enemy.waypoints[0][1]], enemy.waypoints[0][2]], True)
     #Если глобальных вейпоинтов больше 1го и есть локальные вейпоинты, то считаются локальные вейпоинты для следующей карты.
     elif len(enemy.waypoints) > 1 and len(enemy.local_waypoints) < 3:
+        logging.debug(f"{step}: {enemy.name_npc} глобальных вейпоинтов больше 1го и есть локальные вейпоинты, считаются локальные вейпоинты для следующей карты. Его задача {enemy.target}")
         vertices_enemy_a_star_move_local_calculations(global_map, enemy,
                                 [[enemy.waypoints[1][0], enemy.waypoints[1][1]], enemy.waypoints[1][2]], True)
 
     
     #Если нет глобальных вейпоинтов
     else:
+        logging.debug(f"{step}: {enemy.name_npc} нет глобальных вейпоинтов. Его задача {enemy.target}")
         #Если глобальные позиции не равны или глобальные позиции равны, но не равны зоны доступности
         if enemy.target[0] != enemy.global_position or (enemy.target[0] == enemy.global_position and enemy.target[1] != enemy.vertices):
+            logging.debug(f"{step}: {enemy.name_npc} глобальные позиции не равны или глобальные позиции равны, но не равны зоны доступности. Его задача {enemy.target}")
             #Сначала считаем глобальные вейпоинты
             vertices_enemy_a_star_move_global_calculations(global_map, enemy,[enemy.target[0][0], enemy.target[0][1], enemy.target[1]])
             #А затем локальные
@@ -1490,6 +1496,7 @@ def enemy_move_calculaton(global_map, enemy):
             #print(f"{enemy.name_npc} - посчитал глобальные, а затем локальные вейпоинты | {enemy.waypoints} | {enemy.dynamic_waypoints}")
         #Если равны глобальные позиции и зоны доступности
         elif enemy.target[0] == enemy.global_position and enemy.target[1] == enemy.vertices:
+            logging.debug(f"{step}: {enemy.name_npc} глобальные позиции равны и равны зоны доступности. Его задача {enemy.target}")
             #Считаем только локальные вейпоинты без перехода на другую локацию
             vertices_enemy_a_star_move_local_calculations(global_map, enemy,
                                 [[enemy.target[2][0], enemy.target[2][1]], enemy.target[1]], False)
@@ -1718,6 +1725,7 @@ def vertices_enemy_a_star_algorithm_move_calculation(processed_map, start_point,
             general_loop = False
             #print(f"!!! {enemy.name_npc} {global_or_local} путь по алгоритму А* не найден. Выбрана ближайшая точка.")
             if global_or_local == 'global': #УДАЛЕНИЕ ЦЕЛИ ЕСЛИ НЕ НАЙДЕН ПУТЬ ЧТО БЫ НЕ СПАМИЛ
+                logging.debug(f"{enemy.name_npc} УДАЛЕНИЕ ЦЕЛИ ЕСЛИ НЕ НАЙДЕН ПУТЬ ЧТО БЫ НЕ СПАМИЛ start_point - {start_point}, finish_point - {finish_point}")
                 enemy.target = []
         if global_or_local == 'global':
             node_connections(processed_map, graph, node, finish_point, verified_position)
@@ -1728,7 +1736,7 @@ def vertices_enemy_a_star_algorithm_move_calculation(processed_map, start_point,
                 number_finish_node = node.number
                 general_loop = False
         except IndexError:
-            print(F"!!! {enemy.name_npc} finish_point - {finish_point}")
+            logging.error(F"!!!IndexError!!! {enemy.name_npc} finish_point - {finish_point}")
         step_count += 1
         if step_count == 250:
             min_price = 99999
@@ -1738,8 +1746,9 @@ def vertices_enemy_a_star_algorithm_move_calculation(processed_map, start_point,
                     if graph[number_node].price < min_price:
                         min_price = graph[number_node].price
                         number_finish_node = number_node
-            #print(f"!!! {enemy.name_npc} {global_or_local} путь по алгоритму А* за отведённые шаги не найден. Выбрана ближайшая точка.")
+            logging.debug(f"!!! {enemy.name_npc} {global_or_local} путь по алгоритму А* за отведённые шаги не найден. Выбрана ближайшая точка.")
             if global_or_local == 'global': #УДАЛЕНИЕ ЦЕЛИ ЕСЛИ НЕ НАЙДЕН ПУТЬ ЧТО БЫ НЕ СПАМИЛ
+                logging.debug(f"{enemy.name_npc} УДАЛЕНИЕ ЦЕЛИ ЕСЛИ НЕ НАЙДЕН ПУТЬ ЧТО БЫ НЕ СПАМИЛ start_point - {start_point}, finish_point - {finish_point}")
                 enemy.target = []
             sucess = False
             general_loop = False
@@ -3099,6 +3108,8 @@ def main_loop():
         Здесь работает игровое меню
         
     """
+    logging.basicConfig(filename="logging.log", filemode="w", level=logging.DEBUG)
+    
     global_region_grid = 3
     region_grid = 3
     chunks_grid = 3
