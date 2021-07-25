@@ -1370,8 +1370,11 @@ def master_npc_calculation(global_map, enemy_list, person, go_to_print, step, ac
     for enemy in enemy_list:
 
         enemy.direction = 'center'
-        enemy.level = global_map[enemy.global_position[0]][enemy.global_position[1]].chunk[enemy.local_position[0]][enemy.local_position[0]].level
-        enemy.vertices = global_map[enemy.global_position[0]][enemy.global_position[1]].chunk[enemy.local_position[0]][enemy.local_position[1]].vertices
+        try:
+            enemy.level = global_map[enemy.global_position[0]][enemy.global_position[1]].chunk[enemy.local_position[0]][enemy.local_position[0]].level
+            enemy.vertices = global_map[enemy.global_position[0]][enemy.global_position[1]].chunk[enemy.local_position[0]][enemy.local_position[1]].vertices
+        except IndexError:
+            print(f"!!!IndexError!!! Ошибка после добавления NPC enemy.global_position - {enemy.global_position}, enemy.local_position - {enemy.local_position}")
         enemy.all_description_calculation()
         #Удаление реализованного глобального вейпоинта
         if enemy.waypoints and [enemy.global_position[0], enemy.global_position[1], enemy.vertices] == enemy.waypoints[0]:
@@ -1472,22 +1475,21 @@ def enemy_move_calculaton(global_map, enemy, step):
     """
     #Если есть глобальные вейпоинты, но нет локальных - то считаем локальные вейпоинты
     if enemy.waypoints and not enemy.local_waypoints:
-        logging.debug(f"{step}: {enemy.name_npc} есть глобальные вейпоинты, но нет локальных - считаем локальные вейпоинты. Его задача {enemy.target}")
+        logging.debug(f"{step}: {enemy.name_npc} есть глобальные вейпоинты, но нет локальных - считаем локальные вейпоинты. Его задача {enemy.target}. Его позиция {enemy.global_position}, {enemy.vertices}, {enemy.local_position}")
         vertices_enemy_a_star_move_local_calculations(global_map, enemy,
                                 [[enemy.waypoints[0][0], enemy.waypoints[0][1]], enemy.waypoints[0][2]], True)
     #Если глобальных вейпоинтов больше 1го и есть локальные вейпоинты, то считаются локальные вейпоинты для следующей карты.
     elif len(enemy.waypoints) > 1 and len(enemy.local_waypoints) < 3:
-        logging.debug(f"{step}: {enemy.name_npc} глобальных вейпоинтов больше 1го и есть локальные вейпоинты, считаются локальные вейпоинты для следующей карты. Его задача {enemy.target}")
+        logging.debug(f"{step}: {enemy.name_npc} глобальных вейпоинтов больше 1го и есть локальные вейпоинты, считаются локальные вейпоинты для следующей карты. Его задача {enemy.target}. Его позиция {enemy.global_position}, {enemy.vertices}, {enemy.local_position}")
         vertices_enemy_a_star_move_local_calculations(global_map, enemy,
                                 [[enemy.waypoints[1][0], enemy.waypoints[1][1]], enemy.waypoints[1][2]], True)
 
-    
     #Если нет глобальных вейпоинтов
     else:
-        logging.debug(f"{step}: {enemy.name_npc} нет глобальных вейпоинтов. Его задача {enemy.target}")
+        logging.debug(f"{step}: {enemy.name_npc} нет глобальных вейпоинтов. Его задача {enemy.target}. Его позиция {enemy.global_position}, {enemy.vertices}, {enemy.local_position}")
         #Если глобальные позиции не равны или глобальные позиции равны, но не равны зоны доступности
         if enemy.target[0] != enemy.global_position or (enemy.target[0] == enemy.global_position and enemy.target[1] != enemy.vertices):
-            logging.debug(f"{step}: {enemy.name_npc} глобальные позиции не равны или глобальные позиции равны, но не равны зоны доступности. Его задача {enemy.target}")
+            logging.debug(f"{step}: {enemy.name_npc} глобальные позиции не равны или глобальные позиции равны, но не равны зоны доступности. Его задача {enemy.target}. Его позиция {enemy.global_position}, {enemy.vertices}, {enemy.local_position}")
             #Сначала считаем глобальные вейпоинты
             vertices_enemy_a_star_move_global_calculations(global_map, enemy,[enemy.target[0][0], enemy.target[0][1], enemy.target[1]])
             #А затем локальные
@@ -1496,13 +1498,12 @@ def enemy_move_calculaton(global_map, enemy, step):
             #print(f"{enemy.name_npc} - посчитал глобальные, а затем локальные вейпоинты | {enemy.waypoints} | {enemy.dynamic_waypoints}")
         #Если равны глобальные позиции и зоны доступности
         elif enemy.target[0] == enemy.global_position and enemy.target[1] == enemy.vertices:
-            logging.debug(f"{step}: {enemy.name_npc} глобальные позиции равны и равны зоны доступности. Его задача {enemy.target}")
+            logging.debug(f"{step}: {enemy.name_npc} глобальные позиции равны и равны зоны доступности. Его задача {enemy.target}. Его позиция {enemy.global_position}, {enemy.vertices}, {enemy.local_position}")
             #Считаем только локальные вейпоинты без перехода на другую локацию
             vertices_enemy_a_star_move_local_calculations(global_map, enemy,
                                 [[enemy.target[2][0], enemy.target[2][1]], enemy.target[1]], False)
             #print(f"{enemy.name_npc} - посчитал локальные вейпоинты без необходимости считать глобальные | {enemy.waypoints} | {enemy.dynamic_waypoints}")
-            
-        
+
 
 def vertices_enemy_a_star_move_global_calculations(processed_map, enemy, finish_point):
     """
@@ -1543,7 +1544,6 @@ def vertices_enemy_a_star_move_local_calculations(global_map, enemy, target, mov
                             #print(F"finish_point - {finish_point} connect.tiles - {connect.tiles}")
     else:
         finish_point = [target[0][0], target[0][1], target[1]]
-    
     
     if finish_point:
         raw_local_waypoints, success = vertices_enemy_a_star_algorithm_move_calculation(processed_map, start_point, finish_point, 'local', enemy)
@@ -1738,7 +1738,7 @@ def vertices_enemy_a_star_algorithm_move_calculation(processed_map, start_point,
         except IndexError:
             logging.error(F"!!!IndexError!!! {enemy.name_npc} finish_point - {finish_point}")
         step_count += 1
-        if step_count == 250:
+        if step_count == 300:
             min_price = 99999
             node = graph[-1]
             for number_node in range(len(graph)):
@@ -1764,35 +1764,51 @@ def vertices_enemy_a_star_algorithm_move_calculation(processed_map, start_point,
         check_node = graph[check_node.direction] #Предыдущая вершина объявляется проверяемой
 
     if global_or_local == 'global':
-        test_print = ''
+        test_print = '\n'
         test_reversed_waypoints = []
         for waypoint in reversed_waypoints:
             test_reversed_waypoints.append([waypoint[0], waypoint[1]])
         for number_line in range(len(processed_map)):
             for number_tile in range(len(processed_map[number_line])):
                     
-                if [number_line, number_tile] in test_reversed_waypoints:
-                    test_print += processed_map[number_line][number_tile].icon + 'v'
-                #elif [number_line, number_tile, start_point[2]] in verified_position:
-                    #test_print += processed_map[number_line][number_tile].icon + 'x'
+                if [number_line, number_tile, start_point[2]] in reversed_waypoints:
+                    if processed_map[number_line][number_tile].icon == '▲':
+                        test_print += "/" + "v"
+                    else:
+                        test_print += processed_map[number_line][number_tile].icon + 'v'
+                elif [number_line, number_tile, start_point[2]] in verified_position:
+                    if processed_map[number_line][number_tile].icon == '▲':
+                        test_print += "/" + "x"
+                    else:
+                        test_print += processed_map[number_line][number_tile].icon + 'x'
+                elif processed_map[number_line][number_tile].icon == '▲':
+                    test_print += "/" + " "
                 else:
                     test_print += processed_map[number_line][number_tile].icon + ' '
             test_print += '\n'
-        #print(test_print)
+        logging.debug(test_print)
         
     elif global_or_local == 'local':
-        test_print = ''
+        test_print = '\n'
         for number_line in range(len(processed_map)):
             for number_tile in range(len(processed_map[number_line])):
                     
                 if [number_line, number_tile, start_point[2]] in reversed_waypoints:
-                    test_print += processed_map[number_line][number_tile].icon + 'v'
+                    if processed_map[number_line][number_tile].icon == '▲':
+                        test_print += "/" + "v"
+                    else:
+                        test_print += processed_map[number_line][number_tile].icon + 'v'
                 elif [number_line, number_tile, start_point[2]] in verified_position:
-                    test_print += processed_map[number_line][number_tile].icon + 'x'
+                    if processed_map[number_line][number_tile].icon == '▲':
+                        test_print += "/" + "x"
+                    else:
+                        test_print += processed_map[number_line][number_tile].icon + 'x'
+                elif processed_map[number_line][number_tile].icon == '▲':
+                    test_print += "/" + " "
                 else:
                     test_print += processed_map[number_line][number_tile].icon + ' '
             test_print += '\n'
-        #print(test_print)
+        logging.debug(test_print)
 
 
     #print(f"{enemy.name_npc} {global_or_local} list(reversed(reversed_waypoints)) - {list(reversed(reversed_waypoints))}")
@@ -2077,9 +2093,25 @@ def test_request_move(global_map:list, person, chunk_size:int, go_to_print, pres
         interaction.append(['add_global_interaction', 'explosion', person.global_position, person.local_position])
 
     elif pressed_button == 'add_hunter':
-        enemy_list.append(return_npc(copy.deepcopy(person.global_position), copy.deepcopy(person.local_position), 'riffleman'))
+        global_position = copy.deepcopy(person.global_position)
+        local_position = copy.deepcopy(person.local_position)
+        if local_position[0] >= chunk_size:
+            global_position[0] += 1
+            local_position[0] = 0
+        elif local_position[1] >= chunk_size:
+            global_position[1] += 1
+            local_position[1] = 0
+        enemy_list.append(return_npc(global_position, local_position, 'riffleman'))
     elif pressed_button == 'add_coyot':
-        enemy_list.append(return_npc(copy.deepcopy(person.global_position), copy.deepcopy(person.local_position), 'coyot'))
+        global_position = copy.deepcopy(person.global_position)
+        local_position = copy.deepcopy(person.local_position)
+        if local_position[0] >= chunk_size:
+            global_position[0] += 1
+            local_position[0] = 0
+        elif local_position[1] >= chunk_size:
+            global_position[1] += 1
+            local_position[1] = 0
+        enemy_list.append(return_npc(global_position, local_position, 'coyot'))
 
     person.global_position_calculation(chunk_size) #Рассчитывает глобальное положение и номер чанка через метод
 
@@ -2131,7 +2163,6 @@ def calculation_assemblage_point(global_map:list, person, chunk_size:int):
         person.assemblage_point[1] -= 1
         person.dynamic[1] += chunk_size
 
-
     assemblage_chunk = []
 
     line_slice = global_map[person.assemblage_point[0]:(person.assemblage_point[0] + 2)]
@@ -2147,9 +2178,7 @@ def calculation_assemblage_point(global_map:list, person, chunk_size:int):
             
     person.chunks_use_map = gluing_location(assemblage_chunk, 2, chunk_size)
 
-    
-
-        
+ 
 def request_processing(pressed_button):
     """
         Обрабатывает пользовательский запрос
