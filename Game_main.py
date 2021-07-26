@@ -23,6 +23,10 @@ garbage = ['░', '▒', '▓', '█', '☺']
     1)Взрывчатка и разрушения. Добавить тайлам параметры веса и устойчивости. При воздействии, рассчитывать разрушение и/или сползание.
     2)Так как под тайлами фактически не идет просчёт уровней ниже, добавить им описание коренной породы, которая обнажится при разрушении.
 
+    СПИСОК ИЗВЕСТНЫХ БАГОВ:
+    При оставлении персонажем активности в 0х координатах, активность получает странные координаты и не остаётся под персонажем
+    (в частности, лёгкие шаги).
+
     ТЕМАТИКА:
     Всё, что мне нравится. Персонажи как в хороший плохой злой, вяленое конское мясо и гремучие змеи!
 
@@ -1381,7 +1385,7 @@ def master_npc_calculation(global_map, enemy_list, person, go_to_print, step, ac
             enemy.waypoints.pop(0)
 
         #Удаление реализованной цели
-        if enemy.target and enemy.target == [enemy.global_position, enemy.vertices, enemy.local_position]:
+        if enemy.target and enemy.target == [enemy.global_position, enemy.vertices, enemy.local_position] or enemy.target == [enemy.global_position, enemy.vertices, []]:
             enemy.target = []
             
         if not world.npc_path_calculation: #Если никто не считал вейпоинты на этом шаге
@@ -1397,7 +1401,7 @@ def master_npc_calculation(global_map, enemy_list, person, go_to_print, step, ac
                         if vertices.connections:
                             #Определяем позицию искомого тайла, путём выбора из точек перехода искомой зоны доступности
                             number_target = random.randrange(len(vertices.connections))
-                            target_tiles = [0, 0]
+                            target_tiles = []
                             for target_vertices in global_map[vertices.connections[number_target].position[0]][vertices.connections[number_target].position[1]].vertices:
                                 if target_vertices == vertices.connections[number_target].number:
                                     for connect in target_vertices.connections:
@@ -1576,6 +1580,9 @@ def vertices_enemy_a_star_algorithm_move_calculation(processed_map, start_point,
     """
         Рассчитывает поиск пути, алгоритмом A* на основании связей полей доступности.
 
+        РЕФАКТОРИНГ:
+        Объединить обработку случаев истечения количества шагов и не возможности найти дальнейший путь.
+
         ТРЕБОВАНИЯ:
 
         Работа как для приблизительной карты локаций, так и для передвижения по игровой карте. #РЕАЛИЗОВАНО
@@ -1723,7 +1730,8 @@ def vertices_enemy_a_star_algorithm_move_calculation(processed_map, start_point,
             number_finish_node = len(graph) - 1
             sucess = False
             general_loop = False
-            #print(f"!!! {enemy.name_npc} {global_or_local} путь по алгоритму А* не найден. Выбрана ближайшая точка.")
+            logging.debug(f"!!! {enemy.name_npc} {global_or_local} путь по алгоритму А* не найден. min_price == 99999 Выбрана ближайшая точка. start_point - {start_point}, finish_point - {finish_point} step_count - {step_count}")
+            logging.debug(f"verified_position - {verified_position}")
             if global_or_local == 'global': #УДАЛЕНИЕ ЦЕЛИ ЕСЛИ НЕ НАЙДЕН ПУТЬ ЧТО БЫ НЕ СПАМИЛ
                 logging.debug(f"{enemy.name_npc} УДАЛЕНИЕ ЦЕЛИ ЕСЛИ НЕ НАЙДЕН ПУТЬ ЧТО БЫ НЕ СПАМИЛ start_point - {start_point}, finish_point - {finish_point}")
                 enemy.target = []
@@ -1739,19 +1747,28 @@ def vertices_enemy_a_star_algorithm_move_calculation(processed_map, start_point,
             logging.error(F"!!!IndexError!!! {enemy.name_npc} finish_point - {finish_point}")
         step_count += 1
         if step_count == 300:
-            min_price = 99999
-            node = graph[-1]
-            for number_node in range(len(graph)):
-                if graph[number_node].ready:
+            last_check_sucess = False
+            for last_check in verified_position:
+                if [last_check[0][0], last_check[0][1], last_check[1]] == finish_point:
+                    for node in graph:
+                        if node.vertices == last_check[1] and node.position == last_check[0]:
+                            number_finish_node = node.number
+                            last_check_sucess = True
+                            general_loop = False
+            if not last_check_sucess:
+                min_price = 99999
+                node = graph[-1]
+                for number_node in range(len(graph)):
                     if graph[number_node].price < min_price:
                         min_price = graph[number_node].price
                         number_finish_node = number_node
-            logging.debug(f"!!! {enemy.name_npc} {global_or_local} путь по алгоритму А* за отведённые шаги не найден. Выбрана ближайшая точка.")
-            if global_or_local == 'global': #УДАЛЕНИЕ ЦЕЛИ ЕСЛИ НЕ НАЙДЕН ПУТЬ ЧТО БЫ НЕ СПАМИЛ
-                logging.debug(f"{enemy.name_npc} УДАЛЕНИЕ ЦЕЛИ ЕСЛИ НЕ НАЙДЕН ПУТЬ ЧТО БЫ НЕ СПАМИЛ start_point - {start_point}, finish_point - {finish_point}")
-                enemy.target = []
-            sucess = False
-            general_loop = False
+                logging.debug(f"!!! {enemy.name_npc} {global_or_local} путь по алгоритму А* за отведённые шаги не найден. Выбрана ближайшая точка. start_point - {start_point}, finish_point - {finish_point} step_count - {step_count}")
+                logging.debug(f"verified_position - {verified_position}")
+                if global_or_local == 'global': #УДАЛЕНИЕ ЦЕЛИ ЕСЛИ НЕ НАЙДЕН ПУТЬ ЧТО БЫ НЕ СПАМИЛ
+                    logging.debug(f"{enemy.name_npc} УДАЛЕНИЕ ЦЕЛИ ЕСЛИ НЕ НАЙДЕН ПУТЬ ЧТО БЫ НЕ СПАМИЛ start_point - {start_point}, finish_point - {finish_point}")
+                    enemy.target = []
+                sucess = False
+                general_loop = False
             
     check_node = graph[number_finish_node]
     #reversed_waypoints.append([check_node.position[0], check_node.position[1], check_node.vertices])
@@ -1776,7 +1793,7 @@ def vertices_enemy_a_star_algorithm_move_calculation(processed_map, start_point,
                         test_print += "/" + "v"
                     else:
                         test_print += processed_map[number_line][number_tile].icon + 'v'
-                elif [number_line, number_tile, start_point[2]] in verified_position:
+                elif [[number_line, number_tile], start_point[2]] in verified_position:
                     if processed_map[number_line][number_tile].icon == '▲':
                         test_print += "/" + "x"
                     else:
@@ -1798,7 +1815,7 @@ def vertices_enemy_a_star_algorithm_move_calculation(processed_map, start_point,
                         test_print += "/" + "v"
                     else:
                         test_print += processed_map[number_line][number_tile].icon + 'v'
-                elif [number_line, number_tile, start_point[2]] in verified_position:
+                elif [[number_line, number_tile], start_point[2]] in verified_position:
                     if processed_map[number_line][number_tile].icon == '▲':
                         test_print += "/" + "x"
                     else:
@@ -2838,6 +2855,8 @@ def pointer_description(landscape_layer, activity_layer, entities_layer, chunk_s
         mouse_coords.append(axis_position//size_tile)
     ground_description = ''
     pointer_description = ''
+    if mouse_coords[0] < chunk_size and mouse_coords[1] < chunk_size:
+        pointer_description += 'vertices = ' + str(landscape_layer[mouse_coords[1]][mouse_coords[0]].vertices) + ' '
     for area in (landscape_layer, activity_layer, entities_layer):
         ground_description += coords_description(person_coords, area, chunk_size)
         pointer_description += coords_description(mouse_coords, area, chunk_size)
@@ -3157,8 +3176,8 @@ def main_loop():
     
     pygame.init()
 
-    dispay_size = [1200, 750]
-    screen = pygame.display.set_mode(dispay_size, FULLSCREEN | DOUBLEBUF)
+    dispay_size = [1300, 700] #было [1200, 750]
+    screen = pygame.display.set_mode(dispay_size)#, FULLSCREEN | DOUBLEBUF)
     pygame.display.set_caption("My Game")
 
     #Загрузка и создание поверхностей всех спрайтов
