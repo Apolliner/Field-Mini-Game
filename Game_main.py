@@ -1887,10 +1887,18 @@ def wait_keyboard(person, mouse_position):
                     return 'w', mouse_position
                 if event.key == pygame.K_DOWN:
                     return 's', mouse_position
-                if event.key == pygame.K_SPACE:
-                    return 'space', mouse_position
                 if event.key == pygame.K_ESCAPE:
                     return 'escape', mouse_position
+                if event.key == pygame.K_SPACE or event.key == pygame.K_RETURN:
+                    return 'space', mouse_position
+                if event.key == pygame.K_w:
+                    return 'w', mouse_position
+                if event.key == pygame.K_a:
+                    return 'a', mouse_position
+                if event.key == pygame.K_s:
+                    return 's', mouse_position
+                if event.key == pygame.K_d:
+                    return 'd', mouse_position
                 if event.key == pygame.K_t:
                     return 't', mouse_position
                 if event.key == pygame.K_p:
@@ -3103,18 +3111,18 @@ def menu_calculation(menu_list, menu_selection, button_selection):
                     if event.type == pygame.QUIT:
                         sys.exit()
                     if event.type == pygame.KEYDOWN:
-                        if event.key == pygame.K_DOWN:
+                        if event.key == pygame.K_DOWN or event.key == pygame.K_s:
                             if number_menu < len(menu_list) - 1:
                                 return menu_list[number_menu + 1], button_selection
                             else:
                                 return menu_list[0], button_selection
                             
-                        if event.key == pygame.K_UP:
+                        if event.key == pygame.K_UP or event.key == pygame.K_w:
                             if number_menu > 0:
                                 return menu_list[number_menu - 1], button_selection
                             else:
                                 return menu_list[-1], button_selection
-                        if event.key == pygame.K_SPACE:
+                        if event.key == pygame.K_SPACE or event.key == pygame.K_RETURN:
                             return menu_selection, True
             
     menu_selection, button_selection
