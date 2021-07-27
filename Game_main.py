@@ -1390,11 +1390,11 @@ def master_npc_calculation(global_map, enemy_list, person, go_to_print, step, ac
             
         if not world.npc_path_calculation: #Если никто не считал вейпоинты на этом шаге
             
-            #Если есть цель, но нет динамических вейпоинтов.
+            #Если есть цель, но нет локальных вейпоинтов.
             if enemy.target and not(enemy.local_waypoints):
                 enemy_move_calculaton(global_map, enemy, step)
                 world.npc_path_calculation = True
-            #Если цели нет и нет динамических вейпоинтов
+            #Если цели нет и нет локальных вейпоинтов
             if not enemy.target and not enemy.local_waypoints:
                 for vertices in global_map[enemy.global_position[0]][enemy.global_position[1]].vertices:
                     if vertices.number == enemy.vertices:
@@ -1410,7 +1410,7 @@ def master_npc_calculation(global_map, enemy_list, person, go_to_print, step, ac
                             #Задаётся цель из существующих координат, существующих связей и существующих тайлов
                             enemy.target = [vertices.connections[number_target].position, vertices.connections[number_target].number, target_tiles]
             #Если есть количество глобальных вейпоинтов больше 1 и истекают локальные вейпоинты, то считаются локальные вейпоинты для следующей карты.
-            if len(enemy.waypoints) > 1 and len(enemy.local_waypoints) < 3: 
+            if len(enemy.waypoints) > 1 and len(enemy.local_waypoints) < 5: 
                 enemy_move_calculaton(global_map, enemy, step)
                 world.npc_path_calculation = True
         #Если есть динамические вейпоинты
@@ -1478,7 +1478,7 @@ def enemy_move_calculaton(global_map, enemy, step):
         4) Если глобальных вейпоинтов больше 1го и есть локальные вейпоинты, то считаются локальные вейпоинты для следующей карты.
     """
     #Если есть глобальные вейпоинты, но нет локальных - то считаем локальные вейпоинты
-    if enemy.waypoints and not enemy.local_waypoints:
+    if enemy.waypoints and not enemy.local_waypoints and [enemy.waypoints[0][0], enemy.waypoints[0][1]] != enemy.global_position:
         logging.debug(f"{step}: {enemy.name_npc} есть глобальные вейпоинты, но нет локальных - считаем локальные вейпоинты. Его задача {enemy.target}. Его позиция {enemy.global_position}, {enemy.vertices}, {enemy.local_position}")
         vertices_enemy_a_star_move_local_calculations(global_map, enemy,
                                 [[enemy.waypoints[0][0], enemy.waypoints[0][1]], enemy.waypoints[0][2]], True)
@@ -1487,7 +1487,9 @@ def enemy_move_calculaton(global_map, enemy, step):
         logging.debug(f"{step}: {enemy.name_npc} глобальных вейпоинтов больше 1го и есть локальные вейпоинты, считаются локальные вейпоинты для следующей карты. Его задача {enemy.target}. Его позиция {enemy.global_position}, {enemy.vertices}, {enemy.local_position}")
         vertices_enemy_a_star_move_local_calculations(global_map, enemy,
                                 [[enemy.waypoints[1][0], enemy.waypoints[1][1]], enemy.waypoints[1][2]], True)
-
+    #Если следующий глобальный вейпоинт равен глобальной позиции персонажа, но не равен его зоне доступности, но глобальные вейпоинты сбрасываются для перессчёта
+    elif enemy.waypoints and [enemy.waypoints[0][0], enemy.waypoints[0][1]] == enemy.global_position and enemy.waypoints[0][2] != enemy.vertices:
+        enemy.waypoints = []
     #Если нет глобальных вейпоинтов
     else:
         logging.debug(f"{step}: {enemy.name_npc} нет глобальных вейпоинтов. Его задача {enemy.target}. Его позиция {enemy.global_position}, {enemy.vertices}, {enemy.local_position}")
@@ -1607,13 +1609,13 @@ def vertices_enemy_a_star_algorithm_move_calculation(processed_map, start_point,
         Финишная точка - finish_point:[y, x, vertices];
 
 
-        НУЖНО ДЛЯ ИСПРАВЛЕНИЯ ОШИБОК:
-        Добавить список уже занятых координат и сравнивать с ним при добавлении новой вершины.
-
         ЗАПЛАНИРОВАНО:
         1) !!! Если невозможно найти путь локальным поиском, то следующий глобальный вейпоинт объявляется непроходимым и ищется другой путь
         2) При наличии глобальных вейпоинтов, персонажи считают локальные вейпоинты для следующей локации, не доходя несколько локальных
         вейпоинтов по текущей. При этом, они проверяют, не считал ли вейпоинты на этом шаге какой-либо другой персонаж. #РЕАЛИЗОВАНО
+
+        СПИСОК ИЗВЕСТНЫХ ОШИБОК:
+        1)Неуспешный поиск пути если стартовая и конечная позиция равны #FIXED
         
         
     """
@@ -1703,8 +1705,10 @@ def vertices_enemy_a_star_algorithm_move_calculation(processed_map, start_point,
                                                    path_length([node.position[0], node.position[1] - 1], finish_point), node.number))
                             #print(f'добавлена вершина под номером {len(graph)}, направлением на вершину с номером {node.number} и координатами {[node.position[0], node.position[1] - 1]}, {node.vertices}')
 
-    #print(f"{enemy.name_npc} finish_point - {finish_point}, start_point - {start_point}")
-
+    #Если конечная и начальная точка равны
+    if global_or_local == 'local' and finish_point == start_point:
+        return [finish_point], True
+    
     graph = [] #Список, содержащий все вершины
     verified_position = [] #Содержит список всех использованных координат, что бы сравнивать с ним при добавлении новой вершины.
     graph.append(Node_vertices(0, start_point[2], [start_point[0], start_point[1]], path_length(start_point, finish_point), 0))
@@ -1728,7 +1732,7 @@ def vertices_enemy_a_star_algorithm_move_calculation(processed_map, start_point,
                     node = graph[number_node]
         if min_price == 99999:
             number_finish_node = len(graph) - 1
-            sucess = False
+            success = False
             general_loop = False
             logging.debug(f"!!! {enemy.name_npc} {global_or_local} путь по алгоритму А* не найден. min_price == 99999 Выбрана ближайшая точка. start_point - {start_point}, finish_point - {finish_point} step_count - {step_count}")
             logging.debug(f"verified_position - {verified_position}")
@@ -1747,15 +1751,15 @@ def vertices_enemy_a_star_algorithm_move_calculation(processed_map, start_point,
             logging.error(F"!!!IndexError!!! {enemy.name_npc} finish_point - {finish_point}")
         step_count += 1
         if step_count == 300:
-            last_check_sucess = False
+            last_check_success = False
             for last_check in verified_position:
                 if [last_check[0][0], last_check[0][1], last_check[1]] == finish_point:
                     for node in graph:
                         if node.vertices == last_check[1] and node.position == last_check[0]:
                             number_finish_node = node.number
-                            last_check_sucess = True
+                            last_check_success = True
                             general_loop = False
-            if not last_check_sucess:
+            if not last_check_success:
                 min_price = 99999
                 node = graph[-1]
                 for number_node in range(len(graph)):
@@ -1767,7 +1771,7 @@ def vertices_enemy_a_star_algorithm_move_calculation(processed_map, start_point,
                 if global_or_local == 'global': #УДАЛЕНИЕ ЦЕЛИ ЕСЛИ НЕ НАЙДЕН ПУТЬ ЧТО БЫ НЕ СПАМИЛ
                     logging.debug(f"{enemy.name_npc} УДАЛЕНИЕ ЦЕЛИ ЕСЛИ НЕ НАЙДЕН ПУТЬ ЧТО БЫ НЕ СПАМИЛ start_point - {start_point}, finish_point - {finish_point}")
                     enemy.target = []
-                sucess = False
+                success = False
                 general_loop = False
             
     check_node = graph[number_finish_node]

@@ -70,9 +70,9 @@ class Tile:
                         'F': ['чахлое дерево', 1],
                         'P': ['раскидистое дерево', 1],
                         '~': ['вода', 20],
-                        '`': ['солёная вода', 50],
-                        'f': ['брод', 10],
-                        'C': ['каньон', 20],
+                        '`': ['солёная вода', 20],
+                        'f': ['брод', 7],
+                        'C': ['каньон', 7],
                         '??': ['ничего', 10],
                         }
         return ground_dict[icon][number]
@@ -1448,7 +1448,7 @@ def region_generate(global_region_map, global_region_grid, region_grid):
                     6: [['j', '.']],                # Пустыня
                 }
 
-    raw_region_map = all_map_master_generate(global_region_map, region_grid, False, seed_dict, 0, False)
+    raw_region_map = all_map_master_generate(global_region_map, region_grid, True, seed_dict, 0, False)
     region_map = all_gluing_map(raw_region_map, global_region_grid, region_grid)
 
     return region_map
@@ -1561,7 +1561,7 @@ def levelness_calculation(processed_map, field_tiles_tuple, not_the_first_layer,
     """
         Рассчёт уровней, склонов и лестниц. levelness - количество уровней.
 
-        not_the_first_layer кортеж тайлов, по которым производится рассчёт
+        field_tiles_tuple кортеж тайлов, по которым производится рассчёт
 
         not_the_first_layer - False если слой первый и единственный. True если слой расчитывается на предыдущем слое.
 
