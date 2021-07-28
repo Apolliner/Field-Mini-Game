@@ -128,12 +128,12 @@ class Person:
 
     def check_local_position(self):
         local_position = []
-        if self.dynamic[0] > len(self.chunks_use_map)//2:
+        if self.dynamic[0] > len(self.chunks_use_map)//2 - 1:
             local_position.append(self.dynamic[0] - len(self.chunks_use_map)//2)
         else:
             local_position.append(self.dynamic[0])
             
-        if self.dynamic[1] > len(self.chunks_use_map)//2:
+        if self.dynamic[1] > len(self.chunks_use_map)//2 - 1:
             local_position.append(self.dynamic[1] - len(self.chunks_use_map)//2)
         else:
             local_position.append(self.dynamic[1])
@@ -1863,12 +1863,16 @@ def master_player_action(global_map, person, chunk_size, go_to_print, mode_actio
     pressed_button = ''
     person.check_local_position()
     person.direction = 'center'
+    person.global_position_calculation(chunk_size)
         
     
     mode_action, pressed_button, mouse_position = request_press_button(global_map, person, chunk_size, go_to_print, mode_action,
                                                                        interaction, mouse_position)
+    
     if pressed_button != 'none':
         if mode_action == 'move':
+            logging.debug(f"{step}: Персонаж находится в сырых координатах     person.assemblage_point - {person.assemblage_point}, person.dynamic       - {person.dynamic}")
+            logging.debug(f"{step}: Персонаж оставил слабые следы в координатах person.global_position - {person.global_position}, person.local_position - {person.local_position} /n")
             activity_list.append(Action_in_map('faint_footprints', step, person.global_position, person.local_position, chunk_size, person.name))
             if random.randrange(21)//18 > 0: # Оставление персонажем следов
                 activity_list.append(Action_in_map('human_tracks', step, person.global_position, person.local_position, chunk_size, person.name))
@@ -3180,7 +3184,7 @@ def main_loop():
     
     pygame.init()
 
-    dispay_size = [1300, 700] #было [1200, 750]
+    dispay_size = [1300, 730] #было [1200, 750]
     screen = pygame.display.set_mode(dispay_size)#, FULLSCREEN | DOUBLEBUF)
     pygame.display.set_caption("My Game")
 
