@@ -1179,7 +1179,7 @@ class Action_in_map:
 
 class Creature:
     """ Мелкие, необсчитываемые за кадром существа и противники """
-    def __init__(self, global_position, local_position, name, name_npc, icon, type, activity_map, person_description, speed):
+    def __init__(self, global_position, local_position, name, name_npc, icon, type, activity_map, person_description, speed, fly):
         self.global_position = global_position
         self.local_position = local_position
         self.waypoints = [] #На будущее
@@ -1194,10 +1194,99 @@ class Creature:
         self.delete = False
         self.direction = 'center'
         self.visible = True
+        self.fly = fly
 
-    def simple_move(self, chunk_size):
+    def __getstate__(self) -> dict:
+        """ Сохранение класса """
+        state = {}
+        state["global_position"] = self.global_position
+        state["local_position"] = self.local_position
+        state["waypoints"] = self.waypoints
+        state["local_waypoints"] = self.local_waypoints
+        state["name"] = self.name
+        state["name_npc"] = self.name_npc
+        state["icon"] = self.icon
+        state["type"] = self.type
+        state["activity_map"] = self.activity_map
+        state["description"] = self.description
+        state["alarm"] = self.alarm
+        state["delete"] = self.delete
+        state["direction"] = self.direction
+        state["visible"] = self.visible
+        state["fly"] = self.fly
+        return state
+
+    def __setstate__(self, state: dict):
+        """ Восстановление класса """
+        self.global_position = state["global_position"]
+        self.local_position = state["local_position"]
+        self.waypoints = state["waypoints"]
+        self.local_waypoints = state["local_waypoints"]
+        self.name = state["name"]
+        self.name_npc = state["name_npc"]
+        self.icon = state["icon"]
+        self.type = state["type"]
+        self.activity_map = state["activity_map"]
+        self.description = state["description"]
+        self.alarm = state["alarm"]
+        self.delete = state["delete"]
+        self.direction = state["direction"]
+        self.visible = state["visible"]
+        self.fly = state["fly"]
+
+    def simple_move(self, chunk_size, global_map):
         """
-            Хаотичное рандомное движение
+            Хаотичное рандомное движение с учётом препятствий
+        """
+        global_position_y = self.global_position[0]
+        global_position_x = self.global_position[1]
+        tile = global_map[global_position_y][global_position_x].chunk[self.local_position[0]][self.local_position[1]]
+        if random.randrange(2) == 0:
+            axis_y = random.randrange(-1, 2)
+            axis_x = 0
+        else:
+            axis_y = 0
+            axis_x = random.randrange(-1, 2)
+        local_position_y = self.local_position[0] + axis_y
+        if local_position_y > chunk_size - 1:
+            global_position_y += 1
+            local_position_y = 0
+        elif local_position_y < 0:
+            global_position_y -= 1
+            local_position_y = chunk_size - 1
+            
+        local_position_x = self.local_position[1] + axis_x
+        if local_position_x > chunk_size - 1:
+            global_position_x += 1
+            local_position_x = 0
+        elif local_position_x < 0:
+            global_position_x -= 1
+            local_position_x = chunk_size - 1
+
+        if 0 > global_position_y < chunk_size - 1:
+            global_position_y = 0
+            self.delete = True
+        if 0 > global_position_x < chunk_size - 1:
+            global_position_x = 0
+            self.delete = True
+
+        go_tile = global_map[global_position_y][global_position_x].chunk[local_position_y][local_position_x]
+
+        if (tile.level == go_tile.level or tile.stairs or go_tile.stairs) and not go_tile.icon in ('~', '▲'):
+            if axis_y == -1:
+                self.direction = 'up'
+            elif axis_y == 1:
+                self.direction = 'down'
+            elif axis_x == -1:
+                self.direction = 'left'
+            elif axis_x == 1:
+                self.direction = 'right'
+            self.global_position = [global_position_y, global_position_x]
+            self.local_position = [local_position_y, local_position_x]
+
+    def fly_simple_move(self, chunk_size):
+        """
+            Хаотичное рандомное движение без учёта препятствий
         """
         global_position_y = self.global_position[0]
         global_position_x = self.global_position[1]
@@ -1260,7 +1349,8 @@ def return_creature(global_position, local_position, key):
                             'other': [['осматривается', 'animal_rest_stop', 0, 5]],
                             },
                             "Змея, похоже что",
-                            1),
+                            1,
+                            False), #fly
                 'snake_unknown':  Creature(global_position, local_position,
                             'unknown',
                             'Snake Неизвестный',
@@ -1274,7 +1364,8 @@ def return_creature(global_position, local_position, key):
                             'other': [['говорит об ошибке', 'rest_stop', 0, 10]],
                             },
                             "Выползающий для теста",
-                            1),
+                            1,
+                            True), #fly
                 }
     if key in npc_dict:
         return npc_dict[key]
@@ -1536,7 +1627,12 @@ def master_npc_calculation(global_map, enemy_list, person, go_to_print, step, ac
 
         #Если это существо        
         if isinstance(enemy, Creature):
-            enemy.simple_move(chunk_size)
+            if enemy.fly:
+                #Если может летать
+                enemy.fly_simple_move(chunk_size)
+            else:
+                #Если ходит по земле
+                enemy.simple_move(chunk_size, global_map)
             if enemy.delete:
                 del enemy
 
