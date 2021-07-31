@@ -4,6 +4,7 @@ import copy
 import math
 import pygame
 import pickle
+import sys
 if __name__ == '__main__':
     import map_patch
     from pygame.locals import *
@@ -311,8 +312,12 @@ def master_map_generate(global_region_grid, region_grid, chunks_grid, mini_grid,
     #progress_bar(screen, 80, 'Определение связей между локациями')
     defining_zone_relationships(ready_global_map)
     simple_draw_map_generation(screen, 'Создание миникарты')
-    
 
+    #Добавление существ в тайлы
+    #progress_bar(screen, 85, 'Добавление существ в тайлы')
+    creature_spawn_add(ready_global_map)
+    simple_draw_map_generation(screen, 'Добавление существ в тайлы')
+    
     #Создание миникарты
     #progress_bar(screen, 90, 'Создание миникарты')
     minimap = minimap_create(ready_global_map)
@@ -325,6 +330,26 @@ def master_map_generate(global_region_grid, region_grid, chunks_grid, mini_grid,
     return ready_global_map, minimap
 
 
+def creature_spawn_add(global_map):
+    """
+        Помещает мелких существ в тайлы
+
+        added_dict = {биом локации: [(кортеж типов тайлов), (кортеж существ)]}
+    """
+    added_typle = ('S')
+    added_dict = {
+                    'S': [('o'), ('snake')],
+
+                 }
+    for global_line in global_map:
+        for global_tile in global_line:
+            if global_tile.icon in added_typle:
+                for line in global_tile.chunk:
+                    for tile in line:
+                        if tile.icon in added_dict[global_tile.icon][0] and random.randrange(20)//18 > 0:
+                            tile.list_of_features.append(random.choice(added_dict[global_tile.icon][1]))
+                            
+    
 """
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 

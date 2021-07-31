@@ -3091,7 +3091,8 @@ def pointer_description(landscape_layer, activity_layer, entities_layer, chunk_s
     ground_description = ''
     pointer_description = ''
     if mouse_coords[0] < chunk_size and mouse_coords[1] < chunk_size:
-        pointer_description += 'vertices = ' + str(landscape_layer[mouse_coords[1]][mouse_coords[0]].vertices) + ' '
+        pointer_description += 'vertices = ' + str(landscape_layer[mouse_coords[1]][mouse_coords[0]].vertices) + ' тут ' + str(landscape_layer[mouse_coords[1]][mouse_coords[0]].list_of_features) + ' '
+        
     for area in (landscape_layer, activity_layer, entities_layer):
         ground_description += coords_description(person_coords, area, chunk_size)
         pointer_description += coords_description(mouse_coords, area, chunk_size)
