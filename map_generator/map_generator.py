@@ -313,10 +313,12 @@ def master_map_generate(global_region_grid, region_grid, chunks_grid, mini_grid,
     defining_zone_relationships(ready_global_map)
     simple_draw_map_generation(screen, 'Создание миникарты')
 
+
     #Добавление существ в тайлы
     #progress_bar(screen, 85, 'Добавление существ в тайлы')
     creature_spawn_add(ready_global_map)
     simple_draw_map_generation(screen, 'Добавление существ в тайлы')
+
     
     #Создание миникарты
     #progress_bar(screen, 90, 'Создание миникарты')
@@ -338,7 +340,7 @@ def creature_spawn_add(global_map):
     """
     added_typle = ('S')
     added_dict = {
-                    'S': [('o'), ('snake')],
+                    'S': [('o', ), ('snake', )],
 
                  }
     for global_line in global_map:
@@ -346,7 +348,7 @@ def creature_spawn_add(global_map):
             if global_tile.icon in added_typle:
                 for line in global_tile.chunk:
                     for tile in line:
-                        if tile.icon in added_dict[global_tile.icon][0] and random.randrange(20)//18 > 0:
+                        if tile.icon in added_dict[global_tile.icon][0]: #and random.randrange(20)//18 > 0:
                             tile.list_of_features.append(random.choice(added_dict[global_tile.icon][1]))
                             
     

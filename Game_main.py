@@ -43,7 +43,7 @@ class Person:
     __slots__ = ('name', 'assemblage_point', 'dynamic', 'chunks_use_map', 'pointer', 'gun', 'global_position', 'number_chunk',
                  'environment_temperature', 'person_temperature', 'person_pass_step', 'enemy_pass_step',
                  'speed', 'test_visible', 'level', 'vertices', 'local_position', 'direction', 'pass_draw_move', 'recalculating_the_display', 'type',
-                 'icon', 'pointer_step', 'zone_relationships')
+                 'icon', 'pointer_step', 'zone_relationships', 'activating_spawn')
     def __init__(self, assemblage_point:list, dynamic:list, chunks_use_map:list, pointer:list, gun:list):
         self.name = 'person'
         self.assemblage_point = assemblage_point
@@ -69,6 +69,7 @@ class Person:
         self.icon = '☺'
         self.pointer_step = False
         self.zone_relationships = []
+        self.activating_spawn = False
 
     def __getstate__(self) -> dict:
         """ Сохранение класса """
@@ -97,6 +98,7 @@ class Person:
         state["icon"] = self.icon
         state["pointer_step"] = self.pointer_step
         state["zone_relationships"] = self.zone_relationships
+        state["activating_spawn"] = self.activating_spawn
         return state
 
     def __setstate__(self, state: dict):
@@ -125,6 +127,7 @@ class Person:
         self.icon = state["icon"]
         self.pointer_step = state["pointer_step"]
         self.zone_relationships = state["zone_relationships"]
+        self.activating_spawn = state["activating_spawn"]
 
     def check_local_position(self):
         local_position = []
@@ -1195,6 +1198,7 @@ class Creature:
         self.direction = 'center'
         self.visible = True
         self.fly = fly
+        self.steps_to_despawn = 30
 
     def __getstate__(self) -> dict:
         """ Сохранение класса """
@@ -1214,6 +1218,7 @@ class Creature:
         state["direction"] = self.direction
         state["visible"] = self.visible
         state["fly"] = self.fly
+        state["steps_to_despawn"] = self.steps_to_despawn
         return state
 
     def __setstate__(self, state: dict):
@@ -1233,6 +1238,20 @@ class Creature:
         self.direction = state["direction"]
         self.visible = state["visible"]
         self.fly = state["fly"]
+        self.steps_to_despawn = state["steps_to_despawn"]
+
+    def in_dynamic_chunk(self, person):
+        """
+            Рассчитывает находится ли существо на динамическом чанке
+        """
+        if self.global_position in (person.assemblage_point, [person.assemblage_point[0] + 1, person.assemblage_point[1]],
+                               [person.assemblage_point[0], person.assemblage_point[1] + 1],
+                               [person.assemblage_point[0] + 1, person.assemblage_point[1] + 1]):
+            self.steps_to_despawn = 30
+        else:
+            self.steps_to_despawn -= 1
+        if self.steps_to_despawn <= 0:
+            self.delete = True
 
     def simple_move(self, chunk_size, global_map):
         """
@@ -1633,8 +1652,40 @@ def master_npc_calculation(global_map, enemy_list, person, go_to_print, step, ac
             else:
                 #Если ходит по земле
                 enemy.simple_move(chunk_size, global_map)
+            enemy.in_dynamic_chunk(person)
             if enemy.delete:
                 del enemy
+
+    if person.activating_spawn:
+        person.activating_spawn = False
+        activating_spawn_creatures(global_map, enemy_list, person)
+
+def activating_spawn_creatures(global_map, enemy_list, person):
+    """
+        Активирует окружающие персонажа спавны существ
+    """
+    def path_length(start_point, finish_point):
+        """
+            Вычисляет расстояния до персонажа
+        """
+        return math.sqrt((start_point[0] - finish_point[0])**2 + (start_point[1] - finish_point[1])**2)
+    
+    candidats_list = []
+    price_list = []
+    for number_line, line in enumerate(global_map[person.global_position[0]][person.global_position[1]].chunk):
+        for number_tile, tile in enumerate(line):
+            if tile.list_of_features:
+                price = path_length([number_line, number_tile], person.local_position)
+                candidats_list.append([[number_line, number_tile], price])
+                price_list.append(price)
+    if candidats_list:
+        final_price = min(price_list)
+        for candidat in candidats_list:
+            if candidat[1] == final_price:
+                enemy_list.append(return_creature(person.global_position, candidat[0], 'snake'))
+                
+    
+    
 
 def enemy_direction_calculation(enemy):
     """
@@ -2074,6 +2125,7 @@ def master_player_action(global_map, person, chunk_size, go_to_print, mode_actio
     person.check_local_position()
     person.direction = 'center'
     person.global_position_calculation(chunk_size)
+    person.activating_spawn = False
         
     
     mode_action, pressed_button, mouse_position = request_press_button(global_map, person, chunk_size, go_to_print, mode_action,
@@ -2081,11 +2133,10 @@ def master_player_action(global_map, person, chunk_size, go_to_print, mode_actio
     
     if pressed_button != 'none':
         if mode_action == 'move':
-            logging.debug(f"{step}: Персонаж находится в сырых координатах     person.assemblage_point - {person.assemblage_point}, person.dynamic       - {person.dynamic}")
-            logging.debug(f"{step}: Персонаж оставил слабые следы в координатах person.global_position - {person.global_position}, person.local_position - {person.local_position} /n")
             activity_list.append(Action_in_map('faint_footprints', step, person.global_position, person.local_position, chunk_size, person.name))
             if random.randrange(21)//18 > 0: # Оставление персонажем следов
                 activity_list.append(Action_in_map('human_tracks', step, person.global_position, person.local_position, chunk_size, person.name))
+                person.activating_spawn = True
             request_move(global_map, person, chunk_size, go_to_print, pressed_button)
     
         elif mode_action == 'test_move':
