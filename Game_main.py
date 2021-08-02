@@ -529,6 +529,7 @@ def loading_all_sprites():
                     'd': {'0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_dust.png')))},
                     'stairs': {'0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_stairs.png')))},
                     'Sn': {'0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_snake.png')))},
+                    'Rs': {'0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_rattlesnake.png')))},
                     }
     return sprites_dict
 class Fast_minimap_tile(pygame.sprite.Sprite):
@@ -832,6 +833,7 @@ def minimap_dict_create():
                         'co': {'0': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_enemy_coyot.png')))},
                         'un': {'0': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_warning.jpg')))},
                         'Sn': {'0': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_snake.png')))},
+                        'Rs': {'0': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_rattlesnake.png')))},
                         }
         return minimap_dict
 
@@ -926,8 +928,10 @@ def master_game_events(global_map, enemy_list, person, go_to_print, step, activi
     """
     interaction_processing(global_map, interaction, enemy_list, step, chunk_size, activity_list, global_interaction)
     activity_list_check(activity_list, step)
-    master_npc_calculation(global_map, enemy_list, person, go_to_print, step, activity_list, chunk_size, interaction, world)
+    enemy_list = master_npc_calculation(global_map, enemy_list, person, go_to_print, step, activity_list, chunk_size, interaction, world)
     global_interaction_processing(global_map, enemy_list, step, chunk_size, activity_list, global_interaction)
+
+    return enemy_list
 
 def interaction_processing(global_map, interaction, enemy_list, step, chunk_size, activity_list, global_interaction):
     """
@@ -1252,6 +1256,7 @@ class Creature:
             self.steps_to_despawn -= 1
         if self.steps_to_despawn <= 0:
             self.delete = True
+        logging.debug(f"self.name_npc - {self.name_npc}, self.steps_to_despawn - {self.steps_to_despawn}, self.delete - {self.delete}")
 
     def simple_move(self, chunk_size, global_map):
         """
@@ -1370,6 +1375,21 @@ def return_creature(global_position, local_position, key):
                             "Змея, похоже что",
                             1,
                             False), #fly
+                'rattlesnake': Creature(global_position, local_position,
+                            'Snake',
+                            random.choice(['гремучая змея']),
+                            'Rs',
+                            '0',
+                            {
+                            'move': [['передвигается', 'animal_rest_stop', 0, 0]],
+                            'hunger': [['ест', 'animal_rest_stop', 40, 5]],
+                            'thirst': [['пьёт', 'animal_rest_stop', 80, 3]],
+                            'fatigue': [['отдыхает', 'animal_rest_stop', 30, 10]],
+                            'other': [['осматривается', 'animal_rest_stop', 0, 5]],
+                            },
+                            "Осторожно! ",
+                            1,
+                            False), #fly
                 'snake_unknown':  Creature(global_position, local_position,
                             'unknown',
                             'Snake Неизвестный',
@@ -1411,6 +1431,7 @@ class Enemy:
         self.visible = True
         self.direction = 'center'
         self.offset = [0, 0]
+        self.delete = False
     
         self.name = name
         self.name_npc = name_npc
@@ -1462,6 +1483,7 @@ class Enemy:
         state["person_description"] = self.person_description
         state["description"] = self.description
         state["speed"] = self.speed
+        state["delete"] = self.delete
         return state
 
     def __setstate__(self, state: dict):
@@ -1497,6 +1519,7 @@ class Enemy:
         self.person_description = state["person_description"]
         self.description = state["description"]
         self.speed = state["speed"]
+        self.delete = state["delete"]
 
 
 def return_npc(global_position, local_position, key):
@@ -1587,78 +1610,81 @@ def master_npc_calculation(global_map, enemy_list, person, go_to_print, step, ac
         self.target = [] #[[global_y, global_x], vertices, [local_y, local_x]]
         self.local_waypoints = [] # [[local_y, local_x], vertices, [global_y, global_x]]
     """
+    new_enemy_list = []
+    
     for enemy in enemy_list:
         enemy.direction = 'center'
-        
-        #Если это противник 
-        if isinstance(enemy, Enemy):
-            try:
-                enemy.level = global_map[enemy.global_position[0]][enemy.global_position[1]].chunk[enemy.local_position[0]][enemy.local_position[0]].level
-                enemy.vertices = global_map[enemy.global_position[0]][enemy.global_position[1]].chunk[enemy.local_position[0]][enemy.local_position[1]].vertices
-            except IndexError:
-                print(f"!!!IndexError!!! Ошибка после добавления NPC enemy.global_position - {enemy.global_position}, enemy.local_position - {enemy.local_position}")
-            enemy.all_description_calculation()
-            #Удаление реализованного глобального вейпоинта
-            if enemy.waypoints and [enemy.global_position[0], enemy.global_position[1], enemy.vertices] == enemy.waypoints[0]:
-                enemy.waypoints.pop(0)
+        if not enemy.delete:
+            #Если это противник 
+            if isinstance(enemy, Enemy):
+                try:
+                    enemy.level = global_map[enemy.global_position[0]][enemy.global_position[1]].chunk[enemy.local_position[0]][enemy.local_position[0]].level
+                    enemy.vertices = global_map[enemy.global_position[0]][enemy.global_position[1]].chunk[enemy.local_position[0]][enemy.local_position[1]].vertices
+                except IndexError:
+                    print(f"!!!IndexError!!! Ошибка после добавления NPC enemy.global_position - {enemy.global_position}, enemy.local_position - {enemy.local_position}")
+                enemy.all_description_calculation()
+                #Удаление реализованного глобального вейпоинта
+                if enemy.waypoints and [enemy.global_position[0], enemy.global_position[1], enemy.vertices] == enemy.waypoints[0]:
+                    enemy.waypoints.pop(0)
 
-            #Удаление реализованной цели
-            if enemy.target and enemy.target == [enemy.global_position, enemy.vertices, enemy.local_position] or enemy.target == [enemy.global_position, enemy.vertices, []]:
-                enemy.target = []
-                
-            if not world.npc_path_calculation: #Если никто не считал вейпоинты на этом шаге
-                
-                #Если есть цель, но нет локальных вейпоинтов.
-                if enemy.target and not(enemy.local_waypoints):
-                    enemy_move_calculaton(global_map, enemy, step)
-                    world.npc_path_calculation = True
-                #Если цели нет и нет локальных вейпоинтов
-                if not enemy.target and not enemy.local_waypoints:
-                    for vertices in global_map[enemy.global_position[0]][enemy.global_position[1]].vertices:
-                        if vertices.number == enemy.vertices:
-                            if vertices.connections:
-                                #Определяем позицию искомого тайла, путём выбора из точек перехода искомой зоны доступности
-                                number_target = random.randrange(len(vertices.connections))
-                                target_tiles = []
-                                for target_vertices in global_map[vertices.connections[number_target].position[0]][vertices.connections[number_target].position[1]].vertices:
-                                    if target_vertices == vertices.connections[number_target].number:
-                                        for connect in target_vertices.connections:
-                                            if connect.number == vertices.number:
-                                                target_tiles = random.choice(connect.tiles)
-                                #Задаётся цель из существующих координат, существующих связей и существующих тайлов
-                                enemy.target = [vertices.connections[number_target].position, vertices.connections[number_target].number, target_tiles]
-                #Если есть количество глобальных вейпоинтов больше 1 и истекают локальные вейпоинты, то считаются локальные вейпоинты для следующей карты.
-                if len(enemy.waypoints) > 1 and len(enemy.local_waypoints) < 5: 
-                    enemy_move_calculaton(global_map, enemy, step)
-                    world.npc_path_calculation = True
-            #Если есть динамические вейпоинты
-            if enemy.local_waypoints:
-                #Добавляются следы
-                if random.randrange(21)//18 > 0:
-                    activity_list.append(Action_in_map(enemy.activity_map['move'][0][1], step, copy.deepcopy(enemy.global_position),
-                                                       copy.deepcopy(enemy.local_position), chunk_size, enemy.name_npc))
-                activity_list.append(Action_in_map('faint_footprints', step, copy.deepcopy(enemy.global_position), copy.deepcopy(enemy.local_position),
-                                                   chunk_size, enemy.name_npc))
-                enemy_direction_calculation(enemy)
-                enemy.global_position = enemy.local_waypoints[0][3]
-                enemy.local_position = [enemy.local_waypoints[0][0], enemy.local_waypoints[0][1]]
-                enemy.local_waypoints.pop(0)
+                #Удаление реализованной цели
+                if enemy.target and enemy.target == [enemy.global_position, enemy.vertices, enemy.local_position] or enemy.target == [enemy.global_position, enemy.vertices, []]:
+                    enemy.target = []
+                    
+                if not world.npc_path_calculation: #Если никто не считал вейпоинты на этом шаге
+                    
+                    #Если есть цель, но нет локальных вейпоинтов.
+                    if enemy.target and not(enemy.local_waypoints):
+                        enemy_move_calculaton(global_map, enemy, step)
+                        world.npc_path_calculation = True
+                    #Если цели нет и нет локальных вейпоинтов
+                    if not enemy.target and not enemy.local_waypoints:
+                        for vertices in global_map[enemy.global_position[0]][enemy.global_position[1]].vertices:
+                            if vertices.number == enemy.vertices:
+                                if vertices.connections:
+                                    #Определяем позицию искомого тайла, путём выбора из точек перехода искомой зоны доступности
+                                    number_target = random.randrange(len(vertices.connections))
+                                    target_tiles = []
+                                    for target_vertices in global_map[vertices.connections[number_target].position[0]][vertices.connections[number_target].position[1]].vertices:
+                                        if target_vertices == vertices.connections[number_target].number:
+                                            for connect in target_vertices.connections:
+                                                if connect.number == vertices.number:
+                                                    target_tiles = random.choice(connect.tiles)
+                                    #Задаётся цель из существующих координат, существующих связей и существующих тайлов
+                                    enemy.target = [vertices.connections[number_target].position, vertices.connections[number_target].number, target_tiles]
+                    #Если есть количество глобальных вейпоинтов больше 1 и истекают локальные вейпоинты, то считаются локальные вейпоинты для следующей карты.
+                    if len(enemy.waypoints) > 1 and len(enemy.local_waypoints) < 5: 
+                        enemy_move_calculaton(global_map, enemy, step)
+                        world.npc_path_calculation = True
+                #Если есть динамические вейпоинты
+                if enemy.local_waypoints:
+                    #Добавляются следы
+                    if random.randrange(21)//18 > 0:
+                        activity_list.append(Action_in_map(enemy.activity_map['move'][0][1], step, copy.deepcopy(enemy.global_position),
+                                                           copy.deepcopy(enemy.local_position), chunk_size, enemy.name_npc))
+                    activity_list.append(Action_in_map('faint_footprints', step, copy.deepcopy(enemy.global_position), copy.deepcopy(enemy.local_position),
+                                                       chunk_size, enemy.name_npc))
+                    enemy_direction_calculation(enemy)
+                    enemy.global_position = enemy.local_waypoints[0][3]
+                    enemy.local_position = [enemy.local_waypoints[0][0], enemy.local_waypoints[0][1]]
+                    enemy.local_waypoints.pop(0)
 
-        #Если это существо        
-        if isinstance(enemy, Creature):
-            if enemy.fly:
-                #Если может летать
-                enemy.fly_simple_move(chunk_size)
-            else:
-                #Если ходит по земле
-                enemy.simple_move(chunk_size, global_map)
-            enemy.in_dynamic_chunk(person)
-            if enemy.delete:
-                del enemy
-
+            #Если это существо        
+            if isinstance(enemy, Creature):
+                if enemy.fly:
+                    #Если может летать
+                    enemy.fly_simple_move(chunk_size)
+                else:
+                    #Если ходит по земле
+                    enemy.simple_move(chunk_size, global_map)
+                enemy.in_dynamic_chunk(person)
+                if enemy.delete:
+                    enemy = None
+            new_enemy_list.append(enemy)
     if person.activating_spawn:
         person.activating_spawn = False
         activating_spawn_creatures(global_map, enemy_list, person)
+    return enemy_list
 
 def activating_spawn_creatures(global_map, enemy_list, person):
     """
@@ -1676,17 +1702,14 @@ def activating_spawn_creatures(global_map, enemy_list, person):
         for number_tile, tile in enumerate(line):
             if tile.list_of_features:
                 price = path_length([number_line, number_tile], person.local_position)
-                candidats_list.append([[number_line, number_tile], price])
+                candidats_list.append([[number_line, number_tile], price, tile.list_of_features])
                 price_list.append(price)
     if candidats_list:
         final_price = min(price_list)
         for candidat in candidats_list:
             if candidat[1] == final_price:
-                enemy_list.append(return_creature(person.global_position, candidat[0], 'snake'))
+                enemy_list.append(return_creature(person.global_position, candidat[0], random.choice(candidat[2])))
                 
-    
-    
-
 def enemy_direction_calculation(enemy):
     """
         Определяет направление движения NPC
@@ -3589,7 +3612,7 @@ def game_loop(global_map:list, person, chunk_size:int, enemy_list:list, world, s
         calculation_assemblage_point(global_map, person, chunk_size) # Рассчёт динамического чанка
         #all_pass_step_calculations(person, enemy_list, mode_action, interaction)
         if not person.enemy_pass_step and not person.pointer_step:
-            master_game_events(global_map, enemy_list, person, go_to_print, step, activity_list, chunk_size, interaction, world, global_interaction)
+            enemy_list = master_game_events(global_map, enemy_list, person, go_to_print, step, activity_list, chunk_size, interaction, world, global_interaction)
         screen, landscape_layer, activity_layer, entities_layer, offset_sprites, finishing_surface, settings_for_intermediate_steps = master_pygame_draw(
                                         person, chunk_size, go_to_print, global_map, mode_action, enemy_list, activity_list, screen, minimap_surface,
                                         minimap_dict, sprites_dict, offset_sprites, landscape_layer, activity_layer,

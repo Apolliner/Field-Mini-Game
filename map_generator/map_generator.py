@@ -340,7 +340,7 @@ def creature_spawn_add(global_map):
     """
     added_typle = ('S')
     added_dict = {
-                    'S': [('o', ), ('snake', )],
+                    'S': [('o', ), ('snake', 'rattlesnake')],
 
                  }
     for global_line in global_map:
