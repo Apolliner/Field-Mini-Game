@@ -928,10 +928,8 @@ def master_game_events(global_map, enemy_list, person, go_to_print, step, activi
     """
     interaction_processing(global_map, interaction, enemy_list, step, chunk_size, activity_list, global_interaction)
     activity_list_check(activity_list, step)
-    enemy_list = master_npc_calculation(global_map, enemy_list, person, go_to_print, step, activity_list, chunk_size, interaction, world)
+    master_npc_calculation(global_map, enemy_list, person, go_to_print, step, activity_list, chunk_size, interaction, world)
     global_interaction_processing(global_map, enemy_list, step, chunk_size, activity_list, global_interaction)
-
-    return enemy_list
 
 def interaction_processing(global_map, interaction, enemy_list, step, chunk_size, activity_list, global_interaction):
     """
@@ -1610,9 +1608,8 @@ def master_npc_calculation(global_map, enemy_list, person, go_to_print, step, ac
         self.target = [] #[[global_y, global_x], vertices, [local_y, local_x]]
         self.local_waypoints = [] # [[local_y, local_x], vertices, [global_y, global_x]]
     """
-    new_enemy_list = []
-    
-    for enemy in enemy_list:
+    delete_list = []
+    for number_enemy, enemy in enumerate(enemy_list):
         enemy.direction = 'center'
         if not enemy.delete:
             #Если это противник 
@@ -1679,12 +1676,12 @@ def master_npc_calculation(global_map, enemy_list, person, go_to_print, step, ac
                     enemy.simple_move(chunk_size, global_map)
                 enemy.in_dynamic_chunk(person)
                 if enemy.delete:
-                    enemy = None
-            new_enemy_list.append(enemy)
+                    delete_list.append(number_enemy)
     if person.activating_spawn:
         person.activating_spawn = False
         activating_spawn_creatures(global_map, enemy_list, person)
-    return enemy_list
+    for number in reversed(sorted(delete_list)):
+        enemy_list.pop(number)
 
 def activating_spawn_creatures(global_map, enemy_list, person):
     """
@@ -3612,7 +3609,7 @@ def game_loop(global_map:list, person, chunk_size:int, enemy_list:list, world, s
         calculation_assemblage_point(global_map, person, chunk_size) # Рассчёт динамического чанка
         #all_pass_step_calculations(person, enemy_list, mode_action, interaction)
         if not person.enemy_pass_step and not person.pointer_step:
-            enemy_list = master_game_events(global_map, enemy_list, person, go_to_print, step, activity_list, chunk_size, interaction, world, global_interaction)
+            master_game_events(global_map, enemy_list, person, go_to_print, step, activity_list, chunk_size, interaction, world, global_interaction)
         screen, landscape_layer, activity_layer, entities_layer, offset_sprites, finishing_surface, settings_for_intermediate_steps = master_pygame_draw(
                                         person, chunk_size, go_to_print, global_map, mode_action, enemy_list, activity_list, screen, minimap_surface,
                                         minimap_dict, sprites_dict, offset_sprites, landscape_layer, activity_layer,
