@@ -338,9 +338,11 @@ def creature_spawn_add(global_map):
 
         added_dict = {биом локации: [(кортеж типов тайлов), (кортеж существ)]}
     """
-    added_typle = ('S')
+    added_typle = ('S', 'F', 'P')
     added_dict = {
                     'S': [('o', ), ('snake', 'rattlesnake')],
+                    'F': [('P', ), ('bird', )],
+                    'P': [('F', ), ('bird', )],
 
                  }
     for global_line in global_map:

@@ -530,6 +530,7 @@ def loading_all_sprites():
                     'stairs': {'0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_stairs.png')))},
                     'Sn': {'0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_snake.png')))},
                     'Rs': {'0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_rattlesnake.png')))},
+                    'Bi': {'0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_bird.png')))},
                     }
     return sprites_dict
 class Fast_minimap_tile(pygame.sprite.Sprite):
@@ -834,6 +835,7 @@ def minimap_dict_create():
                         'un': {'0': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_warning.jpg')))},
                         'Sn': {'0': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_snake.png')))},
                         'Rs': {'0': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_rattlesnake.png')))},
+                        'Bi': {'0': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_bird.png')))},
                         }
         return minimap_dict
 
@@ -1374,7 +1376,7 @@ def return_creature(global_position, local_position, key):
                             1,
                             False), #fly
                 'rattlesnake': Creature(global_position, local_position,
-                            'Snake',
+                            'Rattlesnake',
                             random.choice(['гремучая змея']),
                             'Rs',
                             '0',
@@ -1388,6 +1390,21 @@ def return_creature(global_position, local_position, key):
                             "Осторожно! ",
                             1,
                             False), #fly
+                'bird': Creature(global_position, local_position,
+                            'Bird',
+                            random.choice(['Птица']),
+                            'Bi',
+                            '0',
+                            {
+                            'move': [['передвигается', 'animal_rest_stop', 0, 0]],
+                            'hunger': [['ест', 'animal_rest_stop', 40, 5]],
+                            'thirst': [['пьёт', 'animal_rest_stop', 80, 3]],
+                            'fatigue': [['отдыхает', 'animal_rest_stop', 30, 10]],
+                            'other': [['осматривается', 'animal_rest_stop', 0, 5]],
+                            },
+                            "Гляди ка, летит ",
+                            1,
+                            True), #fly
                 'snake_unknown':  Creature(global_position, local_position,
                             'unknown',
                             'Snake Неизвестный',
