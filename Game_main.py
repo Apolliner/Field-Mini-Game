@@ -1186,7 +1186,7 @@ class Action_in_map:
 
 class Creature:
     """ Мелкие, необсчитываемые за кадром существа и противники """
-    def __init__(self, global_position, local_position, name, name_npc, icon, type, activity_map, person_description, speed, fly):
+    def __init__(self, global_position, local_position, name, name_npc, icon, type, activity_map, person_description, speed, deactivation_tiles, fly):
         self.global_position = global_position
         self.local_position = local_position
         self.waypoints = [] #На будущее
@@ -1203,6 +1203,7 @@ class Creature:
         self.visible = True
         self.fly = fly
         self.steps_to_despawn = 30
+        self.deactivation_tiles = deactivation_tiles
 
     def __getstate__(self) -> dict:
         """ Сохранение класса """
@@ -1223,6 +1224,7 @@ class Creature:
         state["visible"] = self.visible
         state["fly"] = self.fly
         state["steps_to_despawn"] = self.steps_to_despawn
+        state["deactivation_tiles"] = self.deactivation_tiles
         return state
 
     def __setstate__(self, state: dict):
@@ -1243,6 +1245,15 @@ class Creature:
         self.visible = state["visible"]
         self.fly = state["fly"]
         self.steps_to_despawn = state["steps_to_despawn"]
+        self.deactivation_tiles = state["deactivation_tiles"]
+
+    def if_deactivation_tiles(self, global_map):
+        """
+            Проверяет находится ли существо на тайле деактивации и выбрасывает шанс на диактивацию
+        """
+        if global_map[self.global_position[0]][self.global_position[1]].chunk[self.local_position[0]][self.local_position[1]].icon in self.deactivation_tiles:
+            if random.randrange(20)//18 > 0:
+                self.delete = True
 
     def in_dynamic_chunk(self, person):
         """
@@ -1374,6 +1385,7 @@ def return_creature(global_position, local_position, key):
                             },
                             "Змея, похоже что",
                             1,
+                            ('o',),
                             False), #fly
                 'rattlesnake': Creature(global_position, local_position,
                             'Rattlesnake',
@@ -1389,6 +1401,7 @@ def return_creature(global_position, local_position, key):
                             },
                             "Осторожно! ",
                             1,
+                            ('o',),
                             False), #fly
                 'bird': Creature(global_position, local_position,
                             'Bird',
@@ -1404,6 +1417,7 @@ def return_creature(global_position, local_position, key):
                             },
                             "Гляди ка, летит ",
                             1,
+                            ('F', 'P',),
                             True), #fly
                 'snake_unknown':  Creature(global_position, local_position,
                             'unknown',
@@ -1419,6 +1433,7 @@ def return_creature(global_position, local_position, key):
                             },
                             "Выползающий для теста",
                             1,
+                            ('o',),
                             True), #fly
                 }
     if key in npc_dict:
@@ -1692,6 +1707,7 @@ def master_npc_calculation(global_map, enemy_list, person, go_to_print, step, ac
                     #Если ходит по земле
                     enemy.simple_move(chunk_size, global_map)
                 enemy.in_dynamic_chunk(person)
+                enemy.if_deactivation_tiles(global_map)
                 if enemy.delete:
                     delete_list.append(number_enemy)
     if person.activating_spawn:
