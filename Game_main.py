@@ -25,7 +25,7 @@ garbage = ['░', '▒', '▓', '█', '☺']
 
     СПИСОК ИЗВЕСТНЫХ БАГОВ:
     При оставлении персонажем активности в 0х координатах, активность получает странные координаты и не остаётся под персонажем
-    (в частности, лёгкие шаги).
+    (в частности, лёгкие шаги). #ИСПРАВЛЕНО
 
     ТЕМАТИКА:
     Всё, что мне нравится. Персонажи как в хороший плохой злой, вяленое конское мясо и гремучие змеи!
@@ -1185,7 +1185,13 @@ class Action_in_map:
             self.lifetime_description = f'[{self.birth + self.lifetime - step}]'
 
 class Creature:
-    """ Мелкие, необсчитываемые за кадром существа и противники """
+    """
+    Мелкие, необсчитываемые за кадром существа и противники
+
+    РЕАЛИЗОВАТЬ:
+    1) Изменение режима передвижения с полёта, на хождение по земле.
+    2) Изменение высоты полёта птиц, их иконки и тени под ними
+    """
     def __init__(self, global_position, local_position, name, name_npc, icon, type, activity_map, person_description, speed, deactivation_tiles, fly):
         self.global_position = global_position
         self.local_position = local_position
@@ -1196,7 +1202,8 @@ class Creature:
         self.icon = icon
         self.type = type
         self.activity_map = activity_map
-        self.description = person_description
+        self.person_description = person_description
+        self.description = ''
         self.alarm = False
         self.delete = False
         self.direction = 'center'
@@ -1204,6 +1211,7 @@ class Creature:
         self.fly = fly
         self.steps_to_despawn = 30
         self.deactivation_tiles = deactivation_tiles
+        self.follow = []
 
     def __getstate__(self) -> dict:
         """ Сохранение класса """
@@ -1218,6 +1226,7 @@ class Creature:
         state["type"] = self.type
         state["activity_map"] = self.activity_map
         state["description"] = self.description
+        state["person_description"] = self.person_description
         state["alarm"] = self.alarm
         state["delete"] = self.delete
         state["direction"] = self.direction
@@ -1225,6 +1234,7 @@ class Creature:
         state["fly"] = self.fly
         state["steps_to_despawn"] = self.steps_to_despawn
         state["deactivation_tiles"] = self.deactivation_tiles
+        state["follow"] = self.follow
         return state
 
     def __setstate__(self, state: dict):
@@ -1239,6 +1249,7 @@ class Creature:
         self.type = state["type"]
         self.activity_map = state["activity_map"]
         self.description = state["description"]
+        self.person_description = state["person_description"]
         self.alarm = state["alarm"]
         self.delete = state["delete"]
         self.direction = state["direction"]
@@ -1246,6 +1257,10 @@ class Creature:
         self.fly = state["fly"]
         self.steps_to_despawn = state["steps_to_despawn"]
         self.deactivation_tiles = state["deactivation_tiles"]
+        self.follow = state["follow"]
+
+    def all_description_calculation(self):
+        self.description = f"{self.person_description} {self.name_npc}"
 
     def if_deactivation_tiles(self, global_map):
         """
@@ -1462,6 +1477,7 @@ class Enemy:
         self.direction = 'center'
         self.offset = [0, 0]
         self.delete = False
+        self.follow = []
     
         self.name = name
         self.name_npc = name_npc
@@ -1514,6 +1530,7 @@ class Enemy:
         state["description"] = self.description
         state["speed"] = self.speed
         state["delete"] = self.delete
+        state["follow"] = self.follow
         return state
 
     def __setstate__(self, state: dict):
@@ -1550,6 +1567,7 @@ class Enemy:
         self.description = state["description"]
         self.speed = state["speed"]
         self.delete = state["delete"]
+        self.follow = state["follow"]
 
 
 def return_npc(global_position, local_position, key):
@@ -1643,15 +1661,14 @@ def master_npc_calculation(global_map, enemy_list, person, go_to_print, step, ac
     delete_list = []
     for number_enemy, enemy in enumerate(enemy_list):
         enemy.direction = 'center'
+        enemy.all_description_calculation()
         if not enemy.delete:
             #Если это противник 
             if isinstance(enemy, Enemy):
-                try:
-                    enemy.level = global_map[enemy.global_position[0]][enemy.global_position[1]].chunk[enemy.local_position[0]][enemy.local_position[0]].level
-                    enemy.vertices = global_map[enemy.global_position[0]][enemy.global_position[1]].chunk[enemy.local_position[0]][enemy.local_position[1]].vertices
-                except IndexError:
-                    print(f"!!!IndexError!!! Ошибка после добавления NPC enemy.global_position - {enemy.global_position}, enemy.local_position - {enemy.local_position}")
-                enemy.all_description_calculation()
+                
+                enemy.level = global_map[enemy.global_position[0]][enemy.global_position[1]].chunk[enemy.local_position[0]][enemy.local_position[0]].level
+                enemy.vertices = global_map[enemy.global_position[0]][enemy.global_position[1]].chunk[enemy.local_position[0]][enemy.local_position[1]].vertices
+
                 #Удаление реализованного глобального вейпоинта
                 if enemy.waypoints and [enemy.global_position[0], enemy.global_position[1], enemy.vertices] == enemy.waypoints[0]:
                     enemy.waypoints.pop(0)
@@ -1739,6 +1756,25 @@ def activating_spawn_creatures(global_map, enemy_list, person):
         for candidat in candidats_list:
             if candidat[1] == final_price:
                 enemy_list.append(return_creature(person.global_position, candidat[0], random.choice(candidat[2])))
+
+def enemy_following(enemy, follow):
+    """
+        Рассчитывает движение существа или NPC к персонажу или другому персонажу или NPC
+
+        sefl.follow содержит словарь с описанием того за кем и как следовать. В частности подходить вплотную или на определённое расстояние.
+
+        self.follow = [[enemy, 'attack', 5], [атакуемое существо, тип взаимодействия, расстояние для рассчёта]]
+    """
+    def path_length(start_point, finish_point):
+        """
+            Вычисляет примерное расстояния до финиша, для рассчётов стоимости перемещения
+        """
+        try:
+            return math.sqrt((start_point[0] - finish_point[0])**2 + (start_point[1] - finish_point[1])**2)
+        except TypeError:
+            print(f"!!! TypeError start_point - {start_point} | finish_point - {finish_point}")
+            return 999
+    pass
                 
 def enemy_direction_calculation(enemy):
     """
