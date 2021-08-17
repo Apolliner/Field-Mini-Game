@@ -22,6 +22,7 @@ garbage = ['░', '▒', '▓', '█', '☺']
 
     1)Взрывчатка и разрушения. Добавить тайлам параметры веса и устойчивости. При воздействии, рассчитывать разрушение и/или сползание.
     2)Так как под тайлами фактически не идет просчёт уровней ниже, добавить им описание коренной породы, которая обнажится при разрушении.
+    3)Вся работа с координатами через координаты в формате world_position, то есть, в формате мировых координат.
 
     СПИСОК ИЗВЕСТНЫХ БАГОВ:
     При оставлении персонажем активности в 0х координатах, активность получает странные координаты и не остаётся под персонажем
@@ -43,7 +44,7 @@ class Person:
     __slots__ = ('name', 'assemblage_point', 'dynamic', 'chunks_use_map', 'pointer', 'gun', 'global_position', 'number_chunk',
                  'environment_temperature', 'person_temperature', 'person_pass_step', 'enemy_pass_step',
                  'speed', 'test_visible', 'level', 'vertices', 'local_position', 'direction', 'pass_draw_move', 'recalculating_the_display', 'type',
-                 'icon', 'pointer_step', 'zone_relationships', 'activating_spawn')
+                 'icon', 'pointer_step', 'zone_relationships', 'activating_spawn', 'world_position')
     def __init__(self, assemblage_point:list, dynamic:list, chunks_use_map:list, pointer:list, gun:list):
         self.name = 'person'
         self.assemblage_point = assemblage_point
@@ -70,6 +71,12 @@ class Person:
         self.pointer_step = False
         self.zone_relationships = []
         self.activating_spawn = False
+        self.world_position = [0, 0] #общемировое тайловое положение
+
+    def world_position_calculate(self, chunk_size):
+        """ Рассчитывает глобальные координаты от центра мира """
+        self.world_position = [self.local_position[0] + (self.global_position[0])*(chunk_size),
+                               self.local_position[1] + (self.global_position[1])*(chunk_size)]
 
     def __getstate__(self) -> dict:
         """ Сохранение класса """
@@ -1212,6 +1219,11 @@ class Creature:
         self.steps_to_despawn = 30
         self.deactivation_tiles = deactivation_tiles
         self.follow = []
+        self.world_position = [0, 0]
+
+    def world_position_calculate(self, chunk_size):
+        """ Рассчитывает глобальные координаты от центра мира """
+        self.world_position = [self.local_position[0] + self.global_position[0]*chunk_size, self.local_position[1] + self.global_position[1]*chunk_size]
 
     def __getstate__(self) -> dict:
         """ Сохранение класса """
@@ -1478,6 +1490,7 @@ class Enemy:
         self.offset = [0, 0]
         self.delete = False
         self.follow = []
+        self.world_position = [0, 0]
     
         self.name = name
         self.name_npc = name_npc
@@ -1493,8 +1506,14 @@ class Enemy:
         self.type_npc = 'hunter'
         self.pass_description = ''
         self.description = ''
+
+    def world_position_calculate(self, chunk_size):
+        """ Рассчитывает глобальные координаты от центра мира """
+        self.world_position = [self.local_position[0] + self.global_position[0]*chunk_size, self.local_position[1] + self.global_position[1]*chunk_size]
+        
     def all_description_calculation(self):
         self.description = f"{self.person_description} {self.name_npc}"
+        
     def __getstate__(self) -> dict:
         """ Сохранение класса """
         state = {}
@@ -1727,6 +1746,7 @@ def master_npc_calculation(global_map, enemy_list, person, go_to_print, step, ac
                 enemy.if_deactivation_tiles(global_map)
                 if enemy.delete:
                     delete_list.append(number_enemy)
+    enemy.world_position_calculate(chunk_size)
     if person.activating_spawn:
         person.activating_spawn = False
         activating_spawn_creatures(global_map, enemy_list, person)
@@ -1774,6 +1794,24 @@ def enemy_following(enemy, follow):
         except TypeError:
             print(f"!!! TypeError start_point - {start_point} | finish_point - {finish_point}")
             return 999
+    length_path = path_length(enemy.world_position, enemy.follow[0].world_position)
+    if length_path <= self.follow[2]:
+        if enemy.local_waypoints:
+            enemy_move(enemy)
+        else:
+            enemy_a_star_master(enemy, start=enemy.world_position, finish=enemy.follow[0].world_position)
+
+def enemy_move(enemy):
+    """
+        Передвижение персонажа по локальным вейпоинтам
+    """
+    pass
+
+def enemy_a_star_master(enemy, start=None, finish=None):
+    """
+        Все рассчёты передвижения из одной точки в другую.
+        Может получить стартовую и конечную/конечные точки в формате world_position
+    """
     pass
                 
 def enemy_direction_calculation(enemy):
@@ -2238,6 +2276,8 @@ def master_player_action(global_map, person, chunk_size, go_to_print, mode_actio
         if pressed_button == 'button_map':
             go_to_print.minimap_on = (go_to_print.minimap_on == False)
         request_processing(pressed_button)
+
+    person.world_position_calculate(chunk_size)
     
     return mode_action, mouse_position
 
@@ -3184,7 +3224,7 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
 
     Draw_rect(30*26, 30*14, 1000, 500, (255, 255, 255)).draw(screen) # заливает белым область надписей
     
-    print_time = f"{round(time_2 - time_1, 4)} - отрисовка \n {round(end - time_1, 4)} - общее время \n {settings_for_intermediate_steps} - скорость шага, {mouse_position} - mouse_position"
+    print_time = f"{round(time_2 - time_1, 4)} - отрисовка person.world_position - {person.world_position} {settings_for_intermediate_steps} - скорость шага, {mouse_position} - mouse_position"
     
     fontObj = pygame.font.Font('freesansbold.ttf', 10)
     textSurfaceObj = fontObj.render(print_time, True, (0, 0, 0), (255, 255, 255))
