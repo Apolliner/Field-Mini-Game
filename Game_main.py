@@ -31,7 +31,17 @@ garbage = ['░', '▒', '▓', '█', '☺']
     ТЕМАТИКА:
     Всё, что мне нравится. Персонажи как в хороший плохой злой, вяленое конское мясо и гремучие змеи!
 
-    
+    ОПИСАНИЕ ТИПОВ КООРДИНАТ:
+
+    Существует 4 типа координат:
+
+    Глобальные координаты (global_position) - координаты локации глобальной карты, на которой в данный момент находится персонаж, NPC или существо.
+
+    Динамические координаты (dynamic_position) - координаты персонажа игрока на динамическом чанке. Первичны для персонажа и используются только им.
+
+    Локальные координаты (local_position) - местоположение персонажа, NPC или существа внутри локации.
+
+    Мировые координаты (world_position) - рассчитываются из локальных и глобальных координат для удобства работы с координатами.
 """
 
 class World:
@@ -1508,7 +1518,7 @@ class Enemy:
         self.description = ''
 
     def world_position_calculate(self, chunk_size):
-        """ Рассчитывает глобальные координаты от центра мира """
+        """ Рассчитывает глобальные координаты от начала мира в координатах [0, 0] """
         self.world_position = [self.local_position[0] + self.global_position[0]*chunk_size, self.local_position[1] + self.global_position[1]*chunk_size]
         
     def all_description_calculation(self):
@@ -1799,7 +1809,7 @@ def enemy_following(enemy, follow):
         if enemy.local_waypoints:
             enemy_move(enemy)
         else:
-            enemy_a_star_master(enemy, start=enemy.world_position, finish=enemy.follow[0].world_position)
+            enemy_a_star_master(enemy, global_map, chunk_size, start=enemy.world_position, finish=enemy.follow[0].world_position)
 
 def enemy_move(enemy):
     """
@@ -1807,12 +1817,118 @@ def enemy_move(enemy):
     """
     pass
 
-def enemy_a_star_master(enemy, start=None, finish=None):
+def enemy_a_star_master(character, global_map, chunk_size, finish_world, start_world=None):
     """
         Все рассчёты передвижения из одной точки в другую.
         Может получить стартовую и конечную/конечные точки в формате world_position
+        Стартовая точка не обязательно является текущим положением
     """
-    pass
+    # Если не указана стартовая точка, то за неё принимается местоположение персонажа
+    if not start_world:
+        start_world = character.world_positon
+
+    # Перессчёт из мировых координат в глобальные, локальные и определение номера вершины графа
+    start_global, start_local = world_position_recalculation(start_world, chunk_size)
+    start_vertices = global_map[start_global[0]][start_global[1]].chunk[start_local[0]][start_local[1]].vertices
+    
+    finish_global, finish_local = world_position_recalculation(finish_world, chunk_size)
+    finish_vertices = global_map[finish_global[0]][finish_global[1]].chunk[finish_local[0]][finish_local[1]].vertices
+
+    #Если глобальные позиции не равны или глобальные позиции равны, но не равны зоны доступности
+    if start_global != finish_global or (start_global == finish_global and start_vertices != finish_vertices):
+
+        #Сначала считаем глобальные вейпоинты
+        vertices_enemy_a_star_move_global_calculations2(global_map, enemy, start_global, start_vertices, finish_global, finish_vertices) # Изменить функцию
+        
+        #А затем локальные
+        vertices_enemy_a_star_move_local_calculations2(global_map, enemy,
+                            [[enemy.waypoints[0][0], enemy.waypoints[0][1]], enemy.waypoints[0][2]], True)
+
+    #Если равны глобальные позиции и зоны доступности
+    elif start_global == finish_global and start_vertices == finish_vertices:
+
+        #Считаем только локальные вейпоинты без перехода на другую локацию
+        vertices_enemy_a_star_move_local_calculations2(global_map, enemy,
+                            [[enemy.target[2][0], enemy.target[2][1]], enemy.target[1]], False)
+    
+
+
+
+
+def vertices_enemy_a_star_move_global_calculations2(processed_map, enemy, start_global, start_vertices, finish_global, finish_vertices):
+    """
+        Подготавливает запрос и вызывает алгоритм А* для передвижения по глобальной карте
+    """
+
+    start_point = [start_global[0], start_global[1], start_vertices]
+    finish_point = [finish_global[0], finish_global[1], finish_vertices]
+
+    enemy.waypoints, success = vertices_enemy_a_star_algorithm_move_calculation(processed_map, start_point, finish_point, 'global', enemy)
+
+def vertices_enemy_a_star_move_local_calculations2(global_map, enemy, start_local, start_vertices, finish_local, finish_vertices,
+                                                   start_global, moving_between_locations):
+    """
+        Подготавливает запрос и вызывает алгоритм А* для передвижения по локальной карте
+
+        target:[[local_y, local_x], vertices - номер зоны доступности на следующей или на этой карте в которую нужно прийти]
+    """
+    chunk_size = len(global_map[0][0].chunk)
+    
+    start_point = [start_local[0], start_local[1], start_vertices]
+    global_axis = start_global
+
+    processed_map = global_map[global_axis[0]][global_axis[1]].chunk
+    
+    finish_point = []
+    if moving_between_locations:
+        if start_local != enemy.global_position:
+            for vertices in global_map[global_axis[0]][global_axis[1]].vertices:
+                if vertices.number == enemy.vertices:
+                    for connect in vertices.connections:
+                        if connect.position == start_local and connect.number == finish_vertices:
+                            finish = random.choice(connect.tiles)
+                            finish_point = [finish[0], finish[1], finish_vertices]
+    else:
+        finish_point = [finish_local[0], finish_local[1], finish_vertices]
+    
+    if finish_point:
+        raw_local_waypoints, success = vertices_enemy_a_star_algorithm_move_calculation(processed_map, start_point, finish_point, 'local', enemy)
+        #В каждую путевую точку добавляется глобальная позиция этой точки
+        for waypoint in raw_local_waypoints:
+            if enemy.local_waypoints:
+                waypoint.append(enemy.local_waypoints[-1][3])
+            else:
+                waypoint.append(enemy.global_position)
+
+        #Если найден путь до края локации
+        if raw_local_waypoints[-1][0] == 0 or raw_local_waypoints[-1][0] == chunk_size - 1 or raw_local_waypoints[-1][1] == 0 or raw_local_waypoints[-1][1] == chunk_size - 1:
+            #Добавление вейпоинта, соседнего последнему, но на другой карте и с указанием других глобальных координат
+            if moving_between_locations and success:
+                if finish_local == [global_axis[0] - 1, global_axis[1]]:
+                    raw_local_waypoints.append([len(global_map[0][0].chunk) - 1, raw_local_waypoints[-1][1], finish_vertices, finish_local])
+                elif finish_local == [global_axis[0] + 1, global_axis[1]]:
+                    raw_local_waypoints.append([0, raw_local_waypoints[-1][1], finish_vertices, finish_local])
+                elif finish_local == [global_axis[0], global_axis[1] - 1]:
+                    raw_local_waypoints.append([raw_local_waypoints[-1][0], len(global_map[0][0].chunk) - 1, finish_vertices, finish_local]) 
+                elif finish_local == [global_axis[0], global_axis[1] + 1]:
+                    raw_local_waypoints.append([raw_local_waypoints[-1][0], 0, finish_vertices, finish_local])
+
+        #Добавление новых вейпоинтов в конец списка
+        for local_waypoint in raw_local_waypoints:
+            enemy.local_waypoints.append(local_waypoint)
+
+
+
+
+
+    
+def world_position_recalculation(world_position, chunk_size):
+    """
+        Принимает мировые координаты и размер чанка, возвращает глобальные и локальные координаты.
+    """
+    global_position = [world_position[0]//chunk_size, world_position[1]//chunk_size]
+    local_position = [world_position[0]%chunk_size, world_position[1]%chunk_size]
+    return global_position, local_position
                 
 def enemy_direction_calculation(enemy):
     """
@@ -2224,17 +2340,6 @@ def vertices_enemy_a_star_algorithm_move_calculation(processed_map, start_point,
     return list(reversed(reversed_waypoints)), success
 
 
-def enemy_on_the_screen(enemy, person, chunk_size):
-    """
-        Проверяет NPC на видимость игроком
-    """
-    if (person.dynamic[0] - chunk_size//2 - 1 < enemy.dynamic_chunk_position[0] < person.dynamic[0] + chunk_size//2 + 1) and (
-        person.dynamic[1] - chunk_size//2 - 1 < enemy.dynamic_chunk_position[1] < person.dynamic[1] + chunk_size//2 + 1):
-        enemy.on_the_screen = True
-    else:
-        enemy.on_the_screen = False
-
-
 """
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -2263,6 +2368,7 @@ def master_player_action(global_map, person, chunk_size, go_to_print, mode_actio
             activity_list.append(Action_in_map('faint_footprints', step, person.global_position, person.local_position, chunk_size, person.name))
             if random.randrange(21)//18 > 0: # Оставление персонажем следов
                 activity_list.append(Action_in_map('human_tracks', step, person.global_position, person.local_position, chunk_size, person.name))
+            if random.randrange(40)//38 > 0: # Активация спавнов существ
                 person.activating_spawn = True
             request_move(global_map, person, chunk_size, go_to_print, pressed_button)
     
@@ -2277,6 +2383,9 @@ def master_player_action(global_map, person, chunk_size, go_to_print, mode_actio
             go_to_print.minimap_on = (go_to_print.minimap_on == False)
         request_processing(pressed_button)
 
+    
+    person.global_position_calculation(chunk_size)
+    person.check_local_position()
     person.world_position_calculate(chunk_size)
     
     return mode_action, mouse_position
@@ -3224,7 +3333,7 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
 
     Draw_rect(30*26, 30*14, 1000, 500, (255, 255, 255)).draw(screen) # заливает белым область надписей
     
-    print_time = f"{round(time_2 - time_1, 4)} - отрисовка person.world_position - {person.world_position} {settings_for_intermediate_steps} - скорость шага, {mouse_position} - mouse_position"
+    print_time = f"{person.world_position} - person.world_position, {settings_for_intermediate_steps} - скорость шага, {mouse_position} - mouse_position" #{round(time_2 - time_1, 4)} - отрисовка"
     
     fontObj = pygame.font.Font('freesansbold.ttf', 10)
     textSurfaceObj = fontObj.render(print_time, True, (0, 0, 0), (255, 255, 255))
