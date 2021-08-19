@@ -959,9 +959,20 @@ def interaction_processing(global_map, interaction, enemy_list, step, chunk_size
             if interact[0] == 'task_point_all_enemies':
                 for enemy in enemy_list:
                     enemy.target = interact[1]
+                    enemy.follow = []
                     enemy.waypoints = []
                     enemy.local_waypoints = []
                     logging.debug(f"{step}: {enemy.name_npc} получил задачу {enemy.target}")
+
+            if interact[0] == 'follow_me_all_enemies':
+                 for enemy in enemy_list:
+                    enemy.target = []
+                    enemy.follow = interact[1]
+                    enemy.waypoints = []
+                    enemy.local_waypoints = []
+                    logging.debug(f"{step}: {enemy.name_npc} назначено следование {enemy.follow}")
+
+                    
             if interact[0] == 'view_waypoints':
                 for enemy in enemy_list:
                     if enemy.local_waypoints:
@@ -1705,44 +1716,46 @@ def master_npc_calculation(global_map, enemy_list, person, go_to_print, step, ac
                 #Удаление реализованной цели
                 if enemy.target and enemy.target == [enemy.global_position, enemy.vertices, enemy.local_position] or enemy.target == [enemy.global_position, enemy.vertices, []]:
                     enemy.target = []
-                    
-                if not world.npc_path_calculation: #Если никто не считал вейпоинты на этом шаге
-                    
-                    #Если есть цель, но нет локальных вейпоинтов.
-                    if enemy.target and not(enemy.local_waypoints):
-                        enemy_move_calculaton(global_map, enemy, step)
-                        world.npc_path_calculation = True
-                    #Если цели нет и нет локальных вейпоинтов
-                    if not enemy.target and not enemy.local_waypoints:
-                        for vertices in global_map[enemy.global_position[0]][enemy.global_position[1]].vertices:
-                            if vertices.number == enemy.vertices:
-                                if vertices.connections:
-                                    #Определяем позицию искомого тайла, путём выбора из точек перехода искомой зоны доступности
-                                    number_target = random.randrange(len(vertices.connections))
-                                    target_tiles = []
-                                    for target_vertices in global_map[vertices.connections[number_target].position[0]][vertices.connections[number_target].position[1]].vertices:
-                                        if target_vertices == vertices.connections[number_target].number:
-                                            for connect in target_vertices.connections:
-                                                if connect.number == vertices.number:
-                                                    target_tiles = random.choice(connect.tiles)
-                                    #Задаётся цель из существующих координат, существующих связей и существующих тайлов
-                                    enemy.target = [vertices.connections[number_target].position, vertices.connections[number_target].number, target_tiles]
-                    #Если есть количество глобальных вейпоинтов больше 1 и истекают локальные вейпоинты, то считаются локальные вейпоинты для следующей карты.
-                    if len(enemy.waypoints) > 1 and len(enemy.local_waypoints) < 5: 
-                        enemy_move_calculaton(global_map, enemy, step)
-                        world.npc_path_calculation = True
-                #Если есть динамические вейпоинты
-                if enemy.local_waypoints:
-                    #Добавляются следы
-                    if random.randrange(21)//18 > 0:
-                        activity_list.append(Action_in_map(enemy.activity_map['move'][0][1], step, copy.deepcopy(enemy.global_position),
-                                                           copy.deepcopy(enemy.local_position), chunk_size, enemy.name_npc))
-                    activity_list.append(Action_in_map('faint_footprints', step, copy.deepcopy(enemy.global_position), copy.deepcopy(enemy.local_position),
-                                                       chunk_size, enemy.name_npc))
-                    enemy_direction_calculation(enemy)
-                    enemy.global_position = enemy.local_waypoints[0][3]
-                    enemy.local_position = [enemy.local_waypoints[0][0], enemy.local_waypoints[0][1]]
-                    enemy.local_waypoints.pop(0)
+                if enemy.follow:
+                    enemy_following(enemy, global_map, chunk_size)
+                else:
+                    if not world.npc_path_calculation: #Если никто не считал вейпоинты на этом шаге
+                        
+                        #Если есть цель, но нет локальных вейпоинтов.
+                        if enemy.target and not(enemy.local_waypoints):
+                            enemy_move_calculaton(global_map, enemy, step)
+                            world.npc_path_calculation = True
+                        #Если цели нет и нет локальных вейпоинтов
+                        if not enemy.target and not enemy.local_waypoints:
+                            for vertices in global_map[enemy.global_position[0]][enemy.global_position[1]].vertices:
+                                if vertices.number == enemy.vertices:
+                                    if vertices.connections:
+                                        #Определяем позицию искомого тайла, путём выбора из точек перехода искомой зоны доступности
+                                        number_target = random.randrange(len(vertices.connections))
+                                        target_tiles = []
+                                        for target_vertices in global_map[vertices.connections[number_target].position[0]][vertices.connections[number_target].position[1]].vertices:
+                                            if target_vertices == vertices.connections[number_target].number:
+                                                for connect in target_vertices.connections:
+                                                    if connect.number == vertices.number:
+                                                        target_tiles = random.choice(connect.tiles)
+                                        #Задаётся цель из существующих координат, существующих связей и существующих тайлов
+                                        enemy.target = [vertices.connections[number_target].position, vertices.connections[number_target].number, target_tiles]
+                        #Если есть количество глобальных вейпоинтов больше 1 и истекают локальные вейпоинты, то считаются локальные вейпоинты для следующей карты.
+                        if len(enemy.waypoints) > 1 and len(enemy.local_waypoints) < 5: 
+                            enemy_move_calculaton(global_map, enemy, step)
+                            world.npc_path_calculation = True
+                    #Если есть локальные вейпоинты
+                    if enemy.local_waypoints:
+                        #Добавляются следы
+                        if random.randrange(21)//18 > 0:
+                            activity_list.append(Action_in_map(enemy.activity_map['move'][0][1], step, copy.deepcopy(enemy.global_position),
+                                                               copy.deepcopy(enemy.local_position), chunk_size, enemy.name_npc))
+                        activity_list.append(Action_in_map('faint_footprints', step, copy.deepcopy(enemy.global_position), copy.deepcopy(enemy.local_position),
+                                                           chunk_size, enemy.name_npc))
+                        enemy_direction_calculation(enemy)
+                        enemy.global_position = enemy.local_waypoints[0][3]
+                        enemy.local_position = [enemy.local_waypoints[0][0], enemy.local_waypoints[0][1]]
+                        enemy.local_waypoints.pop(0)
 
             #Если это существо        
             if isinstance(enemy, Creature):
@@ -1787,7 +1800,7 @@ def activating_spawn_creatures(global_map, enemy_list, person):
             if candidat[1] == final_price:
                 enemy_list.append(return_creature(person.global_position, candidat[0], random.choice(candidat[2])))
 
-def enemy_following(enemy, follow):
+def enemy_following(enemy, global_map, chunk_size):
     """
         Рассчитывает движение существа или NPC к персонажу или другому персонажу или NPC
 
@@ -1797,7 +1810,7 @@ def enemy_following(enemy, follow):
     """
     def path_length(start_point, finish_point):
         """
-            Вычисляет примерное расстояния до финиша, для рассчётов стоимости перемещения
+            Вычисляет примерное расстояния до финиша
         """
         try:
             return math.sqrt((start_point[0] - finish_point[0])**2 + (start_point[1] - finish_point[1])**2)
@@ -1805,19 +1818,33 @@ def enemy_following(enemy, follow):
             print(f"!!! TypeError start_point - {start_point} | finish_point - {finish_point}")
             return 999
     length_path = path_length(enemy.world_position, enemy.follow[0].world_position)
-    if length_path <= self.follow[2]:
+    if length_path >= enemy.follow[2]:
         if enemy.local_waypoints:
-            enemy_move(enemy)
+            logging.debug(f"{enemy.name_npc} расчёт перемещения преследования")
+            character_move(character)
         else:
-            enemy_a_star_master(enemy, global_map, chunk_size, start=enemy.world_position, finish=enemy.follow[0].world_position)
+            logging.debug(f"{enemy.name_npc} расчёт вейпоинтов преследования")
+            character_a_star_master(enemy, global_map, chunk_size, start_world=enemy.world_position, finish_world=enemy.follow[0].world_position)
+    else:
+        pass
 
-def enemy_move(enemy):
+def character_move(character):
     """
         Передвижение персонажа по локальным вейпоинтам
     """
-    pass
+    if character.local_waypoints:
+        #Добавляются следы
+        if random.randrange(21)//18 > 0:
+            activity_list.append(Action_in_map(character.activity_map['move'][0][1], step, copy.deepcopy(character.global_position),
+                                               copy.deepcopy(character.local_position), chunk_size, character.name_npc))
+        activity_list.append(Action_in_map('faint_footprints', step, copy.deepcopy(character.global_position), copy.deepcopy(character.local_position),
+                                           chunk_size, character.name_npc))
+        enemy_direction_calculation(character)
+        character.global_position = character.local_waypoints[0][3]
+        character.local_position = [character.local_waypoints[0][0], character.local_waypoints[0][1]]
+        character.local_waypoints.pop(0)
 
-def enemy_a_star_master(character, global_map, chunk_size, finish_world, start_world=None):
+def character_a_star_master(character, global_map, chunk_size, finish_world, start_world=None):
     """
         Все рассчёты передвижения из одной точки в другую.
         Может получить стартовую и конечную/конечные точки в формате world_position
@@ -1838,18 +1865,18 @@ def enemy_a_star_master(character, global_map, chunk_size, finish_world, start_w
     if start_global != finish_global or (start_global == finish_global and start_vertices != finish_vertices):
 
         #Сначала считаем глобальные вейпоинты
-        vertices_enemy_a_star_move_global_calculations2(global_map, enemy, start_global, start_vertices, finish_global, finish_vertices) # Изменить функцию
+        vertices_enemy_a_star_move_global_calculations2(global_map, character, start_global, start_vertices, finish_global, finish_vertices) # Изменить функцию
         
         #А затем локальные
-        vertices_enemy_a_star_move_local_calculations2(global_map, enemy,
-                            [[enemy.waypoints[0][0], enemy.waypoints[0][1]], enemy.waypoints[0][2]], True)
+        vertices_enemy_a_star_move_local_calculations2(global_map, character,
+                            character.local_position, character.vertices, finish_local, finish_vertices, start_global, True)
 
     #Если равны глобальные позиции и зоны доступности
     elif start_global == finish_global and start_vertices == finish_vertices:
 
         #Считаем только локальные вейпоинты без перехода на другую локацию
-        vertices_enemy_a_star_move_local_calculations2(global_map, enemy,
-                            [[enemy.target[2][0], enemy.target[2][1]], enemy.target[1]], False)
+        vertices_enemy_a_star_move_local_calculations2(global_map, character,
+                            start_local, start_vertices, finish_local, finish_vertices, start_global, False)
     
 
 
@@ -1874,22 +1901,23 @@ def vertices_enemy_a_star_move_local_calculations2(global_map, enemy, start_loca
     """
     chunk_size = len(global_map[0][0].chunk)
     
-    start_point = [start_local[0], start_local[1], start_vertices]
-    global_axis = start_global
+    start_point = [enemy.local_position[0], enemy.local_position[1], enemy.vertices]
+    global_axis = enemy.global_position
 
     processed_map = global_map[global_axis[0]][global_axis[1]].chunk
     
     finish_point = []
     if moving_between_locations:
-        if start_local != enemy.global_position:
+        if start_global != enemy.global_position:
             for vertices in global_map[global_axis[0]][global_axis[1]].vertices:
                 if vertices.number == enemy.vertices:
                     for connect in vertices.connections:
-                        if connect.position == start_local and connect.number == finish_vertices:
+                        if connect.position == [enemy.waypoints[0][0], enemy.waypoints[0][1]]: #and connect.number == enemy.waypoints[0][2]:
                             finish = random.choice(connect.tiles)
                             finish_point = [finish[0], finish[1], finish_vertices]
     else:
         finish_point = [finish_local[0], finish_local[1], finish_vertices]
+    print(finish_point)
     
     if finish_point:
         raw_local_waypoints, success = vertices_enemy_a_star_algorithm_move_calculation(processed_map, start_point, finish_point, 'local', enemy)
@@ -2439,6 +2467,8 @@ def wait_keyboard(person, mouse_position):
                     return 'e', mouse_position
                 if event.key == pygame.K_z:
                     return 'z', mouse_position
+                if event.key == pygame.K_f:
+                    return 'f', mouse_position
             if event.type == pygame.MOUSEMOTION:
                 person.pointer_step = True
                 return 'none', event.pos
@@ -2525,6 +2555,11 @@ def request_press_button(global_map, person, chunk_size, go_to_print, mode_actio
     elif key == 'z' or key == 'я':
         if mode_action == 'test_move':
             return ('test_move', 'add_snake', mouse_position)
+        else:
+            return (mode_action, 'none', mouse_position)
+    elif key == 'f' or key == 'а':
+        if mode_action == 'test_move':
+            return ('test_move', 'follow_me', mouse_position)
         else:
             return (mode_action, 'none', mouse_position)
     elif key == 'h' or key == 'р':
@@ -2617,6 +2652,9 @@ def test_request_move(global_map:list, person, chunk_size:int, go_to_print, pres
         if local_position[1] > chunk_size:
             local_position[1] -= chunk_size
         interaction.append(['task_point_all_enemies', [person.global_position, person.vertices, local_position]])
+
+    elif pressed_button == 'follow_me':
+        interaction.append(['follow_me_all_enemies', [person, 'follow', 3]])
 
     elif pressed_button == 'button_add_beacon':
         activity_list.append(Action_in_map('test_beacon', step, person.global_position, person.local_position, chunk_size,
