@@ -1748,7 +1748,8 @@ def master_npc_calculation(global_map, enemy_list, person, go_to_print, step, ac
                     if enemy.local_waypoints:
                         #Добавляются следы
                         if random.randrange(21)//18 > 0:
-                            activity_list.append(Action_in_map(enemy.activity_map['move'][0][1], step, copy.deepcopy(enemy.global_position),
+                            if not global_map[enemy.global_position[0]][enemy.global_position[1]].chunk[enemy.local_position[0]][enemy.local_position[1]].icon in ('f', '~'):
+                                activity_list.append(Action_in_map(enemy.activity_map['move'][0][1], step, copy.deepcopy(enemy.global_position),
                                                                copy.deepcopy(enemy.local_position), chunk_size, enemy.name_npc))
                         activity_list.append(Action_in_map('faint_footprints', step, copy.deepcopy(enemy.global_position), copy.deepcopy(enemy.local_position),
                                                            chunk_size, enemy.name_npc))
@@ -1912,7 +1913,7 @@ def vertices_enemy_a_star_move_local_calculations2(global_map, enemy, start_loca
             for vertices in global_map[global_axis[0]][global_axis[1]].vertices:
                 if vertices.number == enemy.vertices:
                     for connect in vertices.connections:
-                        if connect.position == [enemy.waypoints[0][0], enemy.waypoints[0][1]]: #and connect.number == enemy.waypoints[0][2]:
+                        if connect.position == [enemy.waypoints[0][0], enemy.waypoints[0][1]]: #and connect.number == enemy.vertices:
                             finish = random.choice(connect.tiles)
                             finish_point = [finish[0], finish[1], finish_vertices]
     else:
@@ -2395,7 +2396,8 @@ def master_player_action(global_map, person, chunk_size, go_to_print, mode_actio
         if mode_action == 'move':
             activity_list.append(Action_in_map('faint_footprints', step, person.global_position, person.local_position, chunk_size, person.name))
             if random.randrange(21)//18 > 0: # Оставление персонажем следов
-                activity_list.append(Action_in_map('human_tracks', step, person.global_position, person.local_position, chunk_size, person.name))
+                if not global_map[person.global_position[0]][person.global_position[1]].chunk[person.local_position[0]][person.local_position[1]].icon in ('f', '~'):
+                    activity_list.append(Action_in_map('human_tracks', step, person.global_position, person.local_position, chunk_size, person.name))
             if random.randrange(40)//38 > 0: # Активация спавнов существ
                 person.activating_spawn = True
             request_move(global_map, person, chunk_size, go_to_print, pressed_button)
