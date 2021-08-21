@@ -1527,9 +1527,9 @@ class Enemy:
         self.type_npc = 'hunter'
         self.pass_description = ''
         self.description = ''
-
+        
     def world_position_calculate(self, chunk_size):
-        """ Рассчитывает глобальные координаты от начала мира в координатах [0, 0] """
+        """ Рассчитывает глобальные координаты от центра мира """
         self.world_position = [self.local_position[0] + self.global_position[0]*chunk_size, self.local_position[1] + self.global_position[1]*chunk_size]
         
     def all_description_calculation(self):
@@ -1801,13 +1801,17 @@ def activating_spawn_creatures(global_map, enemy_list, person):
             if candidat[1] == final_price:
                 enemy_list.append(return_creature(person.global_position, candidat[0], random.choice(candidat[2])))
 
-def enemy_following(enemy, global_map, chunk_size):
+def world_position_calculate(global_position, local_position, chunk_size):
+    """ Рассчитывает глобальные координаты от начала мира в координатах [0, 0] """
+    return [local_position[0] + global_position[0]*chunk_size, local_position[1] + global_position[1]*chunk_size]
+
+def enemy_following(character, global_map, chunk_size):
     """
         Рассчитывает движение существа или NPC к персонажу или другому персонажу или NPC
 
         sefl.follow содержит словарь с описанием того за кем и как следовать. В частности подходить вплотную или на определённое расстояние.
 
-        self.follow = [[enemy, 'attack', 5], [атакуемое существо, тип взаимодействия, расстояние для рассчёта]]
+        self.follow = [[character, 'attack', 5], [атакуемое существо, тип взаимодействия, расстояние для рассчёта]]
     """
     def path_length(start_point, finish_point):
         """
@@ -1818,16 +1822,23 @@ def enemy_following(enemy, global_map, chunk_size):
         except TypeError:
             print(f"!!! TypeError start_point - {start_point} | finish_point - {finish_point}")
             return 999
-    length_path = path_length(enemy.world_position, enemy.follow[0].world_position)
-    if length_path >= enemy.follow[2]:
-        if enemy.local_waypoints:
-            logging.debug(f"{enemy.name_npc} расчёт перемещения преследования")
-            character_move(character)
+
+    if character.local_waypoints:
+        length = path_length(world_position_calculate(character.local_waypoints[-1][3], [character.local_waypoints[-1][0],
+                            character.local_waypoints[-1][1]], chunk_size), character.follow[0].world_position)
+        if length > 3:
+            character.waypoints = []
+            character.local_waypoints = []
+            character_a_star_master(character, global_map, chunk_size, start_world=character.world_position,
+                                    finish_world=character.follow[0].world_position)
         else:
-            logging.debug(f"{enemy.name_npc} расчёт вейпоинтов преследования")
-            character_a_star_master(enemy, global_map, chunk_size, start_world=enemy.world_position, finish_world=enemy.follow[0].world_position)
+            length_path = path_length(character.world_position, character.follow[0].world_position)
+            if length_path >= character.follow[2]:
+                character_move(character)
     else:
-        pass
+        character_a_star_master(character, global_map, chunk_size, start_world=character.world_position,
+                                    finish_world=character.follow[0].world_position)
+            
 
 def character_move(character):
     """
@@ -1835,11 +1846,11 @@ def character_move(character):
     """
     if character.local_waypoints:
         #Добавляются следы
-        if random.randrange(21)//18 > 0:
-            activity_list.append(Action_in_map(character.activity_map['move'][0][1], step, copy.deepcopy(character.global_position),
-                                               copy.deepcopy(character.local_position), chunk_size, character.name_npc))
-        activity_list.append(Action_in_map('faint_footprints', step, copy.deepcopy(character.global_position), copy.deepcopy(character.local_position),
-                                           chunk_size, character.name_npc))
+        #if random.randrange(21)//18 > 0:
+        #    activity_list.append(Action_in_map(character.activity_map['move'][0][1], step, copy.deepcopy(character.global_position),
+        #                                       copy.deepcopy(character.local_position), chunk_size, character.name_npc))
+        #activity_list.append(Action_in_map('faint_footprints', step, copy.deepcopy(character.global_position), copy.deepcopy(character.local_position),
+        #                                   chunk_size, character.name_npc))
         enemy_direction_calculation(character)
         character.global_position = character.local_waypoints[0][3]
         character.local_position = [character.local_waypoints[0][0], character.local_waypoints[0][1]]
@@ -1870,14 +1881,14 @@ def character_a_star_master(character, global_map, chunk_size, finish_world, sta
         
         #А затем локальные
         vertices_enemy_a_star_move_local_calculations2(global_map, character,
-                            character.local_position, character.vertices, finish_local, finish_vertices, start_global, True)
+                            character.local_position, character.vertices, finish_local, finish_vertices, start_global, finish_global, True)
 
     #Если равны глобальные позиции и зоны доступности
     elif start_global == finish_global and start_vertices == finish_vertices:
 
         #Считаем только локальные вейпоинты без перехода на другую локацию
         vertices_enemy_a_star_move_local_calculations2(global_map, character,
-                            start_local, start_vertices, finish_local, finish_vertices, start_global, False)
+                            start_local, start_vertices, finish_local, finish_vertices, start_global, finish_global, False)
     
 
 
@@ -1894,7 +1905,7 @@ def vertices_enemy_a_star_move_global_calculations2(processed_map, enemy, start_
     enemy.waypoints, success = vertices_enemy_a_star_algorithm_move_calculation(processed_map, start_point, finish_point, 'global', enemy)
 
 def vertices_enemy_a_star_move_local_calculations2(global_map, enemy, start_local, start_vertices, finish_local, finish_vertices,
-                                                   start_global, moving_between_locations):
+                                                   start_global, finish_global, moving_between_locations):
     """
         Подготавливает запрос и вызывает алгоритм А* для передвижения по локальной карте
 
@@ -1909,16 +1920,14 @@ def vertices_enemy_a_star_move_local_calculations2(global_map, enemy, start_loca
     
     finish_point = []
     if moving_between_locations:
-        if start_global != enemy.global_position:
-            for vertices in global_map[global_axis[0]][global_axis[1]].vertices:
-                if vertices.number == enemy.vertices:
-                    for connect in vertices.connections:
-                        if connect.position == [enemy.waypoints[0][0], enemy.waypoints[0][1]]: #and connect.number == enemy.vertices:
-                            finish = random.choice(connect.tiles)
-                            finish_point = [finish[0], finish[1], finish_vertices]
+        for vertices in global_map[global_axis[0]][global_axis[1]].vertices:
+            if vertices.number == start_vertices:
+                for connect in vertices.connections:
+                    if connect.position == [enemy.waypoints[0][0], enemy.waypoints[0][1]] and connect.number == start_vertices:
+                        finish = random.choice(connect.tiles)
+                        finish_point = [finish[0], finish[1], finish_vertices]
     else:
         finish_point = [finish_local[0], finish_local[1], finish_vertices]
-    print(finish_point)
     
     if finish_point:
         raw_local_waypoints, success = vertices_enemy_a_star_algorithm_move_calculation(processed_map, start_point, finish_point, 'local', enemy)
