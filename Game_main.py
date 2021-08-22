@@ -1717,7 +1717,7 @@ def master_npc_calculation(global_map, enemy_list, person, go_to_print, step, ac
                 if enemy.target and enemy.target == [enemy.global_position, enemy.vertices, enemy.local_position] or enemy.target == [enemy.global_position, enemy.vertices, []]:
                     enemy.target = []
                 if enemy.follow:
-                    enemy_following(enemy, global_map, chunk_size)
+                    enemy_following(enemy, global_map, chunk_size, activity_list, step)
                 else:
                     if not world.npc_path_calculation: #Если никто не считал вейпоинты на этом шаге
                         
@@ -1805,7 +1805,7 @@ def world_position_calculate(global_position, local_position, chunk_size):
     """ Рассчитывает глобальные координаты от начала мира в координатах [0, 0] """
     return [local_position[0] + global_position[0]*chunk_size, local_position[1] + global_position[1]*chunk_size]
 
-def enemy_following(character, global_map, chunk_size):
+def enemy_following(character, global_map, chunk_size, activity_list, step):
     """
         Рассчитывает движение существа или NPC к персонажу или другому персонажу или NPC
 
@@ -1822,35 +1822,55 @@ def enemy_following(character, global_map, chunk_size):
         except TypeError:
             print(f"!!! TypeError start_point - {start_point} | finish_point - {finish_point}")
             return 999
-
-    if character.local_waypoints:
-        length = path_length(world_position_calculate(character.local_waypoints[-1][3], [character.local_waypoints[-1][0],
-                            character.local_waypoints[-1][1]], chunk_size), character.follow[0].world_position)
-        if length > 3:
-            character.waypoints = []
-            character.local_waypoints = []
+    #Если есть глобальные вейпоинты или оба персонажа находятся на одной глобальной позиции
+    if character.waypoints or character.global_position == character.follow[0].global_position:
+        if character.local_waypoints:
+            #Если персонаж и преследуемый находятся на одной локации
+            if character.global_position == character.follow[0].global_position:
+                length = path_length(world_position_calculate(character.local_waypoints[-1][3], [character.local_waypoints[-1][0],
+                                    character.local_waypoints[-1][1]], chunk_size), character.follow[0].world_position)
+                #Если преследуемый персонаж ушёл от последнего локального вейпоинта дальше чем на 3 тайла
+                if length > 3:
+                    character.waypoints = []
+                    character.local_waypoints = []
+                    character_a_star_master(character, global_map, chunk_size, start_world=character.world_position,
+                                            finish_world=character.follow[0].world_position)
+                #Если преследуемый не уходил от последнего вейпоинта
+                else:
+                    length_path = path_length(character.world_position, character.follow[0].world_position)
+                    if length_path >= character.follow[2]:
+                        character_move(character, activity_list, step, chunk_size)
+            #Если персонаж и преследуемый находятся на разных локациях
+            else:
+                #Если положение последнего глобального вейпоинта равно положению преследуемого
+                if character.waypoints and [character.waypoints[-1][0], character.waypoints[-1][1]] == character.follow[0].global_position:
+                    character_move(character, activity_list, step, chunk_size)
+                #Если преследуемый перешёл на другую локацию
+                else:
+                    character.waypoints = []
+                    character.local_waypoints = []
+                    character_a_star_master(character, global_map, chunk_size, start_world=character.world_position,
+                                    finish_world=character.follow[0].world_position)
+        #Если нет локальных вейпоинтов
+        else:
             character_a_star_master(character, global_map, chunk_size, start_world=character.world_position,
                                     finish_world=character.follow[0].world_position)
-        else:
-            length_path = path_length(character.world_position, character.follow[0].world_position)
-            if length_path >= character.follow[2]:
-                character_move(character)
     else:
         character_a_star_master(character, global_map, chunk_size, start_world=character.world_position,
                                     finish_world=character.follow[0].world_position)
             
 
-def character_move(character):
+def character_move(character, activity_list, step, chunk_size):
     """
         Передвижение персонажа по локальным вейпоинтам
     """
     if character.local_waypoints:
         #Добавляются следы
-        #if random.randrange(21)//18 > 0:
-        #    activity_list.append(Action_in_map(character.activity_map['move'][0][1], step, copy.deepcopy(character.global_position),
-        #                                       copy.deepcopy(character.local_position), chunk_size, character.name_npc))
-        #activity_list.append(Action_in_map('faint_footprints', step, copy.deepcopy(character.global_position), copy.deepcopy(character.local_position),
-        #                                   chunk_size, character.name_npc))
+        if random.randrange(21)//18 > 0:
+            activity_list.append(Action_in_map(character.activity_map['move'][0][1], step, copy.deepcopy(character.global_position),
+                                               copy.deepcopy(character.local_position), chunk_size, character.name_npc))
+        activity_list.append(Action_in_map('faint_footprints', step, copy.deepcopy(character.global_position), copy.deepcopy(character.local_position),
+                                           chunk_size, character.name_npc))
         enemy_direction_calculation(character)
         character.global_position = character.local_waypoints[0][3]
         character.local_position = [character.local_waypoints[0][0], character.local_waypoints[0][1]]
