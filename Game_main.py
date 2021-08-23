@@ -23,6 +23,7 @@ garbage = ['░', '▒', '▓', '█', '☺']
     1)Взрывчатка и разрушения. Добавить тайлам параметры веса и устойчивости. При воздействии, рассчитывать разрушение и/или сползание.
     2)Так как под тайлами фактически не идет просчёт уровней ниже, добавить им описание коренной породы, которая обнажится при разрушении.
     3)Вся работа с координатами через координаты в формате world_position, то есть, в формате мировых координат.
+    4)Переписать всё управление персонажами в отдельный модуль, заранее проработав все необходимые им механики.
 
     СПИСОК ИЗВЕСТНЫХ БАГОВ:
     При оставлении персонажем активности в 0х координатах, активность получает странные координаты и не остаётся под персонажем
@@ -42,6 +43,15 @@ garbage = ['░', '▒', '▓', '█', '☺']
     Локальные координаты (local_position) - местоположение персонажа, NPC или существа внутри локации.
 
     Мировые координаты (world_position) - рассчитываются из локальных и глобальных координат для удобства работы с координатами.
+
+    ТРЕБУЮЩИЕСЯ NPC ПЕРСОНАЖАМ МЕХАНИКИ:
+    1)Перемещение в любую доступную точку
+    2)Преследование
+    3)Убегание
+    4)Атака ближняя и дальняя
+    5)Случайное перемещение для существ
+    6)Полёт
+    
 """
 
 class World:
@@ -1822,40 +1832,52 @@ def enemy_following(character, global_map, chunk_size, activity_list, step):
         except TypeError:
             print(f"!!! TypeError start_point - {start_point} | finish_point - {finish_point}")
             return 999
+    logging.debug(f"{character.name_npc}: character.waypoints - {character.waypoints}")
     #Если есть глобальные вейпоинты или оба персонажа находятся на одной глобальной позиции
-    if character.waypoints or character.global_position == character.follow[0].global_position:
+    if character.waypoints or character.global_position == character.follow[0].global_position or character.local_waypoints:
+        logging.debug(f"{character.name_npc}: Если есть глобальные вейпоинты или оба персонажа находятся на одной глобальной позиции")
+        #print(f"{character.name_npc}: character.global_position = {character.global_position}, character.follow[0].global_position - {character.follow[0].global_position}")
         if character.local_waypoints:
             #Если персонаж и преследуемый находятся на одной локации
             if character.global_position == character.follow[0].global_position:
+                logging.debug(f"{character.name_npc}: Если персонаж и преследуемый находятся на одной локации")
                 length = path_length(world_position_calculate(character.local_waypoints[-1][3], [character.local_waypoints[-1][0],
                                     character.local_waypoints[-1][1]], chunk_size), character.follow[0].world_position)
                 #Если преследуемый персонаж ушёл от последнего локального вейпоинта дальше чем на 3 тайла
                 if length > 3:
+                    logging.debug(f"{character.name_npc}: Если преследуемый персонаж ушёл от последнего локального вейпоинта дальше чем на 3 тайла")
                     character.waypoints = []
                     character.local_waypoints = []
                     character_a_star_master(character, global_map, chunk_size, start_world=character.world_position,
                                             finish_world=character.follow[0].world_position)
                 #Если преследуемый не уходил от последнего вейпоинта
                 else:
+                    logging.debug(f"{character.name_npc}: Если преследуемый не уходил от последнего вейпоинта")
                     length_path = path_length(character.world_position, character.follow[0].world_position)
                     if length_path >= character.follow[2]:
                         character_move(character, activity_list, step, chunk_size)
             #Если персонаж и преследуемый находятся на разных локациях
             else:
+                logging.debug(f"{character.name_npc}: Если персонаж и преследуемый находятся на разных локациях")
                 #Если положение последнего глобального вейпоинта равно положению преследуемого
                 if character.waypoints and [character.waypoints[-1][0], character.waypoints[-1][1]] == character.follow[0].global_position:
+                    logging.debug(f"{character.name_npc}: Если положение последнего глобального вейпоинта равно положению преследуемого")
                     character_move(character, activity_list, step, chunk_size)
                 #Если преследуемый перешёл на другую локацию
                 else:
+                    logging.debug(f"{character.name_npc}: Если преследуемый перешёл на другую локацию")
                     character.waypoints = []
                     character.local_waypoints = []
                     character_a_star_master(character, global_map, chunk_size, start_world=character.world_position,
                                     finish_world=character.follow[0].world_position)
         #Если нет локальных вейпоинтов
         else:
+            logging.debug(f"{character.name_npc}: Если нет локальных вейпоинтов")
             character_a_star_master(character, global_map, chunk_size, start_world=character.world_position,
                                     finish_world=character.follow[0].world_position)
+        
     else:
+        logging.debug(f"{character.name_npc}: else")
         character_a_star_master(character, global_map, chunk_size, start_world=character.world_position,
                                     finish_world=character.follow[0].world_position)
             
@@ -1864,7 +1886,9 @@ def character_move(character, activity_list, step, chunk_size):
     """
         Передвижение персонажа по локальным вейпоинтам
     """
+    logging.debug(f"{character.name_npc}: запрос на движение")
     if character.local_waypoints:
+        logging.debug(f"{character.name_npc}: движение")
         #Добавляются следы
         if random.randrange(21)//18 > 0:
             activity_list.append(Action_in_map(character.activity_map['move'][0][1], step, copy.deepcopy(character.global_position),
@@ -1872,7 +1896,7 @@ def character_move(character, activity_list, step, chunk_size):
         activity_list.append(Action_in_map('faint_footprints', step, copy.deepcopy(character.global_position), copy.deepcopy(character.local_position),
                                            chunk_size, character.name_npc))
         enemy_direction_calculation(character)
-        character.global_position = character.local_waypoints[0][3]
+        character.global_position = [character.local_waypoints[0][3][0], character.local_waypoints[0][3][1]]
         character.local_position = [character.local_waypoints[0][0], character.local_waypoints[0][1]]
         character.local_waypoints.pop(0)
 
@@ -1892,10 +1916,16 @@ def character_a_star_master(character, global_map, chunk_size, finish_world, sta
     
     finish_global, finish_local = world_position_recalculation(finish_world, chunk_size)
     finish_vertices = global_map[finish_global[0]][finish_global[1]].chunk[finish_local[0]][finish_local[1]].vertices
-
+    logging.debug(f"{character.name_npc}: character.global_position - {character.global_position}, finish_global - {finish_global}, start_vertices - {start_vertices}, finish_vertices - {finish_vertices}")
+    #Если есть вейпоинты
+    if character.waypoints:
+        logging.debug(f"{character.name_npc}: Если есть вейпоинты")
+        vertices_enemy_a_star_move_local_calculations2(global_map, character,
+                            character.local_position, character.vertices, finish_local, finish_vertices, start_global, finish_global, True)
+    
     #Если глобальные позиции не равны или глобальные позиции равны, но не равны зоны доступности
-    if start_global != finish_global or (start_global == finish_global and start_vertices != finish_vertices):
-
+    elif character.global_position != finish_global or (character.global_position == finish_global and start_vertices != finish_vertices):
+        logging.debug(f"{character.name_npc}: Если глобальные позиции не равны или глобальные позиции равны, но не равны зоны доступности")
         #Сначала считаем глобальные вейпоинты
         vertices_enemy_a_star_move_global_calculations2(global_map, character, start_global, start_vertices, finish_global, finish_vertices) # Изменить функцию
         
@@ -1904,7 +1934,8 @@ def character_a_star_master(character, global_map, chunk_size, finish_world, sta
                             character.local_position, character.vertices, finish_local, finish_vertices, start_global, finish_global, True)
 
     #Если равны глобальные позиции и зоны доступности
-    elif start_global == finish_global and start_vertices == finish_vertices:
+    elif character.global_position == finish_global and start_vertices == finish_vertices:
+        logging.debug(f"{character.name_npc}: Если равны глобальные позиции и зоны доступности")
 
         #Считаем только локальные вейпоинты без перехода на другую локацию
         vertices_enemy_a_star_move_local_calculations2(global_map, character,
@@ -1951,6 +1982,7 @@ def vertices_enemy_a_star_move_local_calculations2(global_map, enemy, start_loca
     
     if finish_point:
         raw_local_waypoints, success = vertices_enemy_a_star_algorithm_move_calculation(processed_map, start_point, finish_point, 'local', enemy)
+        
         #В каждую путевую точку добавляется глобальная позиция этой точки
         for waypoint in raw_local_waypoints:
             if enemy.local_waypoints:
@@ -1958,19 +1990,22 @@ def vertices_enemy_a_star_move_local_calculations2(global_map, enemy, start_loca
             else:
                 waypoint.append(enemy.global_position)
 
+        logging.debug(f"{enemy.name_npc}: start_point - {start_point}, finish_point - {finish_point}, success - {success}")
+        logging.debug(f"{enemy.name_npc}: raw_local_waypoints 0 - {raw_local_waypoints}")
         #Если найден путь до края локации
         if raw_local_waypoints[-1][0] == 0 or raw_local_waypoints[-1][0] == chunk_size - 1 or raw_local_waypoints[-1][1] == 0 or raw_local_waypoints[-1][1] == chunk_size - 1:
             #Добавление вейпоинта, соседнего последнему, но на другой карте и с указанием других глобальных координат
             if moving_between_locations and success:
-                if finish_local == [global_axis[0] - 1, global_axis[1]]:
-                    raw_local_waypoints.append([len(global_map[0][0].chunk) - 1, raw_local_waypoints[-1][1], finish_vertices, finish_local])
-                elif finish_local == [global_axis[0] + 1, global_axis[1]]:
-                    raw_local_waypoints.append([0, raw_local_waypoints[-1][1], finish_vertices, finish_local])
-                elif finish_local == [global_axis[0], global_axis[1] - 1]:
-                    raw_local_waypoints.append([raw_local_waypoints[-1][0], len(global_map[0][0].chunk) - 1, finish_vertices, finish_local]) 
-                elif finish_local == [global_axis[0], global_axis[1] + 1]:
-                    raw_local_waypoints.append([raw_local_waypoints[-1][0], 0, finish_vertices, finish_local])
-
+                if [enemy.waypoints[0][0], enemy.waypoints[0][1]] == [global_axis[0] - 1, global_axis[1]]:
+                    raw_local_waypoints.append([len(global_map[0][0].chunk) - 1, raw_local_waypoints[-1][1], finish_vertices, enemy.waypoints[0]])
+                elif [enemy.waypoints[0][0], enemy.waypoints[0][1]] == [global_axis[0] + 1, global_axis[1]]:
+                    raw_local_waypoints.append([0, raw_local_waypoints[-1][1], finish_vertices, enemy.waypoints[0]])
+                elif [enemy.waypoints[0][0], enemy.waypoints[0][1]] == [global_axis[0], global_axis[1] - 1]:
+                    raw_local_waypoints.append([raw_local_waypoints[-1][0], len(global_map[0][0].chunk) - 1, finish_vertices, enemy.waypoints[0]]) 
+                elif [enemy.waypoints[0][0], enemy.waypoints[0][1]] == [global_axis[0], global_axis[1] + 1]:
+                    raw_local_waypoints.append([raw_local_waypoints[-1][0], 0, finish_vertices, enemy.waypoints[0]])
+                    
+        logging.debug(f"{enemy.name_npc}: raw_local_waypoints 1 - {raw_local_waypoints}")
         #Добавление новых вейпоинтов в конец списка
         for local_waypoint in raw_local_waypoints:
             enemy.local_waypoints.append(local_waypoint)
@@ -2369,7 +2404,7 @@ def vertices_enemy_a_star_algorithm_move_calculation(processed_map, start_point,
                 else:
                     test_print += processed_map[number_line][number_tile].icon + ' '
             test_print += '\n'
-        logging.debug(test_print)
+        #logging.debug(test_print)
         
     elif global_or_local == 'local':
         test_print = '\n'
@@ -2391,7 +2426,7 @@ def vertices_enemy_a_star_algorithm_move_calculation(processed_map, start_point,
                 else:
                     test_print += processed_map[number_line][number_tile].icon + ' '
             test_print += '\n'
-        logging.debug(test_print)
+        #logging.debug(test_print)
 
 
     #print(f"{enemy.name_npc} {global_or_local} list(reversed(reversed_waypoints)) - {list(reversed(reversed_waypoints))}")
