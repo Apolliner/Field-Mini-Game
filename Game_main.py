@@ -16,7 +16,6 @@ from map_generator import map_generator
 garbage = ['░', '▒', '▓', '█', '☺']
 
 """
-    ВЕРСИЯ ДЛЯ РЕФАКТОРИНГА И БАГФИКСА
 
     РЕАЛИЗОВАТЬ:
 
