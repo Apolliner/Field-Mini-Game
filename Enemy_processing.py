@@ -209,42 +209,46 @@ class Character:
     
     def __init__(self, global_position, local_position, name, name_npc, icon, type, description, type_npc):
         
-        self.global_position = global_position      # Положение на глобальной карте          [global_y, global_x]
-        self.local_position = local_position        # Положение на локальной карте           [local_y, local_x]
-        self.world_position = [0, 0]                # Обобщенное положение от начала мира    [world_y, world_x]
-        self.vertices = 0                           # Номер зоны доступности                 int
-        self.level = 0                              # Высота уровня поверхности              int
-        self.global_waypoints = []                  # Список глобальных путевых точек        [[global_y, global_x, vertices], ...]
-        self.local_waypoints = []                   # Список локальных путевых точек         [[local_y, local_x, vertices, [global_y, global_x]], ...]
-        self.world_waypoints = []                   # Список мировых путевых точек           [[world_y, world_x, vertices], ...]
-        
-        self.target = []                            # Текущая цель перемещения и действия    [world_y, world_x, vertices, type, description, condition]
-        self.follow = []                            # Цель для следования или преследования  [follow_character, 'type_follow', расстояние остановки:int]
-        self.delete = False                         # Удаление персонажа из мира             bool
-        self.live = True                            # Живой ли персонаж                      bool
+        # ИНФОРМАЦИЯ ДЛЯ РАССЧЁТОВ И ПЕРЕМЕЩЕНИЯ:
+        self.global_position = global_position      # Положение на глобальной карте         [global_y, global_x]
+        self.local_position = local_position        # Положение на локальной карте          [local_y, local_x]
+        self.world_position = [0, 0]                # Обобщенное положение от начала мира   [world_y, world_x]
+        self.vertices = 0                           # Номер зоны доступности                int
+        self.level = 0                              # Высота уровня поверхности             int
+        self.global_waypoints = []                  # Список глобальных путевых точек       [[global_y, global_x, vertices], ...]
+        self.local_waypoints = []                   # Список локальных путевых точек        [[local_y, local_x, vertices, [global_y, global_x]], ...]
+        self.world_waypoints = []                   # Список мировых путевых точек          [[world_y, world_x, vertices], ...]
 
-        self.name = name                            # Название типа персонажа                str
-        self.name_npc = name_npc                    # Имя конкретного персонажа              str
-        self.icon = icon                            # Базовое отображение персонажа          char
-        self.type = type                            # Тип отображения персонажа              char
-        self.visible = True                         # Виден ли персонаж                      bool
-        self.direction = 'center'                   # Направление движения персонажа         str
-        self.offset = [0, 0]                        # Смещение между промежуточными кадрами  [local_y, local_x]
-        self.type_npc = type_npc                    # Тип поведения персонажа                str
-        self.description = description              # Описание персонажа                     str
+        # ТЕХНИЧЕСКИЕ ДАННЫЕ
+        self.activity = []                          # Текущая активность персонажа          list
+        self.target = []                            # Текущая цель перемещения и действия   [world_y, world_x, vertices, type, description, condition]
+        self.follow = []                            # Цель для следования или преследования [follow_character, 'type_follow', расстояние остановки:int]
+        self.delete = False                         # Удаление персонажа из мира            bool
+        self.live = True                            # Живой ли персонаж                     bool
 
-    def world_position_calculate(global_position, local_position, chunk_size):
+        # ОТОБРАЖЕНИЕ ПЕРСОНАЖА
+        self.name = name                            # Название типа персонажа               str
+        self.name_npc = name_npc                    # Имя конкретного персонажа             str
+        self.icon = icon                            # Базовое отображение персонажа         char
+        self.type = type                            # Тип отображения персонажа             char
+        self.visible = True                         # Виден ли персонаж                     bool
+        self.direction = 'center'                   # Направление движения персонажа        str
+        self.offset = [0, 0]                        # Смещение между промежуточными кадрами [local_y, local_x]
+        self.type_npc = type_npc                    # Тип поведения персонажа               str
+        self.description = description              # Описание персонажа                    str
+
+    def world_position_calculate(self, global_position, local_position):
         """
             Рассчитывает мировые координаты от центра мира
         """
-        return [local_position[0] + global_position[0]*chunk_size, local_position[1] + global_position[1]*chunk_size]
+        return [local_position[0] + global_position[0]*self.chunk_size, local_position[1] + global_position[1]*self.chunk_size]
 
-    def world_position_recalculation(world_position, chunk_size):
+    def world_position_recalculation(self, world_position):
         """
             Принимает мировые координаты и размер чанка, возвращает глобальные и локальные координаты.
         """
-        global_position = [world_position[0]//chunk_size, world_position[1]//chunk_size]
-        local_position = [world_position[0]%chunk_size, world_position[1]%chunk_size]
+        global_position = [world_position[0]//self.chunk_size, world_position[1]//self.chunk_size]
+        local_position = [world_position[0]%self.chunk_size, world_position[1]%self.chunk_size]
         return global_position, local_position
 
     def character_move(self, activity_list, step, chunk_size):
@@ -270,38 +274,72 @@ class Character:
     if self.global_position == [self.local_waypoints[0][3][0], self.local_waypoints[0][3][1]]:
         if self.local_position == [self.local_waypoints[0][0] - 1, self.local_waypoints[0][1]]:
             self.direction = 'down'
-            if self.name == 'riffleman':
-                self.type = 'd3'
+            self.type = 'd3'
         elif self.local_position == [self.local_waypoints[0][0] + 1, self.local_waypoints[0][1]]:
             self.direction = 'up'
-            if self.name == 'riffleman':
-                self.type = 'u3'
+            self.type = 'u3'
         elif self.local_position == [self.local_waypoints[0][0], self.local_waypoints[0][1] - 1]:
             self.direction = 'right'
-            if self.name == 'riffleman':
-                self.type = 'r3'
+            self.type = 'r3'
         elif self.local_position == [self.local_waypoints[0][0], self.local_waypoints[0][1] + 1]:
             self.direction = 'left'
-            if self.name == 'riffleman':
-                self.type = 'l3'
+            self.type = 'l3'
     elif self.global_position == [self.local_waypoints[0][3][0] - 1, self.local_waypoints[0][3][1]]:
         self.direction = 'down'
-        if self.name == 'riffleman':
-                self.type = 'd3'
+        self.type = 'd3'
     elif self.global_position == [self.local_waypoints[0][3][0] + 1, self.local_waypoints[0][3][1]]:
         self.direction = 'up'
-        if self.name == 'riffleman':
-                self.type = 'u3'
+        self.type = 'u3'
     elif self.global_position == [self.local_waypoints[0][3][0], self.local_waypoints[0][3][1] - 1]:
         self.direction = 'right'
-        if self.name == 'riffleman':
-                self.type = 'r3'
+        self.type = 'r3'
     elif self.global_position == [self.local_waypoints[0][3][0], self.local_waypoints[0][3][1] + 1]:
         self.direction = 'left'
-        if self.name == 'riffleman':
-                self.type = 'l3'
+        self.type = 'l3'
 
-class NPC:
+    def check_global_position(self):
+        """
+            Определение глобальной позиции
+        """
+        pass
+    def check_local_position(self):
+        """
+            Определение локальной позиции
+        """
+        pass
+    def check_world_position(self):
+        """
+            Определение мировой позиции
+        """
+        pass
+    def check_vertices(self):
+        """
+            Определение зоны доступности
+        """
+        pass
+    def check_level(self):
+        """
+            Определение текущей высоты
+        """
+        pass
+    def check_all_position(self):
+        """
+            Определение всех нужных параметров
+        """
+        pass
+    def reset_at_the_beginning(self):
+        """
+            Сброс параметров в начале хода
+        """
+        pass
+
+    class CharacterAction:
+        def __init__(self, type, details):
+            sefl.type = type
+            self.details = details
+
+
+class NPC(Character):
     """
         Умные противники, обрабатываемые в каждый момент времени
     """
@@ -321,8 +359,84 @@ class NPC:
         # ПОВЕДЕНИЕ:
         self.alarm = False                          # Атака, ожидание атаки.                bool
         self.stealth = False                        # Скрытность                            bool
+        self.alertness = False                      # Настороженность                       bool
 
-class Creature:
+
+
+    def master_character_calculation(self, step, activity_list):
+        """
+            Обработка действий персонажа на текущем шаге
+        """
+        # Подготовка
+        self.check_all_position()
+        self.reset_at_the_beginning()
+
+        # Рассчёт действий
+        action = self.checking_the_situation()
+
+        # Совершение действий
+        if action.type == 'move':
+            self.move_calculations(action)
+            
+        elif action.type == 'activity':
+            self.activity_calculations(action)
+            
+        elif action.type == 'attack':
+            self.attack_calculations(action) 
+
+        elif action.type == 'getting_damaged':
+            self.getting_damaged_calculations(action)
+
+        # Рассчёт последствий
+        self.consequences_calculation()
+
+    def checking_the_situation(self):
+        """
+            Проверяет обстановку для решения дальнейших действий
+
+            Проверяет наличие опасности, наличие путевых точек, наличие неудовлетворённых потребностей.
+            Возвращат тип действия, совершаемого на данном шаге.
+        """
+        action = CharacterAction('type', 'details')
+        return action
+
+    def move_calculations(self, action):
+        """
+            Передвижение персонажа   ----- Можно заполнить уже готовой логикой из старой версии -----
+        """
+        self.character_move()
+        self.character_follow()
+        self.waypoints_move()
+
+    def character_move(self)
+        """ Рассчёт перемещения в конкретную точку """
+        pass
+    def character_follow(self)
+        """ Рассчёт преследования некоторого персонажа """
+        pass
+    def waypoints_move(self)
+        """ Перемещение по вейпоинтам """
+        pass
+    
+    def activity_calculations(self, action):
+        """ Выполнение и оставление активностей на карте, связанных с удовлетворением потребностей или праздным времяпрепровожденим. """
+        pass
+
+    def attack_calculations(self, action):
+        """ Действия при атаке """
+        pass
+    
+    def getting_damaged_calculations(self, action):
+        """ Получение повреждений """
+        pass
+    def consequences_calculation(self):
+        """ Рассчёт последствий действий персонажа """
+        pass
+    
+
+    
+
+class Creature(Character):
     """
     Мелкие, необсчитываемые за кадром существа и противники
 
@@ -337,7 +451,11 @@ class Creature:
         self.steps_to_despawn = 30                  # Шагов до удаления                     int
         self.deactivation_tiles = deactivation_tiles# Тайлы удаления                        tuple
 
-
+    def master_character_calculation(self):
+        """
+            Обработка действий персонажа на текущем шаге
+        """
+        pass
 
 
         
