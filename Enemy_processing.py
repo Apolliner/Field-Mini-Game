@@ -237,13 +237,13 @@ class Character:
         self.type_npc = type_npc                    # Тип поведения персонажа               str
         self.description = description              # Описание персонажа                    str
 
-    def world_position_calculate(self, global_position, local_position):
+    def character_world_position_calculate(self, global_position, local_position):
         """
             Рассчитывает мировые координаты от центра мира
         """
         return [local_position[0] + global_position[0]*self.chunk_size, local_position[1] + global_position[1]*self.chunk_size]
 
-    def world_position_recalculation(self, world_position):
+    def character_world_position_recalculation(self, world_position):
         """
             Принимает мировые координаты и размер чанка, возвращает глобальные и локальные координаты.
         """
@@ -251,7 +251,7 @@ class Character:
         local_position = [world_position[0]%self.chunk_size, world_position[1]%self.chunk_size]
         return global_position, local_position
 
-    def character_move(self, activity_list, step, chunk_size):
+    def character_waypoints_move(self, activity_list, step):
     """
         Передвижение персонажа по локальным вейпоинтам
     """
@@ -259,15 +259,15 @@ class Character:
         #Добавляются следы
         if random.randrange(21)//18 > 0:
             activity_list.append(Action_in_map(self.activity_map['move'][0][1], step, copy.deepcopy(self.global_position),
-                                               copy.deepcopy(self.local_position), chunk_size, self.name_npc))
+                                               copy.deepcopy(self.local_position), self.chunk_size, self.name_npc))
         activity_list.append(Action_in_map('faint_footprints', step, copy.deepcopy(self.global_position), copy.deepcopy(self.local_position),
-                                           chunk_size, self.name_npc))
+                                           self.chunk_size, self.name_npc))
         self.direction_calculation()
         self.global_position = [self.local_waypoints[0][3][0], self.local_waypoints[0][3][1]]
         self.local_position = [self.local_waypoints[0][0], self.local_waypoints[0][1]]
         self.local_waypoints.pop(0)
 
-    def direction_calculation(self):
+    def character_direction_calculation(self):
     """
         Определяет направление движения персонажа
     """
@@ -297,41 +297,48 @@ class Character:
         self.direction = 'left'
         self.type = 'l3'
 
-    def check_global_position(self):
+    def character_check_global_position(self):
         """
             Определение глобальной позиции
         """
         pass
-    def check_local_position(self):
+    def character_check_local_position(self):
         """
             Определение локальной позиции
         """
         pass
-    def check_world_position(self):
+    def character_check_world_position(self):
         """
             Определение мировой позиции
         """
-        pass
-    def check_vertices(self):
+        self.world_position = [self.local_position[0] + self.global_position[0]*self.chunk_size,
+                               self.local_position[1] + self.global_position[1]*self.chunk_size]
+        
+    def character_check_vertices(self, global_map):
         """
             Определение зоны доступности
         """
-        pass
-    def check_level(self):
+        self.vertices = global_map[self.global_position[0]][self.global_position[1]].chunk[self.local_position[0]][self.local_position[1]].vertices
+        
+    def character_check_level(self, global_map):
         """
             Определение текущей высоты
         """
-        pass
-    def check_all_position(self):
+        self.level = global_map[self.global_position[0]][self.global_position[1]].chunk[self.local_position[0]][self.local_position[0]].level
+        
+    def character_check_all_position(self, global_map):
         """
             Определение всех нужных параметров
         """
-        pass
-    def reset_at_the_beginning(self):
+        self.check_vertices(global_map)
+        self.check_level(global_map)
+        self.check_world_position()
+        
+    def character_reset_at_the_beginning(self):
         """
             Сброс параметров в начале хода
         """
-        pass
+        enemy.direction = 'center'
 
     class CharacterAction:
         def __init__(self, type, details):
@@ -363,34 +370,40 @@ class NPC(Character):
 
 
 
-    def master_character_calculation(self, step, activity_list):
+    def npc_master_calculation(self, step, activity_list):
         """
             Обработка действий персонажа на текущем шаге
         """
         # Подготовка
-        self.check_all_position()
-        self.reset_at_the_beginning()
+        self.character_check_all_position() #Родительский метод
+        self.character_reset_at_the_beginning() #Родительский метод
 
         # Рассчёт действий
-        action = self.checking_the_situation()
+        action = self.npc_checking_the_situation()
 
         # Совершение действий
         if action.type == 'move':
-            self.move_calculations(action)
+            self.npc_move_calculations(action)
             
         elif action.type == 'activity':
-            self.activity_calculations(action)
+            self.npc_activity_calculations(action)
             
         elif action.type == 'attack':
-            self.attack_calculations(action) 
+            self.npc_attack_calculations(action) 
 
         elif action.type == 'getting_damaged':
-            self.getting_damaged_calculations(action)
+            self.npc_getting_damaged_calculations(action)
+
+        elif action.type == 'extra':
+            self.npc_extra_action_calculations(action)
+
+        else:
+            pass
 
         # Рассчёт последствий
-        self.consequences_calculation()
+        self.npc_consequences_calculation()
 
-    def checking_the_situation(self):
+    def npc_checking_the_situation(self):
         """
             Проверяет обстановку для решения дальнейших действий
 
@@ -400,40 +413,55 @@ class NPC(Character):
         action = CharacterAction('type', 'details')
         return action
 
-    def move_calculations(self, action):
+    def npc_move_calculations(self, action, activity_list, step):
         """
             Передвижение персонажа   ----- Можно заполнить уже готовой логикой из старой версии -----
         """
-        self.character_move()
-        self.character_follow()
-        self.waypoints_move()
+        if self.follow:
+            self.npc_follow_move()
+        elif self.activity:
+            self.npc_activity_move()
+        elif:
+            self.npc_move()
+        else:
+            self.npc_random_move()
+        self.character_waypoints_move(activity_list, step) #Родительский метод
 
-    def character_move(self)
+    def npc_move(self):
         """ Рассчёт перемещения в конкретную точку """
         pass
-    def character_follow(self)
+    
+    def npc_follow_move(self):
         """ Рассчёт преследования некоторого персонажа """
         pass
-    def waypoints_move(self)
-        """ Перемещение по вейпоинтам """
+    
+    def npc_random_move(self):
+        """ Случайное перемещение или пропуск хода """
         pass
     
-    def activity_calculations(self, action):
+    def npc_activity_move(self):
+        """ Перемещение всвязи с выполнением активности """
+        pass
+    
+    def npc_activity_calculations(self, action):
         """ Выполнение и оставление активностей на карте, связанных с удовлетворением потребностей или праздным времяпрепровожденим. """
         pass
 
-    def attack_calculations(self, action):
+    def npc_attack_calculations(self, action):
         """ Действия при атаке """
         pass
     
-    def getting_damaged_calculations(self, action):
+    def npc_getting_damaged_calculations(self, action):
         """ Получение повреждений """
         pass
-    def consequences_calculation(self):
-        """ Рассчёт последствий действий персонажа """
+    
+    def npc_extra_action_calculations(self, action):
+        """ Особенные действия NPC """
         pass
     
-
+    def npc_consequences_calculation(self):
+        """ Рассчёт последствий действий персонажа """
+        pass
     
 
 class Creature(Character):
@@ -453,9 +481,61 @@ class Creature(Character):
 
     def master_character_calculation(self):
         """
-            Обработка действий персонажа на текущем шаге
+            Обработка действий существа на текущем шаге
+        """
+        # Подготовка
+        self.character_check_all_position() #Родительский метод
+        self.character_reset_at_the_beginning() #Родительский метод
+
+        # Рассчёт действий
+        action = self.npc_checking_the_situation()
+
+        # Совершение действий
+        if action.type == 'move':
+            self.creature_move_calculations(action)
+            
+        elif action.type == 'activity':
+            self.creature_activity_calculations(action)
+            
+        elif action.type == 'attack':
+            self.creature_attack_calculations(action) 
+
+        elif action.type == 'getting_damaged':
+            self.creature_getting_damaged_calculations(action)
+
+        elif action.type == 'extra':
+            self.creature_extra_action_calculations(action)
+
+        else:
+            pass
+
+        # Рассчёт последствий
+        self.creature_consequences_calculation()
+
+    def creature_move_calculations(self, action, activity_list, step):
+        """
+            Передвижение персонажа   ----- Можно заполнить уже готовой логикой из старой версии -----
         """
         pass
+    
+    def creature_activity_calculations(self, action):
+        """ Выполнение и оставление активностей на карте, связанных с удовлетворением потребностей или праздным времяпрепровожденим. """
+        pass
 
+    def creature_attack_calculations(self, action):
+        """ Действия при атаке """
+        pass
+    
+    def creature_getting_damaged_calculations(self, action):
+        """ Получение повреждений """
+        pass
+    
+    def creature_extra_action_calculations(self, action):
+        """ Особенные действия NPC """
+        pass
+    
+    def creature_consequences_calculation(self):
+        """ Рассчёт последствий действий персонажа """
+        pass
 
         
