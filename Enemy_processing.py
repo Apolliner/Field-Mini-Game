@@ -223,6 +223,7 @@ class Character:
         self.activity = []                          # Текущая активность персонажа          list
         self.target = []                            # Текущая цель перемещения и действия   [world_y, world_x, vertices, type, description, condition]
         self.follow = []                            # Цель для следования или преследования [follow_character, 'type_follow', расстояние остановки:int]
+        self.escape = []                            # Бегство от                            list
         self.delete = False                         # Удаление персонажа из мира            bool
         self.live = True                            # Живой ли персонаж                     bool
 
@@ -367,6 +368,10 @@ class NPC(Character):
         self.alarm = False                          # Атака, ожидание атаки.                bool
         self.stealth = False                        # Скрытность                            bool
         self.alertness = False                      # Настороженность                       bool
+        self.determination = 100                    # Решительность                         int
+
+        # ОБРАБОТКА
+        self.status = []                            # Список текущего состояния             list
 
 
 
@@ -377,6 +382,7 @@ class NPC(Character):
         # Подготовка
         self.character_check_all_position() #Родительский метод
         self.character_reset_at_the_beginning() #Родительский метод
+        self.npc_new_step_check_status()
 
         # Рассчёт действий
         action = self.npc_checking_the_situation()
@@ -403,6 +409,19 @@ class NPC(Character):
         # Рассчёт последствий
         self.npc_consequences_calculation()
 
+    def npc_new_step_check_status(self):
+        """
+            Проверяет состояние персонажа на начало хода.
+        """
+        if self.health < 50:
+            self.status.append('injury')
+        elif self.hunger < 50:
+            self.status.append('hunger')
+        elif self.thirst < 50:
+            self.status.append('thirst')
+        elif self.fatigue < 50:
+            self.status.append('fatigue')
+
     def npc_checking_the_situation(self):
         """
             Проверяет обстановку для решения дальнейших действий
@@ -410,13 +429,28 @@ class NPC(Character):
             Проверяет наличие опасности, наличие путевых точек, наличие неудовлетворённых потребностей.
             Возвращат тип действия, совершаемого на данном шаге.
         """
-        action = CharacterAction('type', 'details')
-        return action
 
+        if self.alarm:
+            if 'injury' in self.status: and 100//self.determination > 0:
+                # тут указание преследователя для убегания от него
+                return CharacterAction('move', 'escape')
+            else:
+                return CharacterAction('attack', 'target')
+
+        elif 'injury' in self.status or 'hunger' in self.status or 'thirst' in self.status or 'fatigue' in self.status:
+            if self.alertness:
+                return CharacterAction('activity', 'slow')
+            else:
+                return CharacterAction('activity', 'fast')
+        else:
+            return CharacterAction('move', 'details')
+        
     def npc_move_calculations(self, action, activity_list, step):
         """
             Передвижение персонажа   ----- Можно заполнить уже готовой логикой из старой версии -----
         """
+        if self.escape:
+            self.npc_escape_move()
         if self.follow:
             self.npc_follow_move()
         elif self.activity:
@@ -430,6 +464,9 @@ class NPC(Character):
     def npc_move(self):
         """ Рассчёт перемещения в конкретную точку """
         pass
+
+    def npc_escape_move(self):
+        """ Рассчёт бегства """
     
     def npc_follow_move(self):
         """ Рассчёт преследования некоторого персонажа """
