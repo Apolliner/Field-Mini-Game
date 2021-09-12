@@ -968,8 +968,8 @@ class path_calculate:
         global_position = [world_position[0]//self.chunk_size, world_position[1]//self.chunk_size]
         local_position = [world_position[0]%self.chunk_size, world_position[1]%self.chunk_size]
         return global_position, local_position
-    
-    def _experimental_a_star_algorithm(self, global_map, start, finish):
+
+    def _experimental_world_a_star_algorithm(self, global_map, start, finish):
         """
             Поиск с помощью мировых координат по глобальной карте
             Предполагается, что работает вместе с классом character или дочернем к нему
@@ -977,6 +977,7 @@ class path_calculate:
             ТРЕБОВАНИЯ:
             Надо что бы зоны доступности не были привязаны к локациям, что бы у них была своя нумерация
             и все локальные координаты были в формате мировых.
+            Раздельная обработка для глобального и для мирового поиска.
 
             Сюда приходит:
             Глобальная карта - global_map
@@ -1065,22 +1066,19 @@ class path_calculate:
                                                                             path_length(add_position, finish_point), node.number))
 
         #Если конечная и начальная точка равны
-        if global_or_local == 'local' and finish_point == start_point:
+        if finish_point == start_point:
             return [finish_point], True
         
-        graph = []                      #Список, содержащий все вершины
-        verified_position = []          #Содержит список всех использованных координат, что бы сравнивать с ним при добавлении новой вершины.
-        graph.append(Node_vertices(0, start_point[2], [start_point[0], start_point[1]], path_length(start_point, finish_point), 0))
-        verified_position.append([[start_point[0], start_point[1]], start_point[2]])
-        if global_or_local == 'global':
-            node_connections(processed_map, graph, graph[0], finish_point, verified_position)
-        elif global_or_local == 'local':
-            node_friends_calculation(processed_map, graph, graph[0], finish_point, verified_position)
-        general_loop = True             #Параметр останавливающий цикл
-        step_count = 0                  #Шаг цикла
-        number_finish_node = 0          #Хранит номер финишной точки
-        reversed_waypoints = []         #Обращенный список вейпоинтов
-        success = True                  #Передаёт информацию об успехе и не успехе
+        graph = []                      # Список, содержащий все вершины
+        verified_position = []          # Содержит список всех использованных координат, что бы сравнивать с ним при добавлении новой вершины.
+        graph.append(Node_vertices(0, start_point, path_length(start_point, finish_point), 0))
+        verified_position.append(start_point)
+        node_friends_calculation(processed_map, graph, graph[0], finish_point, verified_position)
+        general_loop = True             # Параметр останавливающий цикл
+        step_count = 0                  # Шаг цикла
+        number_finish_node = 0          # Хранит номер финишной точки
+        reversed_waypoints = []         # Обращенный список вейпоинтов
+        success = True                  # Передаёт информацию об успехе и не успехе
         while general_loop:
             min_price = 99999
             node = graph[-1]
@@ -1093,15 +1091,113 @@ class path_calculate:
                 number_finish_node = len(graph) - 1
                 success = False
                 general_loop = False
-                if global_or_local == 'global': #УДАЛЕНИЕ ЦЕЛИ ЕСЛИ НЕ НАЙДЕН ПУТЬ ЧТО БЫ НЕ СПАМИЛ
-                    enemy.target = []
-            if global_or_local == 'global':
-                node_connections(processed_map, graph, node, finish_point, verified_position)
-            elif global_or_local == 'local':
-                node_friends_calculation(processed_map, graph, node, finish_point, verified_position)
-            if node.position == [finish_point[0], finish_point[1]] and node.vertices == finish_point[2]:
+            node_friends_calculation(processed_map, graph, node, finish_point, verified_position)
+            if node.position == finish_point and node.vertices == return_content(finish_point).vertices:
                 number_finish_node = node.number
                 general_loop = False
+            step_count += 1
+            if step_count == 300:
+                last_check_success = False
+                for last_check in verified_position:
+                    if last_check == finish_point:
+                        for node in graph:
+                            if node.vertices == return_content(last_check).vertices and node.position == last_check:
+                                number_finish_node = node.number
+                                last_check_success = True
+                                general_loop = False
+                if not last_check_success:
+                    min_price = 99999
+                    node = graph[-1]
+                    for number_node in range(len(graph)):
+                        if graph[number_node].price < min_price:
+                            min_price = graph[number_node].price
+                            number_finish_node = number_node
+                    success = False
+                    general_loop = False
+                
+        check_node = graph[number_finish_node]
+        ran_while = True
+        
+        while True:
+            reversed_waypoints.append(check_node.position)
+            check_node = graph[check_node.direction] #Предыдущая вершина объявляется проверяемой
+            if check_node.direction == 0:
+                break
+
+        return list(reversed(reversed_waypoints)), success
+
+    
+    
+    def _experimental_global_a_star_algorithm(processed_map, start_point, finish_point, global_or_local, enemy):
+        """
+            Рассчитывает поиск пути, алгоритмом A* на основании связей полей доступности. Только по глобальной карте.
+            
+        """
+        class Node_vertices:
+            """Содержит узлы графа для работы с зонами доступности"""
+            __slots__ = ('number', 'vertices', 'position', 'price', 'direction', 'ready')
+            def __init__(self, number, vertices, position, price, direction):
+                self.number = number
+                self.vertices = vertices
+                self.position = position
+                self.price = price
+                self.direction = direction      # Хранит номер вершины из которой вышла
+                self.ready = True               # Проверена ли точка
+
+        def path_length(start_point, finish_point):
+            """
+                Вычисляет примерное расстояния до финиша, для рассчётов стоимости перемещения
+            """
+            try:
+                return math.sqrt((start_point[0] - finish_point[0])**2 + (start_point[1] - finish_point[1])**2)
+            except TypeError:
+                print(f"!!! TypeError start_point - {start_point} | finish_point - {finish_point}")
+                return 999
+
+        def node_connections(processed_map, graph, processed_node, finish_point, verified_position):
+            """
+                Определяет связи вершины и добавляет их в граф при расчёте по глобальной карте
+            """
+            processed_node.ready = False
+            #Находим указанную зону доступности
+            for vertices in processed_map[processed_node.position[0]][processed_node.position[1]].vertices:
+                if vertices.number == processed_node.vertices:
+                    #Проверяем, есть ли у неё связи
+                    if vertices.connections:
+                        for connect in vertices.connections:
+                            if not [connect.position, connect.number] in verified_position:
+                                verified_position.append([connect.position, connect.number])
+                                graph.append(Node_vertices(len(graph), connect.number, connect.position, path_length(connect.position,
+                                                                                        finish_point), processed_node.number))
+                                
+        graph = []                  # Список, содержащий все вершины
+        verified_position = []      # Содержит список всех использованных координат, что бы сравнивать с ним при добавлении новой вершины.
+        graph.append(Node_vertices(0, start_point[2], [start_point[0], start_point[1]], path_length(start_point, finish_point), 0))
+        verified_position.append([[start_point[0], start_point[1]], start_point[2]])
+        node_connections(processed_map, graph, graph[0], finish_point, verified_position)
+        general_loop = True         # Параметр останавливающий цикл
+        step_count = 0              # Шаг цикла
+        number_finish_node = 0      # Хранит номер финишной точки
+        reversed_waypoints = []     # Обращенный список вейпоинтов
+        success = True              # Передаёт информацию об успехе и не успехе
+        while general_loop:
+            min_price = 99999
+            node = graph[-1]
+            for number_node in range(len(graph)):
+                if graph[number_node].ready:
+                    if graph[number_node].price < min_price:
+                        min_price = graph[number_node].price
+                        node = graph[number_node]
+            if min_price == 99999:
+                number_finish_node = len(graph) - 1
+                success = False
+                general_loop = False
+                #УДАЛЕНИЕ ЦЕЛИ ЕСЛИ НЕ НАЙДЕН ПУТЬ ЧТО БЫ НЕ СПАМИЛ
+                enemy.target = []
+            node_connections(processed_map, graph, node, finish_point, verified_position)
+            if node.position == [finish_point[0], finish_point[1]] and node.vertices == finish_point[2]:
+                    number_finish_node = node.number
+                    general_loop = False
             step_count += 1
             if step_count == 300:
                 last_check_success = False
@@ -1119,20 +1215,16 @@ class path_calculate:
                         if graph[number_node].price < min_price:
                             min_price = graph[number_node].price
                             number_finish_node = number_node
-                    if global_or_local == 'global': #УДАЛЕНИЕ ЦЕЛИ ЕСЛИ НЕ НАЙДЕН ПУТЬ ЧТО БЫ НЕ СПАМИЛ
-                        enemy.target = []
+                    enemy.target = []
                     success = False
                     general_loop = False
                 
         check_node = graph[number_finish_node]
         ran_while = True
-        
         while ran_while:
             reversed_waypoints.append([check_node.position[0], check_node.position[1], check_node.vertices])
             if check_node.direction == 0:
-                ran_while = False
             check_node = graph[check_node.direction] #Предыдущая вершина объявляется проверяемой
 
         return list(reversed(reversed_waypoints)), success
-
         
