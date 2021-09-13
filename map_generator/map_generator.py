@@ -332,27 +332,6 @@ def master_map_generate(global_region_grid, region_grid, chunks_grid, mini_grid,
     return ready_global_map, minimap
 
 
-def creature_spawn_add(global_map):
-    """
-        Помещает мелких существ в тайлы
-
-        added_dict = {биом локации: [(кортеж типов тайлов), (кортеж существ)]}
-    """
-    added_typle = ('S', 'F', 'P')
-    added_dict = {
-                    'S': [('o', ), ('snake', 'rattlesnake')],
-                    'F': [('P', ), ('bird', )],
-                    'P': [('F', ), ('bird', )],
-
-                 }
-    for global_line in global_map:
-        for global_tile in global_line:
-            if global_tile.icon in added_typle:
-                for line in global_tile.chunk:
-                    for tile in line:
-                        if tile.icon in added_dict[global_tile.icon][0]: #and random.randrange(20)//18 > 0:
-                            tile.list_of_features.append(random.choice(added_dict[global_tile.icon][1]))
-                            
     
 """
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -603,6 +582,29 @@ def progress_bar(screen, percent, description):
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 """
+
+def creature_spawn_add(global_map):
+    """
+        Помещает мелких существ в тайлы
+
+        added_dict = {биом локации: [(кортеж типов тайлов), (кортеж существ)]}
+    """
+    added_typle = ('S', 'F', 'P')
+    added_dict = {
+                    'S': [('o', ), ('snake', 'rattlesnake')],
+                    'F': [('P', ), ('bird', )],
+                    'P': [('F', ), ('bird', )],
+
+                 }
+    for global_line in global_map:
+        for global_tile in global_line:
+            if global_tile.icon in added_typle:
+                for line in global_tile.chunk:
+                    for tile in line:
+                        if tile.icon in added_dict[global_tile.icon][0]: #and random.randrange(20)//18 > 0:
+                            tile.list_of_features.append(random.choice(added_dict[global_tile.icon][1]))
+                            
+
 @timeit
 def add_fords_in_rivers(processed_map, rivers_waypoints):
     if rivers_waypoints:
