@@ -883,7 +883,7 @@ class Location:
 
 class Tile:
     """ Содержит изображение, описание, особое содержание тайла, стоимость передвижения, тип, высоту и лестницу """
-    __slots__ = ('icon', 'description', 'list_of_features', 'price_move', 'type', 'level', 'stairs')
+    __slots__ = ('icon', 'description', 'list_of_features', 'price_move', 'type', 'level', 'stairs', 'vertices', 'world_vertices')
     def __init__(self, icon):
         self.icon = icon
         self.description = self.getting_attributes(icon, 0)
@@ -892,6 +892,8 @@ class Tile:
         self.type = '0'
         self.level = 0
         self.stairs = False
+        self.vertices = -1
+        self.world_vertices = -2
         
     def getting_attributes(self, icon, number):
         ground_dict =   {
@@ -911,14 +913,38 @@ class Tile:
                         'F': ['чахлое дерево', 1],
                         'P': ['раскидистое дерево', 1],
                         '~': ['вода', 20],
-                        '`': ['солёная вода', 50],
-                        'C': ['каньон', 20],
-                        '??':['ничего', 10],
-                        '0': ['', 0],
-                        '☺': ['персонаж', 0],
+                        '`': ['солёная вода', 20],
+                        'f': ['брод', 7],
+                        'C': ['каньон', 7],
+                        '??': ['ничего', 10],
                         }
         return ground_dict[icon][number]
 
+    def __getstate__(self) -> dict:
+        """ Сохранение класса """
+        state = {}
+        state["icon"] = self.icon
+        state["description"] = self.description
+        state["list_of_features"] = self.list_of_features
+        state["price_move"] = self.price_move
+        state["type"] = self.type
+        state["level"] = self.level
+        state["stairs"] = self.stairs
+        state["vertices"] = self.vertices
+        state["world_vertices"] = self.world_vertices
+        return state
+
+    def __setstate__(self, state: dict):
+        """ Восстановление класса """
+        self.icon = state["icon"] 
+        self.description = state["description"]
+        self.list_of_features = state["list_of_features"]
+        self.price_move = state["price_move"]
+        self.type = state["type"]
+        self.level = state["level"]
+        self.stairs = state["stairs"]
+        self.vertices = state["vertices"]
+        self.world_vertices = state["world_vertices"]
 def gluing_location(raw_gluing_map, grid, count_block):
     """
         Склеивает чанки и локации в единое поле из "сырых" карт
@@ -3483,7 +3509,9 @@ def pointer_description(landscape_layer, activity_layer, entities_layer, chunk_s
     ground_description = ''
     pointer_description = ''
     if mouse_coords[0] < chunk_size and mouse_coords[1] < chunk_size:
-        pointer_description += 'vertices = ' + str(landscape_layer[mouse_coords[1]][mouse_coords[0]].vertices) + ' тут ' + str(landscape_layer[mouse_coords[1]][mouse_coords[0]].list_of_features) + ' '
+        pointer_description += 'vertices = ' + str(landscape_layer[mouse_coords[1]][mouse_coords[0]].vertices) + ' ' + \
+                               'world_vertices = ' + str(landscape_layer[mouse_coords[1]][mouse_coords[0]].world_vertices) + ' тут ' + \
+                               str(landscape_layer[mouse_coords[1]][mouse_coords[0]].list_of_features) + ' '
         
     for area in (landscape_layer, activity_layer, entities_layer):
         ground_description += coords_description(person_coords, area, chunk_size)
