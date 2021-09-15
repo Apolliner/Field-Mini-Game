@@ -309,9 +309,11 @@ def master_map_generate(global_region_grid, region_grid, chunks_grid, mini_grid,
     #Определение независимых областей на локациях
     #progress_bar(screen, 74, 'Определение независимых областей на локациях')
     defining_vertices(ready_global_map)
+
+    world_vertices_calculation(ready_global_map)
     draw_vertices_generation(screen, ready_global_map, 'Определение связей между локациями')
     #simple_draw_map_generation(screen, 'Определение связей между локациями')
-    
+
 
     #Определение связей между локациями
     #progress_bar(screen, 80, 'Определение связей между локациями')
@@ -1015,17 +1017,15 @@ def a_star_algorithm_river_calculation(calculation_map, start_point, finish_poin
 
 class Global_vertices:
     """ Содержит описание зоны доступности """
-    def __init__(self, number, position, connections, world_number):
+    def __init__(self, number, position, connections):
         self.number = number
-        self.world_number
         self.position = position
         self.connections = [connections]
 
 class Connections:
     """Содержит описание связей зоны доступности"""
-    def __init__(self, number, position, tile, world_number):
+    def __init__(self, number, position, tile):
         self.number = number
-        self.world_number = world_number
         self.position = position
         self.tiles = [tile]
 
@@ -1118,6 +1118,33 @@ def defining_zone_relationships(processed_map):
 
                             defining_connections(processed_map, tile_number, tile_position, defining_local_position, local_position, connect_number,
                                 connect_position, global_tile)
+
+
+def world_vertices_calculation(global_map):
+    """
+        Добавляет зонам доступности сквозную нумерацию и заменяет номера тайлов
+    """
+    number_world_vertices = []
+    for number_global_line, global_line in enumerate(global_map):
+        for number_global_tile, global_tile in enumerate(global_line):
+            matching_dict = {}
+            print(f"global_tile.vertices  {global_tile.vertices}")
+            for vertice in global_tile.vertices:
+                matching_dict[vertice.number] = number_world_vertices
+                print(f"matching_dict - {matching_dict}, vertice.number - {vertice.number}, number_world_vertices - {number_world_vertices}")
+                vertice.number = number_world_vertices
+                number_world_vertices += 1
+            print(f"matching_dict - {matching_dict}")
+
+            
+            #Добавление в тайлы мировых номеров зон доступности
+            for number_line, line in enumerate(global_tile.chunk):
+                for number_tile, tile in enumerate(line):
+                    if tile.vertices in matching_dict:
+                        try:
+                            tile.vertices = matching_dict[tile.vertices]
+                        except:
+                            print(f"tile.vertices - {tile.vertices}, matching_dict - {matching_dict}")
 
 @timeit
 def defining_vertices(processed_map):
@@ -1269,180 +1296,6 @@ def defining_vertices(processed_map):
                 for tile in availability_field.tiles:
                     global_tile.chunk[tile[0]][tile[1]].vertices = availability_field.global_number
             
-@timeit
-def defining_vertices_exp(processed_map):
-    """
-        ЭКСПЕРИМЕНТАЛЬНАЯ ВЕРСИЯ Определение независимых областей на локациях и связей между ними для последующей работы с алгоритмом A*
-    """ 
-    class Availability_field:
-        def __init__(self, number, tile):
-            self.number = number
-            self.global_number = number
-            self.tiles = [tile]
-            
-    banned_tuple = ('~', '▲')
-    world_number_field = 0
-    for number_global_line, global_line in enumerate(processed_map):
-        for number_global_tile, global_tile in enumerate(global_line):
-            number_field = 0
-            list_availability_fields = []
-            for number_line in range(len(global_tile.chunk)):
-                for number_tile, tile in enumerate(global_tile.chunk[number_line]):
-                    if not(tile.icon in banned_tuple):
-                            
-                        #Обработка тайла слева
-                        if number_tile > 0 and global_tile.chunk[number_line][number_tile - 1].vertices >= 0:
-                            if tile.level == global_tile.chunk[number_line][number_tile - 1].level or tile.stairs or global_tile.chunk[number_line][number_tile - 1].stairs:
-                                tile.vertices = global_tile.chunk[number_line][number_tile - 1].vertices
-                                list_availability_fields[tile.vertices].tiles.append([number_line, number_tile])
-
-                        #Обработка тайла сверху
-                        if number_line > 0 and global_tile.chunk[number_line - 1][number_tile].vertices >= 0:
-                            if tile.level == global_tile.chunk[number_line - 1][number_tile].level or tile.stairs or global_tile.chunk[number_line - 1][number_tile].stairs:
-                                #Обработка крайней левой линии
-                                if number_tile == 0 and number_line > 0:
-                                    tile.vertices = global_tile.chunk[number_line - 1][number_tile].vertices
-                                    list_availability_fields[tile.vertices].tiles.append([number_line, number_tile]) 
-                                
-                                #Если тайл обрабатывался
-                                if tile.vertices >= 0:
-                                    up = global_tile.chunk[number_line - 1][number_tile].vertices
-                                    if list_availability_fields[tile.vertices].global_number < list_availability_fields[up].global_number:
-                                        check_number = up
-                                        count = 0 
-                                        while True: #Цикл, который проверит номер и глобальный номер на одинаковость и если нет, то повторит это с указанным глобальным номером
-                                            if list_availability_fields[check_number].global_number != list_availability_fields[check_number].number:
-                                                check_number = list_availability_fields[list_availability_fields[check_number].global_number].global_number
-                                                list_availability_fields[list_availability_fields[check_number].global_number].global_number = list_availability_fields[tile.vertices].global_number
-                                            else:
-                                                break
-                                            if count == 20:
-                                                break
-                                            count += 1
-                                        list_availability_fields[up].global_number = list_availability_fields[tile.vertices].global_number
-                                        
-                                    elif list_availability_fields[tile.vertices].global_number > list_availability_fields[up].global_number:
-                                        check_number = tile.vertices
-                                        count = 0 
-                                        while True: #Цикл, который проверит номер и глобальный номер на одинаковость и если нет, то повторит это с указанным глобальным номером
-                                            if list_availability_fields[check_number].global_number != list_availability_fields[check_number].number:
-                                                check_number = list_availability_fields[list_availability_fields[check_number].global_number].global_number
-                                                list_availability_fields[list_availability_fields[check_number].global_number].global_number = list_availability_fields[tile.vertices].global_number
-                                            else:
-                                                break
-                                            if count == 20:
-                                                break
-                                            count += 1
-                                        list_availability_fields[tile.vertices].global_number = list_availability_fields[up].global_number
-                                            
-                                #Если тайл не обрабатывался
-                                elif tile.vertices == -1:
-                                    tile.vertices = global_tile.chunk[number_line - 1][number_tile].vertices
-                                    list_availability_fields[tile.vertices].tiles.append([number_line, number_tile])
-                                
-                                
-                        #Если тайл еще не обрабатывался
-                        if tile.vertices == -1:
-                            tile.vertices = number_field
-                            tile.world_vertices = world_number_field
-                            list_availability_fields.append(Availability_field(number_field, [number_line, number_tile]))
-                            number_field += 1
-                            world_number_field += 1
-            
-            #Повторный проход по лестницам
-            for number_line in range(len(global_tile.chunk)):
-                for number_tile, tile in enumerate(global_tile.chunk[number_line]):
-                    if tile.stairs:
-                        if 0 < number_line and global_tile.chunk[number_line - 1][number_tile].vertices >= 0:
-                            up = global_tile.chunk[number_line - 1][number_tile]
-                            if list_availability_fields[tile.vertices].global_number < list_availability_fields[up.vertices].global_number:
-                                check_number = up.vertices
-                                count = 0 
-                                while True: #Цикл, который проверит номер и глобальный номер на одинаковость и если нет,
-                                            #то повторит это с указанным глобальным номером
-                                    if list_availability_fields[check_number].global_number != list_availability_fields[check_number].number:
-                                        check_number = list_availability_fields[list_availability_fields[check_number].global_number].global_number
-                                        list_availability_fields[list_availability_fields[check_number].global_number].global_number = \
-                                                                                    list_availability_fields[tile.vertices].global_number
-                                        list_availability_fields[list_availability_fields[check_number].world_number].global_number = \
-                                                                                    list_availability_fields[tile.vertices].world_number
-                                    else:
-                                        break
-                                    if count == 20:
-                                        break
-                                    count += 1
-                                list_availability_fields[up.vertices].global_number = list_availability_fields[tile.vertices].global_number
-                                list_availability_fields[up.vertices].world_number = list_availability_fields[tile.vertices].world_number
-
-                            elif list_availability_fields[tile.vertices].global_number > list_availability_fields[up.vertices].global_number:
-                                check_number = tile.vertices
-                                count = 0 
-                                while True: #Цикл, который проверит номер и глобальный номер на одинаковость и если нет,
-                                            #то повторит это с указанным глобальным номером
-                                    if list_availability_fields[check_number].global_number != list_availability_fields[check_number].number:
-                                        check_number = list_availability_fields[list_availability_fields[check_number].global_number].global_number
-                                        list_availability_fields[list_availability_fields[check_number].global_number].global_number = \
-                                                                                    list_availability_fields[tile.vertices].global_number
-                                        list_availability_fields[list_availability_fields[check_number].world_number].global_number = \
-                                                                                    list_availability_fields[tile.vertices].world_number
-                                    else:
-                                        break
-                                    if count == 20:
-                                        break
-                                    count += 1
-                                list_availability_fields[tile.vertices].global_number = list_availability_fields[up.vertices].global_number
-                                list_availability_fields[tile.vertices].world_number = list_availability_fields[up.vertices].world_number
-
-                        if number_line < (len(global_tile.chunk) - 1) and global_tile.chunk[number_line + 1][number_tile].vertices >= 0:
-                            down = global_tile.chunk[number_line + 1][number_tile]
-                            if list_availability_fields[tile.vertices].global_number < list_availability_fields[down.vertices].global_number:
-                                check_number = down.vertices
-                                count = 0 
-                                while True: #Цикл, который проверит номер и глобальный номер на одинаковость и если нет,
-                                            #то повторит это с указанным глобальным номером
-                                    if list_availability_fields[check_number].global_number != list_availability_fields[check_number].number:
-                                        check_number = list_availability_fields[list_availability_fields[check_number].global_number].global_number
-                                        list_availability_fields[list_availability_fields[check_number].global_number].global_number = \
-                                                                                    list_availability_fields[tile.vertices].global_number
-                                        list_availability_fields[list_availability_fields[check_number].world_number].global_number = \
-                                                                                    list_availability_fields[tile.vertices].world_number
-                                    else:
-                                        break
-                                    if count == 20:
-                                        break
-                                    count += 1
-                                list_availability_fields[down.vertices].global_number = list_availability_fields[tile.vertices].global_number
-                                list_availability_fields[down.vertices].world_number = list_availability_fields[tile.vertices].world_number
-
-                            elif list_availability_fields[tile.vertices].global_number > list_availability_fields[down.vertices].global_number:
-                                check_number = tile.vertices
-                                count = 0 
-                                while True: #Цикл, который проверит номер и глобальный номер на одинаковость и если нет,
-                                            #то повторит это с указанным глобальным номером
-                                    if list_availability_fields[check_number].global_number != list_availability_fields[check_number].number:
-                                        check_number = list_availability_fields[list_availability_fields[check_number].global_number].global_number
-                                        list_availability_fields[list_availability_fields[check_number].global_number].global_number = \
-                                                                                    list_availability_fields[tile.vertices].global_number
-                                        list_availability_fields[list_availability_fields[check_number].world_number].global_number = \
-                                                                                    list_availability_fields[tile.vertices].world_number
-                                    else:
-                                        break
-                                    if count == 20:
-                                        break
-                                    count += 1
-                                list_availability_fields[tile.vertices].global_number = list_availability_fields[down.vertices].global_number
-                                list_availability_fields[tile.vertices].world_number = list_availability_fields[down.vertices].world_number
-                            
-                   
-            for field in list_availability_fields:
-                if field.number != field.global_number:
-                    field.global_number = list_availability_fields[field.global_number].global_number
-
-            
-            for availability_field in list_availability_fields:
-                for tile in availability_field.tiles:
-                    global_tile.chunk[tile[0]][tile[1]].vertices = availability_field.global_number
-                    #global_tile.chunk[tile[0]][tile[1]].world_vertices = availability_field.world_number
                             
 def diversity_field_tiles(processed_map):
     """
