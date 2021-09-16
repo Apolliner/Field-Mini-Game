@@ -2858,7 +2858,7 @@ class Island_friends(pygame.sprite.Sprite):
         all_color_dict[255] = (255, 0, 0)
         return all_color_dict
     
-    all_color_dict = add_color_dict(200)
+    all_color_dict = add_color_dict(5000)
 
     def __init__(self, x, y, size_tile, number):
         pygame.sprite.Sprite.__init__(self)

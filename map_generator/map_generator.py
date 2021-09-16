@@ -464,7 +464,7 @@ class Island_friends(pygame.sprite.Sprite):
         all_color_dict[255] = (255, 0, 0)
         return all_color_dict
     
-    all_color_dict = add_color_dict(200)
+    all_color_dict = add_color_dict(5000)
 
     def __init__(self, y, x, size_tile, number):
         pygame.sprite.Sprite.__init__(self)
@@ -1124,27 +1124,21 @@ def world_vertices_calculation(global_map):
     """
         Добавляет зонам доступности сквозную нумерацию и заменяет номера тайлов
     """
-    number_world_vertices = []
+    number_world_vertices = 0
     for number_global_line, global_line in enumerate(global_map):
         for number_global_tile, global_tile in enumerate(global_line):
             matching_dict = {}
-            print(f"global_tile.vertices  {global_tile.vertices}")
-            for vertice in global_tile.vertices:
-                matching_dict[vertice.number] = number_world_vertices
-                print(f"matching_dict - {matching_dict}, vertice.number - {vertice.number}, number_world_vertices - {number_world_vertices}")
-                vertice.number = number_world_vertices
-                number_world_vertices += 1
-            print(f"matching_dict - {matching_dict}")
-
-            
-            #Добавление в тайлы мировых номеров зон доступности
             for number_line, line in enumerate(global_tile.chunk):
                 for number_tile, tile in enumerate(line):
-                    if tile.vertices in matching_dict:
-                        try:
-                            tile.vertices = matching_dict[tile.vertices]
-                        except:
-                            print(f"tile.vertices - {tile.vertices}, matching_dict - {matching_dict}")
+                    if tile.vertices == -1:
+                        pass
+                    elif tile.vertices in matching_dict:
+                        tile.vertices = matching_dict[tile.vertices]
+                    else:
+                        matching_dict[tile.vertices] = number_world_vertices
+                        tile.vertices = number_world_vertices
+                        number_world_vertices += 1
+
 
 @timeit
 def defining_vertices(processed_map):
