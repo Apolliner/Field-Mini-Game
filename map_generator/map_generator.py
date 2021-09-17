@@ -330,16 +330,31 @@ def master_map_generate(global_region_grid, region_grid, chunks_grid, mini_grid,
     #Создание миникарты
     #progress_bar(screen, 90, 'Создание миникарты')
     minimap = minimap_create(ready_global_map)
+    vertices_graph = vertices_graph_create(ready_global_map)
     simple_draw_map_generation(screen, 'Карта готова')
 
     request_for_a_key_press(screen)
     
     #progress_bar(screen, 100, 'Карта готова')
 
-    return ready_global_map, minimap
+    return ready_global_map, minimap, vertices_graph
 
 
+
+def vertices_graph_create(global_map):
+    """
+        На основе глобальной карты, создаёт граф зон доступности для быстрой и удобной работы с ним
+    """
+    vertices_graph = []
+    for number_global_line, global_line in enumerate(global_map):
+        for number_global_tile, global_tile in enumerate(global_line):
+            for vertice in global_tile.vertices:
+                vertices_graph.append(vertice)
+    print(F"vertices_graph - {vertices_graph}")
+    return vertices_graph
     
+
+
 """
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 

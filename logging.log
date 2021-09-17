@@ -1,40 +1,169 @@
-DEBUG:root:2: Малыш Билли нет глобальных вейпоинтов. Его задача [[13, 12], 729, []]. Его позиция [13, 13], 730, [12, 12]
-DEBUG:root:2: Малыш Билли глобальные позиции не равны или глобальные позиции равны, но не равны зоны доступности. Его задача [[13, 12], 729, []]. Его позиция [13, 13], 730, [12, 12]
-DEBUG:root:3: Бутч Кэссиди нет глобальных вейпоинтов. Его задача [[9, 8], 331, []]. Его позиция [9, 9], 334, [12, 12]
-DEBUG:root:3: Бутч Кэссиди глобальные позиции не равны или глобальные позиции равны, но не равны зоны доступности. Его задача [[9, 8], 331, []]. Его позиция [9, 9], 334, [12, 12]
-DEBUG:root:4: молодой койот нет глобальных вейпоинтов. Его задача [[6, 7], 192, []]. Его позиция [6, 6], 191, [12, 12]
-DEBUG:root:4: молодой койот глобальные позиции не равны или глобальные позиции равны, но не равны зоны доступности. Его задача [[6, 7], 192, []]. Его позиция [6, 6], 191, [12, 12]
-DEBUG:root:5: Неизвестный нет глобальных вейпоинтов. Его задача [[5, 6], 157, []]. Его позиция [5, 5], 156, [12, 12]
-DEBUG:root:5: Неизвестный глобальные позиции не равны или глобальные позиции равны, но не равны зоны доступности. Его задача [[5, 6], 157, []]. Его позиция [5, 5], 156, [12, 12]
-DEBUG:root:20: Малыш Билли нет глобальных вейпоинтов. Его задача [[13, 13], 730, []]. Его позиция [13, 12], 729, [16, 24]
-DEBUG:root:20: Малыш Билли глобальные позиции не равны или глобальные позиции равны, но не равны зоны доступности. Его задача [[13, 13], 730, []]. Его позиция [13, 12], 729, [16, 24]
-DEBUG:root:22: Бутч Кэссиди нет глобальных вейпоинтов. Его задача [[9, 9], 334, []]. Его позиция [9, 8], 331, [8, 24]
-DEBUG:root:22: Бутч Кэссиди глобальные позиции не равны или глобальные позиции равны, но не равны зоны доступности. Его задача [[9, 9], 334, []]. Его позиция [9, 8], 331, [8, 24]
-DEBUG:root:24: молодой койот нет глобальных вейпоинтов. Его задача [[7, 7], 227, []]. Его позиция [6, 7], 192, [17, 0]
-DEBUG:root:24: молодой койот глобальные позиции не равны или глобальные позиции равны, но не равны зоны доступности. Его задача [[7, 7], 227, []]. Его позиция [6, 7], 192, [17, 0]
-DEBUG:root:27: Неизвестный нет глобальных вейпоинтов. Его задача [[5, 5], 156, []]. Его позиция [5, 6], 157, [4, 0]
-DEBUG:root:27: Неизвестный глобальные позиции не равны или глобальные позиции равны, но не равны зоны доступности. Его задача [[5, 5], 156, []]. Его позиция [5, 6], 157, [4, 0]
-DEBUG:root:28: Малыш Билли нет глобальных вейпоинтов. Его задача [[13, 14], 735, []]. Его позиция [13, 13], 730, [22, 0]
-DEBUG:root:28: Малыш Билли глобальные позиции не равны или глобальные позиции равны, но не равны зоны доступности. Его задача [[13, 14], 735, []]. Его позиция [13, 13], 730, [22, 0]
-DEBUG:root:35: Бутч Кэссиди нет глобальных вейпоинтов. Его задача [[10, 9], 421, []]. Его позиция [9, 9], 334, [17, 0]
-DEBUG:root:35: Бутч Кэссиди глобальные позиции не равны или глобальные позиции равны, но не равны зоны доступности. Его задача [[10, 9], 421, []]. Его позиция [9, 9], 334, [17, 0]
-DEBUG:root:44: Неизвестный нет глобальных вейпоинтов. Его задача [[6, 5], 190, []]. Его позиция [5, 5], 156, [17, 24]
-DEBUG:root:44: Неизвестный глобальные позиции не равны или глобальные позиции равны, но не равны зоны доступности. Его задача [[6, 5], 190, []]. Его позиция [5, 5], 156, [17, 24]
-DEBUG:root:49: молодой койот нет глобальных вейпоинтов. Его задача [[8, 7], 272, []]. Его позиция [7, 7], 227, [0, 16]
-DEBUG:root:49: молодой койот глобальные позиции не равны или глобальные позиции равны, но не равны зоны доступности. Его задача [[8, 7], 272, []]. Его позиция [7, 7], 227, [0, 16]
-DEBUG:root:51: Бутч Кэссиди нет глобальных вейпоинтов. Его задача [[10, 8], 418, []]. Его позиция [10, 9], 421, [0, 7]
-DEBUG:root:51: Бутч Кэссиди глобальные позиции не равны или глобальные позиции равны, но не равны зоны доступности. Его задача [[10, 8], 418, []]. Его позиция [10, 9], 421, [0, 7]
-DEBUG:root:56: Малыш Билли нет глобальных вейпоинтов. Его задача [[14, 14], 856, []]. Его позиция [13, 14], 735, [20, 0]
-DEBUG:root:56: Малыш Билли глобальные позиции не равны или глобальные позиции равны, но не равны зоны доступности. Его задача [[14, 14], 856, []]. Его позиция [13, 14], 735, [20, 0]
-DEBUG:root:62: Малыш Билли нет глобальных вейпоинтов. Его задача [[14, 13], 855, []]. Его позиция [14, 14], 856, [0, 0]
-DEBUG:root:62: Малыш Билли глобальные позиции не равны или глобальные позиции равны, но не равны зоны доступности. Его задача [[14, 13], 855, []]. Его позиция [14, 14], 856, [0, 0]
-DEBUG:root:64: Бутч Кэссиди нет глобальных вейпоинтов. Его задача [[10, 7], 417, []]. Его позиция [10, 8], 418, [4, 24]
-DEBUG:root:64: Бутч Кэссиди глобальные позиции не равны или глобальные позиции равны, но не равны зоны доступности. Его задача [[10, 7], 417, []]. Его позиция [10, 8], 418, [4, 24]
-DEBUG:root:68: Неизвестный нет глобальных вейпоинтов. Его задача [[5, 5], 156, []]. Его позиция [6, 5], 190, [0, 9]
-DEBUG:root:68: Неизвестный глобальные позиции не равны или глобальные позиции равны, но не равны зоны доступности. Его задача [[5, 5], 156, []]. Его позиция [6, 5], 190, [0, 9]
-DEBUG:root:78: молодой койот нет глобальных вейпоинтов. Его задача [[7, 7], 227, []]. Его позиция [8, 7], 272, [0, 19]
-DEBUG:root:78: молодой койот глобальные позиции не равны или глобальные позиции равны, но не равны зоны доступности. Его задача [[7, 7], 227, []]. Его позиция [8, 7], 272, [0, 19]
-DEBUG:root:82: Малыш Билли нет глобальных вейпоинтов. Его задача [[14, 14], 856, []]. Его позиция [14, 13], 855, [18, 24]
-DEBUG:root:82: Малыш Билли глобальные позиции не равны или глобальные позиции равны, но не равны зоны доступности. Его задача [[14, 14], 856, []]. Его позиция [14, 13], 855, [18, 24]
-DEBUG:root:84: Неизвестный нет глобальных вейпоинтов. Его задача [[4, 5], 124, []]. Его позиция [5, 5], 156, [24, 22]
-DEBUG:root:84: Неизвестный глобальные позиции не равны или глобальные позиции равны, но не равны зоны доступности. Его задача [[4, 5], 124, []]. Его позиция [5, 5], 156, [24, 22]
+DEBUG:root:2: Буффало Билл нет глобальных вейпоинтов. Его задача [[13, 12], 1642, []]. Его позиция [13, 13], 1643, [12, 12]
+DEBUG:root:2: Буффало Билл глобальные позиции не равны или глобальные позиции равны, но не равны зоны доступности. Его задача [[13, 12], 1642, []]. Его позиция [13, 13], 1643, [12, 12]
+DEBUG:root:self.name_npc - уж, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:27: Буффало Билл нет глобальных вейпоинтов. Его задача [[14, 12], 2142, []]. Его позиция [13, 12], 1642, [23, 24]
+DEBUG:root:27: Буффало Билл глобальные позиции не равны или глобальные позиции равны, но не равны зоны доступности. Его задача [[14, 12], 2142, []]. Его позиция [13, 12], 1642, [23, 24]
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:30: Буффало Билл нет глобальных вейпоинтов. Его задача [[15, 12], 2822, []]. Его позиция [14, 12], 2142, [0, 24]
+DEBUG:root:30: Буффало Билл глобальные позиции не равны или глобальные позиции равны, но не равны зоны доступности. Его задача [[15, 12], 2822, []]. Его позиция [14, 12], 2142, [0, 24]
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:64: Буффало Билл нет глобальных вейпоинтов. Его задача [[15, 13], 2823, []]. Его позиция [15, 12], 2822, [0, 16]
+DEBUG:root:64: Буффало Билл глобальные позиции не равны или глобальные позиции равны, но не равны зоны доступности. Его задача [[15, 13], 2823, []]. Его позиция [15, 12], 2822, [0, 16]
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 30, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 29, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 29, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 28, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 28, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 27, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 27, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 26, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 26, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 25, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 25, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 24, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 24, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 23, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 23, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 22, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 22, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 21, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 21, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 20, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 20, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 19, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 19, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 18, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 18, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 17, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 17, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 16, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 16, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 15, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 15, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 14, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 14, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 13, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 13, self.delete - False
+DEBUG:root:84: Буффало Билл нет глобальных вейпоинтов. Его задача [[14, 13], 2144, []]. Его позиция [15, 13], 2823, [10, 0]
+DEBUG:root:84: Буффало Билл глобальные позиции не равны или глобальные позиции равны, но не равны зоны доступности. Его задача [[14, 13], 2144, []]. Его позиция [15, 13], 2823, [10, 0]
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 12, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 12, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 11, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 11, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 10, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 10, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 9, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 9, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 8, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 8, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 7, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 7, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 6, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 6, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 5, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 5, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 4, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 4, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 3, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 3, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 2, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 2, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 1, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 1, self.delete - False
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 0, self.delete - True
+DEBUG:root:self.name_npc - гремучая змея, self.steps_to_despawn - 0, self.delete - True
+DEBUG:root:109: Буффало Билл нет глобальных вейпоинтов. Его задача [[13, 13], 1643, []]. Его позиция [14, 13], 2144, [24, 13]
+DEBUG:root:109: Буффало Билл глобальные позиции не равны или глобальные позиции равны, но не равны зоны доступности. Его задача [[13, 13], 1643, []]. Его позиция [14, 13], 2144, [24, 13]
+DEBUG:root:148: Буффало Билл нет глобальных вейпоинтов. Его задача [[13, 14], 1646, []]. Его позиция [13, 13], 1643, [24, 0]
+DEBUG:root:148: Буффало Билл глобальные позиции не равны или глобальные позиции равны, но не равны зоны доступности. Его задача [[13, 14], 1646, []]. Его позиция [13, 13], 1643, [24, 0]
+DEBUG:root:181: Буффало Билл нет глобальных вейпоинтов. Его задача [[13, 13], 1643, []]. Его позиция [13, 14], 1646, [17, 0]
+DEBUG:root:181: Буффало Билл глобальные позиции не равны или глобальные позиции равны, но не равны зоны доступности. Его задача [[13, 13], 1643, []]. Его позиция [13, 14], 1646, [17, 0]
+DEBUG:root:195: Буффало Билл нет глобальных вейпоинтов. Его задача [[14, 13], 2144, []]. Его позиция [13, 13], 1643, [5, 24]
+DEBUG:root:195: Буффало Билл глобальные позиции не равны или глобальные позиции равны, но не равны зоны доступности. Его задача [[14, 13], 2144, []]. Его позиция [13, 13], 1643, [5, 24]
+DEBUG:root:229: Буффало Билл нет глобальных вейпоинтов. Его задача [[13, 13], 1643, []]. Его позиция [14, 13], 2144, [0, 11]
+DEBUG:root:229: Буффало Билл глобальные позиции не равны или глобальные позиции равны, но не равны зоны доступности. Его задача [[13, 13], 1643, []]. Его позиция [14, 13], 2144, [0, 11]
+DEBUG:root:239: Буффало Билл нет глобальных вейпоинтов. Его задача [[14, 13], 2144, []]. Его позиция [13, 13], 1643, [24, 5]
+DEBUG:root:239: Буффало Билл глобальные позиции не равны или глобальные позиции равны, но не равны зоны доступности. Его задача [[14, 13], 2144, []]. Его позиция [13, 13], 1643, [24, 5]

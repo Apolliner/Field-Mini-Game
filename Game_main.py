@@ -3701,7 +3701,7 @@ def preparing_a_new_game(global_region_grid, region_grid, chunks_grid, mini_regi
     """
         Производит подготовку к началу новой игры и её запуск
     """
-    global_map, raw_minimap = map_generator.master_map_generate(global_region_grid, region_grid, chunks_grid, mini_region_grid, tile_field_grid, screen)
+    global_map, raw_minimap, vertices_graph = map_generator.master_map_generate(global_region_grid, region_grid, chunks_grid, mini_region_grid, tile_field_grid, screen)
         
     person = Person([2, 2], [2, 2], [], [chunk_size//2, chunk_size//2], [chunk_size//2, chunk_size//2])
     calculation_assemblage_point(global_map, person, chunk_size)
