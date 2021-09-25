@@ -471,7 +471,16 @@ class NPC(Character):
     
     def npc_follow_move(self):
         """ Рассчёт преследования некоторого персонажа """
-        pass
+        if self.vertices == self.follow.vertices:
+            if path_length(self.follow.world_position, self.local_waypoints[-1]) > 3:
+                self.local_waypoints = _path_world_tiles_a_star_algorithm(global_map, self.world_position, self.target)
+        elif self.follow.vertices != self.global_waypoints:
+            self.global_waypoints = _path_world_vertices_a_star_algorithm(vertices_map, self.vertices, self.follow.vertices)
+            self.local_waypionts = path_local_waypoints_calculate(self.world_position, global_map)
+
+        # передвижение
+        path_waypoints_move(self, global_map)
+                
     
     def npc_random_move(self):
         """ Случайное перемещение или пропуск хода """
@@ -699,9 +708,30 @@ class Creature(Character):
 class path_calculate:
     """
         Полный рассчёт пути по мировым координатам, возможно станет частью класса character
+
+        Работает с классами, содержащими поля:
+        global_position
+        local_position
+        world_position
+        global_waypoints
+        local_waypoints
+        target
+        direction
     """
 
     chunk_size = 25
+
+    def path_length(self, start_point, finish_point):
+            """
+                Вычисляет примерное расстояния до финиша, для рассчётов стоимости перемещения
+            """
+            return math.sqrt((start_point[0] - finish_point[0])**2 + (start_point[1] - finish_point[1])**2)
+
+    def path_world_position_calculate(self, global_position, local_position):
+        """
+            Рассчитывает мировые координаты от центра мира
+        """
+        return [local_position[0] + global_position[0]*self.chunk_size, local_position[1] + global_position[1]*self.chunk_size]
 
     def path_world_position_recalculation(self, world_position):
         """
@@ -711,22 +741,16 @@ class path_calculate:
         local_position = [world_position[0]%self.chunk_size, world_position[1]%self.chunk_size]
         return global_position, local_position
     
-    def path_direction_calculation(self, waypoint):
-        """ Определяет направлени движения """
-        if [self.world_position[0] - 1, self.world_position[1]] = waypoint:
-            self.direction = 'up'
-        elif [self.world_position[0] + 1, self.world_position[1]] = waypoint:
-            self.direction = 'down'
-        elif [self.world_position[0], self.world_position[1] - 1] = waypoint:
-            self.direction = 'left'
-        elif [self.world_position[0], self.world_position[1] + 1] = waypoint:
-            self.direction = 'right'
-            
-    def path_waypoints_move(self):
-        """ Рассчёт перемещения в конкретную точку """
-        waypoint = self.local_waypoints.pop(0)
-        path_direction_calculation(waypoint)
-        self.global_position, self.local_position = path_world_position_recalculation(waypoint)
+    def path_direction_calculation(self, start, finish):
+        """ Определяет направление движения """
+        if [start[0] - 1, start[1]] = finish:
+            return = 'up'
+        elif [start[0] + 1, start[1]] = finish:
+            return = 'down'
+        elif [start[0], start[1] - 1] = finish:
+            return = 'left'
+        elif [start[0], start[1] + 1] = finish:
+            return = 'right'
 
     def path_world_tile(self, global_map, world_position):
         """
@@ -735,6 +759,20 @@ class path_calculate:
         global_position = [world_position[0]//self.chunk_size, world_position[1]//self.chunk_size]
         local_position = [world_position[0]%self.chunk_size, world_position[1]%self.chunk_size]
         return global_map[global_position[0]][global_position[1]].chunk[local_position[0]][local_position[1]]
+
+    def path_world_location(self, global_map, world_position):
+        """
+            Принимает мировые координаты, глобальную карту и размер чанка, возвращает локацию.
+        """
+        global_position = [world_position[0]//self.chunk_size, world_position[1]//self.chunk_size]
+        return global_map[global_position[0]][global_position[1]]
+            
+    def path_waypoints_move(self, global_map):
+        """ Рассчёт перемещения в конкретную точку """
+        waypoint = self.local_waypoints.pop(0)
+        self.direction = path_direction_calculation(self.world_position, waypoint)
+        self.global_position, self.local_position = path_world_position_recalculation(waypoint)
+        self.vertices = path_world_tile(global_map, waypoint)
     
     def path_calculate(self, global_map, vertices_graph):
         """
@@ -758,13 +796,32 @@ class path_calculate:
 
         # Если есть куда двигаться
         if self.local_waypoints:
-            self.path_waypoints_move()
+            self.path_waypoints_move(global_map)
 
-    def path_local_waypoints_calculate(self):
+    def path_local_waypoints_calculate(self, start_point, global_map):
         """
             Рассчитывает локальные вейпоинты для передвижения
         """
-        local_waypoits = []
+        direction = path_direction_calculation(path_world_tile(self, global_map, self.world_position), self.global_waypoint[0])
+        finish_point = []
+        if moving_between_locations:
+            for vertices in path_world_location(global_map, start_point).vertices:
+                if vertices.number == start_vertices:
+                    for connect in vertices.connections:
+                        if connect.number == enemy.waypoints[0]:
+                            finish = random.choice(connect.tiles)
+                            raw_finish point = path_world_position_calculate(vertices.position, finish) # Преобразование в мировые координаты
+                            if direction == 'up':
+                                finish_point = [raw_finish point[0] - 1, raw_finish point[1]]
+                            elif direction == 'down':
+                                finish_point = [raw_finish point[0] + 1, raw_finish point[1]]
+                            elif direction == 'left':
+                                finish_point = [raw_finish point[0], raw_finish point[1] - 1]
+                            elif direction == 'right':
+                                finish_point = [raw_finish point[0], raw_finish point[1] + 1]
+                             
+        local_waypoins = _path_world_tiles_a_star_algorithm(global_map, start_point, finish_point)
+                            
         return local_waypoits
 
     def _path_world_vertices_a_star_algorithm(self, vertices_map, start_point, finish_point):
@@ -799,12 +856,6 @@ class path_calculate:
                 self.price = price
                 self.direction = direction #Хранит номер вершины из которой вышла
                 self.ready = True #Проверена ли точка
-
-        def path_length(start_point, finish_point):
-            """
-                Вычисляет примерное расстояния до финиша, для рассчётов стоимости перемещения
-            """
-            return math.sqrt((start_point[0] - finish_point[0])**2 + (start_point[1] - finish_point[1])**2)
 
         def node_connections(vertices_map, graph, processed_node, finish_vertices, verified_vertices):
             """
@@ -901,6 +952,7 @@ class path_calculate:
             
         """
         len_map = len(global_map)*self.shunk_size
+        
         class Node_vertices:
             """Содержит узлы графа для работы с зонами доступности"""
             __slots__ = ('number', 'vertices', 'position', 'price', 'direction', 'ready')
@@ -911,12 +963,6 @@ class path_calculate:
                 self.price = price
                 self.direction = direction #Хранит номер вершины из которой вышла
                 self.ready = True #Проверена ли точка
-
-        def path_length(start_point, finish_point):
-            """
-                Вычисляет примерное расстояния до финиша, для рассчётов стоимости перемещения
-            """
-            return math.sqrt((start_point[0] - finish_point[0])**2 + (start_point[1] - finish_point[1])**2)
 
         def node_friends_calculation(global_map, graph, node, finish_point, verified_position):
             """
