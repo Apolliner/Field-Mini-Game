@@ -350,7 +350,6 @@ def vertices_graph_create(global_map):
         for number_global_tile, global_tile in enumerate(global_line):
             for vertice in global_tile.vertices:
                 vertices_graph.append(vertice)
-    print(F"vertices_graph - {vertices_graph}")
     return vertices_graph
     
 
