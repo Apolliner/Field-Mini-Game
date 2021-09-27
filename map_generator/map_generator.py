@@ -5,33 +5,36 @@ import math
 import pygame
 import pickle
 import sys
+from library.decorators import timeit
+from library.classes import Location, Tile, Tile_minimap
 if __name__ == '__main__':
     import map_patch
     from pygame.locals import *
     import sys
 else:
     from map_generator import map_patch
-
-
 """
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-    НОВЫЙ ГЕНЕРАТОР ИГРОВОЙ КАРТЫ
+    ГЕНЕРАТОР ИГРОВОЙ КАРТЫ
     
     На выходе выдаёт класс Location
 
 
     ИЗВЕСТНЫЕ ОШИБКИ:
-    1)Ошибка при попытке соединить два описания при генерации полной тайловой карты. Выбирается вариант с соединением полного описания которого нет. #ИСПРАВЛЕНО
+    1)Ошибка при попытке соединить два описания при генерации полной тайловой карты. 
+    Выбирается вариант с соединением полного описания которого нет. #ИСПРАВЛЕНО
     2)Ошибка мерджа вообще всех локаций. #ИСПРАВЛЕНО
 
 
     РЕАЛИЗОВАТЬ:
     1)Для разных тайлов - разные списки типов, являющихся лестницами
     2)Тайловые поля, не изменяющие свою высоту #РЕАЛИЗОВАНО
-    3)Возможность того, что два разных тайла являются одним тайловым полем (хотя надо ли оно, можно то же самое реализовать рандомным выбором иконки)
+    3)Возможность того, что два разных тайла являются одним тайловым полем (хотя надо ли оно, 
+    можно то же самое реализовать рандомным выбором иконки)
     4)Генерация разных типов тайлов в одном тайловом поле без учёта краёв.
-    5)Адекватность генерации супер биомов друг рядом с другом. Возможно, сначала должен идти выбор главных, не соприкасающихся друг с другом
+    5)Адекватность генерации супер биомов друг рядом с другом. Возможно, сначала должен идти 
+    выбор главных, не соприкасающихся друг с другом
       супер биомов, а ведомые супер биомы подстраиваются под них.
     6)Настройку количества слоёв для каждого типа тайла
     7)Добавление нарисованых заранее кусков карт #РЕАЛИЗОВАНО
@@ -39,156 +42,6 @@ else:
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 """
-
-class Tile:
-    """ Содержит изображение, описание, особое содержание тайла, стоимость передвижения, тип, высоту и лестницу """
-    __slots__ = ('icon', 'description', 'list_of_features', 'price_move', 'type', 'level', 'stairs', 'vertices', 'world_vertices')
-    def __init__(self, icon):
-        self.icon = icon
-        self.description = self.getting_attributes(icon, 0)
-        self.list_of_features = []
-        self.price_move = self.getting_attributes(icon, 1)
-        self.type = '0'
-        self.level = 0
-        self.stairs = False
-        self.vertices = -1
-        self.world_vertices = -2
-        
-    def getting_attributes(self, icon, number):
-        ground_dict =   {
-                        'j': ['бархан', 1],
-                        's': ['ракушка', 1],
-                        '.': ['горячий песок', 1],
-                        ',': ['жухлая трава', 1],
-                        'o': ['валун', 15],
-                        'A': ['холм', 15],
-                        '▲': ['скала', 20],
-                        'i': ['кактус', 1],
-                        ':': ['солончак', 1],
-                        ';': ['солончак', 1],
-                        '„': ['трава', 1],
-                        'u': ['высокая трава', 1],
-                        'ü': ['колючая трава', 10],
-                        'F': ['чахлое дерево', 1],
-                        'P': ['раскидистое дерево', 1],
-                        '~': ['вода', 20],
-                        '`': ['солёная вода', 20],
-                        'f': ['брод', 7],
-                        'C': ['каньон', 7],
-                        '??': ['ничего', 10],
-                        }
-        return ground_dict[icon][number]
-
-    def __getstate__(self) -> dict:
-        """ Сохранение класса """
-        state = {}
-        state["icon"] = self.icon
-        state["description"] = self.description
-        state["list_of_features"] = self.list_of_features
-        state["price_move"] = self.price_move
-        state["type"] = self.type
-        state["level"] = self.level
-        state["stairs"] = self.stairs
-        state["vertices"] = self.vertices
-        state["world_vertices"] = self.world_vertices
-        return state
-
-    def __setstate__(self, state: dict):
-        """ Восстановление класса """
-        self.icon = state["icon"] 
-        self.description = state["description"]
-        self.list_of_features = state["list_of_features"]
-        self.price_move = state["price_move"]
-        self.type = state["type"]
-        self.level = state["level"]
-        self.stairs = state["stairs"]
-        self.vertices = state["vertices"]
-        self.world_vertices = state["world_vertices"]
-
-class Tile_minimap:
-    """ Содержит изображение, описание, особое содержание тайла миникарты"""
-    __slots__ = ('icon', 'description', 'list_of_features', 'price_move', 'type', 'level', 'stairs', 'vertices', 'temperature')
-    def __init__(self, icon, name, price_move, temperature):
-        self.icon = icon
-        self.description = name
-        self.list_of_features = []
-        self.price_move = price_move
-        self.temperature = temperature
-        self.type = '0'
-        self.level = 0
-        self.stairs = False
-        self.vertices = -1
-        
-    def __getstate__(self) -> dict:
-        """ Сохранение класса """
-        state = {}
-        state["icon"] = self.icon
-        state["description"] = self.description
-        state["list_of_features"] = self.list_of_features
-        state["price_move"] = self.price_move
-        state["temperature"] = self.temperature
-        state["type"] = self.type
-        state["level"] = self.level
-        state["stairs"] = self.stairs
-        state["vertices"] = self.vertices
-        
-        return state
-
-    def __setstate__(self, state: dict):
-        """ Восстановление класса """
-        self.icon = state["icon"] 
-        self.description = state["description"]
-        self.list_of_features = state["list_of_features"]
-        self.price_move = state["price_move"]
-        self.temperature = state["temperature"]
-        self.type = state["type"]
-        self.level = state["level"]
-        self.stairs = state["stairs"]
-        self.vertices = state["vertices"]
-
-class Location:
-    """ Содержит описание локации """
-    __slots__ = ('name', 'temperature', 'chunk', 'icon', 'price_move', 'vertices', 'position')
-    def __init__(self, name:str, temperature:float, chunk:list, icon:str, price_move:int, position):
-        self.name = name
-        self.temperature = temperature
-        self.chunk = chunk
-        self.icon = icon
-        self.price_move = price_move
-        self.vertices = []
-        self.position = position
-    def __getstate__(self) -> dict:
-        """ Сохранение класса """
-        state = {}
-        state["name"] = self.name
-        state["temperature"] = self.temperature
-        state["chunk"] = pickle.dumps(self.chunk)
-        state["icon"] = self.icon
-        state["price_move"] = self.price_move
-        state["vertices"] = self.vertices
-        state["position"] = self.position
-        return state
-
-    def __setstate__(self, state: dict):
-        """ Восстановление класса """
-        self.name = state["name"]
-        self.temperature = state["temperature"]
-        self.chunk = pickle.loads(state["chunk"])
-        self.icon = state["icon"]
-        self.price_move = state["price_move"]
-        self.vertices = state["vertices"]
-        self.position = state["position"]
-
-def timeit(func):
-    """
-    Декоратор. Считает время выполнения функции.
-    """
-    def inner(*args, **kwargs):
-        start = time.time()
-        result = func(*args, **kwargs)
-        print(time.time() - start)
-        return result
-    return inner
 
 
 @timeit
