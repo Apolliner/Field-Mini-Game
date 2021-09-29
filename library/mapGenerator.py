@@ -1,16 +1,15 @@
 import random
 import copy
 import math
-import gameOutput
 import sys
+import pygame
 from library.decorators import timeit
 from library.classes import Location, Tile, Tile_minimap
 if __name__ == '__main__':
     from library import mapPatch
-    from gameOutput.locals import *
     import sys
 else:
-    from mapGenerator import mapPatch
+    from library import mapPatch
 """
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -213,14 +212,14 @@ def vertices_graph_create(global_map):
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 """
-class Button_rect(gameOutput.sprite.Sprite):
+class Button_rect(pygame.sprite.Sprite):
     """ Отрисовывает поверхности """
 
     def __init__(self, y, x, size_y, size_x, color):
-        gameOutput.sprite.Sprite.__init__(self)
+        pygame.sprite.Sprite.__init__(self)
         self.y = y
         self.x = x
-        self.image = gameOutput.Surface((size_x, size_y))
+        self.image = pygame.Surface((size_x, size_y))
         self.image.fill(color)
         self.rect = self.image.get_rect()
         self.rect.top = y
@@ -230,14 +229,14 @@ class Button_rect(gameOutput.sprite.Sprite):
     def draw(self, surface):
         surface.blit(self.image, self.rect)
 
-class Draw_region(gameOutput.sprite.Sprite):
+class Draw_region(pygame.sprite.Sprite):
     """ Содержит спрайты миникарты """
 
     def __init__(self, y, x, size_tile, key, type_region):
-        gameOutput.sprite.Sprite.__init__(self)
+        pygame.sprite.Sprite.__init__(self)
         self.x = x
         self.y = y
-        self.image = gameOutput.Surface((size_tile, size_tile))
+        self.image = pygame.Surface((size_tile, size_tile))
         self.image.fill(self.color_dict(key, type_region))
         self.rect = self.image.get_rect()
         self.rect.left = x
@@ -318,7 +317,7 @@ class Draw_region(gameOutput.sprite.Sprite):
             else:
                 return (random.randrange(256), random.randrange(256), random.randrange(256))
 
-class Island_friends(gameOutput.sprite.Sprite):
+class Island_friends(pygame.sprite.Sprite):
     """ Содержит спрайты зон доступности """
     def add_color_dict(size):
         """ Создаёт единый на все экземпляры, словарь цветов """
@@ -332,8 +331,8 @@ class Island_friends(gameOutput.sprite.Sprite):
     all_color_dict = add_color_dict(5000)
 
     def __init__(self, y, x, size_tile, number):
-        gameOutput.sprite.Sprite.__init__(self)
-        self.image = gameOutput.Surface((size_tile, size_tile))
+        pygame.sprite.Sprite.__init__(self)
+        self.image = pygame.Surface((size_tile, size_tile))
         self.image.fill(self.color_dict(number))
         self.image.set_alpha(60)
         self.rect = self.image.get_rect()
@@ -359,28 +358,28 @@ def draw_map_generation(screen, draw_map, type_map, description):
         for number_tile, tile in enumerate(line):
             Draw_region(number_line*size_tile, number_tile*size_tile, size_tile, tile, type_map).draw(screen)
 
-    fontObj = gameOutput.font.Font('freesansbold.ttf', 10)
+    fontObj = pygame.font.Font('freesansbold.ttf', 10)
     textSurfaceObj = fontObj.render(description, True, (0, 0, 0), (255, 255, 255))
     textRectObj = textSurfaceObj.get_rect()
     textRectObj.top = 100
     textRectObj.left = 760
     screen.blit(textSurfaceObj, textRectObj) 
             
-    gameOutput.display.flip()
+    pygame.display.flip()
     
 def simple_draw_map_generation(screen, description):
     """
         Отрисовывает этапы генерации карты без перерисовки карты
     """
     Button_rect(50, 750, 100, 1000, (255, 255, 255)).draw(screen)
-    fontObj = gameOutput.font.Font('freesansbold.ttf', 10)
+    fontObj = pygame.font.Font('freesansbold.ttf', 10)
     textSurfaceObj = fontObj.render(description, True, (0, 0, 0), (255, 255, 255))
     textRectObj = textSurfaceObj.get_rect()
     textRectObj.top = 100
     textRectObj.left = 760
     screen.blit(textSurfaceObj, textRectObj) 
             
-    gameOutput.display.flip()
+    pygame.display.flip()
 
 def draw_vertices_generation(screen, draw_map, description):
     """
@@ -396,35 +395,35 @@ def draw_vertices_generation(screen, draw_map, description):
                 for number_tile, tile in enumerate(line):
                     Island_friends((number_global_line*chunk_size + number_line)*size_tile, (number_global_tile*chunk_size + number_tile)*size_tile, size_tile, tile.vertices).draw(screen)
 
-    fontObj = gameOutput.font.Font('freesansbold.ttf', 10)
+    fontObj = pygame.font.Font('freesansbold.ttf', 10)
     textSurfaceObj = fontObj.render(description, True, (0, 0, 0), (255, 255, 255))
     textRectObj = textSurfaceObj.get_rect()
     textRectObj.top = 100
     textRectObj.left = 760
     screen.blit(textSurfaceObj, textRectObj) 
             
-    gameOutput.display.flip()
+    pygame.display.flip()
 
 def request_for_a_key_press(screen):
     """
         Спрашивает ввод space перед началом игры
     """
     Button_rect(50, 750, 100, 1000, (255, 255, 255)).draw(screen)
-    fontObj = gameOutput.font.Font('freesansbold.ttf', 10)
+    fontObj = pygame.font.Font('freesansbold.ttf', 10)
     textSurfaceObj = fontObj.render('Для продолжения нажмите "SPACE"', True, (0, 0, 0), (255, 255, 255))
     textRectObj = textSurfaceObj.get_rect()
     textRectObj.top = 100
     textRectObj.left = 760
     screen.blit(textSurfaceObj, textRectObj) 
             
-    gameOutput.display.flip()
+    pygame.display.flip()
     request = True
     while request:
-        for event in gameOutput.event.get():
-            if event.type == gameOutput.QUIT:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
                 sys.exit()
-            if event.type == gameOutput.KEYDOWN:
-                if event.key == gameOutput.K_SPACE:
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
                         request = False
         
 def progress_bar(screen, percent, description):
@@ -432,17 +431,17 @@ def progress_bar(screen, percent, description):
         Отрисовывает прогресс-бар для визуализации генерации карты
     """
     screen.fill((255, 255, 255))
-    x_size, y_size = gameOutput.display.Info().current_w, gameOutput.display.Info().current_h
+    x_size, y_size = pygame.display.Info().current_w, pygame.display.Info().current_h
     Button_rect(y_size//2, x_size//2, 200, 1000, (150, 150, 150)).draw(screen)
     Button_rect(y_size//2, x_size//2, 200, percent*10, (200, 100, 100)).draw(screen)
     
-    fontObj = gameOutput.font.Font('freesansbold.ttf', 10)
+    fontObj = pygame.font.Font('freesansbold.ttf', 10)
     textSurfaceObj = fontObj.render(description, True, (0, 0, 0), (255, 255, 255))
     textRectObj = textSurfaceObj.get_rect()
     textRectObj.center = (x_size//2, y_size//2 - 125)
     screen.blit(textSurfaceObj, textRectObj) 
     
-    gameOutput.display.flip()
+    pygame.display.flip()
 
             
 
@@ -1837,11 +1836,11 @@ if __name__ == '__main__':
     """
         Запуск генератора отдельно от игры
     """
-    gameOutput.init()
+    pygame.init()
 
     dispay_size = [1200, 750]
-    screen = gameOutput.display.set_mode(dispay_size, FULLSCREEN | DOUBLEBUF)
-    gameOutput.display.set_caption("My Game")
+    screen = pygame.display.set_mode(dispay_size)
+    pygame.display.set_caption("My Game")
 
     #                                global_region_grid | region_grid | chunks_grid | mini_region_grid | tile_field_grid
     global_map = master_map_generate(       2,                2,            2,            5,                 5,    screen)
