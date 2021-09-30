@@ -347,6 +347,7 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
         1) Изменение смещения и количества промежуточных шагов в зависимости от времени, потраченного на основной кадр
 
     """
+
     time_1 = time.time()  # проверка времени выполнения
 
     size_tile = 30  # Настройка размера тайлов игрового окна
@@ -395,7 +396,6 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
 
             # Отрисовка НПЦ
             entities_layer = entities_layer_calculations(person, chunk_size, go_to_print, enemy_list)
-
             for number_line in range(chunk_size):
                 for number_tile in range(chunk_size):
                     if entities_layer[number_line][number_tile].icon != '0':
