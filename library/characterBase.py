@@ -9,7 +9,7 @@ import gameOutput
 import sys
 import pickle
 import logging
-from library.path import Path
+from library.characterPath import Path
 
 
 garbage = ['░', '▒', '▓', '█', '☺']
@@ -185,14 +185,6 @@ class Person:
             self.global_position = [self.assemblage_point[0] + 1, self.assemblage_point[1] + 1]
             self.number_chunk = 3
 
-class Interfase:
-    """ Содержит элементы для последующего вывода на экран """
-    def __init__(self, game_field, biom_map, minimap_on):
-        self.game_field = game_field
-        self.biom_map = biom_map
-        self.minimap_on = minimap_on
-        self.point_to_draw = [0,0]
-
 class Action_in_map:
     """ Содержит в себе описание активности и срок её жизни """
     __slots__ = ('name', 'icon', 'description', 'lifetime', 'birth', 'global_position', 'local_position', 'caused',
@@ -310,9 +302,9 @@ class Character:
         local_position = [world_position[0]%self.chunk_size, world_position[1]%self.chunk_size]
         return global_position, local_position
 
-    def character_waypoints_move(self, activity_list, step):
+    def character_local_move(self, activity_list, step):
         """
-            Передвижение персонажа по локальным вейпоинтам
+            Передвижение персонажа по локальным вейпоинтам # FIXME УСТАРЕЛО
         """
         if self.local_waypoints:
             #Добавляются следы
@@ -326,36 +318,6 @@ class Character:
             self.global_position = [self.local_waypoints[0][3][0], self.local_waypoints[0][3][1]]
             self.local_position = [self.local_waypoints[0][0], self.local_waypoints[0][1]]
             self.local_waypoints.pop(0)
-
-    def character_direction_calculation(self):
-        """
-            Определяет направление движения персонажа
-        """
-        if self.global_position == [self.local_waypoints[0][3][0], self.local_waypoints[0][3][1]]:
-            if self.local_position == [self.local_waypoints[0][0] - 1, self.local_waypoints[0][1]]:
-                self.direction = 'down'
-                self.type = 'd3'
-            elif self.local_position == [self.local_waypoints[0][0] + 1, self.local_waypoints[0][1]]:
-                self.direction = 'up'
-                self.type = 'u3'
-            elif self.local_position == [self.local_waypoints[0][0], self.local_waypoints[0][1] - 1]:
-                self.direction = 'right'
-                self.type = 'r3'
-            elif self.local_position == [self.local_waypoints[0][0], self.local_waypoints[0][1] + 1]:
-                self.direction = 'left'
-                self.type = 'l3'
-        elif self.global_position == [self.local_waypoints[0][3][0] - 1, self.local_waypoints[0][3][1]]:
-            self.direction = 'down'
-            self.type = 'd3'
-        elif self.global_position == [self.local_waypoints[0][3][0] + 1, self.local_waypoints[0][3][1]]:
-            self.direction = 'up'
-            self.type = 'u3'
-        elif self.global_position == [self.local_waypoints[0][3][0], self.local_waypoints[0][3][1] - 1]:
-            self.direction = 'right'
-            self.type = 'r3'
-        elif self.global_position == [self.local_waypoints[0][3][0], self.local_waypoints[0][3][1] + 1]:
-            self.direction = 'left'
-            self.type = 'l3'
 
     def character_check_global_position(self):
         """
@@ -392,9 +354,9 @@ class Character:
         """
             Определение всех нужных параметров
         """
-        self.check_vertices(global_map)
-        self.check_level(global_map)
-        self.check_world_position()
+        self.character_check_vertices(global_map)
+        self.character_check_level(global_map)
+        self.character_check_world_position()
         
     def character_reset_at_the_beginning(self):
         """
@@ -403,381 +365,13 @@ class Character:
         self.direction = 'center'
 
 class CharacterAction:
+    """
+        FIXME
+    """
     def __init__(self, type, details):
         self.type = type
         self.details = details
 
 
-class NPC(Character, Path):
-    """
-        Умные противники, обрабатываемые в каждый момент времени
-    """
-    def __init__(self, global_position, local_position, name, name_npc, icon, type, description, type_npc):
-        super().__init__(self, global_position, local_position, name, name_npc, icon, type, description, type_npc)
-        
-        # ЖИЗНЕННЫЕ ПОКАЗАТЕЛИ:
-        self.health = 100                           # Здоровье                              int
-        self.hunger = 100                           # Голод                                 int
-        self.thirst = 100                           # Жажда                                 int
-        self.fatigue = 100                          # Усталость                             int
-
-        # ЭКИПИРОВКА:
-        self.inventory = []                         # Инвентарь                             list
-        self.equipment = []                         # Экипировка                            list
-
-        # ПОВЕДЕНИЕ:
-        self.alarm = False                          # Атака, ожидание атаки.                bool
-        self.stealth = False                        # Скрытность                            bool
-        self.alertness = False                      # Настороженность                       bool
-        self.determination = 100                    # Решительность (качество персонажа)    int
-
-        # ОБРАБОТКА
-        self.status = []                            # Список текущего состояния             list
 
 
-
-    def npc_master_calculation(self, step, activity_list):
-        """
-            Обработка действий персонажа на текущем шаге
-        """
-        # Подготовка
-        self.character_check_all_position() #Родительский метод
-        self.character_reset_at_the_beginning() #Родительский метод
-        self.npc_new_step_check_status()
-
-        # Рассчёт действий
-        action = self.npc_checking_the_situation()
-
-        # Совершение действий
-        if action.type == 'move':
-            self.npc_move_calculations(action)
-            
-        elif action.type == 'activity':
-            self.npc_activity_calculations(action)
-            
-        elif action.type == 'attack':
-            self.npc_attack_calculations(action) 
-
-        elif action.type == 'getting_damaged':
-            self.npc_getting_damaged_calculations(action)
-
-        elif action.type == 'extra':
-            self.npc_extra_action_calculations(action)
-
-        else:
-            pass
-
-        # Рассчёт последствий
-        self.npc_consequences_calculation()
-
-    def npc_new_step_check_status(self):
-        """
-            Проверяет состояние персонажа на начало хода.
-        """
-        self.status = []
-        if self.health < 50:
-            self.status.append('injury')
-        elif self.hunger < 50:
-            self.status.append('hunger')
-        elif self.thirst < 50:
-            self.status.append('thirst')
-        elif self.fatigue < 50:
-            self.status.append('fatigue')
-
-    def npc_checking_the_situation(self):
-        """
-            Проверяет обстановку для решения дальнейших действий
-
-            Проверяет наличие опасности, наличие путевых точек, наличие неудовлетворённых потребностей.
-            Возвращат тип действия, совершаемого на данном шаге.
-        """
-
-        if self.alarm:
-            if 'injury' in self.status and 100 // self.determination > 0:
-                # тут указание преследователя для убегания от него
-                return CharacterAction('move', 'escape')
-            else:
-                return CharacterAction('attack', 'target')
-
-        elif 'injury' in self.status or 'hunger' in self.status or 'thirst' in self.status or \
-                                                                        'fatigue' in self.status:
-            if self.alertness:
-                return CharacterAction('activity', 'slow')
-            else:
-                return CharacterAction('activity', 'fast')
-        else:
-            return CharacterAction('move', 'details')
-        
-    def npc_move_calculations(self, action, activity_list, step):
-        """
-            Передвижение персонажа   ----- Можно заполнить уже готовой логикой из старой версии -----
-        """
-        if self.escape:
-            self.npc_escape_move()
-        if self.follow:
-            self.npc_follow_move()
-        elif self.activity:
-            self.npc_activity_move()
-        else:
-            self.npc_move()
-
-        self.character_waypoints_move(activity_list, step)
-
-    def npc_move(self):
-        """ Рассчёт перемещения в конкретную точку """
-        pass
-
-    def npc_escape_move(self):
-        """ Рассчёт бегства """
-    
-    def npc_follow_move(self, global_map, vertices_map):
-        """ Рассчёт преследования некоторого персонажа """
-        if self.vertices == self.follow.vertices:
-            if self.path_length(self.follow.world_position, self.local_waypoints[-1]) > 3:
-                self.local_waypoints = self._path_world_tiles_a_star_algorithm(global_map,
-                                                            self.world_position, self.target)
-        elif self.follow.vertices != self.global_waypoints:
-            self.global_waypoints = self._path_world_vertices_a_star_algorithm(vertices_map,
-                                                         self.vertices, self.follow.vertices)
-            self.local_waypionts = self.path_local_waypoints_calculate(self.world_position, global_map)
-
-        # передвижение
-        self.path_waypoints_move(self, global_map)
-                
-    
-    def npc_random_move(self):
-        """ Случайное перемещение или пропуск хода """
-        pass
-    
-    def npc_activity_move(self):
-        """ Перемещение всвязи с выполнением активности """
-        pass
-    
-    def npc_activity_calculations(self, action):
-        """
-            Выполнение и оставление активностей на карте, связанных с удовлетворением потребностей или
-            праздным времяпрепровожденим.
-        """
-        pass
-
-    def npc_attack_calculations(self, action):
-        """ Действия при атаке """
-        pass
-    
-    def npc_getting_damaged_calculations(self, action):
-        """ Получение повреждений """
-        pass
-    
-    def npc_extra_action_calculations(self, action):
-        """ Особенные действия NPC """
-        pass
-    
-    def npc_consequences_calculation(self):
-        """ Рассчёт последствий действий персонажа """
-        pass
-    
-
-class Creature(Character, Path):
-    """
-    Мелкие, необсчитываемые за кадром существа и противники
-
-    РЕАЛИЗОВАТЬ:
-    1) Изменение режима передвижения с полёта, на хождение по земле.
-    2) Изменение высоты полёта птиц, их иконки и тени под ними
-    """
-    def __init__(self, global_position, local_position, name, name_npc, icon, type, activity_map,
-                 person_description, speed, deactivation_tiles, fly, description, type_npc):
-        super().__init__(self, global_position, local_position, name, name_npc, icon, type, description, type_npc)
-        
-        self.fly = fly                              # Полёт                                 bool
-        self.steps_to_despawn = 30                  # Шагов до удаления                     int
-        self.deactivation_tiles = deactivation_tiles# Тайлы удаления                        tuple
-
-    def master_character_calculation(self):
-        """
-            Обработка действий существа на текущем шаге
-        """
-        # Подготовка
-        self.character_check_all_position() #Родительский метод
-        self.character_reset_at_the_beginning() #Родительский метод
-
-        # Рассчёт действий
-        action = self.creature_checking_the_situation()
-
-        # Совершение действий
-        if action.type == 'move':
-            self.creature_move_calculations(action)
-            
-        elif action.type == 'activity':
-            self.creature_activity_calculations(action)
-            
-        elif action.type == 'attack':
-            self.creature_attack_calculations(action) 
-
-        elif action.type == 'getting_damaged':
-            self.creature_getting_damaged_calculations(action)
-
-        elif action.type == 'extra':
-            self.creature_extra_action_calculations(action)
-
-        else:
-            pass
-
-        # Рассчёт последствий
-        self.creature_consequences_calculation()
-
-    def creature_checking_the_situation(self):
-        """
-            Оценивает ситуацию для существа
-        """
-        return CharacterAction('move', 'escape')
-
-    def creature_move_calculations(self, action, activity_list, step):
-        """
-            Передвижение существа   ----- Можно заполнить уже готовой логикой из старой версии -----
-        """
-        pass
-    
-    def creature_activity_calculations(self, action):
-        """
-            Выполнение и оставление активностей на карте, связанных с удовлетворением потребностей
-            или праздным времяпрепровожденим.
-        """
-        pass
-
-    def creature_attack_calculations(self, action):
-        """ Действия существа при атаке """
-        pass
-    
-    def creature_getting_damaged_calculations(self, action):
-        """ Получение повреждений существом """
-        pass
-    
-    def creature_extra_action_calculations(self, action):
-        """ Особенные действия существа """
-        pass
-    
-    def creature_consequences_calculation(self):
-        """ Рассчёт последствий действий существа """
-        pass
-
-    def if_deactivation_tiles(self, global_map):
-        """
-            Проверяет находится ли существо на тайле деактивации и выбрасывает шанс на диактивацию
-        """
-        if global_map[self.global_position[0]][self.global_position[1]].chunk[self.local_position[0]][
-                                                self.local_position[1]].icon in self.deactivation_tiles:
-            if random.randrange(20)//18 > 0:
-                self.delete = True
-
-    def in_dynamic_chunk(self, person):
-        """
-            Рассчитывает находится ли существо на динамическом чанке
-        """
-        if self.global_position in (person.assemblage_point, [person.assemblage_point[0] + 1, person.assemblage_point[1]],
-                               [person.assemblage_point[0], person.assemblage_point[1] + 1],
-                               [person.assemblage_point[0] + 1, person.assemblage_point[1] + 1]):
-            self.steps_to_despawn = 30
-        else:
-            self.steps_to_despawn -= 1
-        if self.steps_to_despawn <= 0:
-            self.delete = True
-        logging.debug(f"self.name_npc - {self.name_npc}, self.steps_to_despawn - {self.steps_to_despawn}, "
-                      f"self.delete - {self.delete}")
-
-    def simple_move(self, chunk_size, global_map):
-        """
-            Хаотичное рандомное движение с учётом препятствий
-        """
-        global_position_y = self.global_position[0]
-        global_position_x = self.global_position[1]
-        tile = global_map[global_position_y][global_position_x].chunk[self.local_position[0]][self.local_position[1]]
-        if random.randrange(2) == 0:
-            axis_y = random.randrange(-1, 2)
-            axis_x = 0
-        else:
-            axis_y = 0
-            axis_x = random.randrange(-1, 2)
-        local_position_y = self.local_position[0] + axis_y
-        if local_position_y > chunk_size - 1:
-            global_position_y += 1
-            local_position_y = 0
-        elif local_position_y < 0:
-            global_position_y -= 1
-            local_position_y = chunk_size - 1
-            
-        local_position_x = self.local_position[1] + axis_x
-        if local_position_x > chunk_size - 1:
-            global_position_x += 1
-            local_position_x = 0
-        elif local_position_x < 0:
-            global_position_x -= 1
-            local_position_x = chunk_size - 1
-
-        if 0 > global_position_y < chunk_size - 1:
-            global_position_y = 0
-            self.delete = True
-        if 0 > global_position_x < chunk_size - 1:
-            global_position_x = 0
-            self.delete = True
-
-        go_tile = global_map[global_position_y][global_position_x].chunk[local_position_y][local_position_x]
-
-        if (tile.level == go_tile.level or tile.stairs or go_tile.stairs) and not go_tile.icon in ('~', '▲'):
-            if axis_y == -1:
-                self.direction = 'up'
-            elif axis_y == 1:
-                self.direction = 'down'
-            elif axis_x == -1:
-                self.direction = 'left'
-            elif axis_x == 1:
-                self.direction = 'right'
-            self.global_position = [global_position_y, global_position_x]
-            self.local_position = [local_position_y, local_position_x]
-
-    def fly_simple_move(self, chunk_size):
-        """
-            Хаотичное рандомное движение без учёта препятствий
-        """
-        global_position_y = self.global_position[0]
-        global_position_x = self.global_position[1]
-        if random.randrange(2) == 0:
-            axis_y = random.randrange(-1, 2)
-            axis_x = 0
-        else:
-            axis_y = 0
-            axis_x = random.randrange(-1, 2)
-        local_position_y = self.local_position[0] + axis_y
-        if local_position_y > chunk_size - 1:
-            global_position_y += 1
-            local_position_y = 0
-        elif local_position_y < 0:
-            global_position_y -= 1
-            local_position_y = chunk_size - 1
-            
-        local_position_x = self.local_position[1] + axis_x
-        if local_position_x > chunk_size - 1:
-            global_position_x += 1
-            local_position_x = 0
-        elif local_position_x < 0:
-            global_position_x -= 1
-            local_position_x = chunk_size - 1
-
-        if 0 > global_position_y < chunk_size - 1:
-            global_position_y = 0
-            self.delete = True
-        if 0 > global_position_x < chunk_size - 1:
-            global_position_x = 0
-            self.delete = True
-
-        if axis_y == -1:
-            self.direction = 'up'
-        elif axis_y == 1:
-            self.direction = 'down'
-        elif axis_x == -1:
-            self.direction = 'left'
-        elif axis_x == 1:
-            self.direction = 'right'
-            
-        self.global_position = [global_position_y, global_position_x]
-        self.local_position = [local_position_y, local_position_x]

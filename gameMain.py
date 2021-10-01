@@ -5,7 +5,7 @@ import pickle
 import logging
 from library import mapGenerator
 from library.resources import loading_all_sprites, minimap_dict_create
-from library.classes import World, Person, Interfase
+from library.classes import World, Person, Interfaсe
 from library.gameEvents import return_npc, master_game_events
 from library.gameOutput import master_pygame_draw, Offset_sprites
 from library.gameInput import calculation_assemblage_point, master_player_action
@@ -346,7 +346,7 @@ def game_loop(global_map:list, person, chunk_size:int, enemy_list:list, world, s
         activity_list = load_pack[0]
         step = load_pack[1]
         
-    go_to_print = Interfase([], [], True)
+    go_to_print = Interfaсe([], [], True)
     global changing_step
     mode_action = 'move'
     clock = pygame.time.Clock()#

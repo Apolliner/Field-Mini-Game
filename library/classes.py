@@ -147,7 +147,7 @@ class Person:
             self.number_chunk = 3
 
 
-class Interfase:
+class Interfaсe:
     """ Содержит элементы для последующего вывода на экран """
 
     def __init__(self, game_field, biom_map, minimap_on):

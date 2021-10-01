@@ -42,13 +42,13 @@ class Path:
     def path_direction_calculation(self, start, finish):
         """ Определяет направление движения """
         if [start[0] - 1, start[1]] == finish:
-            return 'up'
+            return 'up', 'u3'
         elif [start[0] + 1, start[1]] == finish:
-            return 'down'
+            return 'down', 'd3'
         elif [start[0], start[1] - 1] == finish:
-            return 'left'
+            return 'left', 'l3'
         elif [start[0], start[1] + 1] == finish:
-            return 'right'
+            return 'right', 'r3'
 
     def path_world_tile(self, global_map, world_position):
         """
@@ -65,10 +65,10 @@ class Path:
         global_position = [world_position[0] // self.chunk_size, world_position[1] // self.chunk_size]
         return global_map[global_position[0]][global_position[1]]
 
-    def path_waypoints_move(self, global_map):
-        """ Рассчёт перемещения в конкретную точку """
+    def path_local_move(self, global_map):
+        """ Перемещения к очередному локальному вейпоинту """
         waypoint = self.local_waypoints.pop(0)
-        self.direction = self.path_direction_calculation(self.world_position, waypoint)
+        self.direction, self.type = self.path_direction_calculation(self.world_position, waypoint)
         self.global_position, self.local_position = self.path_world_position_recalculation(waypoint)
         self.vertices = self.path_world_tile(global_map, waypoint)
 

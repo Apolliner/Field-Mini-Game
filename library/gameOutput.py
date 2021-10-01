@@ -328,7 +328,7 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
                        minimap_surface, minimap_dict, sprites_dict, offset_sprites, landscape_layer, activity_layer,
                        entities_layer, finishing_surface, settings_for_intermediate_steps, mouse_position, raw_minimap):
     """
-        Работает с классом Interfase, содержащимся в go_to_print
+        Работает с классом Interfaсe, содержащимся в go_to_print
 
         Формирует 4 слоя итогового изображения:
             1) Ландшафт
