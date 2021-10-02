@@ -250,6 +250,29 @@ class Action_in_map:
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 """
+class Target:
+    """ Содержит описание задачи, выполняемой персонажем """
+    def __init__(self, type, entity, position, create_step, lifetime):
+        self.type = type
+        self.entity = entity
+        self.position = position
+        self.create_step = create_step
+        self.lifetime = lifetime
+
+    def get_position(self):
+        """ Возвращает позицию из цели """
+        if self.entity == None:
+            return self.entity.world_position
+        return self.position
+
+    @staticmethod
+    def get_target():
+        """ По запросу возвращает цель """  # FIXME Пока заглушка
+        target_dict = {
+                'move':{'type': 'move', 'entity': None, 'position': None, 'lifetime': 1000}
+        }
+        return Target(type=None, entity=None, position=None, create_step=None, lifetime=None)
+
 class Character:
     """
         Базовый класс для всех NPC
@@ -270,7 +293,8 @@ class Character:
 
         # ТЕХНИЧЕСКИЕ ДАННЫЕ
         self.activity = []                          # Текущая активность персонажа          list
-        self.target = []                            # Текущая цель перемещения и действия   [world_y, world_x, vertices, type, description, condition]
+        self.target = list()                        # Текущая цель перемещения и действия   [world_y, world_x, vertices, type, description, condition]
+        self.past_target = list()                   # Предыдущая цель                       list
         self.follow = []                            # Цель для следования или преследования [follow_character, 'type_follow', расстояние остановки:int]
         self.escape = []                            # Бегство от                            list
         self.delete = False                         # Удаление персонажа из мира            bool
@@ -319,16 +343,6 @@ class Character:
             self.local_position = [self.local_waypoints[0][0], self.local_waypoints[0][1]]
             self.local_waypoints.pop(0)
 
-    def character_check_global_position(self):
-        """
-            Определение глобальной позиции
-        """
-        pass
-    def character_check_local_position(self):
-        """
-            Определение локальной позиции
-        """
-        pass
     def character_check_world_position(self):
         """
             Определение мировой позиции

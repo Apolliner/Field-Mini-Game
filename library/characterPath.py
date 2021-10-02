@@ -81,13 +81,13 @@ class Path:
         if not self.global_waypoints and not self.local_waypoints:
 
             # Если совпадают глобальные положения с целью
-            if self.vertices == self.world_tile(self, global_map, self.target).vertices:
+            if self.vertices == self.world_tile(self, global_map, self.target.get_position()).vertices:
                 self.local_waypoints = self._path_world_tiles_a_star_algorithm(global_map,
-                                                         self.world_position, self.target)
+                                                         self.world_position, self.target.get_position())
             # Если глобальные положения различаются
             else:
                 self.global_waypoints = self._path_world_vertices_a_star_algorithm(vertices_graph,
-                                                                 self.world_position, self.target)
+                                                                 self.world_position, self.target.get_position())
                 self.local_waypoints = self.path_local_waypoints_calculate(self)
 
         # Есть глобальные, но нет локальных вейпоинтов
@@ -205,7 +205,7 @@ class Path:
                 success = False
                 general_loop = False
 
-                self.target = []
+                self.target = None
 
             node_connections(vertices_map, graph, node, finish_vertices, verified_vertices)
 
@@ -231,7 +231,7 @@ class Path:
                             min_price = graph[number_node].price
                             number_finish_node = number_node
 
-                    self.target = []
+                    self.target = None
                     success = False
                     general_loop = False
 
