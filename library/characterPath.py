@@ -72,9 +72,19 @@ class Path:
         self.global_position, self.local_position = self.path_world_position_recalculation(waypoint)
         self.vertices = self.path_world_tile(global_map, waypoint)
 
+    def path_escape_calculate(self, global_map, vertices_graph):
+        """
+            Рассчитывает точку бегства для персонажа и локальные вейпоинты к ней
+            Возможно потребуется модифицированный алгоритм A* развёрнутый наоборот
+            То есть чем ближе к противнику от которого убегает персонаж, тем дороже стоимость вершины до него.
+            Финальной выбирается самая дешёвая точка после 250-300 циклов.
+        """
+        pass
+
     def path_calculate(self, global_map, vertices_graph):
         """
             Принимает старт и финиш в виде мировых координат, а так же глобальную карту и граф зон доступности для рассчёта пути.
+
         """
 
         # Если нет ни глобальных ни локальных вейпоинтов

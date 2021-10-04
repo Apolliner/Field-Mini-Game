@@ -73,6 +73,13 @@ class NPC(Character, Path):
                 else:
                     я стою
 
+        elif я атакую?
+            if я атакую ту же цель?
+                if дальний бой?
+                    pass
+                elif ближний бой?
+                    pass
+
     """
 
     def __init__(self, global_position, local_position, name, name_npc, icon, type, description, type_npc):
@@ -150,7 +157,7 @@ class NPC(Character, Path):
             Проверяет обстановку для решения дальнейших действий
 
             Проверяет наличие опасности, наличие путевых точек, наличие неудовлетворённых потребностей.
-            Возвращат тип действия, совершаемого на данном шаге.
+            Возвращает тип действия, совершаемого на данном шаге.
         """
 
         if self.alarm:
@@ -185,23 +192,63 @@ class NPC(Character, Path):
         self.path_local_move(global_map)
 
     def npc_move(self, global_map, vertices_graph):
-        """ Рассчёт перемещения в конкретную точку """
-        self.path_calculate(self, global_map, vertices_graph)
+        """
+            Рассчёт перемещения в конкретную точку
 
-        self.path_local_move(global_map)
+            if я просто иду?:
+                if моя текущая цель это туда? and есть вейпоинты?:
+                    если да, то иду
+                else:
+                    считаю вейпоинты
+                    и иду
+        """
+        if self.target == self.past_target and self.local_waypoints:
+            self.path_local_move(global_map)
+        else:
+            self.path_calculate(self, global_map, vertices_graph)
 
-    def npc_escape_move(self):
-        """ Рассчёт бегства """
-        pass
+    def npc_escape_move(self, global_map, vertices_graph):
+        """
+            Рассчёт бегства
 
-    def npc_follow_move(self, global_map, vertices_map):
-        """ Рассчёт преследования некоторого персонажа """
+            elif я убегаю?
+                if я всё так же убегаю? and есть вейпоинты?
+                    бегу
+                else:
+                    считаю вейпоинты
+                    и иду
+        """
+        if self.target == self.past_target and self.local_waypoints:
+            self.path_local_move(global_map)
+        else:
+            self.path_escape_calculate(self, global_map, vertices_graph)
+
+    def npc_follow_move(self, global_map, vertices_graph):
+        """
+            Рассчёт преследования некоторого персонажа
+
+            elif я преследую?:
+                if моя текущая цель это та? and есть вейпоинты? and если цель не далеко ушла:
+                    иду по старым вейпоинтам
+                else:
+                    считаю вейпоинты
+                    и иду
+        """
+        if self.target == self.past_target and self.local_waypoints and self.npc_follow_check(global_map, vertices_graph):
+            self.path_local_move(global_map)
+        else:
+            self.path_calculate(self, global_map, vertices_graph)
+
+    def npc_follow_check(self, global_map, vertices_graph):
+        """
+            Проверяет актуальны ли глобальные и локальные координаты преследуемой цели FIXME Всё переделать
+        """
         if self.vertices == self.follow.vertices:
             if self.path_length(self.follow.world_position, self.local_waypoints[-1]) > 3:
                 self.local_waypoints = self._path_world_tiles_a_star_algorithm(global_map,
                                                                                self.world_position, self.target)
         elif self.follow.vertices != self.global_waypoints:
-            self.global_waypoints = self._path_world_vertices_a_star_algorithm(vertices_map,
+            self.global_waypoints = self._path_world_vertices_a_star_algorithm(vertices_graph,
                                                                                self.vertices, self.follow.vertices)
             self.local_waypionts = self.path_local_waypoints_calculate(self.world_position, global_map)
 
@@ -216,12 +263,30 @@ class NPC(Character, Path):
         """ Перемещение всвязи с выполнением активности """
         pass
 
-    def npc_activity_calculations(self, action):
+    def npc_activity_calculations(self, action, global_map, vertices_graph):
         """
             Выполнение и оставление активностей на карте, связанных с удовлетворением потребностей или
             праздным времяпрепровожденим.
+            elif я совершаю действие?
+                if я совершаю все то же действие? and if я всё на том же этапе? qnd
+                    if я иду?
+                        if у меня есть вейпоинты?
+                            иду по вейпоинтам
+                        else:
+                            считаю вейпоинты
+                            и иду
+                    else:
+                        я стою
         """
-        pass
+        if self.target == self.past_target:
+            if self.target.type == 'move':
+                if self.local_waypoints:
+                    self.path_local_move(global_map)
+                else:
+                    self.path_calculate(self, global_map, vertices_graph)
+            else:
+                pass
+
 
     def npc_attack_calculations(self, action):
         """ Действия при атаке """
