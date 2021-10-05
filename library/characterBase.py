@@ -265,6 +265,20 @@ class Target:
             return self.entity.world_position
         return self.position
 
+    def get_vertices(self, global_map):
+        """ Возвращает номер зоны доступности цели """
+        if self.entity == None:
+            return self._return_vertices(self.entity.world_position, global_map)
+        return self._return_vertices(self.position, global_map)
+
+    def _return_vertices(self, world_position, global_map):
+        """
+            Принимает мировые координаты и размер чанка, возвращает глобальные и локальные координаты.
+        """
+        global_position = [world_position[0] // self.chunk_size, world_position[1] // self.chunk_size]
+        local_position = [world_position[0] % self.chunk_size, world_position[1] % self.chunk_size]
+        return global_map[global_position[0]][global_position[1]].chunk[local_position[0]][local_position[1]].vertices
+
     @staticmethod
     def get_target():
         """ По запросу возвращает цель """  # FIXME Пока заглушка

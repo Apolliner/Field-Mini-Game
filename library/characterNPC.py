@@ -1,3 +1,4 @@
+import copy
 import random
 import logging
 from library.characterBase import Character, CharacterAction
@@ -80,6 +81,9 @@ class NPC(Character, Path):
                 elif ближний бой?
                     pass
 
+        ДОПОЛНЕНИЯ:
+        self.escape и self.follow содержат в себе либо None либо цель
+
     """
 
     def __init__(self, global_position, local_position, name, name_npc, icon, type, description, type_npc):
@@ -92,8 +96,8 @@ class NPC(Character, Path):
         self.fatigue = 100  # Усталость                                 int
 
         # ЭКИПИРОВКА:
-        self.inventory = []  # Инвентарь                                list
-        self.equipment = []  # Экипировка                               list
+        self.inventory = list()  # Инвентарь                            list
+        self.equipment = list()  # Экипировка                           list
 
         # ПОВЕДЕНИЕ:
         self.alarm = False  # Атака, ожидание атаки.                    bool
@@ -102,7 +106,8 @@ class NPC(Character, Path):
         self.determination = 100  # Решительность (качество персонажа)  int
 
         # ОБРАБОТКА
-        self.status = []  # Список текущего состояния             list
+        self.status = list()  # Список текущего состояния               list
+        self.memory = list()
 
     def npc_master_calculation(self, step, activity_list):
         """
@@ -137,6 +142,8 @@ class NPC(Character, Path):
 
         # Рассчёт последствий
         self.npc_consequences_calculation()
+
+        self.past_target = copy.deepcopy(self.target)
 
     def npc_new_step_check_status(self):
         """
@@ -185,7 +192,7 @@ class NPC(Character, Path):
         if self.follow:
             self.npc_follow_move()
         elif self.activity:
-            self.npc_activity_move()
+            self.npc_activity_move(global_map, vertices_graph)
         else:
             self.npc_move(global_map, vertices_graph)
 
@@ -234,36 +241,28 @@ class NPC(Character, Path):
                     считаю вейпоинты
                     и иду
         """
-        if self.target == self.past_target and self.local_waypoints and self.npc_follow_check(global_map, vertices_graph):
+        if self.target == self.past_target and self.local_waypoints and self.npc_follow_check(global_map):
             self.path_local_move(global_map)
         else:
             self.path_calculate(self, global_map, vertices_graph)
 
-    def npc_follow_check(self, global_map, vertices_graph):
+    def npc_follow_check(self, global_map):
         """
-            Проверяет актуальны ли глобальные и локальные координаты преследуемой цели FIXME Всё переделать
+            Проверяет актуальны ли глобальные и локальные координаты преследуемой цели
         """
-        if self.vertices == self.follow.vertices:
-            if self.path_length(self.follow.world_position, self.local_waypoints[-1]) > 3:
-                self.local_waypoints = self._path_world_tiles_a_star_algorithm(global_map,
-                                                                               self.world_position, self.target)
-        elif self.follow.vertices != self.global_waypoints:
-            self.global_waypoints = self._path_world_vertices_a_star_algorithm(vertices_graph,
-                                                                               self.vertices, self.follow.vertices)
-            self.local_waypionts = self.path_local_waypoints_calculate(self.world_position, global_map)
-
-        # передвижение
-        self.path_local_move(self, global_map)
+        if self.vertices == self.target.get_vertices():
+            if self.path_length(self.target.world_position, self.local_waypoints[-1]) > 3:
+                return False
+            return True
+        elif self.target.get_vertices(global_map) == self.global_waypoints[-1]:
+            return True
+        return False
 
     def npc_random_move(self):
         """ Случайное перемещение или пропуск хода """
         pass
 
-    def npc_activity_move(self):
-        """ Перемещение всвязи с выполнением активности """
-        pass
-
-    def npc_activity_calculations(self, action, global_map, vertices_graph):
+    def npc_activity_move(self, global_map, vertices_graph):
         """
             Выполнение и оставление активностей на карте, связанных с удовлетворением потребностей или
             праздным времяпрепровожденим.
@@ -287,6 +286,9 @@ class NPC(Character, Path):
             else:
                 pass
 
+    def npc_activity_calculations(self):
+        """ Первоначальные рассчёты совершения активности """
+        pass
 
     def npc_attack_calculations(self, action):
         """ Действия при атаке """
