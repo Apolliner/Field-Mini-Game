@@ -87,7 +87,7 @@ class NPC(Character, Path):
     """
 
     def __init__(self, global_position, local_position, name, name_npc, icon, type, description, type_npc):
-        super().__init__(self, global_position, local_position, name, name_npc, icon, type, description, type_npc)
+        super().__init__(global_position, local_position, name, name_npc, icon, type, description, type_npc)
 
         # ЖИЗНЕННЫЕ ПОКАЗАТЕЛИ:
         self.health = 100  # Здоровье                                   int
@@ -109,12 +109,12 @@ class NPC(Character, Path):
         self.status = list()  # Список текущего состояния               list
         self.memory = list()
 
-    def npc_master_calculation(self, step, activity_list):
+    def npc_master_calculation(self, step, activity_list, global_map, vertices_graph):
         """
             Обработка действий персонажа на текущем шаге
         """
         # Подготовка
-        self.character_check_all_position()  # Родительский метод
+        self.character_check_all_position(global_map)  # Родительский метод
         self.character_reset_at_the_beginning()  # Родительский метод
         self.npc_new_step_check_status()
 
@@ -123,7 +123,7 @@ class NPC(Character, Path):
 
         # Совершение действий
         if action.type == 'move':
-            self.npc_move_calculations(action)
+            self.npc_move_calculations(action, activity_list, step, global_map, vertices_graph)
 
         elif action.type == 'activity':
             self.npc_activity_calculations(action)
@@ -212,7 +212,7 @@ class NPC(Character, Path):
         if self.target == self.past_target and self.local_waypoints:
             self.path_local_move(global_map)
         else:
-            self.path_calculate(self, global_map, vertices_graph)
+            self.path_calculate(global_map, vertices_graph)
 
     def npc_escape_move(self, global_map, vertices_graph):
         """

@@ -5,7 +5,7 @@ import string
 import keyboard
 import time
 import math
-import gameOutput
+from library import gameOutput
 import sys
 import pickle
 import logging

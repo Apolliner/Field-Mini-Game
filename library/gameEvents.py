@@ -3,6 +3,7 @@ import random
 import copy
 import math
 from library.classes import Action_in_map, Global_interact
+from library.characterNPC import NPC
 
 """
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -15,14 +16,14 @@ from library.classes import Action_in_map, Global_interact
 
 
 def master_game_events(global_map, enemy_list, person, go_to_print, step, activity_list, chunk_size, interaction, world,
-                       global_interaction):
+                       global_interaction, vertices_graph):
     """
         Здесь происходят все события, не связанные с пользовательским вводом
     """
     interaction_processing(global_map, interaction, enemy_list, step, chunk_size, activity_list, global_interaction)
     activity_list_check(activity_list, step)
     master_npc_calculation(global_map, enemy_list, person, go_to_print, step, activity_list, chunk_size, interaction,
-                           world)
+                           world, vertices_graph)
     global_interaction_processing(global_map, enemy_list, step, chunk_size, activity_list, global_interaction)
 
 
@@ -689,7 +690,7 @@ def return_npc(global_position, local_position, key):
 
 
 def master_npc_calculation(global_map, enemy_list, person, go_to_print, step, activity_list, chunk_size, interaction,
-                           world):
+                           world, vertices_graph):
     """
         Здесь происходят все события, связанные с NPC
 
@@ -699,10 +700,14 @@ def master_npc_calculation(global_map, enemy_list, person, go_to_print, step, ac
     delete_list = []
     for number_enemy, enemy in enumerate(enemy_list):
         enemy.direction = 'center'
-        enemy.all_description_calculation()
+        if not isinstance(enemy, NPC):
+            enemy.all_description_calculation()
         if not enemy.delete:
+            # Если это новый тип противника
+            if isinstance(enemy, NPC):
+                enemy.npc_master_calculation(step, activity_list, global_map, vertices_graph)
             # Если это противник
-            if isinstance(enemy, Enemy):
+            elif isinstance(enemy, Enemy):
 
                 enemy.level = \
                 global_map[enemy.global_position[0]][enemy.global_position[1]].chunk[enemy.local_position[0]][

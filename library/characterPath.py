@@ -91,7 +91,7 @@ class Path:
         if not self.global_waypoints and not self.local_waypoints:
 
             # Если совпадают глобальные положения с целью
-            if self.vertices == self.world_tile(self, global_map, self.target.get_position()).vertices:
+            if self.vertices == self.path_world_tile(self, global_map, self.target.get_position()).vertices:
                 self.local_waypoints = self._path_world_tiles_a_star_algorithm(global_map,
                                                          self.world_position, self.target.get_position())
             # Если глобальные положения различаются

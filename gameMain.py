@@ -10,6 +10,7 @@ from library.gameEvents import return_npc, master_game_events
 from library.gameOutput import master_pygame_draw, Offset_sprites
 from library.gameInput import calculation_assemblage_point, master_player_action
 from library.gamePassStep import master_pass_step, new_step_calculation
+from library.characterNPC import NPC
 
 
 garbage = ['░', '▒', '▓', '█', '☺']
@@ -69,11 +70,11 @@ garbage = ['░', '▒', '▓', '█', '☺']
 
 """
 
-def save_map(global_map, minimap):
+def save_map(global_map, minimap, vertices_graph):
     """
         Сохранение игровой карты через pickle
     """
-    all_save = [global_map, minimap]
+    all_save = [global_map, minimap, vertices_graph]
 
     with open("save/saved_map.pkl", "wb") as fp:
         pickle.dump(all_save, fp)
@@ -85,13 +86,13 @@ def load_map():
     with open("save/saved_map.pkl", "rb") as fp:
         all_load = pickle.load(fp)
     
-    return all_load[0], all_load[1]
+    return all_load[0], all_load[1], all_load[2]
 
-def save_game(global_map, person, chunk_size, enemy_list, raw_minimap, activity_list, step):
+def save_game(global_map, person, chunk_size, enemy_list, raw_minimap, activity_list, step, vertices_graph):
     """
         Сохраняет игровой процесс
     """
-    all_save = [global_map, person, chunk_size, enemy_list, raw_minimap, activity_list, step]
+    all_save = [global_map, person, chunk_size, enemy_list, raw_minimap, activity_list, step, vertices_graph]
 
     with open("save/save_game.pkl", "wb") as fp:
         pickle.dump(all_save, fp)
@@ -103,7 +104,7 @@ def load_game():
     with open("save/save_game.pkl", "rb") as fp:
         all_load = pickle.load(fp)
         
-    return all_load[0], all_load[1], all_load[2], all_load[3], all_load[4], all_load[5], all_load[6]
+    return all_load[0], all_load[1], all_load[2], all_load[3], all_load[4], all_load[5], all_load[6], all_load[7]
 
 
 class button_rect(pygame.sprite.Sprite):
@@ -180,9 +181,9 @@ def preparing_a_new_game(global_region_grid, region_grid, chunks_grid, mini_regi
     world = World() #Описание текущего состояния игрового мира
 
     game_loop(global_map, person, chunk_size, enemy_list, world, screen, raw_minimap, True, [],
-              sprites_dict, minimap_dict)
+              sprites_dict, minimap_dict, vertices_graph)
 
-def in_game_main_loop(screen, global_map, person, chunk_size, enemy_list, raw_minimap, activity_list, step):
+def in_game_main_loop(screen, global_map, person, chunk_size, enemy_list, raw_minimap, activity_list, step, vertices_graph):
     """
         Меню в уже загруженной игре
     """
@@ -201,7 +202,7 @@ def in_game_main_loop(screen, global_map, person, chunk_size, enemy_list, raw_mi
         if menu_selection == 'continue the game' and button_selection:
             in_game_main_loop = False
         if menu_selection == 'save game' and button_selection:
-            save_game(global_map, person, chunk_size, enemy_list, raw_minimap, activity_list, step)
+            save_game(global_map, person, chunk_size, enemy_list, raw_minimap, activity_list, step, vertices_graph)
             in_game_main_loop = False
         if menu_selection == 'end game' and button_selection: #Закрытие игры
             in_game_main_loop = False
@@ -300,17 +301,17 @@ def main_loop():
         if menu_selection == 'load_game' and button_selection:
             menu_selection = 'new_game'
             button_selection = False
-            global_map, person, chunk_size, enemy_list, raw_minimap, activity_list, step = load_game()
+            global_map, person, chunk_size, enemy_list, raw_minimap, activity_list, step, vertices_graph = load_game()
             world = World() #Описание текущего состояния игрового мира\
 
             game_loop(global_map, person, chunk_size, enemy_list, world, screen, raw_minimap, False,
-                      [activity_list, step], sprites_dict, minimap_dict)
+                      [activity_list, step], sprites_dict, minimap_dict, vertices_graph)
             master_game_menu_draw(screen, dispay_size, menu_selection, button_selection, menu_list)
             
         if menu_selection == 'load_map' and button_selection:
             menu_selection = 'new_game'
             button_selection = False
-            global_map, raw_minimap = load_map()
+            global_map, raw_minimap, vertices_graph = load_map()
                 
             person = Person([2, 2], [2, 2], [], [chunk_size//2, chunk_size//2], [chunk_size//2, chunk_size//2])
             calculation_assemblage_point(global_map, person, chunk_size)
@@ -322,7 +323,7 @@ def main_loop():
             world = World() #Описание текущего состояния игрового мира
 
             game_loop(global_map, person, chunk_size, enemy_list, world, screen, raw_minimap, True, [],
-                      sprites_dict, minimap_dict)
+                      sprites_dict, minimap_dict, vertices_graph)
             master_game_menu_draw(screen, dispay_size, menu_selection, button_selection, menu_list)
 
         if menu_selection == 'exit_game' and button_selection: #Закрытие игры
@@ -333,7 +334,7 @@ def main_loop():
             master_game_menu_draw(screen, dispay_size, menu_selection, button_selection, menu_list)
 
 def game_loop(global_map:list, person, chunk_size:int, enemy_list:list, world, screen, raw_minimap,
-              new_game:bool, load_pack:list, sprites_dict:dict, minimap_dict:dict):
+              new_game:bool, load_pack:list, sprites_dict:dict, minimap_dict:dict, vertices_graph):
     """
         Здесь происходят все игровые события
         
@@ -341,7 +342,7 @@ def game_loop(global_map:list, person, chunk_size:int, enemy_list:list, world, s
     if new_game:
         activity_list = []
         step = 0
-        save_map(global_map, raw_minimap) #тестовое сохранение карты
+        save_map(global_map, raw_minimap, vertices_graph) #тестовое сохранение карты
     else:
         activity_list = load_pack[0]
         step = load_pack[1]
@@ -373,7 +374,8 @@ def game_loop(global_map:list, person, chunk_size:int, enemy_list:list, world, s
                                             go_to_print, global_map, mode_action, enemy_list, activity_list, screen, minimap_surface,
                                             minimap_dict, sprites_dict, offset_sprites, landscape_layer, activity_layer,
                                             entities_layer, finishing_surface, settings_for_intermediate_steps, mouse_position, raw_minimap)
-    
+
+    #enemy_list.append(NPC([2, 2], [2, 2], 'new_riffleman', 'new_riffleman', '☻', 'd0', 'Тестовый NPC', 'new_riffleman'))
     print('game_loop запущен')
     game_loop = True
     while game_loop:
@@ -396,7 +398,8 @@ def game_loop(global_map:list, person, chunk_size:int, enemy_list:list, world, s
         calculation_assemblage_point(global_map, person, chunk_size) # Рассчёт динамического чанка
         #all_pass_step_calculations(person, enemy_list, mode_action, interaction)
         if not person.enemy_pass_step and not person.pointer_step:
-            master_game_events(global_map, enemy_list, person, go_to_print, step, activity_list, chunk_size, interaction, world, global_interaction)
+            master_game_events(global_map, enemy_list, person, go_to_print, step, activity_list, chunk_size,
+                               interaction, world, global_interaction, vertices_graph)
         screen, landscape_layer, activity_layer, entities_layer, offset_sprites, finishing_surface, settings_for_intermediate_steps = master_pygame_draw(
                                         person, chunk_size, go_to_print, global_map, mode_action, enemy_list, activity_list, screen, minimap_surface,
                                         minimap_dict, sprites_dict, offset_sprites, landscape_layer, activity_layer,
