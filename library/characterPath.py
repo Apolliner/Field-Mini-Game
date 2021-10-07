@@ -101,8 +101,8 @@ class Path:
                 self.local_waypoints = self.path_local_waypoints_calculate(self)
 
         # Есть глобальные, но нет локальных вейпоинтов
-        elif self.global_waypoint and not self.local_waypoints:
-            self.local_waypoints = self.path_local_waypoints_calculate(self)
+        elif self.global_waypoints and not self.local_waypoints:
+            self.local_waypoints = self.path_local_waypoints_calculate(self, global_map)
 
         # Если есть куда двигаться
         if self.local_waypoints:
@@ -112,14 +112,13 @@ class Path:
         """
             Рассчитывает локальные вейпоинты для передвижения
         """
-        direction = self.path_direction_calculation(self.path_world_tile(self, global_map,
-                                            self.world_position), self.global_waypoint[0])
+        direction = self.path_direction_calculation(self.world_position, self.global_waypoints[0])
         finish_point = []
 
         for vertices in self.path_world_location(global_map, start_point).vertices:
             if vertices.number == self.start_vertices:
                 for connect in vertices.connections:
-                    if connect.number == self.waypoints[0]:
+                    if connect.number == self.global_waypoints[0]:
                         finish = random.choice(connect.tiles)
                         raw_finish_point = self.path_world_position_calculate(vertices.position,
                                         finish)  # Преобразование в мировые координаты

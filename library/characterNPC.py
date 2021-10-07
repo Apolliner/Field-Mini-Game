@@ -1,7 +1,7 @@
 import copy
 import random
 import logging
-from library.characterBase import Character, CharacterAction
+from library.characterBase import Character, CharacterAction, Target
 from library.characterPath import Path
 
 
@@ -119,7 +119,7 @@ class NPC(Character, Path):
         self.npc_new_step_check_status()
 
         # Рассчёт действий
-        action = self.npc_checking_the_situation()
+        action = self.npc_checking_the_situation(vertices_graph)
 
         # Совершение действий
         if action.type == 'move':
@@ -159,7 +159,7 @@ class NPC(Character, Path):
         elif self.fatigue < 50:
             self.status.append('fatigue')
 
-    def npc_checking_the_situation(self):
+    def npc_checking_the_situation(self, vertices_graph):
         """
             Проверяет обстановку для решения дальнейших действий
 
@@ -180,8 +180,23 @@ class NPC(Character, Path):
                 return CharacterAction('activity', 'slow')
             else:
                 return CharacterAction('activity', 'fast')
-        else:
+
+
+        elif self.target: # Если есть цель
+            return CharacterAction('move', 'details')  # FIXME Пока все цели только на перемещение
+        else: # Если нет цели
+            self.target = self.npc_calculation_random_target(vertices_graph)
             return CharacterAction('move', 'details')
+        #else:
+        #    return CharacterAction('move', 'details')
+
+    def npc_calculation_random_target(self, vertices_graph):
+        """ Считает случайную цель """
+        vertices = vertices_graph[self.vertices]
+        direction = random.choice(vertices.connections)
+        self.global_waypoints = [direction.number]
+        return Target(type='move', entity=None, position=direction.position, create_step=0, lifetime=1000)
+
 
     def npc_move_calculations(self, action, activity_list, step, global_map, vertices_graph):
         """
