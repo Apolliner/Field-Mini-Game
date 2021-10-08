@@ -39,6 +39,27 @@ class Path:
         local_position = [world_position[0] % self.chunk_size, world_position[1] % self.chunk_size]
         return global_position, local_position
 
+    def path_global_direction_calculation(self, start_vertices, finish_vertices, vertices_graph):
+        """ Определяет направление глобального движения """
+        start = None
+        finish = None
+        for vertices in vertices_graph:
+            if vertices.number == start_vertices:
+                start = vertices.position
+            if vertices.number == finish_vertices:
+                finish = vertices.position
+            if start and finish:
+                break
+
+        if [start[0] - 1, start[1]] == finish:
+            return 'up'
+        elif [start[0] + 1, start[1]] == finish:
+            return 'down'
+        elif [start[0], start[1] - 1] == finish:
+            return 'left'
+        elif [start[0], start[1] + 1] == finish:
+            return 'right'
+
     def path_direction_calculation(self, start, finish):
         """ Определяет направление движения """
         if [start[0] - 1, start[1]] == finish:
@@ -49,6 +70,7 @@ class Path:
             return 'left', 'l3'
         elif [start[0], start[1] + 1] == finish:
             return 'right', 'r3'
+        return "center", 'd0'
 
     def path_world_tile(self, global_map, world_position):
         """
@@ -102,21 +124,21 @@ class Path:
 
         # Есть глобальные, но нет локальных вейпоинтов
         elif self.global_waypoints and not self.local_waypoints:
-            self.local_waypoints = self.path_local_waypoints_calculate(self, global_map)
+            self.local_waypoints = self.path_local_waypoints_calculate(self.world_position, global_map, vertices_graph)
 
         # Если есть куда двигаться
         if self.local_waypoints:
-            self.path_waypoints_move(global_map)
+            self.path_local_move(global_map)
 
-    def path_local_waypoints_calculate(self, start_point, global_map):
+    def path_local_waypoints_calculate(self, start_point, global_map, vertices_graph):
         """
             Рассчитывает локальные вейпоинты для передвижения
         """
-        direction = self.path_direction_calculation(self.world_position, self.global_waypoints[0])
+        direction = self.path_global_direction_calculation(self.vertices, self.global_waypoints[0], vertices_graph)
         finish_point = []
 
         for vertices in self.path_world_location(global_map, start_point).vertices:
-            if vertices.number == self.start_vertices:
+            if vertices.number == self.vertices:
                 for connect in vertices.connections:
                     if connect.number == self.global_waypoints[0]:
                         finish = random.choice(connect.tiles)
@@ -130,8 +152,8 @@ class Path:
                             finish_point = [raw_finish_point[0], raw_finish_point[1] - 1]
                         elif direction == 'right':
                             finish_point = [raw_finish_point[0], raw_finish_point[1] + 1]
-
-        local_waypoints = self._path_world_tiles_a_star_algorithm(global_map, start_point, finish_point)
+                        break
+        local_waypoints, success = self._path_world_tiles_a_star_algorithm(global_map, start_point, finish_point)
 
         return local_waypoints
 
@@ -265,7 +287,7 @@ class Path:
             Финишная точка - finish_point:[world_y, world_x];
 
         """
-        len_map = len(global_map) * self.shunk_size
+        len_map = len(global_map) * self.chunk_size
 
         class Node_vertices:
             """Содержит узлы графа для работы с зонами доступности"""
@@ -287,7 +309,7 @@ class Path:
             """
             node.ready = False
             node_tile = self.path_world_tile(global_map, node.position)
-            tiles_positions = dict()
+            tiles_positions = list()
             if 0 <= node.position[0] < len_map:
                 if node.position[0] + 1 < len_map:
                     tiles_positions.append([node.position[0] + 1, node.position[1]])

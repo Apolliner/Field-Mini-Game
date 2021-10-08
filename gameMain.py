@@ -375,7 +375,7 @@ def game_loop(global_map:list, person, chunk_size:int, enemy_list:list, world, s
                                             minimap_dict, sprites_dict, offset_sprites, landscape_layer, activity_layer,
                                             entities_layer, finishing_surface, settings_for_intermediate_steps, mouse_position, raw_minimap)
 
-    #enemy_list.append(NPC([2, 2], [2, 2], 'new_riffleman', 'new_riffleman', '☻', 'd0', 'Тестовый NPC', 'new_riffleman'))
+    enemy_list.append(NPC([2, 2], [2, 2], 'new_riffleman', 'new_riffleman', '☻', 'd0', 'Тестовый NPC', 'new_riffleman'))
     print('game_loop запущен')
     game_loop = True
     while game_loop:

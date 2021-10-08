@@ -192,7 +192,9 @@ class NPC(Character, Path):
 
     def npc_calculation_random_target(self, vertices_graph):
         """ Считает случайную цель """
-        vertices = vertices_graph[self.vertices]
+        for vertices in vertices_graph:
+            if vertices.number == self.vertices:
+                break
         direction = random.choice(vertices.connections)
         self.global_waypoints = [direction.number]
         return Target(type='move', entity=None, position=direction.position, create_step=0, lifetime=1000)
@@ -204,14 +206,13 @@ class NPC(Character, Path):
         """
         if self.escape:
             self.npc_escape_move()
-        if self.follow:
+        elif self.follow:
             self.npc_follow_move()
         elif self.activity:
             self.npc_activity_move(global_map, vertices_graph)
         else:
             self.npc_move(global_map, vertices_graph)
-
-        self.path_local_move(global_map)
+        #self.path_local_move(global_map)
 
     def npc_move(self, global_map, vertices_graph):
         """
@@ -319,5 +320,9 @@ class NPC(Character, Path):
 
     def npc_consequences_calculation(self):
         """ Рассчёт последствий действий персонажа """
+        pass
+
+    def world_position_calculate(self, _):
+        """ затычка для подключения к старой системе"""
         pass
 
