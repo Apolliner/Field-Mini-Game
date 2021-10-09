@@ -117,6 +117,7 @@ class NPC(Character, Path):
         self.character_check_all_position(global_map)  # Родительский метод
         self.character_reset_at_the_beginning()  # Родительский метод
         self.npc_new_step_check_status()
+        self.check_achieving_the_target()
 
         # Рассчёт действий
         action = self.npc_checking_the_situation(vertices_graph)
@@ -144,6 +145,13 @@ class NPC(Character, Path):
         self.npc_consequences_calculation()
 
         self.past_target = copy.deepcopy(self.target)
+
+    def check_achieving_the_target(self):
+        """
+            Проверяет достижение цели
+        """
+        if self.target and self.global_position == self.target.position:
+            self.target = None
 
     def npc_new_step_check_status(self):
         """
