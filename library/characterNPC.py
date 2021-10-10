@@ -148,8 +148,10 @@ class NPC(Character, Path):
 
     def check_achieving_the_target(self):
         """
-            Проверяет достижение цели
+            Проверяет достижение цели или достижение глобального вейпоинта
         """
+        if self.global_waypoints and self.vertices == self.global_waypoints[0]:
+            self.global_waypoints.pop(0)
         if self.target and self.global_position == self.target.position:
             self.target = None
 

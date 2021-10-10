@@ -28,8 +28,8 @@ class Path:
         """
             Рассчитывает мировые координаты от центра мира
         """
-        return [local_position[0] + global_position[0] * self.chunk_size,
-                local_position[1] + global_position[1] * self.chunk_size]
+        return [local_position[0] + (global_position[0] + 1) * self.chunk_size,
+                local_position[1] + (global_position[1] + 1) * self.chunk_size]
 
     def path_world_position_recalculation(self, world_position):
         """
@@ -115,7 +115,7 @@ class Path:
             # Если совпадают глобальные положения с целью
             if self.vertices == self.path_world_tile(self, global_map, self.target.get_position()).vertices:
                 self.local_waypoints = self._path_world_tiles_a_star_algorithm(global_map,
-                                                         self.world_position, self.target.get_position())
+                                                         self.world_position, self.target.get_position(), self.vertices)
             # Если глобальные положения различаются
             else:
                 self.global_waypoints = self._path_world_vertices_a_star_algorithm(vertices_graph,
@@ -142,8 +142,7 @@ class Path:
                 for connect in vertices.connections:
                     if connect.number == self.global_waypoints[0]:
                         finish = random.choice(connect.tiles)
-                        raw_finish_point = self.path_world_position_calculate(vertices.position,
-                                        finish)  # Преобразование в мировые координаты
+                        raw_finish_point = self.path_world_position_calculate(vertices.position, finish)  # Преобразование в мировые координаты
                         if direction == 'up':
                             finish_point = [raw_finish_point[0] - 1, raw_finish_point[1]]
                         elif direction == 'down':
@@ -153,8 +152,8 @@ class Path:
                         elif direction == 'right':
                             finish_point = [raw_finish_point[0], raw_finish_point[1] + 1]
                         break
-        local_waypoints, success = self._path_world_tiles_a_star_algorithm(global_map, start_point, finish_point)
 
+        local_waypoints, success = self._path_world_tiles_a_star_algorithm(global_map, start_point, finish_point, self.global_waypoints[0])
         return local_waypoints
 
     def _path_world_vertices_a_star_algorithm(self, vertices_map, start_vertices, finish_vertices):
@@ -277,7 +276,7 @@ class Path:
 
         return list(reversed(reversed_waypoints)), success
 
-    def _path_world_tiles_a_star_algorithm(self, global_map, start_point, finish_point):
+    def _path_world_tiles_a_star_algorithm(self, global_map, start_point, finish_point, global_waypoint):
         """
             Рассчитывает поиск пути, алгоритмом A* на основании глобальных зон доступности и мировых координат тайлов.
 
@@ -301,7 +300,7 @@ class Path:
                 self.direction = direction  # Хранит номер вершины из которой вышла
                 self.ready = True  # Проверена ли точка
 
-        def node_friends_calculation(global_map, graph, node, finish_point, verified_position):
+        def node_friends_calculation(global_map, graph, node, finish_point, verified_position, global_waypoint):
             """
                 Вычисляет соседние узлы графа при расчёте по локальной карте
 
@@ -310,21 +309,20 @@ class Path:
             node.ready = False
             node_tile = self.path_world_tile(global_map, node.position)
             tiles_positions = list()
-            if 0 <= node.position[0] < len_map:
-                if node.position[0] + 1 < len_map:
-                    tiles_positions.append([node.position[0] + 1, node.position[1]])
-                if node.position[0] - 1 >= 0:
-                    tiles_positions.append([node.position[0] - 1, node.position[1]])
-            if 0 <= node.position[1] < len_map:
-                if node.position[1] + 1 < len_map:
-                    tiles_positions.append([node.position[0], node.position[1] + 1])
-                if node.position[1] - 1 >= 0:
-                    tiles_positions.append([node.position[0], node.position[1] - 1])
+
+            tiles_positions.append([node.position[0] + 1, node.position[1]])
+
+            tiles_positions.append([node.position[0] - 1, node.position[1]])
+
+            tiles_positions.append([node.position[0], node.position[1] + 1])
+
+            tiles_positions.append([node.position[0], node.position[1] - 1])
             if tiles_positions:
                 for tile_position in tiles_positions:
                     tile = self.path_world_tile(global_map, tile_position)
-                    if tile.vertices == node_tile.vertices and tile.level == node_tile.level or node_tile.stairs or tile.stairs:
-                        if not tile_position in verified_position:
+                    if tile.vertices == node_tile.vertices or tile.vertices == global_waypoint and \
+                                                    tile.level == node_tile.level or node_tile.stairs or tile.stairs:
+                        if tile_position not in verified_position:
                             verified_position.append(tile_position)
                             graph.append(Node_vertices(len(graph), node.vertices, tile_position,
                                                        tile.price_move + self.path_length(tile_position, finish_point),
@@ -338,7 +336,7 @@ class Path:
         verified_position = []  # Содержит список всех использованных координат, что бы сравнивать с ним при добавлении новой вершины.
         graph.append(Node_vertices(0, start_tile.vertices, start_point, self.path_length(start_point, finish_point), 0))
         verified_position.append(start_point)
-        node_friends_calculation(global_map, graph, graph[0], finish_point, verified_position)
+        node_friends_calculation(global_map, graph, graph[0], finish_point, verified_position, global_waypoint)
 
         general_loop = True  # Параметр останавливающий цикл
         step_count = 0  # Шаг цикла
@@ -357,7 +355,7 @@ class Path:
                 number_finish_node = len(graph) - 1
                 success = False
                 general_loop = False
-            node_friends_calculation(global_map, graph, node, finish_point, verified_position)
+            node_friends_calculation(global_map, graph, node, finish_point, verified_position, global_waypoint)
             if node.position == finish_point:
                 number_finish_node = node.number
                 general_loop = False
@@ -380,7 +378,6 @@ class Path:
                             number_finish_node = number_node
                     success = False
                     general_loop = False
-
         # Определение пути по сохранённым направлениям
         check_node = graph[number_finish_node]
         ran_while = True
