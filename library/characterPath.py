@@ -141,7 +141,19 @@ class Path:
             if vertices.number == self.vertices:
                 for connect in vertices.connections:
                     if connect.number == self.global_waypoints[0]:
-                        finish = random.choice(connect.tiles)
+                        #finish = random.choice(connect.tiles)
+                        _, local_position = self.path_world_position_recalculation(start_point)
+                        min_len = 99999
+                        min_number = None
+                        for number_tile, tile in enumerate(connect.tiles):
+                            length = self.path_length(local_position, tile)
+                            if length < min_len:
+                                min_len = length
+                                min_number = number_tile
+                        if min_number is None:
+                            return []
+                        finish = connect.tiles[number_tile]
+
                         raw_finish_point = self.path_world_position_calculate(vertices.position, finish)  # Преобразование в мировые координаты
                         if direction == 'up':
                             finish_point = [raw_finish_point[0] - 1, raw_finish_point[1]]
