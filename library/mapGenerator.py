@@ -842,7 +842,7 @@ def a_star_algorithm_river_calculation(calculation_map, start_point, finish_poin
     verified_node.append(start_node.position)
     finding_a_path = True
     finish_node = 0
-    sucess = True
+    success = True
     step_count = 0
     reversed_waypoints = []
     while finding_a_path:
@@ -854,7 +854,7 @@ def a_star_algorithm_river_calculation(calculation_map, start_point, finish_poin
                     min_price = graph[number_node].price
                     node = graph[number_node]
         if min_price == 99999:
-            sucess = False
+            success = False
             finding_a_path = False
             
         verified_node.append(node.position)
@@ -864,9 +864,9 @@ def a_star_algorithm_river_calculation(calculation_map, start_point, finish_poin
             finish_node = node.number
         step_count += 1
         if step_count == 250:
-            sucess = False
+            success = False
             finding_a_path = False
-    if sucess:
+    if success:
         check_node = graph[-1]
         while check_node.position != start_node.position:
             reversed_waypoints.append(graph[finish_node].position)
@@ -885,6 +885,7 @@ class Global_vertices:
         self.number = number
         self.position = position
         self.connections = [connections]
+        self.approximate_position = None
 
 class Connections:
     """Содержит описание связей зоны доступности"""

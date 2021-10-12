@@ -130,9 +130,62 @@ class Path:
         if self.local_waypoints:
             self.path_local_move(global_map)
 
+    def path_ideal_move_calculation(start_point, finish_point):
+        """
+            Cчитает прямой путь до координат цели, останавливая рассчёт в тот момент, когда достигнет
+            другой зоны доступности. Возвращает последний рассчитаный тайл
+        """
+
+        axis_y = finish_point[0] - start_point[0]  # длинна стороны и количество шагов
+        axis_x = finish_point[1] - start_point[1]  # длинна стороны и количество шагов
+        if abs(axis_y) > abs(axis_x):
+            if axis_x != 0:
+                length_step = abs(axis_y) // abs(axis_x)  # на один X столько то Y
+            else:
+                length_step = abs(axis_y)
+            long_side = 'y'
+        else:
+            if axis_y != 0:
+                length_step = abs(axis_x) // abs(axis_y)  # на один Y столько то X
+            else:
+                length_step = abs(axis_x)
+            long_side = 'x'
+
+        waypoints = [start_point]
+
+        for step in range((abs(axis_y) + abs(axis_x))):
+            if (step + 1) % (length_step + 1) == 0:
+                if long_side == 'y':
+                    if axis_y >= 0 and axis_x >= 0 or axis_y < 0 and axis_x >= 0:
+                        waypoints.append([waypoints[step][0], waypoints[step][1] + 1])
+                    else:
+                        waypoints.append([waypoints[step][0], waypoints[step][1] - 1])
+                elif long_side == 'x':
+                    if axis_x >= 0 and axis_y >= 0 or axis_x < 0 and axis_y >= 0:
+                        waypoints.append([waypoints[step][0] + 1, waypoints[step][1]])
+                    else:
+                        waypoints.append([waypoints[step][0] - 1, waypoints[step][1]])
+            else:
+                if long_side == 'y':
+                    if axis_y >= 0 and axis_x >= 0 or axis_y >= 0 and axis_x < 0:
+                        waypoints.append([waypoints[step][0] + 1, waypoints[step][1]])
+                    else:
+                        waypoints.append([waypoints[step][0] - 1, waypoints[step][1]])
+                elif long_side == 'x':
+                    if axis_x >= 0 and axis_y >= 0 or axis_x >= 0 and axis_y < 0:
+                        waypoints.append([waypoints[step][0], waypoints[step][1] + 1])
+                    else:
+                        waypoints.append([waypoints[step][0], waypoints[step][1] - 1])
+
+        return waypoints
+
     def path_local_waypoints_calculate(self, start_point, global_map, vertices_graph):
         """
             Рассчитывает локальные вейпоинты для передвижения
+
+            FIXME Надо реализовать на этапе сохранения зон доступности, определение приблизительного центра зоны
+            FIXME доступности, что бы при рассчёте финишной точки, сначала рассчитывать прямой путь до цели или центра
+            FIXME следующей глобальной путевой точки, останавливая на границе локаций и выбирая ближайший тайл перехода.
         """
         direction = self.path_global_direction_calculation(self.vertices, self.global_waypoints[0], vertices_graph)
         finish_point = []
