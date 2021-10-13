@@ -176,6 +176,8 @@ def master_map_generate(global_region_grid, region_grid, chunks_grid, mini_grid,
     creature_spawn_add(ready_global_map)
     simple_draw_map_generation(screen, 'Добавление существ в тайлы')
 
+    # Рассчёт приблизительного центра зон доступности
+    determining_the_approximate_center(ready_global_map)
     
     #Создание миникарты
     #progress_bar(screen, 90, 'Создание миникарты')
@@ -189,19 +191,58 @@ def master_map_generate(global_region_grid, region_grid, chunks_grid, mini_grid,
 
     return ready_global_map, minimap, vertices_graph
 
+def determining_the_approximate_center(global_map):
+    """
+        Рассчитывает приблизительный центр зон доступности
+    """
+    class ApproximateCenter:
+        __slots__ = ('up', 'down', 'left', 'right')
+
+        def __init__(self, y, x):
+            self.up = y
+            self.down = y
+            self.left = x
+            self.right = x
+
+        def get_approximate_center(self):
+            """ Рассчитывает приблизительный центр. Возвращает локальные координаты """
+            return [(self.right - self.left)//2 + self.left, (self.right - self.left)//2 + self.left]
+
+    for number_global_line, global_line in enumerate(global_map):
+        for number_global_tile, global_tile in enumerate(global_line):
+            vertices_dict = {}
+            for number_line, line in enumerate(global_tile.chunk):
+                for number_tile, tile in enumerate(line):
+                    if tile.vertices in vertices_dict:
+                        if number_line < vertices_dict[tile.vertices].up:
+                            vertices_dict[tile.vertices].up = number_line
+                        if number_line > vertices_dict[tile.vertices].down:
+                            vertices_dict[tile.vertices].down = number_line
+                        if number_tile < vertices_dict[tile.vertices].left:
+                            vertices_dict[tile.vertices].left = number_tile
+                        if number_tile > vertices_dict[tile.vertices].right:
+                            vertices_dict[tile.vertices].right = number_tile
+                    else:
+                        vertices_dict[tile.vertices] = ApproximateCenter(number_line, number_tile)
+            for vertices in global_tile.vertices:
+                if vertices.number in vertices_dict:
+                    vertices.approximate_position = vertices_dict[vertices.number].get_approximate_center()
 
 
 def vertices_graph_create(global_map):
     """
         На основе глобальной карты, создаёт граф зон доступности для быстрой и удобной работы с ним
     """
+    def sort_vertices(vertices):
+        return vertices.number
+
     vertices_graph = []
     for number_global_line, global_line in enumerate(global_map):
         for number_global_tile, global_tile in enumerate(global_line):
             for vertice in global_tile.vertices:
                 vertices_graph.append(vertice)
-    return vertices_graph
-    
+
+    return sorted(vertices_graph, key=sort_vertices)
 
 
 """

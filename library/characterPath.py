@@ -130,11 +130,13 @@ class Path:
         if self.local_waypoints:
             self.path_local_move(global_map)
 
-    def path_ideal_move_calculation(start_point, finish_point):
+    def approximate_finish_calculation(self, start_point, finish_point):
         """
             Cчитает прямой путь до координат цели, останавливая рассчёт в тот момент, когда достигнет
             другой зоны доступности. Возвращает последний рассчитаный тайл
         """
+
+        start_global_position, _ = self.path_world_position_recalculation(start_point)
 
         axis_y = finish_point[0] - start_point[0]  # длинна стороны и количество шагов
         axis_x = finish_point[1] - start_point[1]  # длинна стороны и количество шагов
@@ -154,6 +156,10 @@ class Path:
         waypoints = [start_point]
 
         for step in range((abs(axis_y) + abs(axis_x))):
+            global_position, _ = self.path_world_position_recalculation(waypoints[-1])
+            # Если другая глобальная позиция,то сменить положение
+            if global_position != start_global_position:
+                break
             if (step + 1) % (length_step + 1) == 0:
                 if long_side == 'y':
                     if axis_y >= 0 and axis_x >= 0 or axis_y < 0 and axis_x >= 0:
@@ -177,14 +183,14 @@ class Path:
                     else:
                         waypoints.append([waypoints[step][0], waypoints[step][1] - 1])
 
-        return waypoints
+        return waypoints[-1]
 
     def path_local_waypoints_calculate(self, start_point, global_map, vertices_graph):
         """
             Рассчитывает локальные вейпоинты для передвижения
 
             FIXME Надо реализовать на этапе сохранения зон доступности, определение приблизительного центра зоны
-            FIXME доступности, что бы при рассчёте финишной точки, сначала рассчитывать прямой путь до цели или центра
+            FIXME доступности, что бы при расчёте финишной точки, сначала рассчитывать прямой путь до цели или центра
             FIXME следующей глобальной путевой точки, останавливая на границе локаций и выбирая ближайший тайл перехода.
         """
         direction = self.path_global_direction_calculation(self.vertices, self.global_waypoints[0], vertices_graph)
