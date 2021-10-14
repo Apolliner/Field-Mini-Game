@@ -176,9 +176,11 @@ def master_map_generate(global_region_grid, region_grid, chunks_grid, mini_grid,
     creature_spawn_add(ready_global_map)
     simple_draw_map_generation(screen, 'Добавление существ в тайлы')
 
+
     # Рассчёт приблизительного центра зон доступности
     determining_the_approximate_center(ready_global_map)
-    
+
+
     #Создание миникарты
     #progress_bar(screen, 90, 'Создание миникарты')
     minimap = minimap_create(ready_global_map)
@@ -208,9 +210,9 @@ def determining_the_approximate_center(global_map):
             """ Рассчитывает приблизительный центр. Возвращает локальные координаты """
             return [(self.right - self.left)//2 + self.left, (self.right - self.left)//2 + self.left]
 
+    vertices_dict = {}
     for number_global_line, global_line in enumerate(global_map):
         for number_global_tile, global_tile in enumerate(global_line):
-            vertices_dict = {}
             for number_line, line in enumerate(global_tile.chunk):
                 for number_tile, tile in enumerate(line):
                     if tile.vertices in vertices_dict:
@@ -227,6 +229,12 @@ def determining_the_approximate_center(global_map):
             for vertices in global_tile.vertices:
                 if vertices.number in vertices_dict:
                     vertices.approximate_position = vertices_dict[vertices.number].get_approximate_center()
+    for number_global_line, global_line in enumerate(global_map):
+        for number_global_tile, global_tile in enumerate(global_line):
+            for vertices in global_tile.vertices:
+                for connect in vertices.connections:
+                    if connect.number in vertices_dict:
+                        connect.approximate_position = vertices_dict[connect.number].get_approximate_center()
 
 
 def vertices_graph_create(global_map):

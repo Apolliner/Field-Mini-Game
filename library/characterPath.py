@@ -133,7 +133,7 @@ class Path:
     def approximate_finish_calculation(self, start_point, finish_point):
         """
             Cчитает прямой путь до координат цели, останавливая рассчёт в тот момент, когда достигнет
-            другой зоны доступности. Возвращает последний рассчитаный тайл
+            другой зоны доступности. Возвращает последний рассчитаный тайл в мировых координатах
         """
 
         start_global_position, _ = self.path_world_position_recalculation(start_point)
@@ -201,18 +201,19 @@ class Path:
                 for connect in vertices.connections:
                     if connect.number == self.global_waypoints[0]:
                         #finish = random.choice(connect.tiles)
-                        _, local_position = self.path_world_position_recalculation(start_point)
+                        _, local_start = self.path_world_position_recalculation(start_point)
+                        world_approximate_finish = self.approximate_finish_calculation(local_start, connect.approximate_position)
+                        _, approximate_finish = self.path_world_position_recalculation(world_approximate_finish)
                         min_len = 99999
                         min_number = None
                         for number_tile, tile in enumerate(connect.tiles):
-                            length = self.path_length(local_position, tile)
+                            length = self.path_length(approximate_finish, tile)
                             if length < min_len:
                                 min_len = length
                                 min_number = number_tile
                         if min_number is None:
                             return []
-                        finish = connect.tiles[number_tile]
-
+                        finish = connect.tiles[min_number]
                         raw_finish_point = self.path_world_position_calculate(vertices.position, finish)  # Преобразование в мировые координаты
                         if direction == 'up':
                             finish_point = [raw_finish_point[0] - 1, raw_finish_point[1]]
@@ -224,7 +225,8 @@ class Path:
                             finish_point = [raw_finish_point[0], raw_finish_point[1] + 1]
                         break
 
-        local_waypoints, success = self._path_world_tiles_a_star_algorithm(global_map, start_point, finish_point, self.global_waypoints[0])
+        local_waypoints, success = self._path_world_tiles_a_star_algorithm(global_map, start_point, finish_point,
+                                                                                        self.global_waypoints[0])
         return local_waypoints
 
     def _path_world_vertices_a_star_algorithm(self, vertices_map, start_vertices, finish_vertices):
