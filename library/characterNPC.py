@@ -109,7 +109,7 @@ class NPC(Character, Path):
         self.status = list()  # Список текущего состояния               list
         self.memory = list()
 
-    def npc_master_calculation(self, step, activity_list, global_map, vertices_graph):
+    def npc_master_calculation(self, step, activity_list, global_map, vertices_graph, vertices_dict):
         """
             Обработка действий персонажа на текущем шаге
         """
@@ -120,11 +120,11 @@ class NPC(Character, Path):
         self.check_achieving_the_target()
 
         # Рассчёт действий
-        action = self.npc_checking_the_situation(vertices_graph)
+        action = self.npc_checking_the_situation(vertices_graph, vertices_dict)
 
         # Совершение действий
         if action.type == 'move':
-            self.npc_move_calculations(action, activity_list, step, global_map, vertices_graph)
+            self.npc_move_calculations(action, activity_list, step, global_map, vertices_graph, vertices_dict)
 
         elif action.type == 'activity':
             self.npc_activity_calculations(action)
@@ -169,7 +169,7 @@ class NPC(Character, Path):
         elif self.fatigue < 50:
             self.status.append('fatigue')
 
-    def npc_checking_the_situation(self, vertices_graph):
+    def npc_checking_the_situation(self, vertices_graph, vertices_dict):
         """
             Проверяет обстановку для решения дальнейших действий
 
@@ -195,22 +195,24 @@ class NPC(Character, Path):
         elif self.target: # Если есть цель
             return CharacterAction('move', 'details')  # FIXME Пока все цели только на перемещение
         else: # Если нет цели
-            self.target = self.npc_calculation_random_target(vertices_graph)
+            self.target = self.npc_calculation_random_target(vertices_graph, vertices_dict)
             return CharacterAction('move', 'details')
         #else:
         #    return CharacterAction('move', 'details')
 
-    def npc_calculation_random_target(self, vertices_graph):
+    def npc_calculation_random_target(self, vertices_graph, vertices_dict):
         """ Считает случайную цель """
-        for vertices in vertices_graph:
-            if vertices.number == self.vertices:
-                break
-        direction = random.choice(vertices.connections)
-        self.global_waypoints = [direction.number]
-        return Target(type='move', entity=None, position=direction.position, create_step=0, lifetime=1000)
+        waypoints = list()
+        number_vertices = self.vertices
+        for step in range(10):
+            vertices = random.choice(vertices_dict[number_vertices].connections)
+            waypoints.append(vertices.number)
+            number_vertices = vertices.number
+        self.global_waypoints = waypoints
+        return Target(type='move', entity=None, position=waypoints[-1], create_step=0, lifetime=1000)
 
 
-    def npc_move_calculations(self, action, activity_list, step, global_map, vertices_graph):
+    def npc_move_calculations(self, action, activity_list, step, global_map, vertices_graph, vertices_dict):
         """
             Передвижение персонажа   ----- Можно заполнить уже готовой логикой из старой версии -----
         """
@@ -221,10 +223,10 @@ class NPC(Character, Path):
         elif self.activity:
             self.npc_activity_move(global_map, vertices_graph)
         else:
-            self.npc_move(global_map, vertices_graph)
+            self.npc_move(global_map, vertices_graph, vertices_dict)
         #self.path_local_move(global_map)
 
-    def npc_move(self, global_map, vertices_graph):
+    def npc_move(self, global_map, vertices_graph, vertices_dict):
         """
             Рассчёт перемещения в конкретную точку
 

@@ -16,14 +16,14 @@ from library.characterNPC import NPC
 
 
 def master_game_events(global_map, enemy_list, person, go_to_print, step, activity_list, chunk_size, interaction, world,
-                       global_interaction, vertices_graph):
+                       global_interaction, vertices_graph, verices_dict):
     """
         Здесь происходят все события, не связанные с пользовательским вводом
     """
     interaction_processing(global_map, interaction, enemy_list, step, chunk_size, activity_list, global_interaction)
     activity_list_check(activity_list, step)
     master_npc_calculation(global_map, enemy_list, person, go_to_print, step, activity_list, chunk_size, interaction,
-                           world, vertices_graph)
+                           world, vertices_graph, verices_dict)
     global_interaction_processing(global_map, enemy_list, step, chunk_size, activity_list, global_interaction)
 
 
@@ -690,7 +690,7 @@ def return_npc(global_position, local_position, key):
 
 
 def master_npc_calculation(global_map, enemy_list, person, go_to_print, step, activity_list, chunk_size, interaction,
-                           world, vertices_graph):
+                           world, vertices_graph, verices_dict):
     """
         Здесь происходят все события, связанные с NPC
 
@@ -705,7 +705,7 @@ def master_npc_calculation(global_map, enemy_list, person, go_to_print, step, ac
         if not enemy.delete:
             # Если это новый тип противника
             if isinstance(enemy, NPC):
-                enemy.npc_master_calculation(step, activity_list, global_map, vertices_graph)
+                enemy.npc_master_calculation(step, activity_list, global_map, vertices_graph, verices_dict)
             # Если это противник
             elif isinstance(enemy, Enemy):
 

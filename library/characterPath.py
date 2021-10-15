@@ -189,9 +189,9 @@ class Path:
         """
             Рассчитывает локальные вейпоинты для передвижения
 
-            FIXME Надо реализовать на этапе сохранения зон доступности, определение приблизительного центра зоны
-            FIXME доступности, что бы при расчёте финишной точки, сначала рассчитывать прямой путь до цели или центра
-            FIXME следующей глобальной путевой точки, останавливая на границе локаций и выбирая ближайший тайл перехода.
+            На основании приблизительного центра зон доступности, а так же поправок этого центра в зависимости от
+            направления следующего вейпоинта, рассчитывает прямой путь до этого приблизительного центра,
+            останавливаясь на границе локаций, и определяет ближайшую точку перехода к последней точке прямого пути.
         """
         direction = self.path_global_direction_calculation(self.vertices, self.global_waypoints[0], vertices_graph)
         finish_point = []
@@ -200,9 +200,24 @@ class Path:
             if vertices.number == self.vertices:
                 for connect in vertices.connections:
                     if connect.number == self.global_waypoints[0]:
-                        #finish = random.choice(connect.tiles)
+                        approximate_position = connect.approximate_position
+                        if len(self.global_waypoints) > 1:
+                            second_direction = self.path_global_direction_calculation(self.vertices,
+                                                            self.global_waypoints[1], vertices_graph)
+                        if second_direction == 'up':
+                            approximate_position = [approximate_position[0] - connect.y_amendment,
+                                                    approximate_position[1]]
+                        elif second_direction == 'down':
+                            approximate_position = [approximate_position[0] + connect.y_amendment,
+                                                    approximate_position[1]]
+                        elif second_direction == 'left':
+                            approximate_position = [approximate_position[0], approximate_position[1] -
+                                                    connect.x_amendment]
+                        elif second_direction == 'right':
+                            approximate_position = [approximate_position[0], approximate_position[1] +
+                                                    connect.x_amendment]
                         _, local_start = self.path_world_position_recalculation(start_point)
-                        world_approximate_finish = self.approximate_finish_calculation(local_start, connect.approximate_position)
+                        world_approximate_finish = self.approximate_finish_calculation(local_start, approximate_position)
                         _, approximate_finish = self.path_world_position_recalculation(world_approximate_finish)
                         min_len = 99999
                         min_number = None

@@ -184,14 +184,14 @@ def master_map_generate(global_region_grid, region_grid, chunks_grid, mini_grid,
     #Создание миникарты
     #progress_bar(screen, 90, 'Создание миникарты')
     minimap = minimap_create(ready_global_map)
-    vertices_graph = vertices_graph_create(ready_global_map)
+    vertices_graph, verices_dict = vertices_graph_create(ready_global_map)
     simple_draw_map_generation(screen, 'Карта готова')
 
     request_for_a_key_press(screen)
     
     #progress_bar(screen, 100, 'Карта готова')
 
-    return ready_global_map, minimap, vertices_graph
+    return ready_global_map, minimap, vertices_graph, verices_dict
 
 def determining_the_approximate_center(global_map):
     """
@@ -209,6 +209,12 @@ def determining_the_approximate_center(global_map):
         def get_approximate_center(self):
             """ Рассчитывает приблизительный центр. Возвращает локальные координаты """
             return [(self.right - self.left)//2 + self.left, (self.right - self.left)//2 + self.left]
+
+        def get_amendments_approximate_center(self):
+            """ Рассчитывает возможные поправки к расположению приблизительного центра """
+            y_amendment = (self.down - self.up)//4
+            x_amendment = (self.right - self.left)//4
+            return y_amendment, x_amendment
 
     vertices_dict = {}
     for number_global_line, global_line in enumerate(global_map):
@@ -229,12 +235,16 @@ def determining_the_approximate_center(global_map):
             for vertices in global_tile.vertices:
                 if vertices.number in vertices_dict:
                     vertices.approximate_position = vertices_dict[vertices.number].get_approximate_center()
+                    vertices.y_amendment, vertices.y_amendment = vertices_dict[vertices.number
+                                                                        ].get_amendments_approximate_center()
     for number_global_line, global_line in enumerate(global_map):
         for number_global_tile, global_tile in enumerate(global_line):
             for vertices in global_tile.vertices:
                 for connect in vertices.connections:
                     if connect.number in vertices_dict:
                         connect.approximate_position = vertices_dict[connect.number].get_approximate_center()
+                        connect.y_amendment, connect.y_amendment = vertices_dict[connect.number
+                                                                        ].get_amendments_approximate_center()
 
 
 def vertices_graph_create(global_map):
@@ -244,13 +254,15 @@ def vertices_graph_create(global_map):
     def sort_vertices(vertices):
         return vertices.number
 
-    vertices_graph = []
+    verices_dict = dict()
+    vertices_graph = list()
     for number_global_line, global_line in enumerate(global_map):
         for number_global_tile, global_tile in enumerate(global_line):
             for vertice in global_tile.vertices:
                 vertices_graph.append(vertice)
+                verices_dict[vertice.number] = vertice
 
-    return sorted(vertices_graph, key=sort_vertices)
+    return sorted(vertices_graph, key=sort_vertices), verices_dict
 
 
 """
@@ -935,6 +947,8 @@ class Global_vertices:
         self.position = position
         self.connections = [connections]
         self.approximate_position = None
+        self.y_amendment = 0
+        self.x_amendment = 0
 
 class Connections:
     """Содержит описание связей зоны доступности"""
@@ -942,6 +956,8 @@ class Connections:
         self.number = number
         self.position = position
         self.tiles = [tile]
+        self.y_amendment = 0
+        self.x_amendment = 0
 
 @timeit
 def defining_zone_relationships(processed_map):
