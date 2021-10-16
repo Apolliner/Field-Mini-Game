@@ -39,17 +39,10 @@ class Path:
         local_position = [world_position[0] % self.chunk_size, world_position[1] % self.chunk_size]
         return global_position, local_position
 
-    def path_global_direction_calculation(self, start_vertices, finish_vertices, vertices_graph):
+    def path_global_direction_calculation(self, start_vertices, finish_vertices, vertices_dict):
         """ Определяет направление глобального движения """
-        start = None
-        finish = None
-        for vertices in vertices_graph:
-            if vertices.number == start_vertices:
-                start = vertices.position
-            if vertices.number == finish_vertices:
-                finish = vertices.position
-            if start and finish:
-                break
+        start = start_vertices.position
+        finish = finish_vertices.position
 
         if [start[0] - 1, start[1]] == finish:
             return 'up'
@@ -103,7 +96,7 @@ class Path:
         """
         pass
 
-    def path_calculate(self, global_map, vertices_graph):
+    def path_calculate(self, global_map, vertices_graph, vertices_dict):
         """
             Принимает старт и финиш в виде мировых координат, а так же глобальную карту и граф зон доступности для рассчёта пути.
 
@@ -113,18 +106,22 @@ class Path:
         if not self.global_waypoints and not self.local_waypoints:
 
             # Если совпадают глобальные положения с целью
-            if self.vertices == self.path_world_tile(self, global_map, self.target.get_position()).vertices:
+            if self.vertices == self.path_world_tile(global_map, self.target.get_position()).vertices:
                 self.local_waypoints = self._path_world_tiles_a_star_algorithm(global_map,
                                                          self.world_position, self.target.get_position(), self.vertices)
             # Если глобальные положения различаются
             else:
-                self.global_waypoints = self._path_world_vertices_a_star_algorithm(vertices_graph,
-                                                                 self.world_position, self.target.get_position())
-                self.local_waypoints = self.path_local_waypoints_calculate(self)
+                self.global_waypoints = self._path_world_vertices_a_star_algorithm(vertices_dict,
+                                    vertices_dict[self.vertices], vertices_dict[self.target.get_vertices(global_map)])
+
+
+                self.local_waypoints = self.path_local_waypoints_calculate(self.world_position, global_map,
+                                                                                    vertices_graph, vertices_dict)
 
         # Есть глобальные, но нет локальных вейпоинтов
         elif self.global_waypoints and not self.local_waypoints:
-            self.local_waypoints = self.path_local_waypoints_calculate(self.world_position, global_map, vertices_graph)
+            self.local_waypoints = self.path_local_waypoints_calculate(self.world_position, global_map, vertices_graph,
+                                                                                                        vertices_dict)
 
         # Если есть куда двигаться
         if self.local_waypoints:
@@ -185,7 +182,7 @@ class Path:
 
         return waypoints[-1]
 
-    def path_local_waypoints_calculate(self, start_point, global_map, vertices_graph):
+    def path_local_waypoints_calculate(self, start_point, global_map, vertices_graph, vertices_dict):
         """
             Рассчитывает локальные вейпоинты для передвижения
 
@@ -193,7 +190,7 @@ class Path:
             направления следующего вейпоинта, рассчитывает прямой путь до этого приблизительного центра,
             останавливаясь на границе локаций, и определяет ближайшую точку перехода к последней точке прямого пути.
         """
-        direction = self.path_global_direction_calculation(self.vertices, self.global_waypoints[0], vertices_graph)
+        direction = self.path_global_direction_calculation(self.vertices, self.global_waypoints[0], vertices_dict)
         finish_point = []
 
         for vertices in self.path_world_location(global_map, start_point).vertices:
@@ -203,7 +200,7 @@ class Path:
                         approximate_position = connect.approximate_position
                         if len(self.global_waypoints) > 1:
                             second_direction = self.path_global_direction_calculation(self.vertices,
-                                                            self.global_waypoints[1], vertices_graph)
+                                                            self.global_waypoints[1], vertices_dict)
                         if second_direction == 'up':
                             approximate_position = [approximate_position[0] - connect.y_amendment,
                                                     approximate_position[1]]
@@ -244,7 +241,7 @@ class Path:
                                                                                         self.global_waypoints[0])
         return local_waypoints
 
-    def _path_world_vertices_a_star_algorithm(self, vertices_map, start_vertices, finish_vertices):
+    def _path_world_vertices_a_star_algorithm(self, vertices_dict, start_vertices, finish_vertices):
         """
             Рассчитывает поиск пути, алгоритмом A* с использованием исключительно полей доступности.
 
@@ -279,23 +276,22 @@ class Path:
                 self.direction = direction  # Хранит номер вершины из которой вышла
                 self.ready = True  # Проверена ли точка
 
-        def node_connections(vertices_map, graph, processed_node, finish_vertices, verified_vertices):
+        def node_connections(vertices_dict, graph, processed_node, finish_vertices, verified_vertices):
             """
                 Определяет связи вершины и добавляет их в граф при расчёте по глобальной карте
             """
             processed_node.ready = False
             # Находим указанную зону доступности
-            for vertices in vertices_map:
-                if vertices.number == processed_node.vertices:
-                    # Проверяем, есть ли у неё связи
-                    if vertices.connections:
-                        for connect in vertices.connections:
-                            if not connect.number in verified_vertices:
-                                verified_vertices.append(connect.number)
-                                graph.append(Node_vertices(len(graph), connect.number, connect.position,
-                                                           self.path_length(connect.position,
-                                                                       finish_vertices.position),
-                                                           processed_node.number))
+            vertices = vertices_dict[processed_node.vertices]
+            # Проверяем, есть ли у неё связи
+            if vertices.connections:
+                for connect in vertices.connections:
+                    if not connect.number in verified_vertices:
+                        verified_vertices.append(connect.number)
+                        graph.append(Node_vertices(len(graph), connect.number, connect.position,
+                                                   self.path_length(connect.position,
+                                                               finish_vertices.position),
+                                                   processed_node.number))
 
         graph = []  # Список, содержащий все вершины
         verified_vertices = []  # Содержит список всех использованных координат, что бы сравнивать с ним при добавлении новой вершины.
@@ -303,7 +299,7 @@ class Path:
                                    self.path_length(start_vertices.position, finish_vertices.position), 0))
         verified_vertices.append(start_vertices.number)
 
-        node_connections(vertices_map, graph, graph[0], finish_vertices, verified_vertices)
+        node_connections(vertices_dict, graph, graph[0], finish_vertices, verified_vertices)
 
         general_loop = True  # Параметр останавливающий цикл
         step_count = 0  # Шаг цикла
@@ -325,7 +321,7 @@ class Path:
 
                 self.target = None
 
-            node_connections(vertices_map, graph, node, finish_vertices, verified_vertices)
+            node_connections(vertices_dict, graph, node, finish_vertices, verified_vertices)
 
             if node.vertices == finish_vertices.number:
                 number_finish_node = node.number

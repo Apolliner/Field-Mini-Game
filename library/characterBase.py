@@ -252,6 +252,7 @@ class Action_in_map:
 """
 class Target:
     """ Содержит описание задачи, выполняемой персонажем """
+    chunk_size = 25
     def __init__(self, type, entity, position, create_step, lifetime):
         self.type = type
         self.entity = entity
@@ -261,13 +262,13 @@ class Target:
 
     def get_position(self):
         """ Возвращает позицию из цели """
-        if self.entity == None:
+        if self.entity is not None:
             return self.entity.world_position
         return self.position
 
     def get_vertices(self, global_map):
         """ Возвращает номер зоны доступности цели """
-        if self.entity == None:
+        if self.entity is not None:
             return self._return_vertices(self.entity.world_position, global_map)
         return self._return_vertices(self.position, global_map)
 

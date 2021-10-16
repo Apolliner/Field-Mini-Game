@@ -202,14 +202,15 @@ class NPC(Character, Path):
 
     def npc_calculation_random_target(self, vertices_graph, vertices_dict):
         """ Считает случайную цель """
-        waypoints = list()
         number_vertices = self.vertices
         for step in range(10):
             vertices = random.choice(vertices_dict[number_vertices].connections)
-            waypoints.append(vertices.number)
             number_vertices = vertices.number
-        self.global_waypoints = waypoints
-        return Target(type='move', entity=None, position=waypoints[-1], create_step=0, lifetime=1000)
+
+        vertices_global_position = vertices_dict[number_vertices].position
+        vertices_local_position = random.choice(random.choice(vertices_dict[number_vertices].connections).tiles)
+        world_position = self.character_world_position_calculate(vertices_global_position, vertices_local_position)
+        return Target(type='move', entity=None, position=world_position, create_step=0, lifetime=1000)
 
 
     def npc_move_calculations(self, action, activity_list, step, global_map, vertices_graph, vertices_dict):
@@ -217,11 +218,11 @@ class NPC(Character, Path):
             Передвижение персонажа   ----- Можно заполнить уже готовой логикой из старой версии -----
         """
         if self.escape:
-            self.npc_escape_move()
+            self.npc_escape_move(global_map, vertices_graph, vertices_dict)
         elif self.follow:
-            self.npc_follow_move()
+            self.npc_follow_move(global_map, vertices_graph, vertices_dict)
         elif self.activity:
-            self.npc_activity_move(global_map, vertices_graph)
+            self.npc_activity_move(global_map, vertices_graph, vertices_dict)
         else:
             self.npc_move(global_map, vertices_graph, vertices_dict)
         #self.path_local_move(global_map)
@@ -240,9 +241,9 @@ class NPC(Character, Path):
         if self.target == self.past_target and self.local_waypoints:
             self.path_local_move(global_map)
         else:
-            self.path_calculate(global_map, vertices_graph)
+            self.path_calculate(global_map, vertices_graph, vertices_dict)
 
-    def npc_escape_move(self, global_map, vertices_graph):
+    def npc_escape_move(self, global_map, vertices_graph, vertices_dict):
         """
             Рассчёт бегства
 
@@ -258,7 +259,7 @@ class NPC(Character, Path):
         else:
             self.path_escape_calculate(self, global_map, vertices_graph)
 
-    def npc_follow_move(self, global_map, vertices_graph):
+    def npc_follow_move(self, global_map, vertices_graph, vertices_dict):
         """
             Рассчёт преследования некоторого персонажа
 
@@ -272,7 +273,7 @@ class NPC(Character, Path):
         if self.target == self.past_target and self.local_waypoints and self.npc_follow_check(global_map):
             self.path_local_move(global_map)
         else:
-            self.path_calculate(self, global_map, vertices_graph)
+            self.path_calculate(self, global_map, vertices_graph, vertices_dict)
 
     def npc_follow_check(self, global_map):
         """
