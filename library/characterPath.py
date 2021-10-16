@@ -41,8 +41,8 @@ class Path:
 
     def path_global_direction_calculation(self, start_vertices, finish_vertices, vertices_dict):
         """ Определяет направление глобального движения """
-        start = start_vertices.position
-        finish = finish_vertices.position
+        start = vertices_dict[start_vertices].position
+        finish = vertices_dict[finish_vertices].position
 
         if [start[0] - 1, start[1]] == finish:
             return 'up'
@@ -111,7 +111,7 @@ class Path:
                                                          self.world_position, self.target.get_position(), self.vertices)
             # Если глобальные положения различаются
             else:
-                self.global_waypoints = self._path_world_vertices_a_star_algorithm(vertices_dict,
+                self.global_waypoints, _ = self._path_world_vertices_a_star_algorithm(vertices_dict,
                                     vertices_dict[self.vertices], vertices_dict[self.target.get_vertices(global_map)])
 
 
@@ -201,18 +201,18 @@ class Path:
                         if len(self.global_waypoints) > 1:
                             second_direction = self.path_global_direction_calculation(self.vertices,
                                                             self.global_waypoints[1], vertices_dict)
-                        if second_direction == 'up':
-                            approximate_position = [approximate_position[0] - connect.y_amendment,
-                                                    approximate_position[1]]
-                        elif second_direction == 'down':
-                            approximate_position = [approximate_position[0] + connect.y_amendment,
-                                                    approximate_position[1]]
-                        elif second_direction == 'left':
-                            approximate_position = [approximate_position[0], approximate_position[1] -
-                                                    connect.x_amendment]
-                        elif second_direction == 'right':
-                            approximate_position = [approximate_position[0], approximate_position[1] +
-                                                    connect.x_amendment]
+                            if second_direction == 'up':
+                                approximate_position = [approximate_position[0] - connect.y_amendment,
+                                                        approximate_position[1]]
+                            elif second_direction == 'down':
+                                approximate_position = [approximate_position[0] + connect.y_amendment,
+                                                        approximate_position[1]]
+                            elif second_direction == 'left':
+                                approximate_position = [approximate_position[0], approximate_position[1] -
+                                                        connect.x_amendment]
+                            elif second_direction == 'right':
+                                approximate_position = [approximate_position[0], approximate_position[1] +
+                                                        connect.x_amendment]
                         _, local_start = self.path_world_position_recalculation(start_point)
                         world_approximate_finish = self.approximate_finish_calculation(local_start, approximate_position)
                         _, approximate_finish = self.path_world_position_recalculation(world_approximate_finish)
@@ -357,7 +357,6 @@ class Path:
             if check_node.direction == 0:
                 ran_while = False
             check_node = graph[check_node.direction]  # Предыдущая вершина объявляется проверяемой
-
         return list(reversed(reversed_waypoints)), success
 
     def _path_world_tiles_a_star_algorithm(self, global_map, start_point, finish_point, global_waypoint):
