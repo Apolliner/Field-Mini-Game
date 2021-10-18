@@ -190,10 +190,15 @@ class NPC(Character, Path):
                 return CharacterAction('activity', 'slow')
             else:
                 return CharacterAction('activity', 'fast')
-
-
-        elif self.target: # Если есть цель
-            return CharacterAction('move', 'details')  # FIXME Пока все цели только на перемещение
+        elif self.follow:
+            if self.past_target.entity != self.follow:
+                self.global_waypoints = list()
+                self.local_waypoints = list()
+            self.target = Target(type='follow', entity=self.follow, position=self.follow.world_position,
+                                 create_step=0, lifetime=1000)
+            return CharacterAction('move', 'follow')  # Если есть цель преследования, то преследование
+        elif self.target:                                # Если есть цель
+            return CharacterAction('move', 'details')    # FIXME Пока все цели только на перемещение
         else: # Если нет цели
             self.target = self.npc_calculation_random_target(vertices_graph, vertices_dict)
             return CharacterAction('move', 'details')
@@ -219,7 +224,7 @@ class NPC(Character, Path):
         """
         if self.escape:
             self.npc_escape_move(global_map, vertices_graph, vertices_dict)
-        elif self.follow:
+        elif action.details == 'follow':
             self.npc_follow_move(global_map, vertices_graph, vertices_dict)
         elif self.activity:
             self.npc_activity_move(global_map, vertices_graph, vertices_dict)
@@ -273,7 +278,7 @@ class NPC(Character, Path):
         if self.target == self.past_target and self.local_waypoints and self.npc_follow_check(global_map):
             self.path_local_move(global_map)
         else:
-            self.path_calculate(self, global_map, vertices_graph, vertices_dict)
+            self.path_calculate(global_map, vertices_graph, vertices_dict)
 
     def npc_follow_check(self, global_map):
         """

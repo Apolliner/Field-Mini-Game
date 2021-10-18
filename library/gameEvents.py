@@ -43,11 +43,14 @@ def interaction_processing(global_map, interaction, enemy_list, step, chunk_size
 
             if interact[0] == 'follow_me_all_enemies':
                 for enemy in enemy_list:
-                    enemy.target = []
-                    enemy.follow = interact[1]
-                    enemy.waypoints = []
-                    enemy.local_waypoints = []
-                    logging.debug(f"{step}: {enemy.name_npc} назначено следование {enemy.follow}")
+                    if hasattr(enemy, 'memory'):  # FIXME Если это новый тип NPC
+                        enemy.follow = interact[1][0]
+                    else:
+                        enemy.target = []
+                        enemy.follow = interact[1]
+                        enemy.waypoints = []
+                        enemy.local_waypoints = []
+                        logging.debug(f"{step}: {enemy.name_npc} назначено следование {enemy.follow}")
 
             if interact[0] == 'view_waypoints':
                 for enemy in enemy_list:

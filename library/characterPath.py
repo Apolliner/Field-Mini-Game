@@ -107,7 +107,7 @@ class Path:
 
             # Если совпадают глобальные положения с целью
             if self.vertices == self.path_world_tile(global_map, self.target.get_position()).vertices:
-                self.local_waypoints = self._path_world_tiles_a_star_algorithm(global_map,
+                self.local_waypoints, _ = self._path_world_tiles_a_star_algorithm(global_map,
                                                          self.world_position, self.target.get_position(), self.vertices)
             # Если глобальные положения различаются
             else:
@@ -197,22 +197,25 @@ class Path:
             if vertices.number == self.vertices:
                 for connect in vertices.connections:
                     if connect.number == self.global_waypoints[0]:
-                        approximate_position = connect.approximate_position
-                        if len(self.global_waypoints) > 1:
-                            second_direction = self.path_global_direction_calculation(self.vertices,
-                                                            self.global_waypoints[1], vertices_dict)
-                            if second_direction == 'up':
-                                approximate_position = [approximate_position[0] - connect.y_amendment,
-                                                        approximate_position[1]]
-                            elif second_direction == 'down':
-                                approximate_position = [approximate_position[0] + connect.y_amendment,
-                                                        approximate_position[1]]
-                            elif second_direction == 'left':
-                                approximate_position = [approximate_position[0], approximate_position[1] -
-                                                        connect.x_amendment]
-                            elif second_direction == 'right':
-                                approximate_position = [approximate_position[0], approximate_position[1] +
-                                                        connect.x_amendment]
+                        if self.target.entity and self.target.entity.vertices == self.global_waypoints[0]:
+                            approximate_position = self.target.entity.world_position
+                        else:
+                            approximate_position = connect.approximate_position
+                            if len(self.global_waypoints) > 1:
+                                second_direction = self.path_global_direction_calculation(self.vertices,
+                                                                self.global_waypoints[1], vertices_dict)
+                                if second_direction == 'up':
+                                    approximate_position = [approximate_position[0] - connect.y_amendment,
+                                                            approximate_position[1]]
+                                elif second_direction == 'down':
+                                    approximate_position = [approximate_position[0] + connect.y_amendment,
+                                                            approximate_position[1]]
+                                elif second_direction == 'left':
+                                    approximate_position = [approximate_position[0], approximate_position[1] -
+                                                            connect.x_amendment]
+                                elif second_direction == 'right':
+                                    approximate_position = [approximate_position[0], approximate_position[1] +
+                                                            connect.x_amendment]
                         _, local_start = self.path_world_position_recalculation(start_point)
                         world_approximate_finish = self.approximate_finish_calculation(local_start, approximate_position)
                         _, approximate_finish = self.path_world_position_recalculation(world_approximate_finish)
