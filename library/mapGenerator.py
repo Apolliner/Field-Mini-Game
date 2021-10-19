@@ -212,8 +212,8 @@ def determining_the_approximate_center(global_map):
 
         def get_amendments_approximate_center(self):
             """ Рассчитывает возможные поправки к расположению приблизительного центра """
-            y_amendment = (self.down - self.up)//4
-            x_amendment = (self.right - self.left)//4
+            y_amendment = (self.down - self.up)//2
+            x_amendment = (self.right - self.left)//2
             return y_amendment, x_amendment
 
     vertices_dict = {}
@@ -235,7 +235,7 @@ def determining_the_approximate_center(global_map):
             for vertices in global_tile.vertices:
                 if vertices.number in vertices_dict:
                     vertices.approximate_position = vertices_dict[vertices.number].get_approximate_center()
-                    vertices.y_amendment, vertices.y_amendment = vertices_dict[vertices.number
+                    vertices.y_amendment, vertices.x_amendment = vertices_dict[vertices.number
                                                                         ].get_amendments_approximate_center()
     for number_global_line, global_line in enumerate(global_map):
         for number_global_tile, global_tile in enumerate(global_line):
@@ -243,7 +243,7 @@ def determining_the_approximate_center(global_map):
                 for connect in vertices.connections:
                     if connect.number in vertices_dict:
                         connect.approximate_position = vertices_dict[connect.number].get_approximate_center()
-                        connect.y_amendment, connect.y_amendment = vertices_dict[connect.number
+                        connect.y_amendment, connect.x_amendment = vertices_dict[connect.number
                                                                         ].get_amendments_approximate_center()
 
 

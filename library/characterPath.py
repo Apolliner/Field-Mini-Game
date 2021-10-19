@@ -43,7 +43,6 @@ class Path:
         """ Определяет направление глобального движения """
         start = vertices_dict[start_vertices].position
         finish = vertices_dict[finish_vertices].position
-
         if [start[0] - 1, start[1]] == finish:
             return 'up'
         elif [start[0] + 1, start[1]] == finish:
@@ -52,6 +51,7 @@ class Path:
             return 'left'
         elif [start[0], start[1] + 1] == finish:
             return 'right'
+        return None
 
     def path_direction_calculation(self, start, finish):
         """ Определяет направление движения """
@@ -198,11 +198,12 @@ class Path:
                 for connect in vertices.connections:
                     if connect.number == self.global_waypoints[0]:
                         if self.target.entity and self.target.entity.vertices == self.global_waypoints[0]:
-                            approximate_position = self.target.entity.world_position
+                            approximate_position = self.target.entity.local_position
                         else:
                             approximate_position = connect.approximate_position
+
                             if len(self.global_waypoints) > 1:
-                                second_direction = self.path_global_direction_calculation(self.vertices,
+                                second_direction = self.path_global_direction_calculation(self.global_waypoints[0],
                                                                 self.global_waypoints[1], vertices_dict)
                                 if second_direction == 'up':
                                     approximate_position = [approximate_position[0] - connect.y_amendment,
