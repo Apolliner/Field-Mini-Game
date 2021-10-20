@@ -144,7 +144,7 @@ class NPC(Character, Path):
         # Рассчёт последствий
         self.npc_consequences_calculation()
 
-        self.past_target = copy.deepcopy(self.target)
+        self.past_target = self.target
 
     def check_achieving_the_target(self):
         """
@@ -194,8 +194,11 @@ class NPC(Character, Path):
             if self.past_target.entity != self.follow:
                 self.global_waypoints = list()
                 self.local_waypoints = list()
-            self.target = Target(type='follow', entity=self.follow, position=self.follow.world_position,
+                self.target = Target(type='follow', entity=self.follow, position=self.follow.world_position,
                                  create_step=0, lifetime=1000)
+            else:
+                self.target = self.past_target
+                self.target.entity = self.follow
             return CharacterAction('move', 'follow')  # Если есть цель преследования, то преследование
         elif self.target:                                # Если есть цель
             return CharacterAction('move', 'details')    # FIXME Пока все цели только на перемещение
@@ -284,11 +287,11 @@ class NPC(Character, Path):
         """
             Проверяет актуальны ли глобальные и локальные координаты преследуемой цели
         """
-        if self.vertices == self.target.get_vertices():
-            if self.path_length(self.target.world_position, self.local_waypoints[-1]) > 3:
+        if self.vertices == self.target.get_vertices(global_map) and self.local_waypoints:
+            if self.path_length(self.target.get_position(), self.local_waypoints[-1]) > 3:
                 return False
             return True
-        elif self.target.get_vertices(global_map) == self.global_waypoints[-1]:
+        elif self.global_waypoints and self.target.get_vertices(global_map) == self.global_waypoints[-1]:
             return True
         return False
 
