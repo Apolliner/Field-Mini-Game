@@ -113,6 +113,7 @@ class NPC(Character, Path):
         """
             Обработка действий персонажа на текущем шаге
         """
+        #print(F"\n\n\nstep -            {step}")
         # Подготовка
         self.character_check_all_position(global_map)  # Родительский метод
         self.character_reset_at_the_beginning()  # Родительский метод

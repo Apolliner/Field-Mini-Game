@@ -220,6 +220,9 @@ class Path:
                         _, local_start = self.path_world_position_recalculation(start_point)
                         world_approximate_finish = self.approximate_finish_calculation(local_start, approximate_position)
                         _, approximate_finish = self.path_world_position_recalculation(world_approximate_finish)
+                        #print(F"approximate_position -  {approximate_position}")
+                        #print(F"local_start -           {local_start}")
+                        #print(F"approximate_finish -    {approximate_finish}")
                         min_len = 99999
                         min_number = None
                         for number_tile, tile in enumerate(connect.tiles):
@@ -230,6 +233,7 @@ class Path:
                         if min_number is None:
                             return []
                         finish = connect.tiles[min_number]
+                        #print(F"finish -                {finish}")
                         raw_finish_point = self.path_world_position_calculate(vertices.position, finish)  # Преобразование в мировые координаты
                         if direction == 'up':
                             finish_point = [raw_finish_point[0] - 1, raw_finish_point[1]]
@@ -475,3 +479,114 @@ class Path:
             check_node = graph[check_node.direction]  # Предыдущая вершина объявляется проверяемой
 
         return list(reversed(reversed_waypoints)), success
+
+
+    def _path_escape_world_tiles_a_star_algorithm(self, global_map, start_point, escape_point):
+        """
+            Рассчитывает поиск пути для побега, алгоритмом A* на основании глобальных зон доступности и
+            мировых координат тайлов.
+
+            Сюда приходит:
+            Обрабатываемая карта - global_map;
+            Стартовые координаты - start_point:[world_y, world_x];
+            Точка побега - escape_point:[world_y, world_x];
+
+            Устанавливает стартовую цену равную 100 и при рассчёте пути добавляет цену при приближении к точке
+            побега и уменьшает при удалении от неё
+        """
+        len_map = len(global_map) * self.chunk_size
+
+        class Node_vertices:
+            """Содержит узлы графа для работы с зонами доступности"""
+            __slots__ = ('number', 'vertices', 'position', 'price', 'direction', 'ready')
+
+            def __init__(self, number, vertices, position, price, direction):
+                self.number = number
+                self.vertices = vertices
+                self.position = position
+                self.price = price
+                self.direction = direction  # Хранит номер вершины из которой вышла
+                self.ready = True  # Проверена ли точка
+
+        def escape_path_length(start_point, finish_point, start_lenth):
+            """
+                Вычисляет примерное расстояния до точки побега и рассчитывает цену.
+            """
+            lenth = math.sqrt((start_point[0] - finish_point[0]) ** 2 + (start_point[1] - finish_point[1]) ** 2)
+            if lenth > start_lenth:
+                return 100 - (lenth - start_lenth)
+            elif lenth < start_lenth:
+                return 100 + (start_lenth - lenth)*2
+            return 100
+
+        def node_friends_calculation(global_map, graph, node, escape_point, verified_position, start_lenth):
+            """
+                Вычисляет соседние узлы графа при расчёте по локальной карте
+
+                То же самое, что было раньше, только с проверкой на высоту и лестницы
+            """
+            node.ready = False
+            node_tile = self.path_world_tile(global_map, node.position)
+            tiles_positions = list()
+            tiles_positions.append([node.position[0] + 1, node.position[1]])
+            tiles_positions.append([node.position[0] - 1, node.position[1]])
+            tiles_positions.append([node.position[0], node.position[1] + 1])
+            tiles_positions.append([node.position[0], node.position[1] - 1])
+            if tiles_positions:
+                for tile_position in tiles_positions:
+                    tile = self.path_world_tile(global_map, tile_position)
+                    if tile.level == node_tile.level or node_tile.stairs or tile.stairs:
+                        if tile_position not in verified_position:
+                            verified_position.append(tile_position)
+                            graph.append(Node_vertices(len(graph), node.vertices, tile_position,
+                                                    tile.price_move + escape_path_length(tile_position, escape_point,
+                                                    start_lenth), node.number))
+                            # print(f'добавлена вершина под номером {len(graph)}, направлением на вершину с номером {node.number}
+                            # и координатами {[node.position[0], node.position[1] - 1]}, {node.vertices}')
+
+        start_lenth = self.path_length(start_point, escape_point)
+
+        start_tile = self.path_world_tile(global_map, start_point)
+
+        graph = []  # Список, содержащий все вершины
+        verified_position = []  # Содержит список всех использованных координат, что бы сравнивать с ним при добавлении новой вершины.
+        graph.append(Node_vertices(0, start_tile.vertices, start_point, 100, 0))
+        verified_position.append(start_point)
+        node_friends_calculation(global_map, graph, graph[0], escape_point, verified_position, start_lenth)
+
+        general_loop = True  # Параметр останавливающий цикл
+        step_count = 0  # Шаг цикла
+        number_finish_node = 0  # Хранит номер финишной точки
+        reversed_waypoints = []  # Обращенный список вейпоинтов
+        while general_loop:
+            min_price = 99999
+            node = graph[-1]
+            for number_node in range(len(graph)):
+                if graph[number_node].ready:
+                    if graph[number_node].price < min_price:
+                        min_price = graph[number_node].price
+                        node = graph[number_node]
+            if min_price == 99999:
+                number_finish_node = len(graph) - 1
+                success = False
+                general_loop = False
+            node_friends_calculation(global_map, graph, node, escape_point, verified_position, start_lenth)
+            step_count += 1
+            if step_count == 300:
+                min_price = 99999
+                node = graph[-1]
+                for number_node in range(len(graph)):
+                    if graph[number_node].price < min_price:
+                        min_price = graph[number_node].price
+                        number_finish_node = number_node
+                general_loop = False
+        # Определение пути по сохранённым направлениям
+        check_node = graph[number_finish_node]
+        ran_while = True
+        while ran_while:
+            reversed_waypoints.append(check_node.position)
+            if check_node.direction == 0:
+                ran_while = False
+            check_node = graph[check_node.direction]  # Предыдущая вершина объявляется проверяемой
+
+        return list(reversed(reversed_waypoints))
