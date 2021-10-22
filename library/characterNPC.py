@@ -146,6 +146,7 @@ class NPC(Character, Path):
         self.npc_consequences_calculation()
 
         self.past_target = self.target
+        #print(F"local_waypoints - {self.local_waypoints}")
 
     def check_achieving_the_target(self):
         """
@@ -191,7 +192,18 @@ class NPC(Character, Path):
                 return CharacterAction('activity', 'slow')
             else:
                 return CharacterAction('activity', 'fast')
-        elif self.follow:
+        elif self.escape:  # Назначение побега
+            if self.past_target.entity != self.escape:
+                self.global_waypoints = list()
+                self.local_waypoints = list()
+                self.target = Target(type='escape', entity=self.escape, position=self.escape.world_position,
+                                     create_step=0, lifetime=1000)
+            else:
+                self.target = self.past_target
+                self.target.entity = self.escape
+            return CharacterAction('move', 'escape')
+
+        elif self.follow:  # Назначение преследования
             if self.past_target.entity != self.follow:
                 self.global_waypoints = list()
                 self.local_waypoints = list()
@@ -203,11 +215,10 @@ class NPC(Character, Path):
             return CharacterAction('move', 'follow')  # Если есть цель преследования, то преследование
         elif self.target:                                # Если есть цель
             return CharacterAction('move', 'details')    # FIXME Пока все цели только на перемещение
-        else: # Если нет цели
+        else:  # Если нет цели
             self.target = self.npc_calculation_random_target(vertices_graph, vertices_dict)
             return CharacterAction('move', 'details')
-        #else:
-        #    return CharacterAction('move', 'details')
+        return CharacterAction('pass', 'details')
 
     def npc_calculation_random_target(self, vertices_graph, vertices_dict):
         """ Считает случайную цель """
@@ -226,7 +237,7 @@ class NPC(Character, Path):
         """
             Передвижение персонажа   ----- Можно заполнить уже готовой логикой из старой версии -----
         """
-        if self.escape:
+        if action.details == 'escape':
             self.npc_escape_move(global_map, vertices_graph, vertices_dict)
         elif action.details == 'follow':
             self.npc_follow_move(global_map, vertices_graph, vertices_dict)
@@ -263,10 +274,16 @@ class NPC(Character, Path):
                     считаю вейпоинты
                     и иду
         """
-        if self.target == self.past_target and self.local_waypoints:
+        if self.target == self.past_target and self.local_waypoints and self.npc_escape_check(global_map):
             self.path_local_move(global_map)
         else:
-            self.path_escape_calculate(self, global_map, vertices_graph)
+            self.path_escape_calculate(global_map, vertices_graph, vertices_dict)
+
+    def npc_escape_check(self, global_map):
+        """ Проверяет актуальность посчитанных вейпоинтов побега """
+        if self.path_length(self.world_position, self.target.get_position()) < 10:
+            return False
+        return True
 
     def npc_follow_move(self, global_map, vertices_graph, vertices_dict):
         """

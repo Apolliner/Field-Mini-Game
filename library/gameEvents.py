@@ -52,6 +52,13 @@ def interaction_processing(global_map, interaction, enemy_list, step, chunk_size
                         enemy.local_waypoints = []
                         logging.debug(f"{step}: {enemy.name_npc} назначено следование {enemy.follow}")
 
+            if interact[0] == 'escape_me_all_enemies':
+                for enemy in enemy_list:
+                    if hasattr(enemy, 'memory'):  # FIXME Если это новый тип NPC
+                        enemy.escape = interact[1][0]
+                        #print("Назначен побег")
+
+
             if interact[0] == 'view_waypoints':
                 for enemy in enemy_list:
                     if enemy.local_waypoints:

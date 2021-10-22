@@ -87,14 +87,18 @@ class Path:
         self.global_position, self.local_position = self.path_world_position_recalculation(waypoint)
         self.vertices = self.path_world_tile(global_map, waypoint)
 
-    def path_escape_calculate(self, global_map, vertices_graph):
+    def path_escape_calculate(self, global_map, vertices_graph, vertices_dict):
         """
             Рассчитывает точку бегства для персонажа и локальные вейпоинты к ней
             Возможно потребуется модифицированный алгоритм A* развёрнутый наоборот
             То есть чем ближе к противнику от которого убегает персонаж, тем дороже стоимость вершины до него.
             Финальной выбирается самая дешёвая точка после 250-300 циклов.
         """
-        pass
+        self.local_waypoints = self._path_escape_world_tiles_a_star_algorithm(global_map, self.world_position,
+                                                                              self.target.get_position())
+        # Если есть куда двигаться
+        if self.local_waypoints:
+            self.path_local_move(global_map)
 
     def path_calculate(self, global_map, vertices_graph, vertices_dict):
         """

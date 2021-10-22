@@ -187,7 +187,7 @@ def request_press_button(global_map, person, chunk_size, go_to_print, mode_actio
             return (mode_action, 'none', mouse_position)
     elif key == 'e' or key == 'у':
         if mode_action == 'test_move':
-            return ('test_move', 'explosion', mouse_position)
+            return ('test_move', 'escape_me', mouse_position)
         else:
             return (mode_action, 'none', mouse_position)
     elif key == 'b' or key == 'и':
@@ -314,6 +314,9 @@ def test_request_move(global_map: list, person, chunk_size: int, go_to_print, pr
 
     elif pressed_button == 'follow_me':
         interaction.append(['follow_me_all_enemies', [person, 'follow', 3]])
+
+    elif pressed_button == 'escape_me':
+        interaction.append(['escape_me_all_enemies', [person, 'escape', 3]])
 
     elif pressed_button == 'button_add_beacon':
         activity_list.append(
