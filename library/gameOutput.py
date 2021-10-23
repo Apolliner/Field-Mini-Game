@@ -399,7 +399,8 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
             for number_line in range(chunk_size):
                 for number_tile in range(chunk_size):
                     if entities_layer[number_line][number_tile].icon != '0':
-                        if entities_layer[number_line][number_tile].name == 'riffleman':
+                        if entities_layer[number_line][number_tile].name == 'riffleman' or \
+                                            hasattr(entities_layer[number_line][number_tile], 'memory'):  # FIXME
                             if entities_layer[number_line][number_tile].direction in ('left', 'right', 'down', 'up'):
                                 person_walk_draw(entities_layer[number_line][number_tile], person,
                                                  settings_for_intermediate_steps)
