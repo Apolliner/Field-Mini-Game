@@ -353,6 +353,7 @@ def loading_all_sprites():
                     'Sn': {'0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), '../resources', 'tile_snake.png')))},
                     'Rs': {'0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), '../resources', 'tile_rattlesnake.png')))},
                     'Bi': {'0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), '../resources', 'tile_bird.png')))},
+                    'B': {'0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), '../resources', 'beacon.png')))},
                     }
     return sprites_dict
 class Fast_minimap_tile(pygame.sprite.Sprite):

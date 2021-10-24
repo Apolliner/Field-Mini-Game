@@ -5,6 +5,7 @@ import sys
 from library.utils import gluing_location
 from library.classes import Action_in_map
 from library.gameEvents import return_npc, return_creature
+from library.gameEvents import world_position_recalculation
 
 
 """
@@ -48,7 +49,7 @@ def master_player_action(global_map, person, chunk_size, go_to_print, mode_actio
 
         elif mode_action == 'test_move':
             test_request_move(global_map, person, chunk_size, go_to_print, pressed_button, interaction, activity_list,
-                              step, enemy_list)
+                              step, enemy_list, mouse_position)
 
         elif mode_action == 'pointer':
             request_pointer(person, chunk_size, go_to_print, pressed_button)
@@ -279,7 +280,7 @@ def request_move(global_map: list, person, chunk_size: int, go_to_print, pressed
 
 
 def test_request_move(global_map: list, person, chunk_size: int, go_to_print, pressed_button, interaction,
-                      activity_list, step, enemy_list):  # тестовый быстрый режим премещения
+                      activity_list, step, enemy_list, mouse_position):  # тестовый быстрый режим перемещения
     """
         Меняет динамическое местоположение персонажа в тестовом режиме, без ограничений. По полчанка за раз.
         При нажатии на 'p' назначает всем NPC точку следования.
@@ -305,12 +306,20 @@ def test_request_move(global_map: list, person, chunk_size: int, go_to_print, pr
             person.recalculating_the_display = True
 
     elif pressed_button == 'button_purpose_task':
-        local_position = copy.deepcopy(person.dynamic)
-        if local_position[0] > chunk_size:
-            local_position[0] -= chunk_size
-        if local_position[1] > chunk_size:
-            local_position[1] -= chunk_size
-        interaction.append(['task_point_all_enemies', [person.global_position, person.vertices, local_position]])
+
+        mouse_screen_coords = [mouse_position[1]//30, mouse_position[0]//30]
+        person_world_position = copy.deepcopy(person.world_position)
+        mouse_world_position = [person_world_position[0] - chunk_size//2 + mouse_screen_coords[0],
+                                person_world_position[1] - chunk_size//2 + mouse_screen_coords[1]]
+
+        mouse_global_position, mouse_local_position = world_position_recalculation(mouse_world_position, chunk_size)
+
+        mouse_vertices = global_map[mouse_global_position[0]][mouse_global_position[1]].chunk[mouse_local_position[0]][
+                                                                                    mouse_local_position[1]].vertices
+        interaction.append(['task_point_all_enemies', [mouse_global_position, mouse_vertices, mouse_local_position],
+                                                                                               mouse_world_position])
+        activity_list.append(Action_in_map('test_beacon', step, mouse_global_position, mouse_local_position,
+                                                                                            chunk_size, ''))
 
     elif pressed_button == 'follow_me':
         interaction.append(['follow_me_all_enemies', [person, 'follow', 3]])

@@ -4,6 +4,7 @@ import copy
 import math
 from library.classes import Action_in_map, Global_interact
 from library.characterNPC import NPC
+from library.characterBase import Target
 
 """
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -34,12 +35,17 @@ def interaction_processing(global_map, interaction, enemy_list, step, chunk_size
     if interaction:
         for interact in interaction:
             if interact[0] == 'task_point_all_enemies':
+
                 for enemy in enemy_list:
-                    enemy.target = interact[1]
-                    enemy.follow = []
-                    enemy.waypoints = []
-                    enemy.local_waypoints = []
-                    logging.debug(f"{step}: {enemy.name_npc} получил задачу {enemy.target}")
+                    if hasattr(enemy, 'memory'):  # FIXME Если это новый тип NPC
+                        enemy.target = Target(type='move', entity=None, position=interact[2],
+                                                            create_step=step, lifetime=1000)
+                    else:
+                        enemy.target = interact[1]
+                        enemy.follow = []
+                        enemy.waypoints = []
+                        enemy.local_waypoints = []
+                        logging.debug(f"{step}: {enemy.name_npc} получил задачу {enemy.target}")
 
             if interact[0] == 'follow_me_all_enemies':
                 for enemy in enemy_list:
