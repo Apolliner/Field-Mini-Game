@@ -39,7 +39,7 @@ def interaction_processing(global_map, interaction, enemy_list, step, chunk_size
                 for enemy in enemy_list:
                     if hasattr(enemy, 'memory'):  # FIXME Если это новый тип NPC
                         enemy.target = Target(type='move', entity=None, position=interact[2],
-                                                            create_step=step, lifetime=1000)
+                                                                create_step=step, lifetime=1000)
                     else:
                         enemy.target = interact[1]
                         enemy.follow = []

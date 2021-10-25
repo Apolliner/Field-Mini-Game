@@ -214,6 +214,9 @@ class NPC(Character, Path):
                 self.target.entity = self.follow
             return CharacterAction('move', 'follow')  # Если есть цель преследования, то преследование
         elif self.target:                                # Если есть цель
+            if self.target != self.past_target:
+                self.global_waypoints = list()
+                self.local_waypoints = list()
             return CharacterAction('move', 'details')    # FIXME Пока все цели только на перемещение
         else:  # Если нет цели
             self.target = self.npc_calculation_random_target(vertices_graph, vertices_dict)

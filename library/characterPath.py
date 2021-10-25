@@ -201,8 +201,8 @@ class Path:
             if vertices.number == self.vertices:
                 for connect in vertices.connections:
                     if connect.number == self.global_waypoints[0]:
-                        if self.target.entity and self.target.entity.vertices == self.global_waypoints[0]:
-                            approximate_position = self.target.entity.local_position
+                        if self.target.get_vertices(global_map) == self.global_waypoints[0]:
+                            _, approximate_position = self.path_world_position_recalculation(self.target.get_position())
                         else:
                             approximate_position = connect.approximate_position
 
