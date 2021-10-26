@@ -300,7 +300,8 @@ class NPC(Character, Path):
                     и иду
         """
         if self.target == self.past_target and self.local_waypoints and self.npc_follow_check(global_map):
-            self.path_local_move(global_map)
+            if self.path_length(self.target.get_position(), self.world_position) > 2:
+                self.path_local_move(global_map)
         else:
             self.path_calculate(global_map, vertices_graph, vertices_dict)
 

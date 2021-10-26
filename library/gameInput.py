@@ -6,6 +6,7 @@ from library.utils import gluing_location
 from library.classes import Action_in_map
 from library.gameEvents import return_npc, return_creature
 from library.gameEvents import world_position_recalculation
+from library.characterNPC import NPC
 
 
 """
@@ -322,7 +323,19 @@ def test_request_move(global_map: list, person, chunk_size: int, go_to_print, pr
                                                                                             chunk_size, ''))
 
     elif pressed_button == 'follow_me':
-        interaction.append(['follow_me_all_enemies', [person, 'follow', 3]])
+        mouse_screen_coords = [mouse_position[1] // 30, mouse_position[0] // 30]
+        person_world_position = copy.deepcopy(person.world_position)
+        mouse_world_position = [person_world_position[0] - chunk_size // 2 + mouse_screen_coords[0],
+                                person_world_position[1] - chunk_size // 2 + mouse_screen_coords[1]]
+        mouse_enemy = None
+        for enemy in enemy_list:
+            if hasattr(enemy, 'memory') and enemy.world_position == mouse_world_position:
+                mouse_enemy = enemy
+                break
+        if mouse_enemy is not None:
+            interaction.append(['follow_me_all_enemies', [mouse_enemy, 'follow', 3]])
+        else:
+            interaction.append(['follow_me_all_enemies', [person, 'follow', 3]])
 
     elif pressed_button == 'escape_me':
         interaction.append(['escape_me_all_enemies', [person, 'escape', 3]])
@@ -342,15 +355,16 @@ def test_request_move(global_map: list, person, chunk_size: int, go_to_print, pr
         interaction.append(['add_global_interaction', 'explosion', person.global_position, person.local_position])
 
     elif pressed_button == 'add_hunter':
-        global_position = copy.deepcopy(person.global_position)
-        local_position = copy.deepcopy(person.local_position)
-        if local_position[0] >= chunk_size:
-            global_position[0] += 1
-            local_position[0] = 0
-        elif local_position[1] >= chunk_size:
-            global_position[1] += 1
-            local_position[1] = 0
-        enemy_list.append(return_npc(global_position, local_position, 'riffleman'))
+        mouse_screen_coords = [mouse_position[1] // 30, mouse_position[0] // 30]
+        person_world_position = copy.deepcopy(person.world_position)
+        mouse_world_position = [person_world_position[0] - chunk_size // 2 + mouse_screen_coords[0],
+                                person_world_position[1] - chunk_size // 2 + mouse_screen_coords[1]]
+
+        mouse_global_position, mouse_local_position = world_position_recalculation(mouse_world_position, chunk_size)
+
+        enemy_list.append(NPC(mouse_global_position, mouse_local_position, 'new_riffleman', 'new_riffleman', '☻',
+                                                                            'd0', 'Тестовый NPC', 'new_riffleman'))
+
     elif pressed_button == 'add_coyot':
         global_position = copy.deepcopy(person.global_position)
         local_position = copy.deepcopy(person.local_position)
