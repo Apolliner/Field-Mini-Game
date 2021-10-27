@@ -14,6 +14,7 @@ class Path:
         local_waypoints
         target
         direction
+        forced_pass
     """
 
     chunk_size = 25
@@ -80,14 +81,21 @@ class Path:
         global_position = [world_position[0] // self.chunk_size, world_position[1] // self.chunk_size]
         return global_map[global_position[0]][global_position[1]]
 
-    def path_local_move(self, global_map):
-        """ Перемещения к очередному локальному вейпоинту """
-        waypoint = self.local_waypoints.pop(0)
-        self.direction, self.type = self.path_direction_calculation(self.world_position, waypoint)
-        self.global_position, self.local_position = self.path_world_position_recalculation(waypoint)
-        self.vertices = self.path_world_tile(global_map, waypoint)
+    def path_local_move(self, global_map, enemy_list):
+        """ Перемещения к очередному локальному вейпоинту. Проверяет наличие другого NPC на пути. """
+        move = True
+        for enemy in enemy_list:
+            if enemy.world_position == self.local_waypoints[0]:
+                self.forced_pass += 1
+                move = False
+        if move:
+            self.forced_pass = 0
+            waypoint = self.local_waypoints.pop(0)
+            self.direction, self.type = self.path_direction_calculation(self.world_position, waypoint)
+            self.global_position, self.local_position = self.path_world_position_recalculation(waypoint)
+            self.vertices = self.path_world_tile(global_map, waypoint)
 
-    def path_escape_calculate(self, global_map, vertices_graph, vertices_dict):
+    def path_escape_calculate(self, global_map, vertices_graph, vertices_dict, enemy_list):
         """
             Рассчитывает точку бегства для персонажа и локальные вейпоинты к ней
             Возможно потребуется модифицированный алгоритм A* развёрнутый наоборот
@@ -98,9 +106,9 @@ class Path:
                                                                               self.target.get_position())
         # Если есть куда двигаться
         if self.local_waypoints:
-            self.path_local_move(global_map)
+            self.path_local_move(global_map, enemy_list)
 
-    def path_calculate(self, global_map, vertices_graph, vertices_dict):
+    def path_calculate(self, global_map, vertices_graph, vertices_dict, enemy_list):
         """
             Принимает старт и финиш в виде мировых координат, а так же глобальную карту и граф зон доступности для рассчёта пути.
 
@@ -129,7 +137,7 @@ class Path:
 
         # Если есть куда двигаться
         if self.local_waypoints:
-            self.path_local_move(global_map)
+            self.path_local_move(global_map, enemy_list)
 
     def approximate_finish_calculation(self, start_point, finish_point):
         """

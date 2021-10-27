@@ -314,6 +314,7 @@ class Character:
         self.escape = []                            # Бегство от                            list
         self.delete = False                         # Удаление персонажа из мира            bool
         self.live = True                            # Живой ли персонаж                     bool
+        self.forced_pass = 0                        # Вынужденный пропуск                   int
 
         # ОТОБРАЖЕНИЕ ПЕРСОНАЖА
         self.name = name                            # Название типа персонажа               str

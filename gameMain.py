@@ -263,7 +263,7 @@ def main_loop():
         Здесь работает игровое меню
         
     """
-    logging.basicConfig(filename="logging.log", filemode="w", level=logging.DEBUG)
+    logging.basicConfig(filename="save/logging.log", filemode="w", level=logging.DEBUG)
     
     global_region_grid = 3
     region_grid = 3

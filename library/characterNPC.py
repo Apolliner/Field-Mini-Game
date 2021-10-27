@@ -109,7 +109,7 @@ class NPC(Character, Path):
         self.status = list()  # Список текущего состояния               list
         self.memory = list()
 
-    def npc_master_calculation(self, step, activity_list, global_map, vertices_graph, vertices_dict):
+    def npc_master_calculation(self, step, activity_list, global_map, vertices_graph, vertices_dict, enemy_list):
         """
             Обработка действий персонажа на текущем шаге
         """
@@ -121,11 +121,12 @@ class NPC(Character, Path):
         self.check_achieving_the_target()
 
         # Рассчёт действий
-        action = self.npc_checking_the_situation(vertices_graph, vertices_dict)
+        action = self.npc_checking_the_situation(vertices_graph, vertices_dict, enemy_list)
 
         # Совершение действий
         if action.type == 'move':
-            self.npc_move_calculations(action, activity_list, step, global_map, vertices_graph, vertices_dict)
+            self.npc_move_calculations(action, activity_list, step, global_map, vertices_graph,
+                                                                    vertices_dict, enemy_list)
 
         elif action.type == 'activity':
             self.npc_activity_calculations(action)
@@ -171,7 +172,12 @@ class NPC(Character, Path):
         elif self.fatigue < 50:
             self.status.append('fatigue')
 
-    def npc_checking_the_situation(self, vertices_graph, vertices_dict):
+        if self.forced_pass > 3:
+            self.global_waypoints = list()
+            self.local_waypoints = list()
+            self.forced_pass = 0
+
+    def npc_checking_the_situation(self, vertices_graph, vertices_dict, enemy_list):
         """
             Проверяет обстановку для решения дальнейших действий
 
@@ -236,21 +242,21 @@ class NPC(Character, Path):
         return Target(type='move', entity=None, position=world_position, create_step=0, lifetime=1000)
 
 
-    def npc_move_calculations(self, action, activity_list, step, global_map, vertices_graph, vertices_dict):
+    def npc_move_calculations(self, action, activity_list, step, global_map, vertices_graph, vertices_dict, enemy_list):
         """
             Передвижение персонажа   ----- Можно заполнить уже готовой логикой из старой версии -----
         """
         if action.details == 'escape':
-            self.npc_escape_move(global_map, vertices_graph, vertices_dict)
+            self.npc_escape_move(global_map, vertices_graph, vertices_dict, enemy_list)
         elif action.details == 'follow':
-            self.npc_follow_move(global_map, vertices_graph, vertices_dict)
+            self.npc_follow_move(global_map, vertices_graph, vertices_dict, enemy_list)
         elif self.activity:
-            self.npc_activity_move(global_map, vertices_graph, vertices_dict)
+            self.npc_activity_move(global_map, vertices_graph, vertices_dict, enemy_list)
         else:
-            self.npc_move(global_map, vertices_graph, vertices_dict)
-        #self.path_local_move(global_map)
+            self.npc_move(global_map, vertices_graph, vertices_dict, enemy_list)
+        #self.path_local_move(global_map, enemy_list)
 
-    def npc_move(self, global_map, vertices_graph, vertices_dict):
+    def npc_move(self, global_map, vertices_graph, vertices_dict, enemy_list):
         """
             Рассчёт перемещения в конкретную точку
 
@@ -262,11 +268,11 @@ class NPC(Character, Path):
                     и иду
         """
         if self.target == self.past_target and self.local_waypoints:
-            self.path_local_move(global_map)
+            self.path_local_move(global_map, enemy_list)
         else:
-            self.path_calculate(global_map, vertices_graph, vertices_dict)
+            self.path_calculate(global_map, vertices_graph, vertices_dict, enemy_list)
 
-    def npc_escape_move(self, global_map, vertices_graph, vertices_dict):
+    def npc_escape_move(self, global_map, vertices_graph, vertices_dict, enemy_list):
         """
             Рассчёт бегства
 
@@ -278,9 +284,9 @@ class NPC(Character, Path):
                     и иду
         """
         if self.target == self.past_target and self.local_waypoints and self.npc_escape_check(global_map):
-            self.path_local_move(global_map)
+            self.path_local_move(global_map, enemy_list)
         else:
-            self.path_escape_calculate(global_map, vertices_graph, vertices_dict)
+            self.path_escape_calculate(global_map, vertices_graph, vertices_dict, enemy_list)
 
     def npc_escape_check(self, global_map):
         """ Проверяет актуальность посчитанных вейпоинтов побега """
@@ -288,7 +294,7 @@ class NPC(Character, Path):
             return False
         return True
 
-    def npc_follow_move(self, global_map, vertices_graph, vertices_dict):
+    def npc_follow_move(self, global_map, vertices_graph, vertices_dict, enemy_list):
         """
             Рассчёт преследования некоторого персонажа
 
@@ -301,9 +307,9 @@ class NPC(Character, Path):
         """
         if self.target == self.past_target and self.local_waypoints and self.npc_follow_check(global_map):
             if self.path_length(self.target.get_position(), self.world_position) > 2:
-                self.path_local_move(global_map)
+                self.path_local_move(global_map, enemy_list)
         else:
-            self.path_calculate(global_map, vertices_graph, vertices_dict)
+            self.path_calculate(global_map, vertices_graph, vertices_dict, enemy_list)
 
     def npc_follow_check(self, global_map):
         """
@@ -321,7 +327,7 @@ class NPC(Character, Path):
         """ Случайное перемещение или пропуск хода """
         pass
 
-    def npc_activity_move(self, global_map, vertices_graph):
+    def npc_activity_move(self, global_map, vertices_graph, enemy_list):
         """
             Выполнение и оставление активностей на карте, связанных с удовлетворением потребностей или
             праздным времяпрепровожденим.
@@ -339,9 +345,9 @@ class NPC(Character, Path):
         if self.target == self.past_target:
             if self.target.type == 'move':
                 if self.local_waypoints:
-                    self.path_local_move(global_map)
+                    self.path_local_move(global_map, enemy_list)
                 else:
-                    self.path_calculate(self, global_map, vertices_graph)
+                    self.path_calculate(self, global_map, vertices_graph, enemy_list)
             else:
                 pass
 

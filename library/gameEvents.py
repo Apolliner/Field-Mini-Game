@@ -720,8 +720,8 @@ def master_npc_calculation(global_map, enemy_list, person, go_to_print, step, ac
             enemy.all_description_calculation()
         if not enemy.delete:
             # Если это новый тип противника
-            if isinstance(enemy, NPC):
-                enemy.npc_master_calculation(step, activity_list, global_map, vertices_graph, verices_dict)
+            if isinstance(enemy, NPC):  # FIXME Если это новый тип противника
+                enemy.npc_master_calculation(step, activity_list, global_map, vertices_graph, verices_dict, enemy_list)
             # Если это противник
             elif isinstance(enemy, Enemy):
 
