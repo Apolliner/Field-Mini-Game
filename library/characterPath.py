@@ -584,7 +584,7 @@ class Path:
                 general_loop = False
             node_friends_calculation(global_map, graph, node, escape_point, verified_position, start_lenth)
             step_count += 1
-            if step_count == 300:
+            if step_count == 50:
                 min_price = 99999
                 node = graph[-1]
                 for number_node in range(len(graph)):

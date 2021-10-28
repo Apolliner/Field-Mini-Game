@@ -253,12 +253,13 @@ class Action_in_map:
 class Target:
     """ Содержит описание задачи, выполняемой персонажем """
     chunk_size = 25
-    def __init__(self, type, entity, position, create_step, lifetime):
+    def __init__(self, type, entity, position, create_step, lifetime, **kwargs):
         self.type = type
         self.entity = entity
         self.position = position
         self.create_step = create_step
         self.lifetime = lifetime
+        self.kwargs = kwargs
 
     def get_position(self):
         """ Возвращает позицию из цели """
@@ -311,7 +312,9 @@ class Character:
         self.target = list()                        # Текущая цель перемещения и действия   [world_y, world_x, vertices, type, description, condition]
         self.past_target = list()                   # Предыдущая цель                       list
         self.follow = []                            # Цель для следования или преследования [follow_character, 'type_follow', расстояние остановки:int]
-        self.escape = []                            # Бегство от                            list
+        self.escape = []                            # Бегство от                            class
+        self.investigation = []                     # Поиск следов                          class
+        self.pathfinder = 5                         # Умение искать следы                   int
         self.delete = False                         # Удаление персонажа из мира            bool
         self.live = True                            # Живой ли персонаж                     bool
         self.forced_pass = 0                        # Вынужденный пропуск                   int
