@@ -109,7 +109,8 @@ class NPC(Character, Path):
         self.status = list()  # Список текущего состояния               list
         self.memory = list()
 
-    def npc_master_calculation(self, step, activity_list, global_map, vertices_graph, vertices_dict, enemy_list):
+    def npc_master_calculation(self, step, activity_list, global_map, vertices_graph, vertices_dict, enemy_list,
+                               step_activity_dict):
         """
             Обработка действий персонажа на текущем шаге
         """
@@ -121,7 +122,7 @@ class NPC(Character, Path):
         self.check_achieving_the_target()
 
         # Рассчёт действий
-        action = self.npc_checking_the_situation(vertices_graph, vertices_dict, enemy_list)
+        action = self.npc_checking_the_situation(vertices_graph, vertices_dict, enemy_list, step_activity_dict)
 
         # Совершение действий
         if action.type == 'move':
@@ -177,13 +178,15 @@ class NPC(Character, Path):
             self.local_waypoints = list()
             self.forced_pass = 0
 
-    def npc_checking_the_situation(self, vertices_graph, vertices_dict, enemy_list):
+    def npc_checking_the_situation(self, vertices_graph, vertices_dict, enemy_list, step_activity_dict):
         """
             Проверяет обстановку для решения дальнейших действий
 
             Проверяет наличие опасности, наличие путевых точек, наличие неудовлетворённых потребностей.
             Возвращает тип действия, совершаемого на данном шаге.
         """
+        traces = self.checking_for_noticeable_traces(step_activity_dict)
+
 
         if self.alarm:
             if 'injury' in self.status and 100 // self.determination > 0:
@@ -228,6 +231,10 @@ class NPC(Character, Path):
             self.target = self.npc_calculation_random_target(vertices_graph, vertices_dict)
             return CharacterAction('move', 'details')
         return CharacterAction('pass', 'details')
+
+    def checking_for_noticeable_traces(self, step_activity_dict):
+        """ Проверяет наличие заметных шагов рядом с персонажем """
+        pass
 
     def npc_calculation_random_target(self, vertices_graph, vertices_dict):
         """ Считает случайную цель """

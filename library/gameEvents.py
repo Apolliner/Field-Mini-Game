@@ -713,6 +713,13 @@ def master_npc_calculation(global_map, enemy_list, person, go_to_print, step, ac
         self.target = [] #[[global_y, global_x], vertices, [local_y, local_x]]
         self.local_waypoints = [] # [[local_y, local_x], vertices, [global_y, global_x]]
     """
+
+    step_activity_dict = dict()
+    for activity in activity_list:
+        world_position = world_position_calculate(activity.global_position, activity.local_position,
+                        chunk_size)
+        step_activity_dict[tuple(world_position)] = activity
+
     delete_list = []
     for number_enemy, enemy in enumerate(enemy_list):
         enemy.direction = 'center'
@@ -721,7 +728,8 @@ def master_npc_calculation(global_map, enemy_list, person, go_to_print, step, ac
         if not enemy.delete:
             # Если это новый тип противника
             if isinstance(enemy, NPC):  # FIXME Если это новый тип противника
-                enemy.npc_master_calculation(step, activity_list, global_map, vertices_graph, verices_dict, enemy_list)
+                enemy.npc_master_calculation(step, activity_list, global_map, vertices_graph, verices_dict, enemy_list,
+                                             step_activity_dict)
             # Если это противник
             elif isinstance(enemy, Enemy):
 
