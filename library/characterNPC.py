@@ -234,7 +234,27 @@ class NPC(Character, Path):
 
     def checking_for_noticeable_traces(self, step_activity_dict):
         """ Проверяет наличие заметных шагов рядом с персонажем """
-        pass
+        pathfinder_dict = {
+            1: ['0.0', '...', '0.0'],
+            2: ['00.00', '0...0', '.....', '0...0', '00.00'],
+            3: ['000.000', '00...00', '0.....0', '.......', '0.....0', '00...00', '000.000'],
+            4: ['0000.0000', '00.....00', '0.......0', '0.......0', '.........', '0.......0', '0.......0', '00.....00',
+                '0000.0000'],
+            5: ['0000...0000', '000.....000', '00.......00', '0.........0', '...........', '...........', '...........',
+                '0.........0', '00.......00', '000.....000', '0000...0000'],
+            6: ['00000...00000', '000.......000', '00.........00', '0...........0', '0...........0', '.............',
+                '.............', '.............', '0...........0', '0...........0', '00.........00', '000.......000',
+                '00000...00000'],
+        }
+        null_position = [self.world_position[0] - self.pathfinder, self.world_position[1] - self.pathfinder]
+        pattern = pathfinder_dict[self.pathfinder]
+        for number_line, line in enumerate(pattern):
+            for number_tile, tile in enumerate(line):
+                if tile == '.':
+                    check_position = tuple(null_position[0] + number_line, null_position[1] + number_tile)
+                    if check_position in step_activity_dict and step_activity_dict[check_position].caused != self.name_npc:
+                        self.investigation = []  # FIXME Видимо придется добавить в активность поле, содержащее создателя активности
+
 
     def npc_calculation_random_target(self, vertices_graph, vertices_dict):
         """ Считает случайную цель """
