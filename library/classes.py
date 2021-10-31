@@ -319,9 +319,9 @@ class Global_interact:
 class Action_in_map:
     """ Содержит в себе описание активности и срок её жизни """
     __slots__ = ('name', 'icon', 'description', 'lifetime', 'birth', 'global_position', 'local_position', 'caused',
-                 'lifetime_description', 'visible', 'type', 'level')
+                 'lifetime_description', 'visible', 'type', 'level', 'entity')
 
-    def __init__(self, name, birth, position_npc, local_position, chunk_size, caused):
+    def __init__(self, name, birth, position_npc, local_position, chunk_size, caused, entity):
         self.name = name
         self.icon = self.action_dict(0)
         self.lifetime = self.action_dict(2)
@@ -334,6 +334,7 @@ class Action_in_map:
         self.visible = self.action_dict(3)
         self.type = '0'
         self.level = 0
+        self.entity = entity
 
     def __getstate__(self) -> dict:
         """ Сохранение класса """
@@ -351,6 +352,7 @@ class Action_in_map:
         state["visible"] = self.visible
         state["type"] = self.type
         state["level"] = self.level
+        state["entity"] = self.entity
         return state
 
     def __setstate__(self, state: dict):
@@ -368,6 +370,7 @@ class Action_in_map:
         self.visible = state["visible"]
         self.type = state["type"]
         self.level = state["level"]
+        self.entity = state["entity"]
 
     def all_description(self):
         self.description = f'{self.lifetime_description} {self.action_dict(1)} похоже на {self.caused}'

@@ -251,10 +251,12 @@ class NPC(Character, Path):
         for number_line, line in enumerate(pattern):
             for number_tile, tile in enumerate(line):
                 if tile == '.':
-                    check_position = tuple(null_position[0] + number_line, null_position[1] + number_tile)
+                    check_position = (null_position[0] + number_line, null_position[1] + number_tile)
                     if check_position in step_activity_dict and step_activity_dict[check_position].caused != self.name_npc:
-                        self.investigation = []  # FIXME Видимо придется добавить в активность поле, содержащее создателя активности
-
+                        activity = step_activity_dict[check_position]
+                        self.investigation = activity.entity  # FIXME Видимо придется добавить в активность поле, содержащее создателя активности
+                        self.target = Target(type='investigation', entity=activity.entity, position=check_position,
+                                    create_step=0, lifetime=1000)
 
     def npc_calculation_random_target(self, vertices_graph, vertices_dict):
         """ Считает случайную цель """

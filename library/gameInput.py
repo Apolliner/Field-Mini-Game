@@ -37,13 +37,13 @@ def master_player_action(global_map, person, chunk_size, go_to_print, mode_actio
         if mode_action == 'move':
             activity_list.append(
                 Action_in_map('faint_footprints', step, person.global_position, person.local_position, chunk_size,
-                              person.name))
+                              person.name, person))
             if random.randrange(21) // 18 > 0:  # Оставление персонажем следов
                 if not global_map[person.global_position[0]][person.global_position[1]].chunk[person.local_position[0]][
                            person.local_position[1]].icon in ('f', '~'):
                     activity_list.append(
                         Action_in_map('human_tracks', step, person.global_position, person.local_position, chunk_size,
-                                      person.name))
+                                      person.name, person))
             if random.randrange(40) // 38 > 0:  # Активация спавнов существ
                 person.activating_spawn = True
             request_move(global_map, person, chunk_size, go_to_print, pressed_button)
@@ -320,7 +320,7 @@ def test_request_move(global_map: list, person, chunk_size: int, go_to_print, pr
         interaction.append(['task_point_all_enemies', [mouse_global_position, mouse_vertices, mouse_local_position],
                                                                                                mouse_world_position])
         activity_list.append(Action_in_map('test_beacon', step, mouse_global_position, mouse_local_position,
-                                                                                            chunk_size, ''))
+                                                                                            chunk_size, '', person))
 
     elif pressed_button == 'follow_me':
         mouse_screen_coords = [mouse_position[1] // 30, mouse_position[0] // 30]
@@ -343,7 +343,7 @@ def test_request_move(global_map: list, person, chunk_size: int, go_to_print, pr
     elif pressed_button == 'button_add_beacon':
         activity_list.append(
             Action_in_map('test_beacon', step, person.global_position, person.local_position, chunk_size,
-                          f'\n оставлен вами в локальной точке - {[person.dynamic[0] % chunk_size, person.dynamic[1] % chunk_size]}| динамической - {person.dynamic}| глобальной - {person.global_position}'))
+                          f'\n оставлен вами в локальной точке - {[person.dynamic[0] % chunk_size, person.dynamic[1] % chunk_size]}| динамической - {person.dynamic}| глобальной - {person.global_position}', person))
 
     elif pressed_button == 'button_test_visible':
         person.test_visible = not person.test_visible

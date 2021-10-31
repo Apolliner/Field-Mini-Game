@@ -25,7 +25,7 @@ def master_game_events(global_map, enemy_list, person, go_to_print, step, activi
     activity_list_check(activity_list, step)
     master_npc_calculation(global_map, enemy_list, person, go_to_print, step, activity_list, chunk_size, interaction,
                            world, vertices_graph, verices_dict)
-    global_interaction_processing(global_map, enemy_list, step, chunk_size, activity_list, global_interaction)
+    global_interaction_processing(global_map, enemy_list, step, chunk_size, activity_list, global_interaction, person)
 
 
 def interaction_processing(global_map, interaction, enemy_list, step, chunk_size, activity_list, global_interaction):
@@ -71,7 +71,7 @@ def interaction_processing(global_map, interaction, enemy_list, step, chunk_size
                         for waypoint in enemy.local_waypoints:  # [local_y, local_x, vertices, [global_y, global_x]]
                             activity_list.append(
                                 Action_in_map('waypoint', step, waypoint[3], [waypoint[0], waypoint[1]],
-                                              chunk_size, enemy.name_npc))
+                                              chunk_size, enemy.name_npc, enemy))
             if interact[0] == 'add_global_interaction':
                 if interact[1] == 'explosion':
                     global_interaction.append(Global_interact('explosion', 'взрыв', interact[2], interact[3]))
@@ -89,7 +89,7 @@ def activity_list_check(activity_list, step):
             activity_list.remove(activity)
 
 
-def global_interaction_processing(global_map, enemy_list, step, chunk_size, activity_list, global_interaction):
+def global_interaction_processing(global_map, enemy_list, step, chunk_size, activity_list, global_interaction, person):
     """
         Обработка глобальных событий
 
@@ -98,12 +98,12 @@ def global_interaction_processing(global_map, enemy_list, step, chunk_size, acti
     if global_interaction:
         for number_interact, interact in enumerate(global_interaction):
             if interact.name == 'explosion':
-                explosion_calculation(interact, activity_list, step, chunk_size, global_map)
+                explosion_calculation(interact, activity_list, step, chunk_size, global_map, person)
                 if interact.step == 5:
                     global_interaction.pop(number_interact)
 
 
-def explosion_calculation(explosion, activity_list, step, chunk_size, global_map):
+def explosion_calculation(explosion, activity_list, step, chunk_size, global_map, person):
     """
         Обработка взрыва
     """
@@ -187,10 +187,12 @@ def explosion_calculation(explosion, activity_list, step, chunk_size, global_map
                               explosion.local_position[1] - len(explosion_draw) // 2 + number_tile]
             if tile == 'e':
                 activity_list.append(
-                    Action_in_map('explosion', step, explosion.global_position, local_position, chunk_size, 'динамит'))
+                    Action_in_map('explosion', step, explosion.global_position, local_position, chunk_size, 'динамит',
+                                  person))
+
             elif tile == 'd':
                 activity_list.append(Action_in_map('dust', step, explosion.global_position, local_position, chunk_size,
-                                                   'последствия взрыва'))
+                                                   'последствия взрыва', person))
 
     explosion.step += 1
 
@@ -790,11 +792,11 @@ def master_npc_calculation(global_map, enemy_list, person, go_to_print, step, ac
                                 activity_list.append(Action_in_map(enemy.activity_map['move'][0][1], step,
                                                                    copy.deepcopy(enemy.global_position),
                                                                    copy.deepcopy(enemy.local_position), chunk_size,
-                                                                   enemy.name_npc))
+                                                                   enemy.name_npc, enemy))
                         activity_list.append(
                             Action_in_map('faint_footprints', step, copy.deepcopy(enemy.global_position),
                                           copy.deepcopy(enemy.local_position),
-                                          chunk_size, enemy.name_npc))
+                                          chunk_size, enemy.name_npc, enemy))
                         enemy_direction_calculation(enemy)
                         enemy.global_position = enemy.local_waypoints[0][3]
                         enemy.local_position = [enemy.local_waypoints[0][0], enemy.local_waypoints[0][1]]
@@ -938,10 +940,10 @@ def character_move(character, activity_list, step, chunk_size):
         if random.randrange(21) // 18 > 0:
             activity_list.append(
                 Action_in_map(character.activity_map['move'][0][1], step, copy.deepcopy(character.global_position),
-                              copy.deepcopy(character.local_position), chunk_size, character.name_npc))
+                              copy.deepcopy(character.local_position), chunk_size, character.name_npc, character))
         activity_list.append(Action_in_map('faint_footprints', step, copy.deepcopy(character.global_position),
                                            copy.deepcopy(character.local_position),
-                                           chunk_size, character.name_npc))
+                                           chunk_size, character.name_npc, character))
         enemy_direction_calculation(character)
         character.global_position = [character.local_waypoints[0][3][0], character.local_waypoints[0][3][1]]
         character.local_position = [character.local_waypoints[0][0], character.local_waypoints[0][1]]
