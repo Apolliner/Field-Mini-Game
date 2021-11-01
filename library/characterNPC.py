@@ -139,7 +139,7 @@ class NPC(Character, Path):
             self.npc_getting_damaged_calculations(action)
 
         elif action.type == 'extra':
-            self.npc_extra_action_calculations(action)
+            self.npc_extra_action_calculations(action, global_map, enemy_list, step_activity_dict)
 
         else:
             pass
@@ -185,8 +185,8 @@ class NPC(Character, Path):
             Проверяет наличие опасности, наличие путевых точек, наличие неудовлетворённых потребностей.
             Возвращает тип действия, совершаемого на данном шаге.
         """
-        traces = self.checking_for_noticeable_traces(step_activity_dict)
-
+        if not self.investigation and random.randrange(10)//9 > 0:
+            self.checking_for_noticeable_traces(step_activity_dict)
 
         if self.alarm:
             if 'injury' in self.status and 100 // self.determination > 0:
@@ -222,6 +222,17 @@ class NPC(Character, Path):
                 self.target = self.past_target
                 self.target.entity = self.follow
             return CharacterAction('move', 'follow')  # Если есть цель преследования, то преследование
+        elif self.investigation:  # Если были обнаружены следы
+            if self.past_target.entity != self.investigation:
+                self.global_waypoints = list()
+                self.local_waypoints = list()
+                self.target = Target(type='investigation', entity=self.investigation,
+                                     position=self.investigation.world_position, create_step=0, lifetime=1000)
+            else:
+                self.target = self.past_target
+                self.target.entity = self.follow
+            return CharacterAction('extra', 'investigation')
+
         elif self.target:                                # Если есть цель
             if self.target != self.past_target:
                 self.global_waypoints = list()
@@ -254,9 +265,7 @@ class NPC(Character, Path):
                     check_position = (null_position[0] + number_line, null_position[1] + number_tile)
                     if check_position in step_activity_dict and step_activity_dict[check_position].caused != self.name_npc:
                         activity = step_activity_dict[check_position]
-                        self.investigation = activity.entity  # FIXME Видимо придется добавить в активность поле, содержащее создателя активности
-                        self.target = Target(type='investigation', entity=activity.entity, position=check_position,
-                                    create_step=0, lifetime=1000)
+                        self.investigation = activity.entity
 
     def npc_calculation_random_target(self, vertices_graph, vertices_dict):
         """ Считает случайную цель """
@@ -392,9 +401,13 @@ class NPC(Character, Path):
         """ Получение повреждений """
         pass
 
-    def npc_extra_action_calculations(self, action):
+    def npc_extra_action_calculations(self, action, global_map, enemy_list, step_activity_dict):
         """ Особенные действия NPC """
-        pass
+        if action.details == 'investigation':
+            if self.local_waypoints:
+                self.path_local_move(global_map, enemy_list)
+            else:
+                self.npc_search_for_traces(step_activity_dict)
 
     def npc_consequences_calculation(self):
         """ Рассчёт последствий действий персонажа """
@@ -404,7 +417,7 @@ class NPC(Character, Path):
         """ Затычка для подключения к старой системе"""
         pass
 
-    def npc_search_for_traces(self):
+    def npc_search_for_traces(self, step_activity_dict):
         """
             Проверяет есть ли посчитанные вейпоинты поиска пути.
             Проверяет зону вокруг персонажа на наличие следов или лёгких следов
@@ -426,3 +439,13 @@ class NPC(Character, Path):
                 '.............', '.............', '0...........0', '0...........0', '00.........00', '000.......000',
                 '00000...00000'],
         }
+        null_position = [self.world_position[0] - self.pathfinder, self.world_position[1] - self.pathfinder]
+        pattern = pathfinder_dict[self.pathfinder]
+        for number_line, line in enumerate(pattern):
+            for number_tile, tile in enumerate(line):
+                if tile == '.':
+                    check_position = (null_position[0] + number_line, null_position[1] + number_tile)
+                    if check_position in step_activity_dict and step_activity_dict[
+                                                    check_position].caused == self.investigation.name_npc:
+                        activity = step_activity_dict[check_position]
+                        pass

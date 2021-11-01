@@ -19,10 +19,11 @@ class Person:
     'environment_temperature', 'person_temperature', 'person_pass_step', 'enemy_pass_step',
     'speed', 'test_visible', 'level', 'vertices', 'local_position', 'direction', 'pass_draw_move',
     'recalculating_the_display', 'type',
-    'icon', 'pointer_step', 'zone_relationships', 'activating_spawn', 'world_position')
+    'icon', 'pointer_step', 'zone_relationships', 'activating_spawn', 'world_position', 'name_npc')
 
     def __init__(self, assemblage_point: list, dynamic: list, chunks_use_map: list, pointer: list, gun: list):
         self.name = 'person'
+        self.name_npc = 'person'
         self.assemblage_point = assemblage_point
         self.dynamic = dynamic
         self.chunks_use_map = chunks_use_map
@@ -49,6 +50,7 @@ class Person:
         self.activating_spawn = False
         self.world_position = [0, 0]  # общемировое тайловое положение
 
+
     def world_position_calculate(self, chunk_size):
         """ Рассчитывает глобальные координаты от центра мира """
         self.world_position = [self.local_position[0] + (self.global_position[0]) * (chunk_size),
@@ -58,6 +60,7 @@ class Person:
         """ Сохранение класса """
         state = {}
         state["name"] = self.name
+        state["name_npc"] = self.name_npc
         state["assemblage_point"] = self.assemblage_point
         state["dynamic"] = self.dynamic
         state["chunks_use_map"] = self.chunks_use_map
@@ -87,6 +90,7 @@ class Person:
     def __setstate__(self, state: dict):
         """ Восстановление класса """
         self.name = state["name"]
+        self.name_npc = state["name_npc"]
         self.assemblage_point = state["assemblage_point"]
         self.dynamic = state["dynamic"]
         self.chunks_use_map = state["chunks_use_map"]
@@ -132,7 +136,6 @@ class Person:
             Номера чанков выглядят так: 0 1
                                         2 3
         """
-
         if self.dynamic[0] < chank_size > self.dynamic[1]:
             self.global_position = self.assemblage_point
             self.number_chunk = 0
