@@ -139,7 +139,8 @@ class NPC(Character, Path):
             self.npc_getting_damaged_calculations(action)
 
         elif action.type == 'extra':
-            self.npc_extra_action_calculations(action, global_map, enemy_list, step_activity_dict)
+            self.npc_extra_action_calculations(action, global_map, enemy_list, step_activity_dict, vertices_graph,
+                                               vertices_dict)
 
         else:
             pass
@@ -185,8 +186,8 @@ class NPC(Character, Path):
             Проверяет наличие опасности, наличие путевых точек, наличие неудовлетворённых потребностей.
             Возвращает тип действия, совершаемого на данном шаге.
         """
-        if not self.investigation and random.randrange(10)//9 > 0:
-            self.checking_for_noticeable_traces(step_activity_dict)
+        #if not self.investigation and random.randrange(10)//9 > 0:
+        #    self.checking_for_noticeable_traces(step_activity_dict)
 
         if self.alarm:
             if 'injury' in self.status and 100 // self.determination > 0:
@@ -223,6 +224,7 @@ class NPC(Character, Path):
                 self.target.entity = self.follow
             return CharacterAction('move', 'follow')  # Если есть цель преследования, то преследование
         elif self.investigation:  # Если были обнаружены следы
+            #print(F"investigation - {self.investigation}")
             if self.past_target.entity != self.investigation:
                 self.global_waypoints = list()
                 self.local_waypoints = list()
@@ -263,7 +265,7 @@ class NPC(Character, Path):
             for number_tile, tile in enumerate(line):
                 if tile == '.':
                     check_position = (null_position[0] + number_line, null_position[1] + number_tile)
-                    if check_position in step_activity_dict and step_activity_dict[check_position].caused != self.name_npc:
+                    if check_position in step_activity_dict and step_activity_dict[check_position].entity.name_npc == 'person': #step_activity_dict[check_position].caused != self.name_npc:
                         activity = step_activity_dict[check_position]
                         self.investigation = activity.entity
 
@@ -381,13 +383,13 @@ class NPC(Character, Path):
                         я стою
         """
         if self.target == self.past_target:
-            if self.target.type == 'move':
+            if self.target.type == 'investigation':
                 if self.local_waypoints:
                     self.path_local_move(global_map, enemy_list)
                 else:
                     self.path_calculate(self, global_map, vertices_graph, enemy_list)
             else:
-                pass
+                self.pa
 
     def npc_activity_calculations(self):
         """ Первоначальные рассчёты совершения активности """
@@ -401,13 +403,14 @@ class NPC(Character, Path):
         """ Получение повреждений """
         pass
 
-    def npc_extra_action_calculations(self, action, global_map, enemy_list, step_activity_dict):
+    def npc_extra_action_calculations(self, action, global_map, enemy_list, step_activity_dict, vertices_graph,
+                                      vertices_dict):
         """ Особенные действия NPC """
         if action.details == 'investigation':
             if self.local_waypoints:
                 self.path_local_move(global_map, enemy_list)
             else:
-                self.npc_search_for_traces(step_activity_dict)
+                self.npc_search_for_traces(step_activity_dict, global_map, vertices_graph, vertices_dict, enemy_list)
 
     def npc_consequences_calculation(self):
         """ Рассчёт последствий действий персонажа """
@@ -417,7 +420,7 @@ class NPC(Character, Path):
         """ Затычка для подключения к старой системе"""
         pass
 
-    def npc_search_for_traces(self, step_activity_dict):
+    def npc_search_for_traces(self, step_activity_dict, global_map, vertices_graph, vertices_dict, enemy_list):
         """
             Проверяет есть ли посчитанные вейпоинты поиска пути.
             Проверяет зону вокруг персонажа на наличие следов или лёгких следов
@@ -446,6 +449,7 @@ class NPC(Character, Path):
                 if tile == '.':
                     check_position = (null_position[0] + number_line, null_position[1] + number_tile)
                     if check_position in step_activity_dict and step_activity_dict[
-                                                    check_position].caused == self.investigation.name_npc:
+                                                    check_position].entity.name_npc == self.investigation.name_npc:
                         activity = step_activity_dict[check_position]
-                        pass
+                        #self.target = Target(type='move', entity=None, position=check_position, create_step=0, lifetime=1000)
+                        self.path_calculate(global_map, vertices_graph, vertices_dict, enemy_list)

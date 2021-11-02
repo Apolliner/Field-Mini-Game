@@ -42,6 +42,7 @@ class Path:
 
     def path_global_direction_calculation(self, start_vertices, finish_vertices, vertices_dict):
         """ Определяет направление глобального движения """
+        #print(F"start_vertices - {start_vertices}")
         start = vertices_dict[start_vertices].position
         finish = vertices_dict[finish_vertices].position
         if [start[0] - 1, start[1]] == finish:
@@ -123,6 +124,7 @@ class Path:
                                                          self.world_position, self.target.get_position(), self.vertices)
             # Если глобальные положения различаются
             else:
+                #print(F"self.vertices - {self.vertices}, self.target.get_vertices(global_map) - {self.target.get_vertices(global_map)}")
                 self.global_waypoints, _ = self._path_world_vertices_a_star_algorithm(vertices_dict,
                                     vertices_dict[self.vertices], vertices_dict[self.target.get_vertices(global_map)])
 
