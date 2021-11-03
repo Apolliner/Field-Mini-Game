@@ -263,7 +263,7 @@ class Target:
 
     def get_position(self):
         """ Возвращает позицию из цели """
-        if self.entity is not None:
+        if self.entity is not None and self.entity:
             return self.entity.world_position
         return self.position
 

@@ -149,6 +149,8 @@ class NPC(Character, Path):
         self.npc_consequences_calculation()
 
         self.past_target = self.target
+        #print(F"end self.target.entity - {self.target.entity}")
+        #print(F"end self.past_target.entity - {self.past_target.entity}")
         #print(F"local_waypoints - {self.local_waypoints}")
 
     def check_achieving_the_target(self):
@@ -186,8 +188,8 @@ class NPC(Character, Path):
             Проверяет наличие опасности, наличие путевых точек, наличие неудовлетворённых потребностей.
             Возвращает тип действия, совершаемого на данном шаге.
         """
-        #if not self.investigation and random.randrange(10)//9 > 0:
-        #    self.checking_for_noticeable_traces(step_activity_dict)
+        if not self.investigation and random.randrange(10)//9 > 0:
+            self.checking_for_noticeable_traces(step_activity_dict)
 
         if self.alarm:
             if 'injury' in self.status and 100 // self.determination > 0:
@@ -224,13 +226,15 @@ class NPC(Character, Path):
                 self.target.entity = self.follow
             return CharacterAction('move', 'follow')  # Если есть цель преследования, то преследование
         elif self.investigation:  # Если были обнаружены следы
-            #print(F"investigation - {self.investigation}")
             if self.past_target.entity != self.investigation:
+                #print(F"\ntrue 1\n"
+                #      F"self.past_target.entity - {self.past_target.entity}\n"
+                #      F"self.investigation - {self.investigation}")
                 self.global_waypoints = list()
                 self.local_waypoints = list()
-                self.target = Target(type='investigation', entity=self.investigation,
-                                     position=self.investigation.world_position, create_step=0, lifetime=1000)
+                #print(F"self.target.entity - {self.target.entity}\n")
             else:
+                #print(F"true 2")
                 self.target = self.past_target
                 self.target.entity = self.follow
             return CharacterAction('extra', 'investigation')
@@ -261,13 +265,22 @@ class NPC(Character, Path):
         }
         null_position = [self.world_position[0] - self.pathfinder, self.world_position[1] - self.pathfinder]
         pattern = pathfinder_dict[self.pathfinder]
+        activity_position = None
+        activity = None
         for number_line, line in enumerate(pattern):
             for number_tile, tile in enumerate(line):
                 if tile == '.':
                     check_position = (null_position[0] + number_line, null_position[1] + number_tile)
                     if check_position in step_activity_dict and step_activity_dict[check_position].entity.name_npc == 'person': #step_activity_dict[check_position].caused != self.name_npc:
-                        activity = step_activity_dict[check_position]
-                        self.investigation = activity.entity
+                        #print(F"Найдена активность в - {check_position}")
+                        if activity is None or (activity and activity.birth == step_activity_dict[check_position].birth):
+                            activity = step_activity_dict[check_position]
+                            activity_position = check_position
+
+
+        if activity:
+            self.investigation = activity.entity
+            self.target = Target(type='investigation', entity=None, position=activity_position, create_step=0, lifetime=1000)
 
     def npc_calculation_random_target(self, vertices_graph, vertices_dict):
         """ Считает случайную цель """
@@ -407,8 +420,15 @@ class NPC(Character, Path):
                                       vertices_dict):
         """ Особенные действия NPC """
         if action.details == 'investigation':
-            if self.local_waypoints:
-                self.path_local_move(global_map, enemy_list)
+            if self.target and self.target.type == 'investigation':
+                if self.local_waypoints:
+                    #print(F"true 3")
+                    self.path_local_move(global_map, enemy_list)
+                elif self.target.get_position() != self.world_position:
+                    self.path_calculate(global_map, vertices_graph, vertices_dict, enemy_list)
+                else:
+                    #print(F"true 4")
+                    self.npc_search_for_traces(step_activity_dict, global_map, vertices_graph, vertices_dict, enemy_list)
             else:
                 self.npc_search_for_traces(step_activity_dict, global_map, vertices_graph, vertices_dict, enemy_list)
 
@@ -444,12 +464,18 @@ class NPC(Character, Path):
         }
         null_position = [self.world_position[0] - self.pathfinder, self.world_position[1] - self.pathfinder]
         pattern = pathfinder_dict[self.pathfinder]
+        activity_position = None
+        activity = None
         for number_line, line in enumerate(pattern):
             for number_tile, tile in enumerate(line):
                 if tile == '.':
                     check_position = (null_position[0] + number_line, null_position[1] + number_tile)
                     if check_position in step_activity_dict and step_activity_dict[
                                                     check_position].entity.name_npc == self.investigation.name_npc:
-                        activity = step_activity_dict[check_position]
-                        #self.target = Target(type='move', entity=None, position=check_position, create_step=0, lifetime=1000)
-                        self.path_calculate(global_map, vertices_graph, vertices_dict, enemy_list)
+                        if (activity and activity.birth < step_activity_dict[check_position].birth) or not activity:
+                            activity = step_activity_dict[check_position]
+                            activity_position = check_position
+        if activity:
+            #print(F"true 5")
+            self.target = Target(type='investigation', entity=None, position=activity_position, create_step=0, lifetime=1000)
+            self.path_calculate(global_map, vertices_graph, vertices_dict, enemy_list)
