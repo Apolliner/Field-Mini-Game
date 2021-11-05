@@ -382,22 +382,22 @@ class Action_in_map:
         """ Принимает название активности, возвращает её иконку, описание и срок жизни"""
 
         action_dict = {
-            'camp': ['/', 'следы лагеря', 150, True],
-            'bonfire': ['+', 'следы костра', 150, True],
-            'rest_stop': ['№', 'следы остановки человека', 150, True],
-            'horse_tracks': ['%', 'следы лошади', 150, True],
-            'human_tracks': ['8', 'следы человека', 150, True],
-            'animal_traces': ['@', 'следы зверя', 150, True],
-            'gnawed bones': ['#', 'обглоданные зверем кости', 500, True],
-            'defecate': ['&', 'справленная нужда', 150, True],
+            'camp':             ['/', 'следы лагеря', 150, True],
+            'bonfire':          ['+', 'следы костра', 150, True],
+            'rest_stop':        ['№', 'следы остановки человека', 150, True],
+            'horse_tracks':     ['%', 'следы лошади', 150, True],
+            'human_tracks':     ['8', 'следы человека', 150, True],
+            'animal_traces':    ['@', 'следы зверя', 150, True],
+            'gnawed bones':     ['#', 'обглоданные зверем кости', 500, True],
+            'defecate':         ['&', 'справленная нужда', 150, True],
             'animal_rest_stop': ['$', 'следы животной лежанки', 150, True],
-            'dead_man': ['D', 'мёртвый человек', 1000, True],
-            'test_beacon': ['B', 'маяк для теста', 1000, True],
-            'unknown': ['?', 'неизвестно', 150, True],
+            'dead_man':         ['D', 'мёртвый человек', 1000, True],
+            'test_beacon':      ['B', 'маяк для теста', 1000, True],
+            'unknown':          ['?', 'неизвестно', 150, True],
             'faint_footprints': ['=', 'слабые следы', 50, False],
-            'waypoint': ['w', 'вейпоинт', 50, False],
-            'explosion': ['e', 'взрыв', 1, True],
-            'dust': ['d', 'пыль', 10, True],
+            'waypoint':         ['w', 'вейпоинт', 50, False],
+            'explosion':        ['e', 'взрыв', 1, True],
+            'dust':             ['d', 'пыль', 10, True],
         }
         if self.name in action_dict:
             return action_dict[self.name][number]

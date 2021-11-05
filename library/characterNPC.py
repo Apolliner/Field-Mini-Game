@@ -21,6 +21,9 @@ from library.characterPath import Path
     ТРЕБУЕТСЯ ОПИСАНИЕ ГЛОБАЛЬНОГО ПОИСКА
     Так как NPC противники являются охотниками за головами, у них должна быть логика перемещения по игровой карте. 
     
+    ТРЕБУЕТСЯ ПРОРАБОТАТЬ РАБОТУ ПАМЯТИ ПЕРСОНАЖА
+    Требуется запоминать прошлые совершённые действия и положения. Возможно стоит реализовать их запись в memory.
+    
 """
 
 
@@ -126,7 +129,9 @@ class NPC(Character, Path):
 
         # ОБРАБОТКА
         self.status = list()  # Список текущего состояния               list
-        self.memory = list()
+        self.memory = list()  # Память о прерванных действиях           list
+        self.friends = list()  # Список друзей персонажа                list
+        self.enemies = list()  # Список врагов персонажа                list
 
     def npc_master_calculation(self, step, activity_list, global_map, vertices_graph, vertices_dict, enemy_list,
                                step_activity_dict):
@@ -160,7 +165,6 @@ class NPC(Character, Path):
         elif action.type == 'extra':
             self.npc_extra_action_calculations(action, global_map, enemy_list, step_activity_dict, vertices_graph,
                                                vertices_dict)
-
         else:
             pass
 
@@ -295,8 +299,6 @@ class NPC(Character, Path):
                         if activity is None or (activity and activity.birth == step_activity_dict[check_position].birth):
                             activity = step_activity_dict[check_position]
                             activity_position = check_position
-
-
         if activity:
             self.investigation = activity.entity
             self.target = Target(type='investigation', entity=None, position=activity_position, create_step=0, lifetime=1000)
@@ -440,10 +442,8 @@ class NPC(Character, Path):
         """ Особенные действия NPC """
         if action.details == 'investigation':
             if self.target and self.target.type == 'investigation':
-                if self.local_waypoints:
+                if self.local_waypoints or self.global_waypoints:
                     #print(F"true 3")
-                    self.path_local_move(global_map, enemy_list)
-                elif self.target.get_position() != self.world_position:
                     self.path_calculate(global_map, vertices_graph, vertices_dict, enemy_list)
                 else:
                     #print(F"true 4")
@@ -481,6 +481,9 @@ class NPC(Character, Path):
                 '.............', '.............', '0...........0', '0...........0', '00.........00', '000.......000',
                 '00000...00000'],
         }
+        pass_position = None
+        if self.target and self.target.type == 'investigation' and self.target.get_position() != self.world_position:
+            pass_position = self.target.get_position()
         null_position = [self.world_position[0] - self.pathfinder, self.world_position[1] - self.pathfinder]
         pattern = pathfinder_dict[self.pathfinder]
         activity_position = None
@@ -489,8 +492,9 @@ class NPC(Character, Path):
             for number_tile, tile in enumerate(line):
                 if tile == '.':
                     check_position = (null_position[0] + number_line, null_position[1] + number_tile)
-                    if check_position in step_activity_dict and step_activity_dict[
-                                                    check_position].entity.name_npc == self.investigation.name_npc:
+                    if check_position in step_activity_dict and check_position != pass_position and step_activity_dict[
+                                                check_position].entity.name_npc == self.investigation.name_npc and \
+                                                step_activity_dict[check_position].visible:
                         if (activity and activity.birth < step_activity_dict[check_position].birth) or not activity:
                             activity = step_activity_dict[check_position]
                             activity_position = check_position
