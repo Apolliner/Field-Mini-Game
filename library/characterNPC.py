@@ -24,7 +24,38 @@ from library.characterPath import Path
     ТРЕБУЕТСЯ ПРОРАБОТАТЬ РАБОТУ ПАМЯТИ ПЕРСОНАЖА
     Требуется запоминать прошлые совершённые действия и положения. Возможно стоит реализовать их запись в memory.
     
+    Память представляет из себя словарь, с типами событий, содержащими списки классов Memory
+    
 """
+
+class Memory:
+    """
+        Содержит память NPC противников
+
+        Память может быть следующих типов:
+        activity
+        target
+        follow
+        escape
+        investigation
+
+        Статус может быть
+
+        passed
+        failed
+        interrupted
+        continued
+
+        Если статус interrupted, то можно достать действие из памяти и повторить, или закончить.
+
+    """
+    def __init__(self, step, world_position, description, status, entity=None, content=None):
+        self.step = step
+        self.world_position = world_position
+        self.description = description
+        self.status = status
+        self.entity = entity
+        self.content = content
 
 
 class ActionNPC:
@@ -129,7 +160,7 @@ class NPC(Character, Path):
 
         # ОБРАБОТКА
         self.status = list()  # Список текущего состояния               list
-        self.memory = list()  # Память о прерванных действиях           list
+        self.memory = dict()  # Память о действиях и событиях           dict
         self.friends = list()  # Список друзей персонажа                list
         self.enemies = list()  # Список врагов персонажа                list
 
@@ -146,7 +177,7 @@ class NPC(Character, Path):
         self.check_achieving_the_target()
 
         # Рассчёт действий
-        action = self.npc_checking_the_situation(vertices_graph, vertices_dict, enemy_list, step_activity_dict)
+        action = self.npc_checking_the_situation(vertices_graph, vertices_dict, enemy_list, step_activity_dict, step)
 
         # Совершение действий
         if action.type == 'move':
@@ -204,7 +235,7 @@ class NPC(Character, Path):
             self.local_waypoints = list()
             self.forced_pass = 0
 
-    def npc_checking_the_situation(self, vertices_graph, vertices_dict, enemy_list, step_activity_dict):
+    def npc_checking_the_situation(self, vertices_graph, vertices_dict, enemy_list, step_activity_dict, step):
         """
             Проверяет обстановку для решения дальнейших действий
 
@@ -263,11 +294,17 @@ class NPC(Character, Path):
             return CharacterAction('extra', 'investigation')
 
         elif self.target:                                # Если есть цель
+
+            # Если тип цели равен None, то проверяется содержимое памяти
+            if self.target.type is None:
+                self.npc_check_memory(step)
+
             if self.target != self.past_target:
                 self.global_waypoints = list()
                 self.local_waypoints = list()
             return CharacterAction('move', 'details')    # FIXME Пока все цели только на перемещение
         else:  # Если нет цели
+
             self.target = self.npc_calculation_random_target(vertices_graph, vertices_dict)
             return CharacterAction('move', 'details')
         return CharacterAction('pass', 'details')
@@ -502,3 +539,39 @@ class NPC(Character, Path):
             #print(F"true 5")
             self.target = Target(type='investigation', entity=None, position=activity_position, create_step=0, lifetime=1000)
             self.path_calculate(global_map, vertices_graph, vertices_dict, enemy_list)
+
+
+    def npc_get_memory(self, type):
+        """
+            Возвращает последние 3 записи указанного типа
+        """
+        if type in self.memory:
+            memory = reversed(self.memory[type])
+            if len(memory) >= 3:
+                return [memory[0], memory[1], memory[2]]
+            elif len(memory) == 2:
+                return [memory[0], memory[1]]
+            elif len(memory) == 1:
+                return [memory[0]]
+        return None
+
+    def npc_check_memory(self, step):
+        """
+            Проверяет содержимое памяти
+
+            Если находит подходящую запись для продолжения, то удаляет её
+
+        """
+        type_tuple = ('activity', 'move', 'follow')
+        for type in type_tuple:
+            memory_list = self.npc_get_memory(self, type)
+            if memory_list is not None:
+                for memory in memory_list:
+                    if memory.status == 'interrupted':
+                        self.target = self.target = Target(type=memory.type, entity=memory.entity,
+                                    position=memory.world_position, create_step=step, lifetime=1000)
+                        memory.status = "continued"
+                        break  # FIXME Добавить изменение статуса взятого из памяти действия и добавление entity в
+                               # FIXME соответствующее поле.
+            else:
+                continue
