@@ -160,7 +160,9 @@ class NPC(Character, Path):
 
         # ОБРАБОТКА
         self.status = list()  # Список текущего состояния               list
-        self.memory = dict()  # Память о действиях и событиях           dict
+        self.memory = {'investigation':[],
+                       'activity':[],
+                       'move':[]}  # Память о действиях и событиях      dict
         self.friends = list()  # Список друзей персонажа                list
         self.enemies = list()  # Список врагов персонажа                list
 
@@ -195,7 +197,7 @@ class NPC(Character, Path):
 
         elif action.type == 'extra':
             self.npc_extra_action_calculations(action, global_map, enemy_list, step_activity_dict, vertices_graph,
-                                               vertices_dict)
+                                               vertices_dict, step)
         else:
             pass
 
@@ -475,7 +477,7 @@ class NPC(Character, Path):
         pass
 
     def npc_extra_action_calculations(self, action, global_map, enemy_list, step_activity_dict, vertices_graph,
-                                      vertices_dict):
+                                      vertices_dict, step):
         """ Особенные действия NPC """
         if action.details == 'investigation':
             if self.target and self.target.type == 'investigation':
@@ -484,9 +486,9 @@ class NPC(Character, Path):
                     self.path_calculate(global_map, vertices_graph, vertices_dict, enemy_list)
                 else:
                     #print(F"true 4")
-                    self.npc_search_for_traces(step_activity_dict, global_map, vertices_graph, vertices_dict, enemy_list)
+                    self.npc_search_for_traces(step_activity_dict, global_map, vertices_graph, vertices_dict, enemy_list, step)
             else:
-                self.npc_search_for_traces(step_activity_dict, global_map, vertices_graph, vertices_dict, enemy_list)
+                self.npc_search_for_traces(step_activity_dict, global_map, vertices_graph, vertices_dict, enemy_list, step)
 
     def npc_consequences_calculation(self):
         """ Рассчёт последствий действий персонажа """
@@ -496,7 +498,7 @@ class NPC(Character, Path):
         """ Затычка для подключения к старой системе"""
         pass
 
-    def npc_search_for_traces(self, step_activity_dict, global_map, vertices_graph, vertices_dict, enemy_list):
+    def npc_search_for_traces(self, step_activity_dict, global_map, vertices_graph, vertices_dict, enemy_list, step):
         """
             Проверяет есть ли посчитанные вейпоинты поиска пути.
             Проверяет зону вокруг персонажа на наличие следов или лёгких следов
@@ -518,9 +520,17 @@ class NPC(Character, Path):
                 '.............', '.............', '0...........0', '0...........0', '00.........00', '000.......000',
                 '00000...00000'],
         }
-        pass_position = None
+        pass_positions = list()
+        # Запрет возвращаться к текущему следу
         if self.target and self.target.type == 'investigation' and self.target.get_position() != self.world_position:
-            pass_position = self.target.get_position()
+            pass_positions.append(self.target.get_position())
+        memory_list = self.npc_get_memory('investigation')
+
+        # Запрет возвращаться к уже проверенным следам
+        if memory_list:
+            for memory in memory_list:
+                pass_positions.append(memory.world_position)
+
         null_position = [self.world_position[0] - self.pathfinder, self.world_position[1] - self.pathfinder]
         pattern = pathfinder_dict[self.pathfinder]
         activity_position = None
@@ -529,7 +539,7 @@ class NPC(Character, Path):
             for number_tile, tile in enumerate(line):
                 if tile == '.':
                     check_position = (null_position[0] + number_line, null_position[1] + number_tile)
-                    if check_position in step_activity_dict and check_position != pass_position and step_activity_dict[
+                    if check_position in step_activity_dict and check_position != pass_positions and step_activity_dict[
                                                 check_position].entity.name_npc == self.investigation.name_npc and \
                                                 step_activity_dict[check_position].visible:
                         if (activity and activity.birth < step_activity_dict[check_position].birth) or not activity:
@@ -537,7 +547,10 @@ class NPC(Character, Path):
                             activity_position = check_position
         if activity:
             #print(F"true 5")
-            self.target = Target(type='investigation', entity=None, position=activity_position, create_step=0, lifetime=1000)
+            self.memory['investigation'].append(Memory(step, self.target.get_position(), None, 'passed',
+                                                                entity=self.target.entity, content=None))
+            self.target = Target(type='investigation', entity=None, position=activity_position, create_step=0,
+                                                                                            lifetime=1000)
             self.path_calculate(global_map, vertices_graph, vertices_dict, enemy_list)
 
 
@@ -546,13 +559,14 @@ class NPC(Character, Path):
             Возвращает последние 3 записи указанного типа
         """
         if type in self.memory:
-            memory = reversed(self.memory[type])
-            if len(memory) >= 3:
-                return [memory[0], memory[1], memory[2]]
-            elif len(memory) == 2:
-                return [memory[0], memory[1]]
-            elif len(memory) == 1:
-                return [memory[0]]
+            memory = self.memory[type].reverse()
+            if memory:
+                if len(memory) >= 3:
+                    return [memory[0], memory[1], memory[2]]
+                elif len(memory) == 2:
+                    return [memory[0], memory[1]]
+                elif len(memory) == 1:
+                    return [memory[0]]
         return None
 
     def npc_check_memory(self, step):
@@ -571,7 +585,8 @@ class NPC(Character, Path):
                         self.target = self.target = Target(type=memory.type, entity=memory.entity,
                                     position=memory.world_position, create_step=step, lifetime=1000)
                         memory.status = "continued"
-                        break  # FIXME Добавить изменение статуса взятого из памяти действия и добавление entity в
-                               # FIXME соответствующее поле.
+                        if memory.type in ('follow', 'escape', 'investigation') and memory.entity:
+                            setattr(self, memory.type, memory.entity)
+                        break
             else:
                 continue
