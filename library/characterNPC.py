@@ -582,7 +582,7 @@ class NPC(Character, Path):
             if memory_list is not None:
                 for memory in memory_list:
                     if memory.status == 'interrupted':
-                        self.target = self.target = Target(type=memory.type, entity=memory.entity,
+                        self.target = Target(type=memory.type, entity=memory.entity,
                                     position=memory.world_position, create_step=step, lifetime=1000)
                         memory.status = "continued"
                         if memory.type in ('follow', 'escape', 'investigation') and memory.entity:
@@ -590,3 +590,39 @@ class NPC(Character, Path):
                         break
             else:
                 continue
+
+    def npc_radius_search_for_traces(self, global_map, step):
+        """
+            Выставляет точку, определяет радиус, и проверяет 4 точки по сторонам, в каждой точке ищет следы.
+            Если не находит, то бросает это занятие
+        """
+        def edge_detection(direction, radius, world_position):
+            """ Доходит до максимально доступной точки на границе радиуса """
+            for step in range(radius):
+                if direction == 'left':
+                    new_position = [world_position[0], world_position[1] - 1]
+                elif direction == 'up':
+                    new_position = [world_position[0] - 1, world_position[1]]
+                elif direction == 'right':
+                    new_position = [world_position[0], world_position[1] + 1]
+                else:  # direction == 'down':
+                    new_position = [world_position[0] + 1, world_position[1]]
+                if self.path_world_tile(global_map, new_position).vertices != -1:
+                    world_position = new_position
+                else:
+                    return world_position
+            return world_position
+        radius_investigation_dict = {1: 'left', 2: 'up', 3: 'right', 4: 'down'}  # FIXME для начала просто по сторонам
+        # Если поиск по радиусу ещё не проводился
+
+        if self.target.type == 'radius_investigation':
+            finish_point = edge_detection(radius_investigation_dict[self.target.kwargs['step_radius']], self.pathfinder,
+                                                                                                    self.world_position)
+            self.target = Target(type='radius_investigation', entity=self.investigation, position=finish_point,
+                                 create_step=step, lifetime=1000, step_radius=(self.target.kwargs['step_radius'] + 1))
+        else:
+            finish_point = edge_detection(radius_investigation_dict[0], self.pathfinder, self.world_position)
+
+            self.target = Target(type='radius_investigation', entity=self.investigation, position=finish_point,
+                                                                create_step=step, lifetime=1000, step_radius=1)
+
