@@ -264,8 +264,8 @@ class Target:
     def get_position(self):
         """ Возвращает позицию из цели """
         if self.entity is not None and self.entity:
-            return self.entity.world_position
-        return self.position
+            return list(self.entity.world_position)
+        return list(self.position)
 
     def get_vertices(self, global_map):
         """ Возвращает номер зоны доступности цели """

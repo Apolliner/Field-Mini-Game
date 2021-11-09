@@ -85,16 +85,20 @@ class Path:
     def path_local_move(self, global_map, enemy_list):
         """ Перемещения к очередному локальному вейпоинту. Проверяет наличие другого NPC на пути. """
         move = True
+        print(F"None 1")
         for enemy in enemy_list:
-            if enemy.world_position == self.local_waypoints[0]:
+            if enemy.world_position == self.local_waypoints[0] and enemy != self:
                 self.forced_pass += 1
                 move = False
+                print(F"None 2")
         if move:
+            print(F"None 3")
             self.forced_pass = 0
             waypoint = self.local_waypoints.pop(0)
             self.direction, self.type = self.path_direction_calculation(self.world_position, waypoint)
             self.global_position, self.local_position = self.path_world_position_recalculation(waypoint)
             self.vertices = self.path_world_tile(global_map, waypoint)
+            print(F"None 4")
 
     def path_escape_calculate(self, global_map, vertices_graph, vertices_dict, enemy_list):
         """
@@ -115,16 +119,18 @@ class Path:
             Учитывает наличие существующих глобальный вейпоинтов.
 
         """
-
+        print(F"false 1")
         # Если нет ни глобальных ни локальных вейпоинтов
         if not self.global_waypoints and not self.local_waypoints:
-
+            print(F"false 2")
             # Если совпадают глобальные положения с целью
             if self.vertices == self.path_world_tile(global_map, self.target.get_position()).vertices:
                 self.local_waypoints, _ = self._path_world_tiles_a_star_algorithm(global_map,
                                                          self.world_position, self.target.get_position(), self.vertices)
+                print(F"false 3")
             # Если глобальные положения различаются
             else:
+                print(F"false 4")
                 #print(F"self.vertices - {self.vertices}, self.target.get_vertices(global_map) - {self.target.get_vertices(global_map)}")
                 self.global_waypoints, _ = self._path_world_vertices_a_star_algorithm(vertices_dict,
                                     vertices_dict[self.vertices], vertices_dict[self.target.get_vertices(global_map)])
@@ -137,9 +143,11 @@ class Path:
         elif self.global_waypoints and not self.local_waypoints:
             self.local_waypoints = self.path_local_waypoints_calculate(self.world_position, global_map, vertices_graph,
                                                                                                         vertices_dict)
+            print(F"false 5")
 
         # Если есть куда двигаться
         if self.local_waypoints:
+            print(F"false 6")
             self.path_local_move(global_map, enemy_list)
 
     def approximate_finish_calculation(self, start_point, finish_point):
@@ -493,7 +501,7 @@ class Path:
                 ran_while = False
             check_node = graph[check_node.direction]  # Предыдущая вершина объявляется проверяемой
 
-        return list(reversed(reversed_waypoints)), success
+        return list(reversed([list(finish_point)] + reversed_waypoints)), success
 
 
     def _path_escape_world_tiles_a_star_algorithm(self, global_map, start_point, escape_point):

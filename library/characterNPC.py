@@ -205,6 +205,8 @@ class NPC(Character, Path):
         self.npc_consequences_calculation()
 
         self.past_target = self.target
+        print(F"\ntype - {self.target.type}, step - {self.target.create_step}, position - {self.target.get_position()}, "
+              F"self.position - {self.world_position} \nlocal_waypoints - {self.local_waypoints}")
         #print(F"end self.target.entity - {self.target.entity}")
         #print(F"end self.past_target.entity - {self.past_target.entity}")
         #print(F"local_waypoints - {self.local_waypoints}")
@@ -480,15 +482,32 @@ class NPC(Character, Path):
                                       vertices_dict, step):
         """ Особенные действия NPC """
         if action.details == 'investigation':
-            if self.target and self.target.type == 'investigation':
-                if self.local_waypoints or self.global_waypoints:
-                    #print(F"true 3")
-                    self.path_calculate(global_map, vertices_graph, vertices_dict, enemy_list)
-                else:
-                    #print(F"true 4")
-                    self.npc_search_for_traces(step_activity_dict, global_map, vertices_graph, vertices_dict, enemy_list, step)
+            print(F"true 1")
+            # Если установлена цель поиска по радиусу и текущее местоположение равно указанной цели, то производится
+            # поиск следов
+            if self.target.type == 'radius_investigation' and self.world_position == self.target.get_position():
+                self.npc_search_for_traces(step_activity_dict, global_map, vertices_graph, vertices_dict, enemy_list,
+                                                                                                                step)
+                print(F"true 2")
+                # Если после поиска следов цель не меняется на следование к следующим следам, то рассчитывается путь до
+                # следующей точки в радиусе
+                if self.target.type != 'investigation':
+                    self.npc_radius_search_for_traces(global_map, step)
+                print(F"true 3")
+            # Если установлена цель поиска в радиусе но текущее положение не равно цели, то передвижение
+            elif self.target.type == 'radius_investigation' and self.world_position != self.target.get_position():
+                self.path_calculate(global_map, vertices_graph, vertices_dict, enemy_list)
+                print(F"true 4")
+
+            # Если текущая цель следование к следующим следам и цель ещё не достигнута
+            elif self.target and self.target.type == 'investigation' and self.world_position != self.target.get_position():
+                self.path_calculate(global_map, vertices_graph, vertices_dict, enemy_list)
+                print(F"true 5")
+            # Если текущая цель следование к следующим вейпоинтам, и цель достигнута, то производится новый поиск в радиусе
             else:
+                self.memory['investigation'].append(Memory(step, self.world_position, None, 'passed'))
                 self.npc_search_for_traces(step_activity_dict, global_map, vertices_graph, vertices_dict, enemy_list, step)
+                print(F"true 6")
 
     def npc_consequences_calculation(self):
         """ Рассчёт последствий действий персонажа """
@@ -521,37 +540,46 @@ class NPC(Character, Path):
                 '00000...00000'],
         }
         pass_positions = list()
+        print(F"zett 1")
         # Запрет возвращаться к текущему следу
-        if self.target and self.target.type == 'investigation' and self.target.get_position() != self.world_position:
-            pass_positions.append(self.target.get_position())
+        #if self.target and self.target.type == 'investigation' and self.target.get_position() != self.world_position:
+        pass_positions.append(self.target.get_position())
         memory_list = self.npc_get_memory('investigation')
-
+        print(F"memory_list - {memory_list}")
+        print(F"zett 2")
         # Запрет возвращаться к уже проверенным следам
         if memory_list:
             for memory in memory_list:
                 pass_positions.append(memory.world_position)
 
+        print(F"pass_positions - {pass_positions}, memory - {self.memory}")
+
         null_position = [self.world_position[0] - self.pathfinder, self.world_position[1] - self.pathfinder]
         pattern = pathfinder_dict[self.pathfinder]
         activity_position = None
         activity = None
+        print(F"zett 3")
         for number_line, line in enumerate(pattern):
             for number_tile, tile in enumerate(line):
                 if tile == '.':
                     check_position = (null_position[0] + number_line, null_position[1] + number_tile)
-                    if check_position in step_activity_dict and check_position != pass_positions and step_activity_dict[
+                    if check_position in step_activity_dict and list(check_position) not in pass_positions and step_activity_dict[
                                                 check_position].entity.name_npc == self.investigation.name_npc and \
                                                 step_activity_dict[check_position].visible:
                         if (activity and activity.birth < step_activity_dict[check_position].birth) or not activity:
                             activity = step_activity_dict[check_position]
-                            activity_position = check_position
+                            activity_position = list(check_position)
+        print(F"zett 4")
         if activity:
-            #print(F"true 5")
+            print(F"zett 5 activity_position - {activity_position}")
             self.memory['investigation'].append(Memory(step, self.target.get_position(), None, 'passed',
                                                                 entity=self.target.entity, content=None))
             self.target = Target(type='investigation', entity=None, position=activity_position, create_step=0,
                                                                                             lifetime=1000)
             self.path_calculate(global_map, vertices_graph, vertices_dict, enemy_list)
+        elif self.target.type == 'investigation':
+            print(F"zett 6")
+            self.npc_radius_search_for_traces(global_map, step)
 
 
     def npc_get_memory(self, type):
@@ -559,7 +587,10 @@ class NPC(Character, Path):
             Возвращает последние 3 записи указанного типа
         """
         if type in self.memory:
-            memory = self.memory[type].reverse()
+            memory = self.memory[type]
+            print(F"get_memory 1 - {memory}")
+            memory = list(reversed(memory))
+            print(F"get_memory 2 - {memory}")
             if memory:
                 if len(memory) >= 3:
                     return [memory[0], memory[1], memory[2]]
@@ -573,7 +604,7 @@ class NPC(Character, Path):
         """
             Проверяет содержимое памяти
 
-            Если находит подходящую запись для продолжения, то удаляет её
+            Если находит подходящую запись для продолжения, то отмечает её продолженной
 
         """
         type_tuple = ('activity', 'move', 'follow')
@@ -614,15 +645,21 @@ class NPC(Character, Path):
             return world_position
         radius_investigation_dict = {1: 'left', 2: 'up', 3: 'right', 4: 'down'}  # FIXME для начала просто по сторонам
         # Если поиск по радиусу ещё не проводился
-
         if self.target.type == 'radius_investigation':
             finish_point = edge_detection(radius_investigation_dict[self.target.kwargs['step_radius']], self.pathfinder,
-                                                                                                    self.world_position)
-            self.target = Target(type='radius_investigation', entity=self.investigation, position=finish_point,
-                                 create_step=step, lifetime=1000, step_radius=(self.target.kwargs['step_radius'] + 1))
+                                                                                           self.target.kwargs["center"])
+            print(F"finish_point - {finish_point}")
+            self.target = Target(type='radius_investigation', entity=None, position=finish_point,
+                                 create_step=step, lifetime=1000, step_radius=(self.target.kwargs['step_radius'] + 1),
+                                 center=self.target.kwargs["center"])
+        elif self.target.type == 'radius_investigation' and self.target.kwargs['step_radius'] == 4:
+            # Сброс поиска
+            self.target = Target(type='move', entity=None, position=self.world_position,
+                                 create_step=step, lifetime=1000)
         else:
-            finish_point = edge_detection(radius_investigation_dict[0], self.pathfinder, self.world_position)
+            finish_point = edge_detection(radius_investigation_dict[1], self.pathfinder, self.world_position)
+            print(F"finish_point - {finish_point}")
 
-            self.target = Target(type='radius_investigation', entity=self.investigation, position=finish_point,
-                                                                create_step=step, lifetime=1000, step_radius=1)
+            self.target = Target(type='radius_investigation', entity=None, position=finish_point,
+                                 create_step=step, lifetime=1000, step_radius=1, center=self.world_position)
 
