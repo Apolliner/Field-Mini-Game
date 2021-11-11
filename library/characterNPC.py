@@ -336,7 +336,7 @@ class NPC(Character, Path):
                             activity_position = check_position
         if activity:
             self.investigation = activity.entity
-            self.target = Target(type='investigation', entity=None, position=activity_position, create_step=0, lifetime=1000)
+            self.target = Target(type='investigation', entity=None, position=activity_position, create_step=0, lifetime=1000, activity=activity)
 
     def npc_calculation_random_target(self, vertices_graph, vertices_dict):
         """ Считает случайную цель """
@@ -549,13 +549,18 @@ class NPC(Character, Path):
                                                 check_position].entity.name_npc == self.investigation.name_npc and \
                                                 step_activity_dict[check_position].visible:
                         if (activity and activity.birth < step_activity_dict[check_position].birth) or not activity:
-                            activity = step_activity_dict[check_position]
-                            activity_position = list(check_position)
+                            if self.target.type == 'investigation' or self.target.type == 'radius_investigation':
+                                if self.target.kwargs['activity'].birth < step_activity_dict[check_position].birth:
+                                    activity = step_activity_dict[check_position]
+                                    activity_position = list(check_position)
+                            else:
+                                activity = step_activity_dict[check_position]
+                                activity_position = list(check_position)
         if activity:
             self.memory['investigation'].append(Memory(step, self.target.get_position(), None, 'passed',
                                                                 entity=self.target.entity, content=None))
             self.target = Target(type='investigation', entity=None, position=activity_position, create_step=0,
-                                                                                            lifetime=1000)
+                                                                                    lifetime=1000, activity=activity)
             self.path_calculate(global_map, vertices_graph, vertices_dict, enemy_list)
         elif self.target.type == 'investigation':
             self.npc_radius_search_for_traces(global_map, step)
@@ -625,7 +630,7 @@ class NPC(Character, Path):
                                                                                            self.target.kwargs["center"])
             self.target = Target(type='radius_investigation', entity=None, position=finish_point,
                                  create_step=step, lifetime=1000, step_radius=(self.target.kwargs['step_radius'] + 1),
-                                 center=self.target.kwargs["center"])
+                                 center=self.target.kwargs["center"], activity=self.target.kwargs['activity'])
         elif self.target.type == 'radius_investigation' and self.target.kwargs['step_radius'] == 4:
             # Сброс поиска
             self.target = Target(type='move', entity=None, position=self.world_position,
@@ -634,5 +639,6 @@ class NPC(Character, Path):
             finish_point = edge_detection(radius_investigation_dict[1], self.pathfinder, self.world_position)
 
             self.target = Target(type='radius_investigation', entity=None, position=finish_point,
-                                 create_step=step, lifetime=1000, step_radius=1, center=self.world_position)
+                                        create_step=step, lifetime=1000, step_radius=1, center=self.world_position,
+                                        activity=self.target.kwargs['activity'])
 
