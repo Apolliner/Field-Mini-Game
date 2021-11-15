@@ -464,9 +464,12 @@ class NPC(Character, Path):
         """ Первоначальные рассчёты совершения активности """
         pass
 
-    def npc_attack_calculations(self, action):
+    def npc_attack_calculations(self, action, global_map, vertices_graph, vertices_dict, enemy_list):
         """ Действия при атаке """
-        pass
+        if self.path_length(self.world_position, self.target.get_position()) < 10:
+            pass
+        else:
+            self.path_calculate(global_map, vertices_graph, vertices_dict, enemy_list)
 
     def npc_getting_damaged_calculations(self, action):
         """ Получение повреждений """
