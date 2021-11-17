@@ -364,6 +364,23 @@ def loading_all_sprites():
                             'upf2': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), '../resources', 'tile_enemy_riffleman_up_pistol_shot_1.png'))),
                             'upf3': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), '../resources', 'tile_enemy_riffleman_up_pistol_shot_0.png'))),
 
+                            'ls0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), '../resources', 'tile_enemy_riffleman_left_to_stand_0.png'))),
+                            'ls1': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), '../resources', 'tile_enemy_riffleman_left_to_stand_1.png'))),
+                            'ls2': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), '../resources', 'tile_enemy_riffleman_left_to_stand_2.png'))),
+                            'ls3': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), '../resources', 'tile_enemy_riffleman_left_to_stand_3.png'))),
+                            'rs0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), '../resources', 'tile_enemy_riffleman_right_to_stand_0.png'))),
+                            'rs1': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), '../resources', 'tile_enemy_riffleman_right_to_stand_1.png'))),
+                            'rs2': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), '../resources', 'tile_enemy_riffleman_right_to_stand_2.png'))),
+                            'rs3': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), '../resources', 'tile_enemy_riffleman_right_to_stand_3.png'))),
+                            'ds0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), '../resources', 'tile_enemy_riffleman_down_to_stand_0.png'))),
+                            'ds1': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), '../resources', 'tile_enemy_riffleman_down_to_stand_1.png'))),
+                            'ds2': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), '../resources', 'tile_enemy_riffleman_down_to_stand_2.png'))),
+                            'ds3': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), '../resources', 'tile_enemy_riffleman_down_to_stand_3.png'))),
+                            'us0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), '../resources', 'tile_enemy_riffleman_up_to_stand_0.png'))),
+                            'us1': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), '../resources', 'tile_enemy_riffleman_up_to_stand_1.png'))),
+                            'us2': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), '../resources', 'tile_enemy_riffleman_up_to_stand_2.png'))),
+                            'us3': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), '../resources', 'tile_enemy_riffleman_up_to_stand_3.png'))),
+
                             'h': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), '../resources', 'tile_enemy_horseman.png'))),
 
                          },

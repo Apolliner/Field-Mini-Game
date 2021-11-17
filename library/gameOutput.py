@@ -293,6 +293,28 @@ def person_walk_draw(entity, person, settings_for_intermediate_steps):
         intermediate_steps_dict[settings_for_intermediate_steps[0]][person.pass_draw_move - 1]]
 
 
+def new_npc_walk_draw(entity, person, settings_for_intermediate_steps):
+    """
+            Меняет кадры анимации персонажа во время промежуточных кадров
+    """
+    intermediate_steps_dict = {
+        2: [0, 1],
+        3: [0, 1, 2],
+        5: [0, 1, 1, 2, 3],
+        6: [0, 1, 1, 2, 2, 3],
+        10: [0, 0, 1, 1, 1, 2, 2, 2, 3, 3],
+        15: [0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3],
+        30: [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3],
+    }
+    direction = entity.direction[0]
+    if entity.direction == "center":
+        direction = "ds"
+    animation = entity.animation
+    intermediate_step = intermediate_steps_dict[settings_for_intermediate_steps[0]][person.pass_draw_move - 1]
+
+    entity.type = F"{direction}{animation}{intermediate_step}"
+
+
 class Draw_open_image(pygame.sprite.Sprite):
     """ Отрисовывает полученное изображение """
 
@@ -401,7 +423,11 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
                     if entities_layer[number_line][number_tile].icon != '0':
                         if entities_layer[number_line][number_tile].name == 'riffleman' or \
                                             hasattr(entities_layer[number_line][number_tile], 'memory'):  # FIXME
-                            if entities_layer[number_line][number_tile].direction in ('left', 'right', 'down', 'up'):
+
+                            if hasattr(entities_layer[number_line][number_tile], 'memory'):
+                                new_npc_walk_draw(entities_layer[number_line][number_tile], person,
+                                                  settings_for_intermediate_steps)
+                            elif entities_layer[number_line][number_tile].direction in ('left', 'right', 'down', 'up'):
                                 person_walk_draw(entities_layer[number_line][number_tile], person,
                                                  settings_for_intermediate_steps)
 
@@ -621,11 +647,11 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
         person_sprite.rect.left = person.global_position[1] * size_tile_minimap
         person_sprite.draw(working_minimap_surface)
 
-        for enemy in enemy_list:
-            enemy_sprite = minimap_dict[enemy.icon][enemy.type]
-            enemy_sprite.rect.top = enemy.global_position[0] * size_tile_minimap
-            enemy_sprite.rect.left = enemy.global_position[1] * size_tile_minimap
-            enemy_sprite.draw(working_minimap_surface)
+        #for enemy in enemy_list:
+        #    enemy_sprite = minimap_dict[enemy.icon][enemy.type]
+        #    enemy_sprite.rect.top = enemy.global_position[0] * size_tile_minimap
+        #    enemy_sprite.rect.left = enemy.global_position[1] * size_tile_minimap
+        #    enemy_sprite.draw(working_minimap_surface)
 
         screen.blit(working_minimap_surface, ((len(global_map) - 1) * size_tile, 0))
 

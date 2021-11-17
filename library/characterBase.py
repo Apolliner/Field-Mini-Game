@@ -322,8 +322,9 @@ class Character:
         # ОТОБРАЖЕНИЕ ПЕРСОНАЖА
         self.name = name                            # Название типа персонажа               str
         self.name_npc = name_npc                    # Имя конкретного персонажа             str
-        self.icon = icon                            # Базовое отображение персонажа         char
-        self.type = type                            # Тип отображения персонажа             char
+        self.icon = icon                            # Базовое отображение персонажа         string
+        self.type = type                            # Тип отображения персонажа             string
+        self.animation = ''                         # Префикс анимации                      string
         self.visible = True                         # Виден ли персонаж                     bool
         self.direction = 'center'                   # Направление движения персонажа        str
         self.offset = [0, 0]                        # Смещение между промежуточными кадрами [local_y, local_x]

@@ -58,14 +58,14 @@ class Path:
     def path_direction_calculation(self, start, finish):
         """ Определяет направление движения """
         if [start[0] - 1, start[1]] == finish:
-            return 'up', 'u3'
+            return 'up', 'u'
         elif [start[0] + 1, start[1]] == finish:
-            return 'down', 'd3'
+            return 'down', 'd'
         elif [start[0], start[1] - 1] == finish:
-            return 'left', 'l3'
+            return 'left', 'l'
         elif [start[0], start[1] + 1] == finish:
-            return 'right', 'r3'
-        return "center", 'd0'
+            return 'right', 'r'
+        return "center", 'd'
 
     def path_world_tile(self, global_map, world_position):
         """
@@ -92,7 +92,7 @@ class Path:
         if move:
             self.forced_pass = 0
             waypoint = self.local_waypoints.pop(0)
-            self.direction, self.type = self.path_direction_calculation(self.world_position, waypoint)
+            self.direction, self.animations = self.path_direction_calculation(self.world_position, waypoint)
             self.global_position, self.local_position = self.path_world_position_recalculation(waypoint)
             self.vertices = self.path_world_tile(global_map, waypoint)
 
