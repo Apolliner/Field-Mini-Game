@@ -306,10 +306,15 @@ def new_npc_walk_draw(entity, person, settings_for_intermediate_steps):
         15: [0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3],
         30: [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3],
     }
-    direction = entity.direction[0]
+    # Если нет движения то за направление принимается старое движение
     if entity.direction == "center":
-        direction = "ds"
-    animation = entity.animation
+        animation = "pf"
+        direction = entity.old_direction[0]
+    # Если движение есть, то устанавливается новое направление
+    else:
+        entity.old_direction = entity.direction
+        direction = entity.direction[0]
+        animation = "p"
     intermediate_step = intermediate_steps_dict[settings_for_intermediate_steps[0]][person.pass_draw_move - 1]
 
     entity.type = F"{direction}{animation}{intermediate_step}"
@@ -647,11 +652,12 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
         person_sprite.rect.left = person.global_position[1] * size_tile_minimap
         person_sprite.draw(working_minimap_surface)
 
-        #for enemy in enemy_list:
-        #    enemy_sprite = minimap_dict[enemy.icon][enemy.type]
-        #    enemy_sprite.rect.top = enemy.global_position[0] * size_tile_minimap
-        #    enemy_sprite.rect.left = enemy.global_position[1] * size_tile_minimap
-        #    enemy_sprite.draw(working_minimap_surface)
+        for enemy in enemy_list:
+            if not hasattr(enemy, 'memory'):
+                enemy_sprite = minimap_dict[enemy.icon][enemy.type]
+                enemy_sprite.rect.top = enemy.global_position[0] * size_tile_minimap
+                enemy_sprite.rect.left = enemy.global_position[1] * size_tile_minimap
+                enemy_sprite.draw(working_minimap_surface)
 
         screen.blit(working_minimap_surface, ((len(global_map) - 1) * size_tile, 0))
 

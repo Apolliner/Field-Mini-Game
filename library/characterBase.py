@@ -327,6 +327,7 @@ class Character:
         self.animation = ''                         # Префикс анимации                      string
         self.visible = True                         # Виден ли персонаж                     bool
         self.direction = 'center'                   # Направление движения персонажа        str
+        self.old_direction = 'down'                 # Старое направление движения персонажа str
         self.offset = [0, 0]                        # Смещение между промежуточными кадрами [local_y, local_x]
         self.type_npc = type_npc                    # Тип поведения персонажа               str
         self.description = description              # Описание персонажа                    str
