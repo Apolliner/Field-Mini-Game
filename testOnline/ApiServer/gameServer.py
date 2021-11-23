@@ -5,3 +5,21 @@
 
     Здесь реализуется сервер игры.
 """
+import time
+import random
+from init import db
+from Models.base import Base
+
+
+def main_loop():
+    item = Base.query.first()
+    while True:
+        if random.randrange(100)//50 > 0:
+            item.count += 1
+        else:
+            item.count -= 1
+
+        db.session.commit()
+        time.sleep(0.1)
+
+main_loop()
