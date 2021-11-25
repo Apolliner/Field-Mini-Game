@@ -49,6 +49,57 @@ class Player:
         self.speed = 1
         self.model = model
 
+    def player_position_calculation(self, chunk_size):
+        """
+            Принимает мировые координаты и размер чанка, возвращает глобальные и локальные координаты.
+        """
+        self.global_position = [self.world_position[0] // chunk_size, self.world_position[1] // chunk_size]
+        self.local_position = [self.world_position[0] % chunk_size, self.world_position[1] % chunk_size]
+
+    def calculation_dynamic_chunk(self, global_map, chunk_size):
+        """ Рассчитывает динамический чанк, динамические координаты и точку сборки """
+        assemblage_point = copy.deepcopy(self.global_position)
+        dynamic_position = copy.deepcopy(self.local_position)
+        if chunk_size//2 > self.local_position[0]:
+            assemblage_point[0] -= 1
+            dynamic_position[0] += chunk_size
+        if chunk_size//2 > self.local_position[1]:
+            assemblage_point[1] -= 1
+            dynamic_position[1] += chunk_size
+
+        lines = global_map[assemblage_point[0]:(assemblage_point[0] + 2)]
+        chunks = list()
+        for line in lines:
+            chunks.append(line[assemblage_point[1]:(assemblage_point[1] + 2)])
+        self.chunks_use_map = self.gluing_location(chunks, 2, chunk_size)
+        self.assemblage_point = assemblage_point
+        self.dynamic_position = dynamic_position
+
+    def gluing_location(self, raw_gluing_map, grid, count_block):
+        """
+            Склеивает чанки и локации в единое поле из "сырых" карт
+
+            grid - количество кластеров в одной стороне квадратной склеиваемой карты
+            count_block - количество сущностей на одной стороне квадратного кластера
+        """
+        value_region_box = grid * count_block
+        gluing_map = []
+        for empry_line in range(grid * count_block):
+            gluing_map.append([])
+
+        count_location = 0
+        for number_region_line in range(grid):
+            for number_region in range(grid):
+                for number_location_line in range(count_block):
+                    for number_location in range(count_block):
+                        gluing_index = (number_region_line + number_location_line) + (
+                                count_location // (grid * (count_block ** 2)) * (count_block - 1))  # определяет индекс
+                        gluing_map[gluing_index].append(
+                            raw_gluing_map[number_region_line][number_region][number_location_line][number_location])
+                        count_location += 1
+        return gluing_map
+
+
 def get_tile_world(global_map, world_position, chunk_size):
     """
         Принимает мировые координаты, глобальную карту и размер чанка, возвращает тайл.
@@ -83,9 +134,10 @@ def master_player_action(global_map, player, player_request, world):
 
     return None
 
+
 def request_move(global_map, player, player_request, chunk_size):
     """
-        Меняет динамическое местоположение персонажа
+        Меняет мировое местоположение персонажа
         Сначала происходит проверка не является ли следующий по пути тайл скалой, затем проверяется не находится ли он
         на другом уровне или лестницей или персонаж сейчас стоит на лестнице.
     """
@@ -116,7 +168,7 @@ def request_move(global_map, player, player_request, chunk_size):
             player.direction = 'right'
             player.type = 'r3'
 
-    player.global_position_calculation(chunk_size)  # Рассчитывает глобальное положение и номер чанка через метод
+    player.player_position_calculation(chunk_size)  # Рассчитывает глобальное положение и номер чанка через метод
 
 def main_loop():
     """
