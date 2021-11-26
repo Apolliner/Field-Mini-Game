@@ -7,11 +7,12 @@
 """
 import copy
 import time
+import json
 import pickle
 import random
 from init import db
 from Models.base import Base
-from Models.player import Player
+from Models.player import Player as PlayerModel
 from Models.playerRequest import PlayerRequest
 
 
@@ -29,12 +30,12 @@ class World:
     chunk_size = 25
 
 class Player:
-    def __init__(self, name, icon, global_position, local_position, world_position, model):
-        self.name = 'player'
+    def __init__(self, id, name, icon, global_position, local_position, world_position):
+        self.id = id
+        self.name = name
         self.name_npc = 'player'
         self.type = '0'
-        self.icon = '☺'
-
+        self.icon = icon
         self.assemblage_point = None
         self.dynamic_position = None
         self.chunks_use_map = []
@@ -45,9 +46,7 @@ class Player:
         self.level = 0
         self.vertices = 0
         self.direction = 'center'
-
         self.speed = 1
-        self.model = model
 
     def player_position_calculation(self, chunk_size):
         """
@@ -68,10 +67,31 @@ class Player:
             dynamic_position[1] += chunk_size
 
         lines = global_map[assemblage_point[0]:(assemblage_point[0] + 2)]
-        chunks = list()
+        assemblage_chunk = list()
         for line in lines:
-            chunks.append(line[assemblage_point[1]:(assemblage_point[1] + 2)])
-        self.chunks_use_map = self.gluing_location(chunks, 2, chunk_size)
+            assemblage_chunk.append(line[assemblage_point[1]:(assemblage_point[1] + 2)])
+        for number_line in range(len(assemblage_chunk)):
+            for chunk in range(len(assemblage_chunk)):
+                assemblage_chunk[number_line][chunk] = assemblage_chunk[number_line][chunk].chunk
+
+        assemblage_chunk = self.gluing_location(assemblage_chunk, 2, chunk_size)
+
+        final_chunk = list()
+        for number_line, line in enumerate(assemblage_chunk):
+            final_chunk_line = list()
+            for number_tile, tile in enumerate(line):
+                final_chunk_line.append(tile.icon + tile.type)
+            final_chunk.append(final_chunk_line)
+
+        #print_chunk = ''
+        #for line in final_chunk:
+        #    print_line = ''
+        #    for tile in line:
+        #        print_line += tile
+        #    print_chunk + print_line + "\n"
+        #print(F"\n\n{print_chunk}\n\n")
+
+        self.chunks_use_map = final_chunk
         self.assemblage_point = assemblage_point
         self.dynamic_position = dynamic_position
 
@@ -118,21 +138,15 @@ def get_level_and_vertices(global_map, world_position, chunk_size):
 def master_player_action(global_map, player, player_request, world):
     """ Рассчитывает передвижение персонажа """
     player.level, player.vertices = get_level_and_vertices(global_map, player.world_position, world.chunk_size)
-
-    player.check_local_position()
     player.direction = 'center'
-    player.global_position_calculation(world.chunk_size)
     player.activating_spawn = False
 
-    if player_request.description != 'none':
+    if player_request is not None and player_request.description != 'none':
         if player_request.type == 'move':
             request_move(global_map, player, player_request, world.chunk_size)
 
-    player.global_position_calculation(world.chunk_size)
-    player.check_local_position()
-    player.world_position_calculate(world.chunk_size)
-
-    return None
+    player.calculation_dynamic_chunk(global_map, world.chunk_size)
+    return player
 
 
 def request_move(global_map, player, player_request, chunk_size):
@@ -170,6 +184,23 @@ def request_move(global_map, player, player_request, chunk_size):
 
     player.player_position_calculation(chunk_size)  # Рассчитывает глобальное положение и номер чанка через метод
 
+
+def player_model_update(player, player_model):
+    """ Обновляет модель игрока """
+    player_model.icon = player.icon
+    player_model.name = player.name
+    player_model.type = player.type
+    player_model.x_dynamic = player.dynamic_position[1]
+    player_model.y_dynamic = player.dynamic_position[0]
+    player_model.x_world = player.world_position[1]
+    player_model.y_world = player.world_position[0]
+    player_model.chunk = json.dumps(player.chunks_use_map)
+    player_model.level = player.level
+    player_model.vertices = player.vertices
+    player_model.assemblage_point_x = player.assemblage_point[1]
+    player_model.assemblage_point_y = player.assemblage_point[0]
+    return player_model
+
 def main_loop():
     """
 
@@ -206,21 +237,25 @@ def main_loop():
     global_map, raw_minimap, vertices_graph, vertices_dict = load_map()
     step = 0
     world = World()
-    players = dict()
-    item = Base.query.first()
+    players_dict = dict()
+    names = ('Малыш Билли', 'Буффало Билл', 'Маленькая Верная Рука Энни Окли', 'Дикий Билл Хикок', 'Бедовая Джейн',
+             'Бутч Кэссиди', 'Сандэнс Кид', 'Черный Барт')
+    icons = ("☺", "☻")
     while True:
-        players = Player.query.all()
-        for player in players:
-            player_request = PlayerRequest.query.filter_by(player_id=player.id).first()
-            master_player_action(global_map, player, player_request, world)
-
-            db.session.delete(player_request)
-            db.session.commit()
-
-
-
-
-        db.session.commit()
-        step += 1
+        players_model = PlayerModel.query.all()
+        if players_model is not None:
+            for player_model in players_model:
+                if player_model.id not in players_dict:
+                    players_dict[player_model.id] = Player(player_model.id, random.choice(names), random.choice(icons),
+                                                           [2, 2], [2, 2], [40, 40])
+                player = players_dict[player_model.id]
+                player_request = PlayerRequest.query.filter_by(player_id=player.id).first()
+                player = master_player_action(global_map, player, player_request, world)
+                player_model = player_model_update(player, player_model)
+                db.session.add(player_model)
+                if player_request is not None:
+                    db.session.delete(player_request)
+                db.session.commit()
+            step += 1
 
 main_loop()
