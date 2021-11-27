@@ -312,7 +312,7 @@ def loading_all_sprites():
 
                           },
                     '☻': {
-
+                            '0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), '../resources', 'tile_enemy_riffleman_down_0.png'))),
                             'l0': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), '../resources', 'tile_enemy_riffleman_left_0.png'))),
                             'l1': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), '../resources', 'tile_enemy_riffleman_left_1.png'))),
                             'l2': Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), '../resources', 'tile_enemy_riffleman_left_2.png'))),
@@ -684,7 +684,7 @@ def minimap_dict_create():
 
                          },
                     '☻': {
-
+                            '0': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), '../resources', 'tile_enemy_riffleman_down_0.png'))),
                             'l0': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), '../resources', 'tile_enemy_riffleman_left_0.png'))),
                             'l1': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), '../resources', 'tile_enemy_riffleman_left_1.png'))),
                             'l2': Fast_minimap_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), '../resources', 'tile_enemy_riffleman_left_2.png'))),
