@@ -199,6 +199,7 @@ def player_model_update(player, player_model):
     player_model.vertices = player.vertices
     player_model.assemblage_point_x = player.assemblage_point[1]
     player_model.assemblage_point_y = player.assemblage_point[0]
+    player_model.direction = player.direction
     return player_model
 
 def main_loop():

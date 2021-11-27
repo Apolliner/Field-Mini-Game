@@ -40,6 +40,7 @@ class RPlayer(Resource):
             "chunks_use_map": player_model.chunk,
             "level": player_model.level,
             "vertices": player_model.vertices,
+            "direction": player_model.direction
         }
         return answer
 
