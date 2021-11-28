@@ -31,6 +31,20 @@ class RPlayer(Resource):
         if player_model is None:
             return {"message": "player not found"}
 
+        enemies_model = Player.query.filter(Player.id != player_id).all()
+        enemies = dict()
+        if enemies_model is not None:
+            for enemy in enemies_model:
+                enemy_data = {
+                    "id": enemy.id,
+                    "name": enemy.name,
+                    "icon": enemy.icon,
+                    "type": enemy.type,
+                    "world_position": [enemy.y_world, enemy.x_world],
+                }
+                enemies[enemy.id] = enemy_data
+
+        #print(F"\n\nenemies - {enemies}\n\n")
         answer = {
             "icon": player_model.icon,
             "name": player_model.name,
@@ -40,7 +54,9 @@ class RPlayer(Resource):
             "chunks_use_map": player_model.chunk,
             "level": player_model.level,
             "vertices": player_model.vertices,
-            "direction": player_model.direction
+            "direction": player_model.direction,
+            "enemies": enemies,
+            "assemblage_point": [enemy.assemblage_point_y, enemy.assemblage_point_x]
         }
         return answer
 

@@ -50,21 +50,22 @@ class Player:
 
 
 
-def new_player_create(base_url, player, headers):
+def new_player_create(base_url, player, headers, chunk_size):
     raw_answer = requests.post(f'{base_url}/player_post', headers=headers)
     data = json.loads(raw_answer.content)
     if "player_id" in data:
         player_id = data["player_id"]
         time.sleep(2)
-        player = get_player(base_url, player, headers, player_id)
-        return player
+        player, enemy_list = get_player(base_url, player, headers, player_id, list(), chunk_size)
+        return player, enemy_list
     return None
 
-def get_player(base_url, player, headers, player_id):
+def get_player(base_url, player, headers, player_id, enemy_list, chunk_size):
     """ Запрос к API на получение персонажа игрока и сохранение этих данных """
     raw_player = requests.get(f'{base_url}/player/{player_id}', headers=headers)
     data_player = json.loads(raw_player.content)
-    player_direction_calculate(player, player.world_position, data_player["world_position"])
+    player = player_direction_calculate(player, player.world_position, data_player["world_position"])
+    #print(F"\n\ndata_player['enemies'] - {data_player['enemies']}\n\n")
     #print(F"\n\ndata_player - {data_player}\n\n")
     player.id = player_id
     player.name = data_player['name']
@@ -76,8 +77,67 @@ def get_player(base_url, player, headers, player_id):
     player.level = data_player['level']
     player.vertices = data_player['vertices']
     player.direction = data_player['direction']
+    player.assemblage_point = data_player['assemblage_point']
+    enemy_list = enemy_list_calculations(enemy_list, data_player['enemies'], chunk_size)
 
-    return player
+    return player, enemy_list
+
+
+class Enemy:
+    """ Обманка для рендера, делающая вид, что другие персонажи это NPC """
+    def __init__(self, id, name, icon, type, world_position):
+        self.id = id
+        self.global_position = [0, 0]
+        self.local_position = [0, 0]
+        self.pass_step = 0
+        self.on_the_screen = False
+        self.steps_to_new_step = 1
+        self.visible = True
+        self.direction = 'center'
+        self.offset = [0, 0]
+        self.delete = False
+        self.world_position = world_position
+
+        self.name = name
+        self.name_npc = "Другой игрок"
+        self.icon = icon
+        self.type = type
+        self.person_description = "Другой игрок"
+        self.speed = 1
+        self.type_npc = 'hunter'
+        self.pass_description = ''
+        self.description = ''
+
+    def global_and_local_calculate(self, chunk_size):
+        """ Принимает размер чанка, рассчитывает свои координаты по мировым координатам """
+        self.global_position = [self.world_position[0] // chunk_size, self.world_position[1] // chunk_size]
+        self.local_position = [self.world_position[0] % chunk_size, self.world_position[1] % chunk_size]
+
+
+def enemy_list_calculations(enemy_list, enemies, chunk_size):
+    """ Получает старый и новый список противников, добавляет новых, обновляет старых """
+    checked_enemy = list()
+    for enemy in enemy_list:
+        if enemy.id in enemies:
+            enemy.name = enemies[enemy.id]['name']
+            enemy.icon = enemies[enemy.id]['icon']
+            enemy.type = enemies[enemy.id]['type']
+            enemy.world_position = enemies[enemy.id]["world_position"]
+            enemy.global_and_local_calculate(chunk_size)
+            enemy = player_direction_calculate(enemy, enemy.world_position, enemies[enemy.id]['world_position'])
+        checked_enemy.append(int(enemy.id))
+    #print(F"\n\nchecked_enemy  - {checked_enemy }\n\n")
+    #print(F"\n\nenemies - {enemies}\n\n")
+    for enemy in enemies:
+        #print(F"enemy - {enemy}, if enemy not in checked_enemy - {int(enemy) not in checked_enemy}")
+        if int(enemy) not in checked_enemy:
+            enemy_data = enemies[enemy]
+            new_enemy = Enemy(enemy_data['id'], enemy_data['name'], enemy_data['icon'], enemy_data['type'],
+                                                                                        enemy_data['world_position'])
+            new_enemy.global_and_local_calculate(chunk_size)
+            enemy_list.append(new_enemy)
+    return enemy_list
+
 
 def chunk_recalculate(chunk):
     #print(F"\n\nchunk - {chunk}\n\n")
@@ -142,6 +202,7 @@ def player_direction_calculate(player, old_world_position, new_world_position):
         player.direction = 'left'
     elif new_world_position == [old_world_position[0], old_world_position[1] + 1]:
         player.direction = 'center'
+    return player
 
 def print_chunk(person):
 
@@ -199,7 +260,7 @@ def main_loop():
 
     person = Player()
 
-    person = new_player_create(base_url, person, headers)
+    person, enemy_list = new_player_create(base_url, person, headers, chunk_size)
 
     # Предварительная отрисовка игрового окна
     screen, landscape_layer, activity_layer, entities_layer, offset_sprites, finishing_surface, \
@@ -215,8 +276,9 @@ def main_loop():
         if not person.person_pass_step:
             player_request(global_map, person, chunk_size, go_to_print, mode_action, list(), mouse_position, base_url,
                                                                                                             headers)
-            time.sleep(0.1)
-            person = get_player(base_url, person, headers, person.id)
+            #time.sleep(0.1)
+            person, enemy_list = get_player(base_url, person, headers, person.id, enemy_list, chunk_size)
+        #print(F"\n\nenemy_list - {enemy_list}\n\n")
         #person.pass_draw_move = False  # FIXME
         #person.direction = "down"  # FIXME
         screen, landscape_layer, activity_layer, entities_layer, offset_sprites, finishing_surface, \
