@@ -16,7 +16,7 @@ from pathlib import Path
 from flask_restful import Resource
 import os
 import keyboard
-from library.gameOutput import master_pygame_draw, Offset_sprites
+from library.multiplayerOutput import master_pygame_draw, Offset_sprites
 from library.classes import Interfaсe
 from library.resources import loading_all_sprites, minimap_dict_create
 from library.gameInput import request_press_button
@@ -276,7 +276,7 @@ def main_loop():
         if not person.person_pass_step:
             player_request(global_map, person, chunk_size, go_to_print, mode_action, list(), mouse_position, base_url,
                                                                                                             headers)
-            #time.sleep(0.1)
+            time.sleep(0.1)
             person, enemy_list = get_player(base_url, person, headers, person.id, enemy_list, chunk_size)
         #print(F"\n\nenemy_list - {enemy_list}\n\n")
         #person.pass_draw_move = False  # FIXME
