@@ -20,7 +20,7 @@ from library.multiplayerOutput import master_pygame_draw, Offset_sprites
 from library.classes import Interfaсe
 from library.resources import loading_all_sprites, minimap_dict_create
 from library.gameInput import request_press_button
-from library.gamePassStep import master_pass_step
+from library.gamePassStep import master_pass_step, new_step_calculation
 
 
 class Player:
@@ -76,7 +76,7 @@ def get_player(base_url, player, headers, player_id, enemy_list, chunk_size):
     player.world_position = data_player["world_position"]
     player.level = data_player['level']
     player.vertices = data_player['vertices']
-    player.direction = data_player['direction']
+    #player.direction = data_player['direction']
     player.assemblage_point = data_player['assemblage_point']
     enemy_list = enemy_list_calculations(enemy_list, data_player['enemies'], chunk_size)
 
@@ -201,6 +201,8 @@ def player_direction_calculate(player, old_world_position, new_world_position):
     elif new_world_position == [old_world_position[0], old_world_position[1] - 1]:
         player.direction = 'left'
     elif new_world_position == [old_world_position[0], old_world_position[1] + 1]:
+        player.direction = 'right'
+    elif new_world_position == [old_world_position[0], old_world_position[1]]:
         player.direction = 'center'
     return player
 
@@ -271,6 +273,10 @@ def main_loop():
 
 
     while True:
+        clock.tick(game_fps)
+        interaction = []
+        person.pointer_step = False
+
         master_pass_step(person)
         #person.direction = "center"
         if not person.person_pass_step:
@@ -279,8 +285,11 @@ def main_loop():
             time.sleep(0.1)
             person, enemy_list = get_player(base_url, person, headers, person.id, enemy_list, chunk_size)
         #print(F"\n\nenemy_list - {enemy_list}\n\n")
-        #person.pass_draw_move = False  # FIXME
+        #person.pass_draw_move = 0  # FIXME
         #person.direction = "down"  # FIXME
+        #print(F"\nperson.direction - {person.direction}\n")
+        #print(F"\nperson.pass_draw_move - {person.pass_draw_move}\n")
+        step = new_step_calculation(enemy_list, person, step)
         screen, landscape_layer, activity_layer, entities_layer, offset_sprites, finishing_surface, \
                     settings_for_intermediate_steps = master_pygame_draw(person, chunk_size, go_to_print, global_map,
                     mode_action, enemy_list, activity_list, screen, minimap_surface, minimap_dict, sprites_dict,

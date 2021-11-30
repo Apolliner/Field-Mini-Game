@@ -160,14 +160,15 @@ def entities_layer_calculations(person, chunk_size: int, go_to_print, entities_l
                     person.assemblage_point[1] + 1:
                 go_draw_entities.append(
                     [entity.local_position[0] + chunk_size, entity.local_position[1] + chunk_size, entity])
-
+    #print(F"\b\bgo_draw_entities - {go_draw_entities}\n")
     entities_layer = []
     for number_line in range(start_stop[0], start_stop[2]):
         new_line = []
         for number_tile in range(start_stop[1], start_stop[3]):
             no_changes = True
-            for entity in go_draw_entities:
+            for entity in go_draw_entities:    # FIXME СУПЕР НЕ ЭФФЕКТИВНО
                 if number_line == entity[0] and number_tile == entity[1]:
+                    #print(F"true")
                     new_line.append(entity[2])
                     no_changes = False
                     break
