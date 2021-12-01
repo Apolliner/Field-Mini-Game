@@ -142,22 +142,28 @@ def entities_layer_calculations(person, chunk_size: int, go_to_print, entities_l
     start_stop = [(person.dynamic[0] - chunk_size // 2), (person.dynamic[1] - chunk_size // 2),
                   (person.dynamic[0] + chunk_size // 2 + 1), (person.dynamic[1] + chunk_size // 2 + 1)]
     go_draw_entities = []
+    #print()
+    #print(F"person.assemblage_point - {person.assemblage_point}, local_position - {person.local_position}, global_position - {person.global_position}")
     for entity in entities_list:
         if entity.visible or person.test_visible:
             if entity.global_position[0] == person.assemblage_point[0] and entity.global_position[1] == \
                     person.assemblage_point[1]:
+                #print(F"true 1 local_position - {entity.local_position}, global_position - {entity.global_position}, name - {entity.name}")
                 go_draw_entities.append([entity.local_position[0], entity.local_position[1], entity])
 
             elif entity.global_position[0] == person.assemblage_point[0] and entity.global_position[1] == \
                     person.assemblage_point[1] + 1:
+                #print(F"true 2 local_position - {entity.local_position}, global_position - {entity.global_position}, name - {entity.name}")
                 go_draw_entities.append([entity.local_position[0], entity.local_position[1] + chunk_size, entity])
 
             elif entity.global_position[0] == person.assemblage_point[0] + 1 and entity.global_position[1] == \
                     person.assemblage_point[1]:
+                #print(F"true 3 local_position - {entity.local_position}, global_position - {entity.global_position}, name - {entity.name}")
                 go_draw_entities.append([entity.local_position[0] + chunk_size, entity.local_position[1], entity])
 
             elif entity.global_position[0] == person.assemblage_point[0] + 1 and entity.global_position[1] == \
                     person.assemblage_point[1] + 1:
+                #print(F"true 5 local_position - {entity.local_position}, global_position - {entity.global_position}, name - {entity.name}")
                 go_draw_entities.append(
                     [entity.local_position[0] + chunk_size, entity.local_position[1] + chunk_size, entity])
     #print(F"\b\bgo_draw_entities - {go_draw_entities}\n")

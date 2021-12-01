@@ -48,6 +48,11 @@ class Player:
 
         self.pass_draw_move = False
 
+    def global_and_local_calculate(self, chunk_size):
+        """ Принимает размер чанка, рассчитывает свои координаты по мировым координатам """
+        self.global_position = [self.world_position[0] // chunk_size, self.world_position[1] // chunk_size]
+        self.local_position = [self.world_position[0] % chunk_size, self.world_position[1] % chunk_size]
+
 
 
 def new_player_create(base_url, player, headers, chunk_size):
@@ -67,6 +72,7 @@ def get_player(base_url, player, headers, player_id, enemy_list, chunk_size):
     player = player_direction_calculate(player, player.world_position, data_player["world_position"])
     #print(F"\n\ndata_player['enemies'] - {data_player['enemies']}\n\n")
     #print(F"\n\ndata_player - {data_player}\n\n")
+    #print(F"data_player - {data_player}")
     player.id = player_id
     player.name = data_player['name']
     player.type = data_player['type']
@@ -78,6 +84,7 @@ def get_player(base_url, player, headers, player_id, enemy_list, chunk_size):
     player.vertices = data_player['vertices']
     #player.direction = data_player['direction']
     player.assemblage_point = data_player['assemblage_point']
+    player.global_and_local_calculate(chunk_size)
     enemy_list = enemy_list_calculations(enemy_list, data_player['enemies'], chunk_size)
 
     return player, enemy_list
@@ -136,6 +143,11 @@ def enemy_list_calculations(enemy_list, enemies, chunk_size):
                                                                                         enemy_data['world_position'])
             new_enemy.global_and_local_calculate(chunk_size)
             enemy_list.append(new_enemy)
+
+    #print()
+    #for enemy in enemy_list:
+    #    print(F"enemy.global_position - {enemy.global_position}, enemy.local_position - {enemy.local_position}"
+    #          F"enemy.world_position - {enemy.world_position}")
     return enemy_list
 
 
@@ -289,6 +301,9 @@ def main_loop():
         #person.direction = "down"  # FIXME
         #print(F"\nperson.direction - {person.direction}\n")
         #print(F"\nperson.pass_draw_move - {person.pass_draw_move}\n")
+        #print()
+        #for enemy in enemy_list:
+        #    print(F"enemy.global_position - {enemy.global_position}, enemy.local_position - {enemy.local_position}")
         step = new_step_calculation(enemy_list, person, step)
         screen, landscape_layer, activity_layer, entities_layer, offset_sprites, finishing_surface, \
                     settings_for_intermediate_steps = master_pygame_draw(person, chunk_size, go_to_print, global_map,
