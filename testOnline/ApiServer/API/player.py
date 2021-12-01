@@ -56,7 +56,7 @@ class RPlayer(Resource):
             "vertices": player_model.vertices,
             "direction": player_model.direction,
             "enemies": enemies,
-            "assemblage_point": [enemy.assemblage_point_y, enemy.assemblage_point_x]
+            "assemblage_point": [player_model.assemblage_point_y, player_model.assemblage_point_x]
         }
         return answer
 
