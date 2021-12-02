@@ -133,13 +133,10 @@ def enemy_list_calculations(enemy_list, enemies, chunk_size):
             enemy.global_and_local_calculate(chunk_size)
             enemy = player_direction_calculate(enemy, enemy.world_position, enemies[enemy.id]['world_position'])
         checked_enemy.append(int(enemy.id))
-    #print(F"\n\nchecked_enemy  - {checked_enemy }\n\n")
-    #print(F"\n\nenemies - {enemies}\n\n")
     for enemy in enemies:
-        #print(F"enemy - {enemy}, if enemy not in checked_enemy - {int(enemy) not in checked_enemy}")
         if int(enemy) not in checked_enemy:
             enemy_data = enemies[enemy]
-            new_enemy = Enemy(enemy_data['id'], enemy_data['name'], enemy_data['icon'], enemy_data['type'],
+            new_enemy = Enemy(str(enemy_data['id']), enemy_data['name'], enemy_data['icon'], enemy_data['type'],
                                                                                         enemy_data['world_position'])
             new_enemy.global_and_local_calculate(chunk_size)
             enemy_list.append(new_enemy)
@@ -233,7 +230,8 @@ def print_chunk(person):
 def main_loop():
     pygame.init()
     chunk_size = 25
-    base_url = "http://127.0.0.1:5000"
+    #base_url = "http://127.0.0.1:5000"
+    base_url = "http://192.168.43.30:5000"
     headers = {'Content-Type': 'application/json'}
     global_map = []
     dispay_size = [1300, 730]  # было [1200, 750]

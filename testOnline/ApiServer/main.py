@@ -11,7 +11,7 @@ from dicts import initialize_dictionaries
 
 db.create_all()
 register_routes(api)
-
+remote_url = "http://192.168.43.30"
 if __name__ == '__main__':
     initialize_dictionaries(db)
     app.run(debug=True)
