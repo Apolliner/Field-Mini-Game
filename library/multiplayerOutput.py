@@ -267,6 +267,8 @@ def person_walk_draw(entity, person, settings_for_intermediate_steps):
     """
         Меняет кадры анимации персонажа во время промежуточных кадров
     """
+    #print()
+    #print(F"entity before type = {entity.type}")
     direction_dict = {
         'left': {0: 'l0',
                  1: 'l1',
@@ -298,6 +300,7 @@ def person_walk_draw(entity, person, settings_for_intermediate_steps):
 
     entity.type = direction_dict[entity.direction][
         intermediate_steps_dict[settings_for_intermediate_steps[0]][person.pass_draw_move - 1]]
+    print(F"entity.name = {entity.name}entity after type = {entity.type}")
 
 
 def new_npc_walk_draw(entity, person, settings_for_intermediate_steps):
@@ -444,18 +447,24 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
                                                  settings_for_intermediate_steps)
 
                         offset_enemy = entities_layer[number_line][number_tile].offset
-
+                        #print()
+                        #print(F"true 1 enemy.direction - {entities_layer[number_line][number_tile].direction}")
                         if entities_layer[number_line][number_tile].direction == 'left':
+                            #print(F"true 2")
                             offset_enemy[1] -= step_direction
                         elif entities_layer[number_line][number_tile].direction == 'right':
+                            #print(F"true 3")
                             offset_enemy[1] += step_direction
                         elif entities_layer[number_line][number_tile].direction == 'up':
+                            #print(F"true 4")
                             offset_enemy[0] -= step_direction
                         elif entities_layer[number_line][number_tile].direction == 'down':
+                            #print(F"true 5")
                             offset_enemy[0] += step_direction
                         else:
+                            #print(F"true 6")
                             offset_enemy = [0, 0]
-
+                        #print(F"\nenemy.name - {entities_layer[number_line][number_tile].name} offset_enemy - {offset_enemy}")
                         print_sprite = sprites_dict[entities_layer[number_line][number_tile].icon][
                             entities_layer[number_line][number_tile].type]
                         print_sprite.rect.top = number_line * size_tile + offset_sprites.all[0] + offset_enemy[0]

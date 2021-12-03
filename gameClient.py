@@ -113,7 +113,7 @@ class Enemy:
         self.speed = 1
         self.type_npc = 'hunter'
         self.pass_description = ''
-        self.description = ''
+        self.description = "Другой игрок"
 
     def global_and_local_calculate(self, chunk_size):
         """ Принимает размер чанка, рассчитывает свои координаты по мировым координатам """
@@ -124,14 +124,16 @@ class Enemy:
 def enemy_list_calculations(enemy_list, enemies, chunk_size):
     """ Получает старый и новый список противников, добавляет новых, обновляет старых """
     checked_enemy = list()
+    #print()
     for enemy in enemy_list:
         if enemy.id in enemies:
             enemy.name = enemies[enemy.id]['name']
             enemy.icon = enemies[enemy.id]['icon']
             enemy.type = enemies[enemy.id]['type']
+            #print(F"enemy.name - {enemy.name}, enemy.world_position - {enemy.world_position} - enemies[enemy.id]['world_position' - {enemies[enemy.id]['world_position']}")
+            enemy = player_direction_calculate(enemy, enemy.world_position, enemies[enemy.id]['world_position'])
             enemy.world_position = enemies[enemy.id]["world_position"]
             enemy.global_and_local_calculate(chunk_size)
-            enemy = player_direction_calculate(enemy, enemy.world_position, enemies[enemy.id]['world_position'])
         checked_enemy.append(int(enemy.id))
     for enemy in enemies:
         if int(enemy) not in checked_enemy:
@@ -213,6 +215,7 @@ def player_direction_calculate(player, old_world_position, new_world_position):
         player.direction = 'right'
     elif new_world_position == [old_world_position[0], old_world_position[1]]:
         player.direction = 'center'
+    #print(F"{player.name}player.direction - {player.direction}, old_world_position - {old_world_position} new_world_position - {new_world_position}")
     return player
 
 def print_chunk(person):
@@ -301,6 +304,7 @@ def main_loop():
         #print(F"\nperson.pass_draw_move - {person.pass_draw_move}\n")
         #print()
         #for enemy in enemy_list:
+        #    print(F"enemy.type - {enemy.type}")
         #    print(F"enemy.global_position - {enemy.global_position}, enemy.local_position - {enemy.local_position}")
         step = new_step_calculation(enemy_list, person, step)
         screen, landscape_layer, activity_layer, entities_layer, offset_sprites, finishing_surface, \
