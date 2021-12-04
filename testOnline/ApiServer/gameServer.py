@@ -202,6 +202,45 @@ def player_model_update(player, player_model):
     player_model.direction = player.direction
     return player_model
 
+
+def test_player_move(enemy, step, chunk_size):
+    """ Тестовый персонаж, ходящий по кругу. """
+    autopilot_list = [
+    'down',
+    'down',
+    'down',
+    'down',
+    'down',
+    'right',
+    'right',
+    'right',
+    'right',
+    'right',
+    'up',
+    'up',
+    'up',
+    'up',
+    'up',
+    'left',
+    'left',
+    'left',
+    'left',
+    'left',
+    ]
+
+    enemy.direction = autopilot_list[step%20]
+    if enemy.direction = 'up':
+        enemy.world_position[0] -= 1
+    elif enemy.direction = 'down':
+        enemy.world_position[0] += 1
+    elif enemy.direction = 'left':
+        enemy.world_position[1] -= 1
+    elif enemy.direction = 'right':
+        enemy.world_position[1] += 1
+
+    enemy.player_position_calculation(chunk_size)
+
+
 def main_loop():
     """
 
