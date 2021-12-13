@@ -47,6 +47,7 @@ class Player:
         self.vertices = 0
         self.direction = 'center'
         self.speed = 1
+        self.test = False
 
     def player_position_calculation(self, chunk_size):
         """
@@ -82,14 +83,6 @@ class Player:
             for number_tile, tile in enumerate(line):
                 final_chunk_line.append(tile.icon + tile.type)
             final_chunk.append(final_chunk_line)
-
-        #print_chunk = ''
-        #for line in final_chunk:
-        #    print_line = ''
-        #    for tile in line:
-        #        print_line += tile
-        #    print_chunk + print_line + "\n"
-        #print(F"\n\n{print_chunk}\n\n")
 
         self.chunks_use_map = final_chunk
         self.assemblage_point = assemblage_point
@@ -144,6 +137,8 @@ def master_player_action(global_map, player, player_request, world):
     if player_request is not None and player_request.description != 'none':
         if player_request.type == 'move':
             request_move(global_map, player, player_request, world.chunk_size)
+        elif player_request.type == 'test_move':
+            player.test = True
 
     player.calculation_dynamic_chunk(global_map, world.chunk_size)
     return player
@@ -229,17 +224,17 @@ def test_player_move(enemy, step, chunk_size):
     ]
 
     enemy.direction = autopilot_list[step%20]
-    if enemy.direction = 'up':
+    if enemy.direction == 'up':
         enemy.world_position[0] -= 1
-    elif enemy.direction = 'down':
+    elif enemy.direction == 'down':
         enemy.world_position[0] += 1
-    elif enemy.direction = 'left':
+    elif enemy.direction == 'left':
         enemy.world_position[1] -= 1
-    elif enemy.direction = 'right':
+    elif enemy.direction == 'right':
         enemy.world_position[1] += 1
 
     enemy.player_position_calculation(chunk_size)
-
+    return enemy
 
 def main_loop():
     """
@@ -281,6 +276,7 @@ def main_loop():
     names = ('Малыш Билли', 'Буффало Билл', 'Маленькая Верная Рука Энни Окли', 'Дикий Билл Хикок', 'Бедовая Джейн',
              'Бутч Кэссиди', 'Сандэнс Кид', 'Черный Барт')
     icons = ("☺", "☻")
+
     while True:
         players_model = PlayerModel.query.all()
         if players_model is not None:
@@ -289,8 +285,11 @@ def main_loop():
                     players_dict[player_model.id] = Player(player_model.id, random.choice(names), random.choice(icons),
                                                            [2, 2], [2, 2], [40, 40])
                 player = players_dict[player_model.id]
-                player_request = PlayerRequest.query.filter_by(player_id=player.id).first()
-                player = master_player_action(global_map, player, player_request, world)
+                if player.test:
+                    player = test_player_move(player, step, world.chunk_size)
+                else:
+                    player_request = PlayerRequest.query.filter_by(player_id=player.id).first()
+                    player = master_player_action(global_map, player, player_request, world)
                 player_model = player_model_update(player, player_model)
                 db.session.add(player_model)
                 if player_request is not None:

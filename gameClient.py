@@ -233,8 +233,8 @@ def print_chunk(person):
 def main_loop():
     pygame.init()
     chunk_size = 25
-    #base_url = "http://127.0.0.1:5000"
-    base_url = "http://192.168.43.30:5000"
+    base_url = "http://127.0.0.1:5000"
+    #base_url = "http://192.168.43.30:5000"
     headers = {'Content-Type': 'application/json'}
     global_map = []
     dispay_size = [1300, 730]  # было [1200, 750]
