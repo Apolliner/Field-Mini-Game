@@ -286,6 +286,7 @@ def main_loop():
 
 
     while True:
+        start = time.time()
         clock.tick(game_fps)
         interaction = []
         person.pointer_step = False
@@ -297,6 +298,8 @@ def main_loop():
                                                                                                             headers)
             time.sleep(0.1)
             person, enemy_list = get_player(base_url, person, headers, person.id, enemy_list, chunk_size)
+        if person.pass_draw_move:
+            pass_draw_move = True
         #print(F"\n\nenemy_list - {enemy_list}\n\n")
         #person.pass_draw_move = 0  # FIXME
         #person.direction = "down"  # FIXME
@@ -312,5 +315,7 @@ def main_loop():
                     mode_action, enemy_list, activity_list, screen, minimap_surface, minimap_dict, sprites_dict,
                     offset_sprites, landscape_layer, activity_layer, entities_layer, finishing_surface,
                     settings_for_intermediate_steps, mouse_position, raw_minimap)
-
+        result = time.time() - start
+        if not pass_draw_move and result < 0.2:
+            time.sleep(0.2 - result)
 main_loop()

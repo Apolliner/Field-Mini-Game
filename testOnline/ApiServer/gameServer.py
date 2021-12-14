@@ -278,6 +278,7 @@ def main_loop():
     icons = ("☺", "☻")
 
     while True:
+        start = time.time()
         players_model = PlayerModel.query.all()
         if players_model is not None:
             for player_model in players_model:
@@ -296,5 +297,8 @@ def main_loop():
                     db.session.delete(player_request)
                 db.session.commit()
             step += 1
+        result = time.time() - start
+        if result < 0.1:
+            time.sleep(0.1 - result)
 
 main_loop()
