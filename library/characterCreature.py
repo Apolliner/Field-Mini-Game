@@ -16,9 +16,9 @@ class Creature(Character, Path):
                  person_description, speed, deactivation_tiles, fly, description, type_npc):
         super().__init__(self, global_position, local_position, name, name_npc, icon, type, description, type_npc)
 
-        self.fly = fly  # Полёт                                 bool
-        self.steps_to_despawn = 30  # Шагов до удаления                     int
-        self.deactivation_tiles = deactivation_tiles  # Тайлы удаления                        tuple
+        self.fly = fly                                                      # Полёт                                 bool
+        self.steps_to_despawn = 30                                          # Шагов до удаления                     int
+        self.deactivation_tiles = deactivation_tiles                        # Тайлы удаления                        tuple
 
     def master_character_calculation(self):
         """

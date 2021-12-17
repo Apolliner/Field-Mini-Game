@@ -303,17 +303,18 @@ class Character:
         self.world_position = [0, 0]                # Обобщенное положение от начала мира   [world_y, world_x]
         self.vertices = 0                           # Номер зоны доступности                int
         self.level = 0                              # Высота уровня поверхности             int
-        self.global_waypoints = []                  # Список глобальных путевых точек       [[global_y, global_x, vertices], ...]
-        self.local_waypoints = []                   # Список локальных путевых точек        [[local_y, local_x, vertices, [global_y, global_x]], ...]
-        self.world_waypoints = []                   # Список мировых путевых точек          [[world_y, world_x, vertices], ...]
+        self.global_waypoints = list()              # Список глобальных путевых точек       [[global_y, global_x, vertices], ...]
+        self.local_waypoints = list()               # Список локальных путевых точек        [[local_y, local_x, vertices, [global_y, global_x]], ...]
+        self.world_waypoints = list()               # Список мировых путевых точек          [[world_y, world_x, vertices], ...]
 
         # ТЕХНИЧЕСКИЕ ДАННЫЕ
-        self.activity = []                          # Текущая активность персонажа          list
+        self.activity = list()                      # Текущая активность персонажа          list
         self.target = list()                        # Текущая цель перемещения и действия   [world_y, world_x, vertices, type, description, condition]
         self.past_target = list()                   # Предыдущая цель                       list
-        self.follow = []                            # Цель для следования или преследования [follow_character, 'type_follow', расстояние остановки:int]
-        self.escape = []                            # Бегство от                            class
-        self.investigation = []                     # Поиск следов                          class
+        self.follow = list()                        # Цель для следования или преследования [follow_character, 'type_follow', расстояние остановки:int]
+        self.escape = list()                        # Бегство от                            class
+        self.attack = list()                        # Атака этого персонажа                 class
+        self.investigation = list()                 # Поиск следов                          class
         self.pathfinder = 5                         # Умение искать следы                   int
         self.delete = False                         # Удаление персонажа из мира            bool
         self.live = True                            # Живой ли персонаж                     bool
