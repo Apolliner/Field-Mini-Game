@@ -484,6 +484,20 @@ class NPC(Character, Path):
                 else:
                     self.path_calculate(global_map, vertices_graph, vertices_dict, enemy_list)
 
+    def check_firing_line(self, global_map):
+        """ Проверяет линию стрельбы на наличие препятствий. Возвращает свободно ли на линии стрельбы"""
+        # Получение прямой линии между персонажами
+        line_tiles = self.line_waypoints_calculation(self.world_position, self.target.get_position())
+        # Проверяет наличие непроходимых тайлов на линии или увеличения высоты между персонажами
+        start_tile = self.path_world_tile(global_map, self.world_position)
+        finish_tile = self.path_world_tile(global_map, self.target.get_position())
+        for line_tile in line_tiles:
+            tile = self.path_world_tile(global_map, line_tile)
+            # Если есть высота выше высоты персонажа # Если это непреодолимый тайл и он не является водой
+            if tile.level > start_tile.level or (tile.vertices == -1 and tile.icon not in ("~", "f")):
+                return False
+        return True
+
     def npc_fire_gun(self):
         """ Стрельба NPC из оружия """
 

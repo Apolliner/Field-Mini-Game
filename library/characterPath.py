@@ -140,10 +140,11 @@ class Path:
         if self.local_waypoints:
             self.path_local_move(global_map, enemy_list)
 
-    def approximate_finish_calculation(self, start_point, finish_point):
+    def line_waypoints_calculation(self, start_point, finish_point, limiter=False):
         """
             Cчитает прямой путь до координат цели, останавливая рассчёт в тот момент, когда достигнет
             другой зоны доступности. Возвращает последний рассчитаный тайл в мировых координатах
+            Возвращает список мировых вейпоинтов.
         """
 
         start_global_position, _ = self.path_world_position_recalculation(start_point)
@@ -166,10 +167,11 @@ class Path:
         waypoints = [start_point]
 
         for step in range((abs(axis_y) + abs(axis_x))):
-            global_position, _ = self.path_world_position_recalculation(waypoints[-1])
-            # Если другая глобальная позиция,то сменить положение
-            if global_position != start_global_position:
-                break
+            if limiter:
+                global_position, _ = self.path_world_position_recalculation(waypoints[-1])
+                # Если другая глобальная позиция, то сменить положение
+                if global_position != start_global_position:
+                   break
             if (step + 1) % (length_step + 1) == 0:
                 if long_side == 'y':
                     if axis_y >= 0 and axis_x >= 0 or axis_y < 0 and axis_x >= 0:
@@ -231,7 +233,8 @@ class Path:
                                     approximate_position = [approximate_position[0], approximate_position[1] +
                                                             connect.x_amendment]
                         _, local_start = self.path_world_position_recalculation(start_point)
-                        world_approximate_finish = self.approximate_finish_calculation(local_start, approximate_position)
+                        world_approximate_finish = self.line_waypoints_calculation(local_start, approximate_position,
+                                                                                       limiter=True)
                         _, approximate_finish = self.path_world_position_recalculation(world_approximate_finish)
                         #print(F"approximate_position -  {approximate_position}")
                         #print(F"local_start -           {local_start}")
