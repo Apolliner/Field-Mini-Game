@@ -451,25 +451,55 @@ class NPC(Character, Path):
                     else:
                         я стою
         """
+        # FIXME Логика не отсюда, но пускай пока лежит.
         if self.target == self.past_target:
             if self.target.type == 'investigation':
                 if self.local_waypoints:
                     self.path_local_move(global_map, enemy_list)
                 else:
                     self.path_calculate(self, global_map, vertices_graph, enemy_list)
-            else:
-                self.pa
 
     def npc_activity_calculations(self):
         """ Первоначальные рассчёты совершения активности """
         pass
 
     def npc_attack_calculations(self, action, global_map, vertices_graph, vertices_dict, enemy_list):
-        """ Действия при атаке """
-        if self.path_length(self.world_position, self.target.get_position()) < 10:
-            pass
-        else:
-            self.path_calculate(global_map, vertices_graph, vertices_dict, enemy_list)
+        """
+            Действия при атаке
+
+            elif я атакую?
+            if я атакую ту же цель?
+                if дальний бой?
+                    pass
+                elif ближний бой?
+                    pass
+        """
+        if self.target == self.past_target:
+            if self.attack.type == 'close_combat':
+                pass
+            elif self.attack == "ranged_combat":
+                # FIXME тут нужна проверка на тип оружия, соответственно на сколько шагов надо подойти для выстрела.
+                if self.path_length(self.world_position, self.target.get_position()) < 10:
+                    pass
+                else:
+                    self.path_calculate(global_map, vertices_graph, vertices_dict, enemy_list)
+
+    def check_firing_line(self, global_map):
+        """ Проверяет линию стрельбы на наличие препятствий. Возвращает свободно ли на линии стрельбы"""
+        # Получение прямой линии между персонажами
+        line_tiles = self.line_waypoints_calculation(self.world_position, self.target.get_position())
+        # Проверяет наличие непроходимых тайлов на линии или увеличения высоты между персонажами
+        start_tile = self.path_world_tile(global_map, self.world_position)
+        finish_tile = self.path_world_tile(global_map, self.target.get_position())
+        for line_tile in line_tiles:
+            tile = self.path_world_tile(global_map, line_tile)
+            # Если есть высота выше высоты персонажа # Если это непреодолимый тайл и он не является водой
+            if tile.level > start_tile.level or (tile.vertices == -1 and tile.icon not in ("~", "f")):
+                return False
+        return True
+
+    def npc_fire_gun(self):
+        """ Стрельба NPC из оружия """
 
     def npc_getting_damaged_calculations(self, action):
         """ Получение повреждений """
@@ -567,7 +597,6 @@ class NPC(Character, Path):
             self.path_calculate(global_map, vertices_graph, vertices_dict, enemy_list)
         elif self.target.type == 'investigation':
             self.npc_radius_search_for_traces(global_map, step)
-
 
     def npc_get_memory(self, type):
         """

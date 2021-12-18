@@ -294,7 +294,7 @@ class TargetAttack:
     """ Описание текущей цели для атаки """
     def __init__(self, entity):
         self.entity = entity
-        
+
 
     def get_entity(self):
         """ Возвращает объект цели для атаки """
