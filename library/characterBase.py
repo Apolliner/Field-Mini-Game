@@ -289,6 +289,18 @@ class Target:
         }
         return Target(type=None, entity=None, position=None, create_step=None, lifetime=None)
 
+
+class TargetAttack:
+    """ Описание текущей цели для атаки """
+    def __init__(self, entity):
+        self.entity = entity
+        
+
+    def get_entity(self):
+        """ Возвращает объект цели для атаки """
+        return self.entity
+
+
 class Character:
     """
         Базовый класс для всех NPC
