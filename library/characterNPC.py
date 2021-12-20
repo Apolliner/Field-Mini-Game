@@ -641,13 +641,13 @@ class NPC(Character, Path, Bases):
             return world_position
         radius_investigation_dict = {1: 'left', 2: 'up', 3: 'right', 4: 'down'}  # FIXME для начала просто по сторонам
         # Если поиск по радиусу ещё не проводился
-        if self.target.type == 'radius_investigation':
+        if self.target.type == 'radius_investigation' and self.target.kwargs['step_radius'] <= 4:
             finish_point = edge_detection(radius_investigation_dict[self.target.kwargs['step_radius']], self.pathfinder,
                                                                                            self.target.kwargs["center"])
             self.target = Target(type='radius_investigation', entity=None, position=finish_point,
                                  create_step=step, lifetime=1000, step_radius=(self.target.kwargs['step_radius'] + 1),
                                  center=self.target.kwargs["center"], activity=self.target.kwargs['activity'])
-        elif self.target.type == 'radius_investigation' and self.target.kwargs['step_radius'] == 4:
+        elif self.target.type == 'radius_investigation' and self.target.kwargs['step_radius'] > 4:
             # Сброс поиска
             self.target = Target(type='move', entity=None, position=self.world_position,
                                  create_step=step, lifetime=1000)

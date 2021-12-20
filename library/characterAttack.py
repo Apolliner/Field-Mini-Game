@@ -60,7 +60,6 @@ class CharacterAttack(Bases):
 
         return waypoints[-1]
 
-
     def attack_check_firing_line(self, global_map):
         """ Проверяет линию стрельбы на наличие препятствий. Возвращает свободно ли на линии стрельбы"""
         # Получение прямой линии между персонажами
