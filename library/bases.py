@@ -1,4 +1,4 @@
-
+import math
 
 class Bases:
     """ Базовые методы, нужные везде """
@@ -32,3 +32,8 @@ class Bases:
         """
         global_position = [world_position[0] // self.chunk_size, world_position[1] // self.chunk_size]
         return global_map[global_position[0]][global_position[1]]
+
+    def bases_hypotenuse(self, cathet_y, cathet_x):
+        """ Считает гипотенузу по двум катетам """
+        hypotenuse = math.sqrt(cathet_y**2 + cathet_x**2)
+        return hypotenuse

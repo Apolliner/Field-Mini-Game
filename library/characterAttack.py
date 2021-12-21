@@ -78,3 +78,16 @@ class CharacterAttack(Bases):
         """ Стрельба NPC из оружия """
         if self.attack_check_firing_line(self, global_map):
             pass
+
+    def attack_bypassing_an_obstacle(self):
+        """
+            Рассчитывает направления движения для обхода противника по кругу.
+            Для этого помещает противника в центр круга, и, зная оба катета, рассчитывает гипотенузу.
+            Затем, в любую ближайшую прямую сторону от противника отсчитывает целочисленное значение гипотенузы и
+            строит до рассчитанной точки прямой путь.
+        """
+        start_point = self.world_position
+        finish_point = self.target.get_position()
+        axis_y = finish_point[0] - start_point[0]  # длинна стороны и количество шагов
+        axis_x = finish_point[1] - start_point[1]  # длинна стороны и количество шагов
+        hypotenuse = self.bases_hypotenuse(axis_y, axis_x)
