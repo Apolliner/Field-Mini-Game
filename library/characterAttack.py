@@ -1,3 +1,4 @@
+import random
 from library.bases import Bases
 
 
@@ -90,4 +91,14 @@ class CharacterAttack(Bases):
         finish_point = self.target.get_position()
         axis_y = finish_point[0] - start_point[0]  # длинна стороны и количество шагов
         axis_x = finish_point[1] - start_point[1]  # длинна стороны и количество шагов
-        hypotenuse = self.bases_hypotenuse(axis_y, axis_x)
+        hypotenuse = self.bases_hypotenuse(abs(axis_y), abs(axis_x))
+        if axis_y < 0:
+            enemy_direction_y = "left"
+        else:
+            enemy_direction_y = "right"
+        if axis_x < 0:
+            enemy_direction_x = "up"
+        else:
+            enemy_direction_x = "down"
+
+        direction = random.choice((enemy_direction_y, enemy_direction_x))
