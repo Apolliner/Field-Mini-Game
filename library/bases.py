@@ -37,3 +37,32 @@ class Bases:
         """ Считает гипотенузу по двум катетам """
         hypotenuse = math.sqrt(cathet_y**2 + cathet_x**2)
         return hypotenuse
+
+    class BaseStack:
+        """ Базовая реализация стека """
+        def __init__(self, type):
+            self.type = type
+            self._stack = list()
+
+        def add_stack_element(self, element, name):
+            """ Положить элемент """
+            self._stack.append({"name": name, "body": element})
+
+        def get_stack_element(self):
+            """ Забрать элемент """
+            len_stack = self.len_stack()
+            if len_stack > 0:
+                return self.stack.pop(len_stack - 1)
+            else:
+                return None
+
+        def len_stack(self):
+            """ Размер стека """
+            return len(self._stack)
+
+        def get_names(self):
+            """ Возвращает список имён элементов """
+            names = list()
+            for element in self._stack:
+                names.append(element["name"])
+            return names
