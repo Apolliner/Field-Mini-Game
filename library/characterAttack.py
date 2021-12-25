@@ -102,3 +102,45 @@ class CharacterAttack(Bases):
             enemy_direction_x = "down"
 
         direction = random.choice((enemy_direction_y, enemy_direction_x))
+
+    def attack_add_tasks_in_stack(self, type):
+        """ Добавляет задач в стек в зависимости от типа действия """
+        action_dict = {
+            "fire": [
+                    {"name": "check_reload",        "function": self._check_reload},
+                    {"name": "attack_position",     "function": self._attack_position},
+                    {"name": "aiming",              "function": self._aiming},
+                    {"name": "fire",                "function": self._fire}],
+            "reload": [
+                    {"name": "check_inventory",     "function": self._check_inventory},
+                    {"name": "reload_position",     "function": self._reload_position},
+                    {"name": "reload",              "function": self._reload}]
+        }
+
+    def _check_reload(self, **kwargs):
+        """ Проверяет необходимость перезарядки, при необходимости добавляет в стек """
+        pass
+
+    def _attack_position(self, **kwargs):
+        """ Ищет выгодное положение для атаки """
+        pass
+
+    def _aiming(self, **kwargs):
+        """ Прицеливание """
+        pass
+
+    def _fire(self, **kwargs):
+        """ Выстрел """
+        pass
+
+    def _check_inventory(self, **kwargs):
+        """ Проверка содержимого инвентаря"""
+        pass
+
+    def _reload_position(self, **kwargs):
+        """ Поиск и перемещение в безопасную позицию для перезарядки """
+        pass
+
+    def _reload(self, **kwargs):
+        """ Перезарядка оружия """
+        pass
