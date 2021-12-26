@@ -158,6 +158,7 @@ class NPC(Character, Path, Bases):
         self.stealth = False  # Скрытность                              bool
         self.alertness = False  # Настороженность                       bool
         self.determination = 100  # Решительность (качество персонажа)  int
+        self.action_stack = self.BaseStack()
 
         # ОБРАБОТКА
         self.status = list()  # Список текущего состояния               list
@@ -233,6 +234,11 @@ class NPC(Character, Path, Bases):
             self.global_waypoints = list()
             self.local_waypoints = list()
             self.forced_pass = 0
+
+    def npc_check_stack(self):
+        """ Проверяет ситуацию и содержимое стека """
+        names = self.action_stack.get_names()
+
 
     def npc_checking_the_situation(self, vertices_graph, vertices_dict, enemy_list, step_activity_dict, step):
         """
@@ -504,7 +510,15 @@ class NPC(Character, Path, Bases):
                 То есть в зависимости от ситуации, добавляется список действий в стек.
                 Нет заряженного оружия - добавляются задачи поиска укрытия для перезарядки и заряжание оружия,
             а после этого задачи выстрела. Оружие уже заряжено - сразу задачи выстрела.
-            
+
+            Функции, содержащиеся в стеке должны быть итерируемыми и должны возвращать True если их условия выполнены и
+        False до тех пор, пока условие выполняется. Если функция докладывает дополнительную функцию в стек, то она
+        возвращает None.
+             True - Действие закончено до конца, из стека выбрасывается её элемент.
+             False - Действие исполняется и ещё не закончено.
+             None - Назначено дополнительное действие и оно должно начать исполняться тут же.
+        Перемещение так же должно являться дополнительной функцией в стеке.
+
         """
         if self.target == self.past_target:
             if self.attack.type == 'close_combat':

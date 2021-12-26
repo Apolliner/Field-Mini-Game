@@ -119,28 +119,30 @@ class CharacterAttack(Bases):
 
     def _check_reload(self, **kwargs):
         """ Проверяет необходимость перезарядки, при необходимости добавляет в стек """
-        pass
+        return True
 
     def _attack_position(self, **kwargs):
         """ Ищет выгодное положение для атаки """
-        pass
+        while True:
+            yield False
+        return True
 
     def _aiming(self, **kwargs):
         """ Прицеливание """
-        pass
+        return True
 
     def _fire(self, **kwargs):
         """ Выстрел """
-        pass
+        return True
 
     def _check_inventory(self, **kwargs):
         """ Проверка содержимого инвентаря"""
-        pass
+        return True
 
     def _reload_position(self, **kwargs):
         """ Поиск и перемещение в безопасную позицию для перезарядки """
-        pass
+        return True
 
     def _reload(self, **kwargs):
         """ Перезарядка оружия """
-        pass
+        return True

@@ -40,8 +40,7 @@ class Bases:
 
     class BaseStack:
         """ Базовая реализация стека """
-        def __init__(self, type):
-            self.type = type
+        def __init__(self):
             self._stack = list()
 
         def add_stack_element(self, element, name):
@@ -49,14 +48,22 @@ class Bases:
             self._stack.append({"name": name, "body": element})
 
         def get_stack_element(self):
-            """ Забрать элемент """
-            len_stack = self.len_stack()
+            """ Получить элемент """
+            len_stack = self.get_len_stack()
+            if len_stack > 0:
+                return self.stack.pop[len_stack - 1]
+            else:
+                return None
+
+        def pop_stack_element(self):
+            """ Извлечь элемент """
+            len_stack = self.get_len_stack()
             if len_stack > 0:
                 return self.stack.pop(len_stack - 1)
             else:
                 return None
 
-        def len_stack(self):
+        def get_len_stack(self):
             """ Размер стека """
             return len(self._stack)
 
