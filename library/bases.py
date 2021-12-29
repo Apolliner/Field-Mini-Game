@@ -73,3 +73,39 @@ class Bases:
             for element in self._stack:
                 names.append(element["name"])
             return names
+
+    def bases_get_memory(self, type):
+        """
+            Возвращает последние 3 записи указанного типа
+        """
+        if type in self.memory:
+            memory = self.memory[type]
+            memory = list(reversed(memory))
+            if memory:
+                if len(memory) >= 10:
+                    return memory[::10]
+                else:
+                    return memory
+        return None
+
+    def bases_check_memory(self, step):
+        """
+            Проверяет содержимое памяти
+
+            Если находит подходящую запись для продолжения, то отмечает её продолженной
+
+        """
+        type_tuple = ('activity', 'move', 'follow')
+        for type in type_tuple:
+            memory_list = self.npc_get_memory(self, type)
+            if memory_list is not None:
+                for memory in memory_list:
+                    if memory.status == 'interrupted':
+                        self.target = Target(type=memory.type, entity=memory.entity, position=memory.world_position,
+                                                                                    create_step=step, lifetime=1000)
+                        memory.status = "continued"
+                        if memory.type in ('follow', 'escape', 'investigation') and memory.entity:
+                            setattr(self, memory.type, memory.entity)
+                        break
+            else:
+                continue

@@ -87,7 +87,7 @@ class NewNPC(Character, Path, Bases):
     def _npc_move_global_path(self, kwargs):
         """
             Перемещение к удалённой точке. Во время перемещения постоянно определяет необходимость совершения
-            активностей. FIXME Но пока просто ходит
+            активностей. FIXME Но пока просто ходит Здесь же проверяет округу на наличие чужих следов.
         """
         if self.local_waypoints:
             self.path_local_move(kwargs["global_map"], kwargs["enemy_list"])
