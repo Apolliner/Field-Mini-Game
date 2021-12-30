@@ -12,6 +12,73 @@ class SearchFootprints(Bases):
 
         return False
 
+    def _checking_for_noticeable_traces(self, step_activity_dict):
+        """ Проверяет наличие заметных шагов рядом с персонажем """
+        pathfinder_dict = {
+            1: ['0.0', '...', '0.0'],
+            2: ['00.00', '0...0', '.....', '0...0', '00.00'],
+            3: ['000.000', '00...00', '0.....0', '.......', '0.....0', '00...00', '000.000'],
+            4: ['0000.0000', '00.....00', '0.......0', '0.......0', '.........', '0.......0', '0.......0', '00.....00',
+                '0000.0000'],
+            5: ['0000...0000', '000.....000', '00.......00', '0.........0', '...........', '...........', '...........',
+                '0.........0', '00.......00', '000.....000', '0000...0000'],
+            6: ['00000...00000', '000.......000', '00.........00', '0...........0', '0...........0', '.............',
+                '.............', '.............', '0...........0', '0...........0', '00.........00', '000.......000',
+                '00000...00000'],
+        }
+        null_position = [self.world_position[0] - self.pathfinder, self.world_position[1] - self.pathfinder]
+        pattern = pathfinder_dict[self.pathfinder]
+        activity_position = None
+        activity = None
+        for number_line, line in enumerate(pattern):
+            for number_tile, tile in enumerate(line):
+                if tile == '.':
+                    check_position = (null_position[0] + number_line, null_position[1] + number_tile)
+                    if check_position in step_activity_dict and step_activity_dict[
+                        check_position].entity.name_npc == 'person':  # step_activity_dict[check_position].caused != self.name_npc:
+                        # print(F"Найдена активность в - {check_position}")
+                        if activity is None or (
+                                activity and activity.birth == step_activity_dict[check_position].birth):
+                            activity = step_activity_dict[check_position]
+                            activity_position = check_position
+        if activity:
+            self.investigation = activity.entity
+            self.target = Target(type='investigation', entity=None, position=activity_position, create_step=0,
+                                 lifetime=1000, activity=activity)
+            self.activity_stack.add_stack_element(self.investigation_action_calculations(**kwargs))
+            return None
+
+        return True
+
+    def _investigation_action_calculations(self, **kwargs):
+        """ Особенные действия NPC """
+        if action.details == 'investigation':
+            # Если установлена цель поиска по радиусу и текущее местоположение равно указанной цели, то производится
+            # поиск следов
+            if self.target.type == 'radius_investigation' and self.world_position == self.target.get_position():
+                self.npc_search_for_traces(**kwargs)
+                # Если после поиска следов цель не меняется на следование к следующим следам, то рассчитывается путь до
+                # следующей точки в радиусе
+                if self.target.type != 'investigation':
+                    self.action_stack.add_element(self._radius_search_for_traces(**kwargs))
+                    return None
+            # Если установлена цель поиска в радиусе но текущее положение не равно цели, то передвижение
+            elif self.target.type == 'radius_investigation' and self.world_position != self.target.get_position():
+                self.path_calculate(kwargs["global_map"], kwargs["vertices_graph"], kwargs["vertices_dict"],
+                                    kwargs["enemy_list"])
+
+            # Если текущая цель следование к следующим следам и цель ещё не достигнута
+            elif self.target and self.target.type == 'investigation' and self.world_position != self.target.get_position():
+                self.path_calculate(kwargs["global_map"], kwargs["vertices_graph"], kwargs["vertices_dict"],
+                                    kwargs["enemy_list"])
+            # Если текущая цель следование к следующим вейпоинтам, и цель достигнута, то производится новый поиск в радиусе
+            else:
+                self.memory['investigation'].append(Memory(step, self.world_position, None, 'passed'))
+                self.npc_search_for_traces(**kwargs)
+
+        return True
+
+
     def _search_for_traces(self, **kwargs):
         """
             Проверяет есть ли посчитанные вейпоинты поиска пути.
