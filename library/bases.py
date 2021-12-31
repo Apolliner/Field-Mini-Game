@@ -51,7 +51,7 @@ class Bases:
             """ Получить элемент """
             len_stack = self.get_len_stack()
             if len_stack > 0:
-                return self.stack.pop[len_stack - 1]
+                return self.stack[-1]
             else:
                 return None
 
@@ -73,6 +73,10 @@ class Bases:
             for element in self._stack:
                 names.append(element["name"])
             return names
+
+        def clear_stack(self):
+            """ Экстренное удаление всех элементов стека кроме первого"""
+            self._stack = list()
 
     def bases_get_memory(self, type):
         """
@@ -109,3 +113,31 @@ class Bases:
                         break
             else:
                 continue
+
+    def bases_router(self, stack, **kwargs):
+        """
+            Маршрутизатор, выполняющий функции из стека, так же проверяет стек на наличие бесконечной
+            рекурсии.
+        """
+        names_count = dict()
+        for name in stack.get_names():
+            if name not in names_count:
+                names_count[name] = 0
+            names_count[name] += 1
+        for key in names_count:
+            if names_count[key] > 10:
+                # Если одинаковых элементов больше десяти, то возможно началась бесконечная рекурсия
+                # и надо очистить стек. Базовый первый элемент берётся из описания самого персонажа.
+                stack.clear_stack()
+
+        while True:
+            action = stack.get_stack_element()
+            answer = action(**kwargs)
+            if answer is True:
+                stack.pop_stack_element()
+                break
+            elif answer is False:
+                break
+            elif answer is None:
+                continue
+
