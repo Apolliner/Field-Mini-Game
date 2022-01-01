@@ -4,6 +4,7 @@ import logging
 from library.characterBase import Character, CharacterAction, Target
 from library.characterPath import Path
 from library.bases import Bases
+from library.characterNPCSearchFootprints import SearchFootprints
 
 """
     Вообще всё взаимодействие NPC с миром посредством стека, хранящем функции.
@@ -13,7 +14,7 @@ from library.bases import Bases
 """
 
 
-class NewNPC(Character, Path, Bases):
+class NewNPC(Character, Path, Bases, SearchFootprints):
     """ Ещё одна попытка сделать расширяемых NPC на базе стека """
 
     def __init__(self, global_position, local_position, name, name_npc, icon, type, description, type_npc):
@@ -49,48 +50,50 @@ class NewNPC(Character, Path, Bases):
             Обработка действий персонажа на текущем шаге
         """
         # Подготовка
-        self.character_check_all_position(global_map)
         self.character_reset_at_the_beginning()
-        self.npc_new_step_check_status()
         self.check_achieving_the_target()
 
-        # Расчёт действий
-        self.npc_checking_the_situation(kwargs)
+        # Расчёт срочных действий
+        self.npc_checking_the_situation(**kwargs)
 
         # Совершение действий, находящихся в стеке
-        action = self.action_stack.get_stack_element()
-        success = action(kwargs)
-        if success:
-            self.action_stack.pop_stack_element()
+        self.bases_router(self.action_stack, **kwargs)
 
-        # Рассчёт последствий
-        self.npc_consequences_calculation()
+        # Расчёт последствий
         self.past_target = self.target
+        self.character_check_all_position(**kwargs)
 
-    def npc_checking_the_situation(self, kwargs):
+    def npc_checking_the_situation(self, **kwargs):
         """
             Проверка ситуации. Проверка стека на адекватность. Выкидывание элементов из стека при необходимости
             или добавление новых.
         """
         pass
 
-    def _npc_search_person(self, kwargs):
+    def _npc_search_person(self, **kwargs):
         """ Глобальная цель поиска указанного персонажа. Базовая активность охотников за головами """
         finish_vertices = random.randrange(5000)
         # Проверка на возможность достичь точки
         _, success = self._path_world_vertices_a_star_algorithm(kwargs["vertices_dict"], self.vertices, finish_vertices)
         if success:
-            self.action_stack.add_stack_element(_npc_move_global_path, "global_move")
+            self.action_stack.add_stack_element(self._npc_move_global_path, "global_move")
             return False
         return False
 
-    def _npc_move_global_path(self, kwargs):
+    def _npc_move_global_path(self, **kwargs):
         """
             Перемещение к удалённой точке. Во время перемещения постоянно определяет необходимость совершения
-            активностей. FIXME Но пока просто ходит Здесь же проверяет округу на наличие чужих следов.
+            активностей. FIXME Но пока просто ходит. Здесь же проверяет округу на наличие чужих следов.
         """
-        if self.local_waypoints:
-            self.path_local_move(kwargs["global_map"], kwargs["enemy_list"])
-        else:
-            self.path_calculate(kwargs["global_map"], kwargs["vertices_graph"], kwargs["vertices_dict"],
-                                kwargs["enemy_list"])
+        result_search = self.investigation_checking_for_noticeable_traces(**kwargs)
+        if result_search:
+            if self.local_waypoints:
+                self.path_local_move(kwargs["global_map"], kwargs["enemy_list"])
+            else:
+                self.path_calculate(kwargs["global_map"], kwargs["vertices_graph"], kwargs["vertices_dict"],
+                                    kwargs["enemy_list"])
+            return False
+        else:  # result_search is None:
+            self.bases_del_all_waypoints(**kwargs)
+            self.action_stack.add_stack_element(self._investigation_action_calculations, "investigation")
+            return None

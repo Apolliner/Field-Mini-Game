@@ -12,7 +12,7 @@ class SearchFootprints(Bases):
 
         return False
 
-    def _checking_for_noticeable_traces(self, step_activity_dict):
+    def investigation_checking_for_noticeable_traces(self, **kwargs):
         """ Проверяет наличие заметных шагов рядом с персонажем """
         pathfinder_dict = {
             1: ['0.0', '...', '0.0'],
@@ -26,6 +26,7 @@ class SearchFootprints(Bases):
                 '.............', '.............', '0...........0', '0...........0', '00.........00', '000.......000',
                 '00000...00000'],
         }
+        step_activity_dict = kwargs["step_activity_dict"]
         null_position = [self.world_position[0] - self.pathfinder, self.world_position[1] - self.pathfinder]
         pattern = pathfinder_dict[self.pathfinder]
         activity_position = None
@@ -60,7 +61,7 @@ class SearchFootprints(Bases):
                 # Если после поиска следов цель не меняется на следование к следующим следам, то рассчитывается путь до
                 # следующей точки в радиусе
                 if self.target.type != 'investigation':
-                    self.action_stack.add_element(self._radius_search_for_traces(**kwargs))
+                    self.action_stack.add_element(self._investigation_radius_search_for_traces(**kwargs))
                     return None
             # Если установлена цель поиска в радиусе но текущее положение не равно цели, то передвижение
             elif self.target.type == 'radius_investigation' and self.world_position != self.target.get_position():
@@ -79,7 +80,7 @@ class SearchFootprints(Bases):
         return True
 
 
-    def _search_for_traces(self, **kwargs):
+    def _investigation_search_for_traces(self, **kwargs):
         """
             Проверяет есть ли посчитанные вейпоинты поиска пути.
             Проверяет зону вокруг персонажа на наличие следов или лёгких следов
@@ -139,7 +140,7 @@ class SearchFootprints(Bases):
         elif self.target.type == 'investigation':
             self.npc_radius_search_for_traces(kwargs["global_map"], kwargs["step"])
 
-    def _radius_search_for_traces(self, **kwargs):
+    def _investigation_radius_search_for_traces(self, **kwargs):
         """
             Выставляет точку, определяет радиус, и проверяет 4 точки по сторонам, в каждой точке ищет следы.
             Если не находит, то бросает это занятие

@@ -141,3 +141,8 @@ class Bases:
             elif answer is None:
                 continue
 
+    def bases_del_all_waypoints(self, **kwargs):
+        """ Удаляет все вейпоинты """
+        self.global_waypoints = list()
+        self.local_waypoints = list()
+
