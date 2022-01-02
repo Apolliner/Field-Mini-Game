@@ -1,5 +1,5 @@
 import random
-from library.bases import Bases
+from libraryNPC.bases import Bases
 
 
 class CharacterAttack(Bases):

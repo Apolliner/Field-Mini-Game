@@ -1,4 +1,4 @@
-from library.bases import Bases
+from libraryNPC.bases import Bases
 
 
 class SearchFootprints(Bases):

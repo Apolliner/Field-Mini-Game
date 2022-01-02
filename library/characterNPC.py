@@ -1,9 +1,7 @@
-import copy
 import random
-import logging
 from library.characterBase import Character, CharacterAction, Target
 from library.characterPath import Path
-from library.bases import Bases
+from libraryNPC.bases import Bases
 
 """
     ОПИСАНИЕ ПОИСКА ШАГОВ

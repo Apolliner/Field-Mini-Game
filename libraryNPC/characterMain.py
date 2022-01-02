@@ -1,10 +1,8 @@
-import copy
 import random
-import logging
-from library.characterBase import Character, CharacterAction, Target
+from library.characterBase import Character
 from library.characterPath import Path
-from library.bases import Bases
-from library.characterNPCSearchFootprints import SearchFootprints
+from libraryNPC.bases import Bases
+from libraryNPC.characterNPCSearchFootprints import SearchFootprints
 
 """
     Вообще всё взаимодействие NPC с миром посредством стека, хранящем функции.
@@ -97,3 +95,7 @@ class NewNPC(Character, Path, Bases, SearchFootprints):
             self.bases_del_all_waypoints(**kwargs)
             self.action_stack.add_stack_element(self._investigation_action_calculations, "investigation")
             return None
+
+    def world_position_calculate(self, _):
+        """ Затычка для подключения к старой системе"""
+        pass
