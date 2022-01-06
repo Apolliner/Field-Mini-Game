@@ -1,3 +1,4 @@
+import random
 
 
 class MemoryNode:
@@ -11,9 +12,9 @@ class MemoryNode:
         self.name = name
         self.status = status
         self.entity = entity
-        self.connections = list()
+        self.connections = dict()
         if connection:
-            self.connections.append(connection)
+            self.connections[connection.id] = connection
 
     def get_position(self):
         if hasattr(self, "position") and self.position:
@@ -43,26 +44,48 @@ class Memory:
     """
     def __init__(self):
         self._graph = dict()
-        self._types = dict()
+        self._types = {
+            "area": list(),
+            "character": list(),
+            "footprints": list()
+        }
         self._event_stack = list()
 
     def add_standard_memories(self):
         """ Заполняет память стандартными знаниями """
-        self._nodes.extend([
-                MemoryNode(len(self._nodes), "area", "base_area", "opened", None),  # Запись обо всём мире
-                MemoryNode(len(self._nodes + 1), "character", "ordered character", "opened",
-                                                                                        "<Объект персонажа игрока>")])
+        self._all_add_new_memories(MemoryNode(self._id_generate(), "area", "base_area", "opened", None))
+        self._all_add_new_memories(MemoryNode(self._id_generate(), "character", "ordered character", "opened",
+                                                                                        "<Объект персонажа игрока>"))
+
+    def _all_add_new_memories(self, memories):
+        """ Добавление объекта элемента памяти как в граф, так и в словарь по типам """
+        self._graph[memories.id] = memories
+        self._types[memories.type].append(memories)
+
+    def _id_generate(self):
+        """ Генерация случайного id, которого ещё нет в графе """
+        while True:
+            gen_id = random.randrange(9999999)
+            if gen_id not in self._graph:
+                break
+        return gen_id
 
     def generalization_of_experience(self):
         """ Обобщает множество одинаковых закрытых записей в одну """
-
         for key in self._types:
             closed_memories = list()
             for element in self._types[key]:
                 if element.status == "closed":
                     closed_memories.append(element)
             if len(closed_memories) > 5:
-                summarized = MemoryNode(len(self._nodes), key, '', "summarized", None)
+                summarized = MemoryNode(self._id_generate(), key, '', "summarized", None)
+                self._all_add_new_memories(summarized)
                 for closed_memory in closed_memories:
-                    closed_number = closed_memory.id
+                    closed_id = closed_memory.id
+                    for connect in closed_memory.connections:
+                        if summarized is not connect.connections:
+                            connect.connections[summarized.id] = summarized
+                        connect.connections.pop(closed_id, False)
+                    self._graph.pop(closed_id, False)
+                    self._types[closed_memory.type].pop(closed_id)
 
