@@ -1,4 +1,5 @@
 import random
+from libraryNPC.stackBase import BaseStack
 
 
 class MemoryNode:
@@ -6,15 +7,18 @@ class MemoryNode:
         Вершина графа памяти
         Каждое событие должно быть закрыто. Закрытые события обобщаются для экономии места.
     """
-    def __init__(self, id, type, name, status, entity, connection=None):
+    def __init__(self, id, type, name, status, entity, connection=None, position=None):
         self.id = id
         self.type = type
         self.name = name
         self.status = status
         self.entity = entity
         self.connections = dict()
-        if connection:
+        if connection is not None:
             self.connections[connection.id] = connection
+        self.positions = list()
+        if position is not None:
+            self.positions.append(position)
 
     def get_position(self):
         if hasattr(self, "position") and self.position:
@@ -49,7 +53,7 @@ class Memory:
             "character": list(),
             "footprints": list()
         }
-        self._event_stack = list()
+        self._event_stack = BaseStack()
 
     def add_standard_memories(self):
         """ Заполняет память стандартными знаниями """
@@ -88,4 +92,10 @@ class Memory:
                         connect.connections.pop(closed_id, False)
                     self._graph.pop(closed_id, False)
                     self._types[closed_memory.type].pop(closed_id)
+
+    def get_position(self):
+        """ Получение последней позиции последнего элемента из _event_stack """
+        if self._event_stack.get_stack_element() and self._event_stack.get_stack_element().positions:
+            return self._event_stack.get_stack_element().positions[-1]
+        return None
 
