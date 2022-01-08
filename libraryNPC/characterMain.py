@@ -1,6 +1,6 @@
 import random
-from library.characterBase import Character
-from library.characterPath import Path
+from libraryNPC.characterBase import Character
+from libraryNPC.characterPath import Path
 from libraryNPC.bases import Bases
 from libraryNPC.characterNPCSearchFootprints import SearchFootprints
 from libraryNPC.characterMove import CharacterMove

@@ -1,5 +1,6 @@
 import random
 from libraryNPC.stackBase import BaseStack
+from libraryNPC.bases import Bases
 
 
 class MemoryNode:
@@ -20,13 +21,6 @@ class MemoryNode:
         if position is not None:
             self.positions.append(position)
 
-    def get_position(self):
-        if hasattr(self, "position") and self.position:
-            return self.position
-        elif self.entity and self.entity.world_position:
-            return self.entity.world_position
-        return None
-
     def _check_target_type(self):
         """ Автоматически определяет степень важности цели """
         types_dict = {
@@ -38,21 +32,19 @@ class MemoryNode:
         return "base"
 
 
-class Memory:
+class Memory(Bases):
     """
         Содержит в себе граф памяти
         Память хранит события, обобщенные события и их связи
 
         _graph содержит связи между элементами памяти
         _types содержит объекты элементов памяти, отсортированные по типам
+
+        Нужно как то передавать информацию о том, что выполняется та же задача, что и на прошлом шаге.
     """
     def __init__(self):
         self._graph = dict()
-        self._types = {
-            "area": list(),
-            "character": list(),
-            "footprints": list()
-        }
+        self._types = dict()
         self._event_stack = BaseStack()
 
     def add_standard_memories(self):
@@ -64,6 +56,8 @@ class Memory:
     def _all_add_new_memories(self, memories):
         """ Добавление объекта элемента памяти как в граф, так и в словарь по типам """
         self._graph[memories.id] = memories
+        if memories.type not in self._types:
+            self._types[memories.type] = list()
         self._types[memories.type].append(memories)
 
     def _id_generate(self):
@@ -98,4 +92,11 @@ class Memory:
         if self._event_stack.get_stack_element() and self._event_stack.get_stack_element().positions:
             return self._event_stack.get_stack_element().positions[-1]
         return None
+
+    def get_vertices(self, global_map):
+        """ Получение зоны доступности тайла на последней позиции последнего элемента из _event_stack """
+        world_position = self.get_position()
+        if world_position is None:
+            return None
+        return self.bases_world_tile(global_map, world_position).vertices
 
