@@ -10,8 +10,10 @@ class ActionStack(BaseStack):
             name - Имя элемента
             element - функция действия
             type_element - Тип элемента, базовый или промежуточный. Промежуточные удаляются до первого базового.
+            target - Хранит задачу этого элемента. FIXME система задач 2
         """
-        self._stack.append({"name": kwargs["name"], "body": kwargs["element"], "type": kwargs["type_action"]})
+        self._stack.append({"name": kwargs["name"], "body": kwargs["element"], "type": kwargs["type_action"],
+                            "target": kwargs["target"]})  # FIXME система задач 2
 
     def get_names(self):
         """ Возвращает список имён элементов """
@@ -37,5 +39,12 @@ class ActionStack(BaseStack):
                 type_element = self._get_type_element()
                 if type_element is None or type_element == "base":
                     break
-                self.pop_stack_element(self)
+                else:
+                    self.pop_stack_element()
+
+    def get_target(self):
+        element = self.get_stack_element()
+        if element and "target" in element:
+            return element["target"]
+        return None
 
