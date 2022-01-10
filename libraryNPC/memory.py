@@ -55,10 +55,27 @@ class MemoryNode:
     def get_position(self):
         """ Возвращает позицию из цели """
         if self.target:
-            return list(self.entity.world_position)
+            return list(self.target.entity.world_position)
         if self.positions:
-            return list(self.positions[-1])
+            return list(self.target.positions[-1])
         return None
+
+    def get_tile(self, global_map, chunk_size):
+        """ Возвращает тайл, на позицию которого указывает цель """
+        world_position = self.get_position()
+        if world_position is not None:
+            global_position = [world_position[0] // chunk_size, world_position[1] // chunk_size]
+            local_position = [world_position[0] % chunk_size, world_position[1] % chunk_size]
+            return global_map[global_position[0]][global_position[1]].chunk[local_position[0]][local_position[1]]
+        return None
+
+    def get_vertices(self, global_map, chunk_size):
+        """ Возвращает зону доступности цели """
+        tile = self.get_tile(global_map, chunk_size)
+        if tile is not None:
+            return tile.vertices
+        return None
+
 
 class Memory(Bases):
     """
@@ -70,12 +87,12 @@ class Memory(Bases):
         _types содержит объекты элементов памяти, отсортированные по типам
 
         Нужно как то передавать информацию о том, что выполняется та же задача, что и на прошлом шаге.
+        FIXME Можно так же, как и раньше, только target это элемент памяти
     """
     def __init__(self, master):
         self.master = master        # Объект персонажа, чья память обрабатывается
         self._graph = dict()
         self._types = dict()
-        self.event_stack = BaseStack()  # FIXME система задач 1
 
     def add_standard_memories(self, player):
         """ Заполняет память стандартными знаниями """
@@ -116,29 +133,5 @@ class Memory(Bases):
                         connect.connections.pop(closed_id, False)
                     self._graph.pop(closed_id, False)
                     self._types[closed_memory.type].pop(closed_id)
-
-    def get_position(self):  # FIXME система задач 1
-        """ Получение последней позиции последнего элемента из _event_stack """
-        element = self.event_stack.get_stack_element()
-        if element and element.positions:
-            return element.positions[-1]
-        return None
-
-    def get_vertices(self, global_map):  # FIXME система задач 1
-        """ Получение зоны доступности тайла на последней позиции последнего элемента из _event_stack """
-        world_position = self.get_position()
-        if world_position is None:
-            return None
-        return self.bases_world_tile(global_map, world_position).vertices
-
-    def check_old_target(self, **kwargs):  # FIXME система задач 1
-        """ Возвращает - продолжается ли старое задание (True) или выполняется новое (False). None говорит об ошибке """
-        element = self.event_stack.get_stack_element()
-        if element and "step" in kwargs:
-            if element.step == kwargs["step"]:
-                return False
-            else:
-                return True
-        return None
 
 
