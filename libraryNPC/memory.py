@@ -1,6 +1,7 @@
 import random
 from libraryNPC.stackBase import BaseStack
 from libraryNPC.bases import Bases
+from libraryNPC.classes import PushingList
 
 
 class MemoryNode:
@@ -24,7 +25,7 @@ class MemoryNode:
         self.connections = dict()
         if connection is not None:
             self.connections[connection.id] = connection
-        self.positions = list()
+        self.positions = PushingList()
         if position is not None:
             self.positions.append(position)
 

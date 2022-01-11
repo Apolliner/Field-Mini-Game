@@ -29,4 +29,4 @@ class CharacterMove:
         else:  # result_search is None:
             self.bases_del_all_waypoints(**kwargs)
             self.action_stack.add_stack_element(self._investigation_action_calculations, "investigation")
-            return None
+            return float("inf")

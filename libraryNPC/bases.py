@@ -3,6 +3,8 @@ import math
 class Bases:
     """ Базовые методы, нужные везде """
 
+    inf = float("inf")
+
     def bases_world_position_calculate(self, global_position, local_position):
         """
             Рассчитывает мировые координаты от центра мира
@@ -79,6 +81,7 @@ class Bases:
             Маршрутизатор, выполняющий функции из стека, так же проверяет стек на наличие бесконечной
             рекурсии. FIXME None нужно заменить, так как его значение в остальной обработке означает необработанную
                             ситуацию
+                            /\ Теперь это inf - infinity
         """
         names_count = dict()
         for name in stack.get_names():
@@ -99,7 +102,7 @@ class Bases:
                 break
             elif answer is False:
                 break
-            elif answer is None:
+            elif answer is self.inf:
                 continue
 
     def bases_del_all_waypoints(self, **kwargs):
