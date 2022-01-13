@@ -1,6 +1,6 @@
-from libraryNPC.bases import Bases
+from libraryNPC.characterPathBase import PathBase
 
-class Path(Bases):
+class Path(PathBase):
     """
         Реализует перемещение в точку или зону доступности, содержащуюся в задаче.
     """
@@ -12,20 +12,18 @@ class Path(Bases):
         """
         return False
 
-    def _path_calculate(self, **kwargs):
+    def _path_move_calculate(self, **kwargs):
         """
             Рассчитывает путь до тайла или до зоны доступности (в зависимости от того, что приходит из задачи)
         """
         ...
 
-    def _path_global_waypoints_calculate(self, start_vertices, finish_vertices, **kwargs):
+    def _path_move_global_waypoints_calculate(self, start_vertices, finish_vertices, **kwargs):
         """ Рассчитывает глобальные вейпоинты """
         ...
 
-    def _path_local_waypoints_calculate(self, start_position, finish_position, **kwargs):
+    def _path_move_local_waypoints_calculate(self, start_position, finish_position, **kwargs):
         """ Рассчитывает локальные вейпоинты """
         ...
 
-    def _path_local_move(self, **kwargs):
-        """ Реализует перемещение персонажа по локальным вейпоинтам """
-        ...
+
