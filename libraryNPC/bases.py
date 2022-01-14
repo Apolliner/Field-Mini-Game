@@ -5,6 +5,12 @@ class Bases:
 
     inf = float("inf")
 
+    def bases_path_length(self, start_point, finish_point):
+        """
+            Вычисляет примерное расстояния до финиша, для рассчётов стоимости перемещения
+        """
+        return math.sqrt((start_point[0] - finish_point[0]) ** 2 + (start_point[1] - finish_point[1]) ** 2)
+
     def bases_world_position_calculate(self, global_position, local_position):
         """
             Рассчитывает мировые координаты от центра мира

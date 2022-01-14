@@ -1,7 +1,8 @@
 import random
+from libraryNPC.characterPathMove import PathMove
 
 
-class CharacterMove:
+class CharacterMove(PathMove):
 
     def _move_search_person(self, **kwargs):
         """ Глобальная цель поиска указанного персонажа. Базовая активность охотников за головами """
@@ -20,11 +21,7 @@ class CharacterMove:
         """
         result_search = self.investigation_checking_for_noticeable_traces(**kwargs)
         if result_search:
-            if self.local_waypoints:
-                self.path_local_move(kwargs["global_map"], kwargs["enemy_list"])
-            else:
-                self.path_calculate(kwargs["global_map"], kwargs["vertices_graph"], kwargs["vertices_dict"],
-                                    kwargs["enemy_list"])
+            self.action_stack.add_stack_element(self.path_move, "move")#FIXME Надо сгенерировать элемент памяти и задачу
             return False
         else:  # result_search is None:
             self.bases_del_all_waypoints(**kwargs)

@@ -1,6 +1,7 @@
 import random
 from libraryNPC.characterBase import Character
 from libraryNPC.characterPath import Path
+from libraryNPC.characterPathMove import PathMove
 from libraryNPC.bases import Bases
 from libraryNPC.characterNPCSearchFootprints import SearchFootprints
 from libraryNPC.characterMove import CharacterMove
@@ -13,7 +14,7 @@ from libraryNPC.characterMove import CharacterMove
 """
 
 
-class NewNPC(Character, Path, Bases, SearchFootprints, CharacterMove):
+class NewNPC(Character, PathMove, Bases, SearchFootprints, CharacterMove):
     """ Ещё одна попытка сделать расширяемых NPC на базе стека """
 
     def __init__(self, global_position, local_position, name, name_npc, icon, type, description, type_npc):
