@@ -11,11 +11,11 @@ class MemoryNode:
 
         Задачи так же являются элементами памяти
     """
-    def __init__(self, id, type, name, status, step, master, target=None, entity=None, connection=None, position=None):
+    def __init__(self, id, type, name, master, step=0, target=None, entity=None, connection=None, position=None, **kwargs):
         self.id = id
         self.type = type
         self.name = name
-        self.status = status
+        self.status = "opened"
         self.step = step            # Шаг обновляется при каждом изменении элемента памяти
         self.birth = step           # Создание элемента остаётся постоянным
         self.master = master        # Объект персонажа, к которому относится элемент памяти
@@ -97,9 +97,15 @@ class Memory(Bases):
 
     def add_standard_memories(self, player):
         """ Заполняет память стандартными знаниями """
-        self._all_add_new_memories(MemoryNode(self._id_generate(), "area", "base_area", "opened", 0, self.master))
-        self._all_add_new_memories(MemoryNode(self._id_generate(), "character", "ordered character", "opened", 0,
+        self._all_add_new_memories(MemoryNode(self._id_generate(), "area", "base_area", self.master))
+        self._all_add_new_memories(MemoryNode(self._id_generate(), "character", "ordered character",
                                                                                     self.master, entity=player))
+
+    def add_memories(self, type, name, **kwargs):
+        """ Метод для создания новой записи и автоматического её добавления в граф. Возвращает созданный элемент """
+        new_memory = MemoryNode(self._id_generate(), type, name, self.master, **kwargs)
+        self._all_add_new_memories(new_memory)
+        return new_memory
 
     def _all_add_new_memories(self, memories):
         """ Добавление объекта элемента памяти как в граф, так и в словарь по типам """

@@ -5,6 +5,7 @@ from libraryNPC.characterPathMove import PathMove
 from libraryNPC.bases import Bases
 from libraryNPC.characterNPCSearchFootprints import SearchFootprints
 from libraryNPC.characterMove import CharacterMove
+from libraryNPC.memory import Memory
 
 """
     Вообще всё взаимодействие NPC с миром посредством стека, хранящем функции.
@@ -39,9 +40,7 @@ class NewNPC(Character, PathMove, Bases, SearchFootprints, CharacterMove):
 
         # ОБРАБОТКА
         self.status = list()                            # Список текущего состояния                 list
-        self.memory = {'investigation': [],
-                       'activity': [],
-                       'move': []}                      # Память о действиях и событиях             dict
+        self.memory = Memory(self)                      # Граф памяти персонажа                     Memory
         self.friends = list()                           # Список друзей персонажа                   list
         self.enemies = list()                           # Список врагов персонажа                   list
 
