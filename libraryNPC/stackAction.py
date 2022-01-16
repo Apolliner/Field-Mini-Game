@@ -9,11 +9,9 @@ class ActionStack(BaseStack):
 
             name - Имя элемента
             element - функция действия
-            type_element - Тип элемента, базовый или промежуточный. Промежуточные удаляются до первого базового.
             target - Хранит задачу этого элемента.
         """
-        self._stack.append({"name": kwargs["name"], "body": kwargs["element"], "type": kwargs["type_action"],
-                            "target": kwargs["target"]})
+        self._stack.append({"name": kwargs["name"], "element": kwargs["element"], "target": kwargs["target"]})
 
     def get_names(self):
         """ Возвращает список имён элементов """

@@ -11,7 +11,7 @@ class CharacterMove(PathMove):
         _, success = self._path_world_vertices_a_star_algorithm(kwargs["vertices_dict"], self.vertices, finish_vertices)
         if success:
             target = self.memory.add_memories("target", "move", position=finish_vertices, **kwargs)
-            self.action_stack.add_stack_element(self.path_move, "global_move", target)
+            self.action_stack.add_stack_element(name="global_move", element=self.path_move, target=target)
             return False
         return False
 
@@ -23,7 +23,7 @@ class CharacterMove(PathMove):
         result_search = self.investigation_checking_for_noticeable_traces(**kwargs)
         if result_search:
             target = self.memory.add_memories("target", "move", position=result_search, **kwargs)
-            self.action_stack.add_stack_element(self.path_move, "move", target)
+            self.action_stack.add_stack_element(name="move", element=self.path_move, target=target)
             return False
         else:  # result_search is None:
             self.bases_del_all_waypoints(**kwargs)

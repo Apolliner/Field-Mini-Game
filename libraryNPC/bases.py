@@ -46,42 +46,6 @@ class Bases:
         hypotenuse = math.sqrt(cathet_y**2 + cathet_x**2)
         return hypotenuse
 
-    def bases_get_memory(self, type):
-        """
-            Возвращает последние 3 записи указанного типа
-        """
-        if type in self.memory:
-            memory = self.memory[type]
-            memory = list(reversed(memory))
-            if memory:
-                if len(memory) >= 10:
-                    return memory[::10]
-                else:
-                    return memory
-        return None
-
-    def bases_check_memory(self, step):
-        """
-            Проверяет содержимое памяти
-
-            Если находит подходящую запись для продолжения, то отмечает её продолженной FIXME устарело
-
-        """
-        type_tuple = ('activity', 'move', 'follow')
-        for type in type_tuple:
-            memory_list = self.npc_get_memory(self, type)
-            if memory_list is not None:
-                for memory in memory_list:
-                    if memory.status == 'interrupted':
-                        self.target = Target(type=memory.type, entity=memory.entity, position=memory.world_position,
-                                                                                    create_step=step, lifetime=1000)
-                        memory.status = "continued"
-                        if memory.type in ('follow', 'escape', 'investigation') and memory.entity:
-                            setattr(self, memory.type, memory.entity)
-                        break
-            else:
-                continue
-
     def bases_router(self, stack, **kwargs):
         """
             Маршрутизатор, выполняющий функции из стека, так же проверяет стек на наличие бесконечной
@@ -102,7 +66,8 @@ class Bases:
 
         while True:
             action = stack.get_stack_element()
-            answer = action(**kwargs)
+            answer = action["element"](**kwargs)
+            self.target = action["target"]
             if answer is True:
                 stack.pop_stack_element()
                 break

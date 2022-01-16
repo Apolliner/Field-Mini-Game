@@ -9,7 +9,7 @@ class BaseStack:
             Положить элемент
             element - элемент стека
         """
-        self._stack.append(kwargs["element"])
+        self._stack.append({"element": kwargs["element"]})
 
     def get_stack_element(self):
         """ Получить элемент """
