@@ -1,4 +1,6 @@
 import math
+import random
+
 
 class Bases:
     """ Базовые методы, нужные везде """
@@ -81,3 +83,9 @@ class Bases:
         self.global_waypoints = list()
         self.local_waypoints = list()
 
+    def bases_gen_random_id(self, ids_list):
+        while True:
+            new_id = random.randrange(999999)
+            if new_id not in ids_list:
+                ids_list.append(new_id)
+                return new_id

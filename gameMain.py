@@ -11,6 +11,7 @@ from library.gameOutput import master_pygame_draw, Offset_sprites
 from library.gameInput import calculation_assemblage_point, master_player_action
 from library.gamePassStep import master_pass_step, new_step_calculation
 from library.characterNPC import NPC
+from libraryNPC.characterMain import NewNPC
 
 
 garbage = ['░', '▒', '▓', '█', '☺']
@@ -380,6 +381,9 @@ def game_loop(global_map:list, person, chunk_size:int, enemy_list:list, world, s
                                             entities_layer, finishing_surface, settings_for_intermediate_steps, mouse_position, raw_minimap)
 
     enemy_list.append(NPC([2, 2], [2, 2], 'new_riffleman', 'new_riffleman', '☻', 'd0', 'Тестовый NPC', 'new_riffleman'))
+    #enemy_list.append(NewNPC([2, 2], [2, 2], 'super_riffleman', 'super_riffleman', '☺', 'd0', ' Новый тестовый NPC',
+    #                         'super_riffleman'))
+
     print('game_loop запущен')
     game_loop = True
     while game_loop:

@@ -5,6 +5,7 @@ import math
 from library.classes import Action_in_map, Global_interact
 from library.characterNPC import NPC
 from library.characterBase import Target
+from libraryNPC.characterMain import NewNPC
 
 """
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -715,7 +716,7 @@ def master_npc_calculation(global_map, enemy_list, person, go_to_print, step, ac
         self.target = [] #[[global_y, global_x], vertices, [local_y, local_x]]
         self.local_waypoints = [] # [[local_y, local_x], vertices, [global_y, global_x]]
     """
-
+    ids_list = list()  # FIXME Пока зашлушка
     step_activity_dict = dict()
     for activity in activity_list:
         world_position = world_position_calculate(activity.global_position, activity.local_position,
@@ -727,9 +728,14 @@ def master_npc_calculation(global_map, enemy_list, person, go_to_print, step, ac
         enemy.direction = 'center'
         if not isinstance(enemy, NPC):
             enemy.all_description_calculation()
-        if not enemy.delete:
+        if not enemy.delete:  # FIXME Самый новый вид NPC
+            if isinstance(enemy, NewNPC):
+                enemy.npc_master_calculation(step=step, activity_list=activity_list, global_map=global_map,
+                                             vertices_graph=vertices_graph, verices_dict=verices_dict,
+                                             enemy_list=enemy_list, step_activity_dict=step_activity_dict,
+                                             ids_list=ids_list)
             # Если это новый тип противника
-            if isinstance(enemy, NPC):  # FIXME Если это новый тип противника
+            elif isinstance(enemy, NPC):
                 enemy.npc_master_calculation(step, activity_list, global_map, vertices_graph, verices_dict, enemy_list,
                                              step_activity_dict)
             # Если это противник

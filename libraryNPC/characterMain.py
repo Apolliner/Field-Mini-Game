@@ -15,10 +15,10 @@ from libraryNPC.memory import Memory
 """
 
 
-class NewNPC(Character, PathMove, Bases, SearchFootprints, CharacterMove):
+class NewNPC(Character, PathMove):  #, SearchFootprints, CharacterMove):
     """ Ещё одна попытка сделать расширяемых NPC на базе стека """
 
-    def __init__(self, global_position, local_position, name, name_npc, icon, type, description, type_npc):
+    def __init__(self, global_position, local_position, name, name_npc, icon, type, description, type_npc, **kwargs):
         super().__init__(global_position, local_position, name, name_npc, icon, type, description, type_npc)
 
         # ЖИЗНЕННЫЕ ПОКАЗАТЕЛИ:
@@ -44,6 +44,8 @@ class NewNPC(Character, PathMove, Bases, SearchFootprints, CharacterMove):
         self.friends = list()                           # Список друзей персонажа                   list
         self.enemies = list()                           # Список врагов персонажа                   list
 
+        self._init_new_npc(**kwargs)
+
     def npc_master_calculation(self, **kwargs):
         """
             Обработка действий персонажа на текущем шаге
@@ -68,4 +70,10 @@ class NewNPC(Character, PathMove, Bases, SearchFootprints, CharacterMove):
             или добавление новых.
         """
         pass
+
+    def _init_new_npc(self, **kwargs):
+        """ Инициализирует нового NPC """
+        self.memory.add_standard_memories(kwargs["player"])
+        target = self.memory.add_memories("target", "global_move", **kwargs)
+        self.action_stack.add_stack_element(name="global_move", element=self._move_search_person, target=target)
 

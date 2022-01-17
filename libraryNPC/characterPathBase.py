@@ -1,12 +1,19 @@
 from libraryNPC.bases import Bases
 
 
-class PathBase(Bases):
+class PathBase():
     """ Базовый класс передвижения, чтобы не пересекались методы разных типов передвижения """
 
     def _path_base_local_move(self, **kwargs):
         """ Реализует перемещение персонажа по локальным вейпоинтам """
-        ...
+        # FIXME пока всё очень просто
+        if self.local_waypoints:
+            waypoint = self.local_waypoints.pop(0)
+            self.world_position = waypoint
+            self.global_position, self.local_position = self.bases_world_position_recalculation(self.world_position)
+            tile = self.bases_world_tile(kwargs["global_map"], self.world_position)
+            self.vertices = tile.vertices
+            self.level = tile.level
 
     def _path_base_global_direction_calculation(self, start_vertices, finish_vertices, vertices_dict):
         """ Определяет направление глобального движения """

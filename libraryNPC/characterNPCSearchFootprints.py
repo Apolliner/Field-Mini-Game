@@ -1,7 +1,7 @@
 from libraryNPC.bases import Bases
 
 
-class SearchFootprints(Bases):
+class SearchFootprints():
 
     def _search_footprints(self, **kwargs):
         """

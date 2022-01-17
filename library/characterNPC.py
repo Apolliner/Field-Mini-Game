@@ -156,7 +156,7 @@ class NPC(Character, Path, Bases):
         self.stealth = False  # Скрытность                              bool
         self.alertness = False  # Настороженность                       bool
         self.determination = 100  # Решительность (качество персонажа)  int
-        self.action_stack = self.BaseStack()
+        #self.action_stack = self.BaseStack()
 
         # ОБРАБОТКА
         self.status = list()  # Список текущего состояния               list
