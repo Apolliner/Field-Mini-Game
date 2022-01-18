@@ -6,6 +6,8 @@ from libraryNPC.bases import Bases
 from libraryNPC.characterNPCSearchFootprints import SearchFootprints
 from libraryNPC.characterMove import CharacterMove
 from libraryNPC.memory import Memory
+from libraryNPC.stackBase import BaseStack
+from libraryNPC.stackAction import ActionStack
 
 """
     Вообще всё взаимодействие NPC с миром посредством стека, хранящем функции.
@@ -15,11 +17,11 @@ from libraryNPC.memory import Memory
 """
 
 
-class NewNPC(Character, PathMove):  #, SearchFootprints, CharacterMove):
+class NewNPC(Character, CharacterMove):  #, SearchFootprints, CharacterMove, PathMove):
     """ Ещё одна попытка сделать расширяемых NPC на базе стека """
 
     def __init__(self, global_position, local_position, name, name_npc, icon, type, description, type_npc, **kwargs):
-        super().__init__(global_position, local_position, name, name_npc, icon, type, description, type_npc)
+        super().__init__(global_position, local_position, name, name_npc, icon, type, description, type_npc, **kwargs)
 
         # ЖИЗНЕННЫЕ ПОКАЗАТЕЛИ:
         self.health = 100                               # Здоровье                                  int
@@ -36,7 +38,7 @@ class NewNPC(Character, PathMove):  #, SearchFootprints, CharacterMove):
         self.stealth = False                            # Скрытность                                bool
         self.alertness = False                          # Настороженность                           bool
         self.determination = 100                        # Решительность (качество персонажа)        int
-        self.action_stack = self.BaseStack()
+        self.action_stack = ActionStack()
 
         # ОБРАБОТКА
         self.status = list()                            # Список текущего состояния                 list
@@ -76,4 +78,7 @@ class NewNPC(Character, PathMove):  #, SearchFootprints, CharacterMove):
         self.memory.add_standard_memories(kwargs["player"])
         target = self.memory.add_memories("target", "global_move", **kwargs)
         self.action_stack.add_stack_element(name="global_move", element=self._move_search_person, target=target)
+
+    def check_achieving_the_target(self):
+        pass
 

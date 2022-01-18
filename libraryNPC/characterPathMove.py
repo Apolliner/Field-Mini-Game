@@ -156,9 +156,12 @@ class PathMove(PathBase):
                                                    self.bases_path_length(connect.position,
                                                                finish_vertices.position),
                                                    processed_node.number))
+        if type(start_vertices) == int:
+            start_vertices = vertices_dict[start_vertices]
 
         graph = []  # Список, содержащий все вершины
         verified_vertices = []  # Содержит список всех использованных координат, что бы сравнивать с ним при добавлении новой вершины.
+
         graph.append(Node_vertices(0, start_vertices.number, start_vertices.position,
                                    self.bases_path_length(start_vertices.position, finish_vertices.position), 0))
         verified_vertices.append(start_vertices.number)

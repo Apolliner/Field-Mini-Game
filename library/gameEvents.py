@@ -709,7 +709,7 @@ def return_npc(global_position, local_position, key):
 
 
 def master_npc_calculation(global_map, enemy_list, person, go_to_print, step, activity_list, chunk_size, interaction,
-                           world, vertices_graph, verices_dict):
+                           world, vertices_graph, vertices_dict):
     """
         Здесь происходят все события, связанные с NPC
 
@@ -726,17 +726,17 @@ def master_npc_calculation(global_map, enemy_list, person, go_to_print, step, ac
     delete_list = []
     for number_enemy, enemy in enumerate(enemy_list):
         enemy.direction = 'center'
-        if not isinstance(enemy, NPC):
-            enemy.all_description_calculation()
+        #if not isinstance(enemy, NPC):
+        #    enemy.all_description_calculation()
         if not enemy.delete:  # FIXME Самый новый вид NPC
             if isinstance(enemy, NewNPC):
                 enemy.npc_master_calculation(step=step, activity_list=activity_list, global_map=global_map,
-                                             vertices_graph=vertices_graph, verices_dict=verices_dict,
+                                             vertices_graph=vertices_graph, vertices_dict=vertices_dict,
                                              enemy_list=enemy_list, step_activity_dict=step_activity_dict,
                                              ids_list=ids_list)
             # Если это новый тип противника
             elif isinstance(enemy, NPC):
-                enemy.npc_master_calculation(step, activity_list, global_map, vertices_graph, verices_dict, enemy_list,
+                enemy.npc_master_calculation(step, activity_list, global_map, vertices_graph, vertices_dict, enemy_list,
                                              step_activity_dict)
             # Если это противник
             elif isinstance(enemy, Enemy):

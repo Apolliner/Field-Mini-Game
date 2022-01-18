@@ -71,6 +71,7 @@ garbage = ['░', '▒', '▓', '█', '☺']
 
 """
 
+
 def save_map(global_map, minimap, vertices_graph, vertices_dict):
     """
         Сохранение игровой карты через pickle
@@ -80,6 +81,7 @@ def save_map(global_map, minimap, vertices_graph, vertices_dict):
     with open("save/saved_map.pkl", "wb") as fp:
         pickle.dump(all_save, fp)
 
+
 def load_map():
     """
         Загрузка игровой карты через pickle
@@ -88,6 +90,7 @@ def load_map():
         all_load = pickle.load(fp)
     
     return all_load[0], all_load[1], all_load[2], all_load[3]
+
 
 def save_game(global_map, person, chunk_size, enemy_list, raw_minimap, activity_list, step, vertices_graph, 
                                                                                                 vertices_dict):
@@ -99,6 +102,7 @@ def save_game(global_map, person, chunk_size, enemy_list, raw_minimap, activity_
 
     with open("save/save_game.pkl", "wb") as fp:
         pickle.dump(all_save, fp)
+
 
 def load_game():
     """
@@ -127,7 +131,8 @@ class button_rect(pygame.sprite.Sprite):
         
     def draw(self, surface):
         surface.blit(self.image, self.rect)
-            
+
+
 def master_game_menu_draw(screen, dispay_size, menu_selection, button_selection, menu_list, fill = True):
     """
         Отрисовывает игровое меню
@@ -146,6 +151,7 @@ def master_game_menu_draw(screen, dispay_size, menu_selection, button_selection,
         step += 100
 
     pygame.display.flip()
+
 
 def settings_loop(screen, dispay_size, fast_generation:bool, global_region_grid, region_grid, chunks_grid, mini_region_grid, tile_field_grid):
     """
@@ -188,6 +194,7 @@ def preparing_a_new_game(global_region_grid, region_grid, chunks_grid, mini_regi
     game_loop(global_map, person, chunk_size, enemy_list, world, screen, raw_minimap, True, [],
               sprites_dict, minimap_dict, vertices_graph, vertices_dict)
 
+
 def in_game_main_loop(screen, global_map, person, chunk_size, enemy_list, raw_minimap, activity_list, step, vertices_graph):
     """
         Меню в уже загруженной игре
@@ -218,6 +225,7 @@ def in_game_main_loop(screen, global_map, person, chunk_size, enemy_list, raw_mi
         button_selection = False
     return game_loop
 
+
 def menu_calculation(menu_list, menu_selection, button_selection):
     """
         Обрабатывает перемещение по любому игровому меню
@@ -246,6 +254,7 @@ def menu_calculation(menu_list, menu_selection, button_selection):
             
     menu_selection, button_selection
 
+
 def minimap_create(raw_map, minimap_dict, size_tile):
     """
         Создаёт игровую миникарту для постоянного использования
@@ -258,7 +267,8 @@ def minimap_create(raw_map, minimap_dict, size_tile):
             print_sprite.rect.left = number_tile*size_tile
             print_sprite.draw(minimap_surface)
     return minimap_surface         
-            
+
+
 def main_loop():
     """
         Здесь работает игровое меню
@@ -338,6 +348,7 @@ def main_loop():
             button_selection = False
             master_game_menu_draw(screen, dispay_size, menu_selection, button_selection, menu_list)
 
+
 def game_loop(global_map:list, person, chunk_size:int, enemy_list:list, world, screen, raw_minimap,
               new_game:bool, load_pack:list, sprites_dict:dict, minimap_dict:dict, vertices_graph, vertices_dict):
     """
@@ -376,13 +387,14 @@ def game_loop(global_map:list, person, chunk_size:int, enemy_list:list, world, s
 
     #Предварительная отрисовка игрового окна
     screen, landscape_layer, activity_layer, entities_layer, offset_sprites, finishing_surface, settings_for_intermediate_steps = master_pygame_draw(person, chunk_size,
-                                            go_to_print, global_map, mode_action, enemy_list, activity_list, screen, minimap_surface,
-                                            minimap_dict, sprites_dict, offset_sprites, landscape_layer, activity_layer,
-                                            entities_layer, finishing_surface, settings_for_intermediate_steps, mouse_position, raw_minimap)
+                        go_to_print, global_map, mode_action, enemy_list, activity_list, screen, minimap_surface,
+                        minimap_dict, sprites_dict, offset_sprites, landscape_layer, activity_layer,
+                        entities_layer, finishing_surface, settings_for_intermediate_steps, mouse_position, raw_minimap)
 
     enemy_list.append(NPC([2, 2], [2, 2], 'new_riffleman', 'new_riffleman', '☻', 'd0', 'Тестовый NPC', 'new_riffleman'))
-    #enemy_list.append(NewNPC([2, 2], [2, 2], 'super_riffleman', 'super_riffleman', '☺', 'd0', ' Новый тестовый NPC',
-    #                         'super_riffleman'))
+    kwargs = {"ids_list": list(), "player": person}
+    enemy_list.append(NewNPC([2, 2], [2, 2], 'super_riffleman', 'super_riffleman', '☺', 'd0', ' Новый тестовый NPC',
+                             'super_riffleman', **kwargs))
 
     print('game_loop запущен')
     game_loop = True
@@ -394,10 +406,11 @@ def game_loop(global_map:list, person, chunk_size:int, enemy_list:list, world, s
         master_pass_step(person)
         
         if not person.person_pass_step:
-            mode_action, mouse_position = master_player_action(global_map, person, chunk_size, go_to_print, mode_action, interaction, activity_list, step,
-                                               enemy_list, mouse_position)
+            mode_action, mouse_position = master_player_action(global_map, person, chunk_size, go_to_print, mode_action,
+                                                        interaction, activity_list, step, enemy_list, mouse_position)
         if mode_action == 'in_game_menu':
-            game_loop = in_game_main_loop(screen, global_map, person, chunk_size, enemy_list, raw_minimap, activity_list, step)
+            game_loop = in_game_main_loop(screen, global_map, person, chunk_size, enemy_list, raw_minimap,
+                                                                                        activity_list, step)
             mode_action = 'move'
             
         step = new_step_calculation(enemy_list, person, step)
@@ -409,9 +422,9 @@ def game_loop(global_map:list, person, chunk_size:int, enemy_list:list, world, s
             master_game_events(global_map, enemy_list, person, go_to_print, step, activity_list, chunk_size,
                                interaction, world, global_interaction, vertices_graph, vertices_dict)
         screen, landscape_layer, activity_layer, entities_layer, offset_sprites, finishing_surface, settings_for_intermediate_steps = master_pygame_draw(
-                                        person, chunk_size, go_to_print, global_map, mode_action, enemy_list, activity_list, screen, minimap_surface,
-                                        minimap_dict, sprites_dict, offset_sprites, landscape_layer, activity_layer,
-                                        entities_layer, finishing_surface, settings_for_intermediate_steps, mouse_position, raw_minimap)
+                    person, chunk_size, go_to_print, global_map, mode_action, enemy_list, activity_list, screen,
+                    minimap_surface, minimap_dict, sprites_dict, offset_sprites, landscape_layer, activity_layer,
+                    entities_layer, finishing_surface, settings_for_intermediate_steps, mouse_position, raw_minimap)
         
 
 main_loop()
