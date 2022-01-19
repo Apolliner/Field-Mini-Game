@@ -11,7 +11,7 @@ class MemoryNode:
 
         Задачи так же являются элементами памяти
     """
-    def __init__(self, id, type, name, master, step=0, target=None, entity=None, connection=None, position=None, **kwargs):
+    def __init__(self, id, type, name, master, step=0, target=None, entity=None, connection=None, positions=None, **kwargs):
         self.id = id
         self.type = type
         self.name = name
@@ -26,8 +26,8 @@ class MemoryNode:
         if connection is not None:
             self.connections[connection.id] = connection
         self.positions = PushingList()
-        if position is not None:
-            self.positions.append(position)
+        if positions is not None:
+            self.positions.extend(positions)
 
     def _update_position(self, position=None):
         """
@@ -122,7 +122,7 @@ class Memory(Bases):
                 break
         return gen_id
 
-    def generalization_of_experience(self):
+    def generalization_of_experience(self, **kwargs):
         """ Обобщает множество одинаковых закрытых записей в одну """
         for key in self._types:
             closed_memories = list()
@@ -130,7 +130,10 @@ class Memory(Bases):
                 if element.status == "closed":
                     closed_memories.append(element)
             if len(closed_memories) > 5:
-                summarized = MemoryNode(self._id_generate(), key, '', "summarized", None)
+                positions = PushingList()
+                for closed_memory in closed_memories:
+                    positions.extend(closed_memory.positions)
+                summarized = MemoryNode(self._id_generate(), key, '', "summarized", kwargs["step"], positions=positions)
                 self._all_add_new_memories(summarized)
                 for closed_memory in closed_memories:
                     closed_id = closed_memory.id
