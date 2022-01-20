@@ -6,7 +6,10 @@ class CharacterMove(PathMove):
 
     def _move_search_person(self, **kwargs):
         """ Глобальная цель поиска указанного персонажа. Базовая активность охотников за головами """
-        finish_vertices = random.randrange(5000)
+        while True:
+            finish_vertices = random.randrange(5000)
+            if finish_vertices in kwargs["vertices_dict"]:
+                break
         # Проверка на возможность достичь точки
         _, success = self._path_world_vertices_a_star_algorithm(kwargs["vertices_dict"], self.vertices, finish_vertices)
         if success:

@@ -8,6 +8,7 @@ from libraryNPC.characterMove import CharacterMove
 from libraryNPC.memory import Memory
 from libraryNPC.stackBase import BaseStack
 from libraryNPC.stackAction import ActionStack
+from libraryNPC.temporaryOld import TemporaryOld
 
 """
     Вообще всё взаимодействие NPC с миром посредством стека, хранящем функции.
@@ -17,7 +18,7 @@ from libraryNPC.stackAction import ActionStack
 """
 
 
-class NewNPC(Character, CharacterMove):  #, SearchFootprints, CharacterMove, PathMove):
+class NewNPC(Character, CharacterMove, TemporaryOld):  #, SearchFootprints, CharacterMove, PathMove):
     """ Ещё одна попытка сделать расширяемых NPC на базе стека """
 
     def __init__(self, global_position, local_position, name, name_npc, icon, type, description, type_npc, **kwargs):

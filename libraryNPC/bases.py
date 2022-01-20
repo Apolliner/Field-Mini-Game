@@ -89,3 +89,12 @@ class Bases:
             if new_id not in ids_list:
                 ids_list.append(new_id)
                 return new_id
+
+    def bases_check_vertices(self, vertices, vertices_dict):
+        """
+            Когда нужен объект зоны доступности, а бывает приходит её номер, то этот метод проверяет
+            и возвращает объект
+        """
+        if type(vertices) is int:
+            return vertices_dict[vertices]
+        return vertices

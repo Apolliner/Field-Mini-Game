@@ -45,14 +45,14 @@ class Character(Bases):
         self.type_npc = type_npc                    # Тип поведения персонажа               str
         self.description = description              # Описание персонажа                    str
 
-    def character_world_position_calculate(self, global_position, local_position):
+    def character_world_position_calculate(self, global_position, local_position, **kwargs):
         """
             Рассчитывает мировые координаты от центра мира
         """
         return [local_position[0] + global_position[0]*self.chunk_size, local_position[1] +
                                                         global_position[1]*self.chunk_size]
 
-    def character_world_position_recalculation(self, world_position):
+    def character_world_position_recalculation(self, world_position, **kwargs):
         """
             Принимает мировые координаты и размер чанка, возвращает глобальные и локальные координаты.
         """
@@ -60,28 +60,28 @@ class Character(Bases):
         local_position = [world_position[0]%self.chunk_size, world_position[1]%self.chunk_size]
         return global_position, local_position
 
-    def character_check_world_position(self):
+    def character_check_world_position(self, **kwargs):
         """
             Определение мировой позиции
         """
         self.world_position = [self.local_position[0] + self.global_position[0]*self.chunk_size,
                                self.local_position[1] + self.global_position[1]*self.chunk_size]
         
-    def character_check_vertices(self, global_map):
+    def character_check_vertices(self, global_map, **kwargs):
         """
             Определение зоны доступности
         """
         self.vertices = global_map[self.global_position[0]][self.global_position[1]].chunk[
                                     self.local_position[0]][self.local_position[1]].vertices
         
-    def character_check_level(self, global_map):
+    def character_check_level(self, global_map, **kwargs):
         """
             Определение текущей высоты
         """
         self.level = global_map[self.global_position[0]][self.global_position[1]].chunk[
                                     self.local_position[0]][self.local_position[0]].level
         
-    def character_check_all_position(self, global_map):
+    def character_check_all_position(self, global_map, **kwargs):
         """
             Определение всех нужных параметров
         """
@@ -89,7 +89,7 @@ class Character(Bases):
         self.character_check_level(global_map)
         self.character_check_world_position()
         
-    def character_reset_at_the_beginning(self):
+    def character_reset_at_the_beginning(self, **kwargs):
         """
             Сброс параметров в начале хода
         """

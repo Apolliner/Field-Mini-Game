@@ -393,7 +393,7 @@ def game_loop(global_map:list, person, chunk_size:int, enemy_list:list, world, s
 
     enemy_list.append(NPC([2, 2], [2, 2], 'new_riffleman', 'new_riffleman', '☻', 'd0', 'Тестовый NPC', 'new_riffleman'))
     kwargs = {"ids_list": list(), "player": person}
-    enemy_list.append(NewNPC([2, 2], [2, 2], 'super_riffleman', 'super_riffleman', '☺', 'd0', ' Новый тестовый NPC',
+    enemy_list.append(NewNPC([2, 2], [2, 2], 'super_riffleman', 'super_riffleman', '☻', 'd0', ' Новый тестовый NPC',
                              'super_riffleman', **kwargs))
 
     print('game_loop запущен')

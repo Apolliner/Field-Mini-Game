@@ -10,22 +10,24 @@ class PathMove(PathBase):
             Просто вызывается и само всё делает.
             Возвращает False если цель не достигнута и True если достигнута.
         """
-        if not self.local_waypoints:
-            finish = self.target.get_position()
-            vertices_dict = kwargs["vertices_dict"]
-            if type(finish) is int:  # Расчёт пути до зоны доступности
-                finish_vertices = finish
-                vertices = vertices_dict[finish_vertices]
-                finish = self.bases_world_position_calculate(vertices.position, vertices.approximate_position)
-            else:  # Расчёт пути до конкретной точки
-                finish_vertices = self.bases_world_tile(kwargs["global_map"], finish).vertices
+        if self.target.get_position():
+            if not self.local_waypoints:
+                finish = self.target.get_position()
+                print(F"id - {self.target.id}, type - {self.target.type}, name - {self.target.name}")
+                vertices_dict = kwargs["vertices_dict"]
+                if type(finish) is int:  # Расчёт пути до зоны доступности
+                    finish_vertices = finish
+                    vertices = vertices_dict[finish_vertices]
+                    finish = self.bases_world_position_calculate(vertices.position, vertices.approximate_position)
+                else:  # Расчёт пути до конкретной точки
+                    finish_vertices = self.bases_world_tile(kwargs["global_map"], finish).vertices
 
-            if self.world_position == finish:  # Точка достигнута, задача выполнена
-                return True
+                if self.world_position == finish:  # Точка достигнута, задача выполнена
+                    return True
 
-            self._path_move_calculate(finish_vertices, finish, **kwargs)
+                self._path_move_calculate(finish_vertices, finish, **kwargs)
 
-        self._path_base_local_move(**kwargs)
+            self._path_base_local_move(**kwargs)
         return False
 
     def _path_move_calculate(self, finish_vertices, finish_tile, **kwargs):
@@ -156,8 +158,9 @@ class PathMove(PathBase):
                                                    self.bases_path_length(connect.position,
                                                                finish_vertices.position),
                                                    processed_node.number))
-        if type(start_vertices) == int:
-            start_vertices = vertices_dict[start_vertices]
+
+        start_vertices = self.bases_check_vertices(start_vertices, vertices_dict)
+        finish_vertices = self.bases_check_vertices(finish_vertices, vertices_dict)
 
         graph = []  # Список, содержащий все вершины
         verified_vertices = []  # Содержит список всех использованных координат, что бы сравнивать с ним при добавлении новой вершины.
