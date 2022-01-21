@@ -13,7 +13,7 @@ class CharacterMove(PathMove):
         # Проверка на возможность достичь точки
         _, success = self._path_world_vertices_a_star_algorithm(kwargs["vertices_dict"], self.vertices, finish_vertices)
         if success:
-            target = self.memory.add_memories("target", "move", position=finish_vertices, **kwargs)
+            target = self.memory.add_memories("target", "move", positions=[finish_vertices], **kwargs)
             self.action_stack.add_stack_element(name="global_move", element=self.path_move, target=target)
             return False
         return False

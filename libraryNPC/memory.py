@@ -56,9 +56,10 @@ class MemoryNode:
     def get_position(self):
         """ Возвращает позицию из цели """
         if self.target:
-            return list(self.target.entity.world_position)
+            return list(self.entity.world_position)
         if self.positions:
-            return list(self.target.positions[-1])
+            print(F"positions - {self.positions}")
+            return self.positions[-1]
         return None
 
     def get_tile(self, global_map, chunk_size):

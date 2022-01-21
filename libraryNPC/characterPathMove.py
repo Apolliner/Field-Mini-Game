@@ -4,6 +4,7 @@ class PathMove(PathBase):
     """
         Реализует перемещение в точку или зону доступности, содержащуюся в задаче.
     """
+    chunk_size = 25
 
     def path_move(self, **kwargs):
         """
@@ -43,7 +44,7 @@ class PathMove(PathBase):
         vertices_dict = kwargs["vertices_dict"]
         global_map = kwargs["global_map"]
         self.global_waypoints, _ = self._path_world_vertices_a_star_algorithm(vertices_dict,
-                                    vertices_dict[self.vertices], vertices_dict[self.memory.get_vertices(global_map)])
+                                    vertices_dict[self.vertices], vertices_dict[self.target.get_vertices(global_map, self.chunk_size)])
 
     def _path_move_local_waypoints_calculate(self, start_point, finish_point, **kwargs):
         """

@@ -5,7 +5,7 @@ from libraryNPC.characterPathMove import PathMove
 from libraryNPC.bases import Bases
 from libraryNPC.characterNPCSearchFootprints import SearchFootprints
 from libraryNPC.characterMove import CharacterMove
-from libraryNPC.memory import Memory
+from libraryNPC.memory import Memory, MemoryNode
 from libraryNPC.stackBase import BaseStack
 from libraryNPC.stackAction import ActionStack
 from libraryNPC.temporaryOld import TemporaryOld
