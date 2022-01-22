@@ -733,7 +733,7 @@ def master_npc_calculation(global_map, enemy_list, person, go_to_print, step, ac
                 enemy.npc_master_calculation(step=step, activity_list=activity_list, global_map=global_map,
                                              vertices_graph=vertices_graph, vertices_dict=vertices_dict,
                                              enemy_list=enemy_list, step_activity_dict=step_activity_dict,
-                                             ids_list=ids_list)
+                                             ids_list=ids_list, chunk_size=chunk_size)
             # Если это новый тип противника
             elif isinstance(enemy, NPC):
                 enemy.npc_master_calculation(step, activity_list, global_map, vertices_graph, vertices_dict, enemy_list,

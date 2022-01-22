@@ -42,9 +42,8 @@ class PathMove(PathBase):
     def _path_move_global_waypoints_calculate(self, start_vertices, finish_vertices, **kwargs):
         """ Рассчитывает глобальные вейпоинты """
         vertices_dict = kwargs["vertices_dict"]
-        global_map = kwargs["global_map"]
         self.global_waypoints, _ = self._path_world_vertices_a_star_algorithm(vertices_dict,
-                                    vertices_dict[self.vertices], vertices_dict[self.target.get_vertices(global_map, self.chunk_size)])
+                    vertices_dict[self.vertices.number], vertices_dict[self.target.get_vertices(**kwargs)])
 
     def _path_move_local_waypoints_calculate(self, start_point, finish_point, **kwargs):
         """

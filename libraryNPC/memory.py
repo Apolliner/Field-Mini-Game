@@ -71,9 +71,12 @@ class MemoryNode:
             return global_map[global_position[0]][global_position[1]].chunk[local_position[0]][local_position[1]]
         return None
 
-    def get_vertices(self, global_map, chunk_size):
+    def get_vertices(self, global_map, chunk_size, **kwargs):
         """ Возвращает зону доступности цели """
-        tile = self.get_tile(global_map, chunk_size)
+        position = self.get_position()
+        if type(position) == int:
+            return kwargs["vertices_dict"][position]
+        tile = self.get_tile(kwargs["global_map"], kwargs["chunk_size"])
         if tile is not None:
             return tile.vertices
         return None
