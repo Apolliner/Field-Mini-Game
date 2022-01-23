@@ -17,17 +17,21 @@ class PathMove(PathBase):
                 print(F"id - {self.target.id}, type - {self.target.type}, name - {self.target.name}")
                 vertices_dict = kwargs["vertices_dict"]
                 if type(finish) is int:  # Расчёт пути до зоны доступности
+                    print(F"true 1")
                     finish_vertices = finish
                     vertices = vertices_dict[finish_vertices]
                     finish = self.bases_world_position_calculate(vertices.position, vertices.approximate_position)
                 else:  # Расчёт пути до конкретной точки
+                    print(F"true 2")
                     finish_vertices = self.bases_world_tile(kwargs["global_map"], finish).vertices
 
                 if self.world_position == finish:  # Точка достигнута, задача выполнена
+                    print(F"true 3")
                     return True
 
                 self._path_move_calculate(finish_vertices, finish, **kwargs)
-
+                print(F"true 4 global_waypoints - {self.global_waypoints}, local_waypoints -{self.local_waypoints}")
+            print(F"true 5")
             self._path_base_local_move(**kwargs)
         return False
 
@@ -43,7 +47,7 @@ class PathMove(PathBase):
         """ Рассчитывает глобальные вейпоинты """
         vertices_dict = kwargs["vertices_dict"]
         self.global_waypoints, _ = self._path_world_vertices_a_star_algorithm(vertices_dict,
-                    vertices_dict[self.vertices.number], vertices_dict[self.target.get_vertices(**kwargs)])
+                    vertices_dict[self.vertices], self.target.get_vertices(**kwargs))
 
     def _path_move_local_waypoints_calculate(self, start_point, finish_point, **kwargs):
         """
@@ -62,7 +66,7 @@ class PathMove(PathBase):
             if vertices.number == self.vertices:
                 for connect in vertices.connections:
                     if connect.number == self.global_waypoints[0]:
-                        if self.memory.get_vertices(global_map) == self.global_waypoints[0]:
+                        if self.target.get_vertices(**kwargs) == self.global_waypoints[0]:
                             _, approximate_position = self.bases_world_position_recalculation(self.memory.get_position())
                         else:
                             approximate_position = connect.approximate_position
@@ -110,9 +114,8 @@ class PathMove(PathBase):
                             finish_point = [raw_finish_point[0], raw_finish_point[1] + 1]
                         break
 
-        local_waypoints, success = self._path_world_tiles_a_star_algorithm(global_map, start_point, finish_point,
+        self.local_waypoints, success = self._path_world_tiles_a_star_algorithm(global_map, start_point, finish_point,
                                                                            self.global_waypoints[0])
-        return local_waypoints
 
     def _path_world_vertices_a_star_algorithm(self, vertices_dict, start_vertices, finish_vertices):
         """

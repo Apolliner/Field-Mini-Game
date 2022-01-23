@@ -58,7 +58,6 @@ class MemoryNode:
         if self.target:
             return list(self.entity.world_position)
         if self.positions:
-            print(F"positions - {self.positions}")
             return self.positions[-1]
         return None
 
@@ -71,7 +70,7 @@ class MemoryNode:
             return global_map[global_position[0]][global_position[1]].chunk[local_position[0]][local_position[1]]
         return None
 
-    def get_vertices(self, global_map, chunk_size, **kwargs):
+    def get_vertices(self, **kwargs):
         """ Возвращает зону доступности цели """
         position = self.get_position()
         if type(position) == int:

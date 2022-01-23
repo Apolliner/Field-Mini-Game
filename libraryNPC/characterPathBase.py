@@ -11,9 +11,22 @@ class PathBase():
             waypoint = self.local_waypoints.pop(0)
             self.world_position = waypoint
             self.global_position, self.local_position = self.bases_world_position_recalculation(self.world_position)
+            self.direction, self.animations = self._path_base_direction_calculation(self.world_position, waypoint)
             tile = self.bases_world_tile(kwargs["global_map"], self.world_position)
             self.vertices = tile.vertices
             self.level = tile.level
+
+    def _path_base_direction_calculation(self, start, finish):
+        """ Определяет направление движения """
+        if [start[0] - 1, start[1]] == finish:
+            return 'up', 'u'
+        elif [start[0] + 1, start[1]] == finish:
+            return 'down', 'd'
+        elif [start[0], start[1] - 1] == finish:
+            return 'left', 'l'
+        elif [start[0], start[1] + 1] == finish:
+            return 'right', 'r'
+        return "center", 'd'
 
     def _path_base_global_direction_calculation(self, start_vertices, finish_vertices, vertices_dict):
         """ Определяет направление глобального движения """
