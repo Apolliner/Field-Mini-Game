@@ -9,9 +9,11 @@ class PathBase():
         # FIXME пока всё очень просто
         if self.local_waypoints:
             waypoint = self.local_waypoints.pop(0)
+            if len(self.local_waypoints) == 0 and self.global_waypoints:
+                self.global_waypoints.pop(0) # Удаление реализованного вейпоинта
+            self.direction, self.animations = self._path_base_direction_calculation(self.world_position, waypoint)
             self.world_position = waypoint
             self.global_position, self.local_position = self.bases_world_position_recalculation(self.world_position)
-            self.direction, self.animations = self._path_base_direction_calculation(self.world_position, waypoint)
             tile = self.bases_world_tile(kwargs["global_map"], self.world_position)
             self.vertices = tile.vertices
             self.level = tile.level

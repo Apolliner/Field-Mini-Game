@@ -14,24 +14,18 @@ class PathMove(PathBase):
         if self.target.get_position():
             if not self.local_waypoints:
                 finish = self.target.get_position()
-                print(F"id - {self.target.id}, type - {self.target.type}, name - {self.target.name}")
                 vertices_dict = kwargs["vertices_dict"]
                 if type(finish) is int:  # Расчёт пути до зоны доступности
-                    print(F"true 1")
                     finish_vertices = finish
                     vertices = vertices_dict[finish_vertices]
                     finish = self.bases_world_position_calculate(vertices.position, vertices.approximate_position)
                 else:  # Расчёт пути до конкретной точки
-                    print(F"true 2")
                     finish_vertices = self.bases_world_tile(kwargs["global_map"], finish).vertices
 
                 if self.world_position == finish:  # Точка достигнута, задача выполнена
-                    print(F"true 3")
                     return True
 
                 self._path_move_calculate(finish_vertices, finish, **kwargs)
-                print(F"true 4 global_waypoints - {self.global_waypoints}, local_waypoints -{self.local_waypoints}")
-            print(F"true 5")
             self._path_base_local_move(**kwargs)
         return False
 
