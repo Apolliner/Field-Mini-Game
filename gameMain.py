@@ -330,11 +330,7 @@ def main_loop():
                 
             person = Person([2, 2], [2, 2], [], [chunk_size//2, chunk_size//2], [chunk_size//2, chunk_size//2])
             calculation_assemblage_point(global_map, person, chunk_size)
-            enemy_list = [
-                    return_npc([len(global_map)//2, len(global_map)//2], [chunk_size//2, chunk_size//2], 'horseman'),
-                    return_npc([len(global_map)//3, len(global_map)//3], [chunk_size//2, chunk_size//2], 'riffleman'),
-                    return_npc([len(global_map)//4, len(global_map)//4], [chunk_size//2, chunk_size//2], 'coyot'),
-                    return_npc([len(global_map)//5, len(global_map)//5], [chunk_size//2, chunk_size//2], 'unknown'),]
+            enemy_list = []
             world = World() #Описание текущего состояния игрового мира
 
             game_loop(global_map, person, chunk_size, enemy_list, world, screen, raw_minimap, True, [],
@@ -391,7 +387,7 @@ def game_loop(global_map:list, person, chunk_size:int, enemy_list:list, world, s
                         minimap_dict, sprites_dict, offset_sprites, landscape_layer, activity_layer,
                         entities_layer, finishing_surface, settings_for_intermediate_steps, mouse_position, raw_minimap)
 
-    enemy_list.append(NPC([2, 2], [2, 2], 'new_riffleman', 'new_riffleman', '☻', 'd0', 'Тестовый NPC', 'new_riffleman'))
+    #enemy_list.append(NPC([2, 2], [2, 2], 'new_riffleman', 'new_riffleman', '☻', 'd0', 'Тестовый NPC', 'new_riffleman'))
     kwargs = {"ids_list": list(), "player": person}
     enemy_list.append(NewNPC([2, 2], [2, 2], 'super_riffleman', 'super_riffleman', '☻', 'd0', ' Новый тестовый NPC',
                              'super_riffleman', **kwargs))
