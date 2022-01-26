@@ -147,4 +147,8 @@ class Memory(Bases):
                     self._graph.pop(closed_id, False)
                     self._types[closed_memory.type].pop(closed_id)
 
+    def get_memory_by_id(self, id, **kwargs):
+        """ Возвращает запись памяти по id """
+        return self._graph[id]
+
 
