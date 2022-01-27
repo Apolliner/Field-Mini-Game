@@ -10,6 +10,7 @@ class PathFollow(PathMove, Bases):
     def path_follow_add_order(self, id, **kwargs):
         """ Принимает id записи памяти и создаёт задачу на следование до цели """
         target = self.memory.get_memory_by_id(id, **kwargs)
+        self.target = target
         self.action_stack.add_stack_element(name="follow", element=self._path_follow, target=target)
 
     def _path_follow(self, **kwargs):

@@ -18,10 +18,11 @@ class Person:
     'name', 'assemblage_point', 'dynamic', 'chunks_use_map', 'pointer', 'gun', 'global_position', 'number_chunk',
     'environment_temperature', 'person_temperature', 'person_pass_step', 'enemy_pass_step',
     'speed', 'test_visible', 'level', 'vertices', 'local_position', 'direction', 'pass_draw_move',
-    'recalculating_the_display', 'type',
-    'icon', 'pointer_step', 'zone_relationships', 'activating_spawn', 'world_position', 'name_npc')
+    'recalculating_the_display', 'type', 'icon', 'pointer_step', 'zone_relationships', 'activating_spawn',
+    'world_position', 'name_npc', "id")
 
     def __init__(self, assemblage_point: list, dynamic: list, chunks_use_map: list, pointer: list, gun: list):
+        self.id = 1
         self.name = 'person'
         self.name_npc = 'person'
         self.assemblage_point = assemblage_point
@@ -51,6 +52,7 @@ class Person:
         self.world_position = [0, 0]  # общемировое тайловое положение
 
 
+
     def world_position_calculate(self, chunk_size):
         """ Рассчитывает глобальные координаты от центра мира """
         self.world_position = [self.local_position[0] + (self.global_position[0]) * (chunk_size),
@@ -59,6 +61,7 @@ class Person:
     def __getstate__(self) -> dict:
         """ Сохранение класса """
         state = {}
+        state["id"] = self.id
         state["name"] = self.name
         state["name_npc"] = self.name_npc
         state["assemblage_point"] = self.assemblage_point
@@ -89,6 +92,7 @@ class Person:
 
     def __setstate__(self, state: dict):
         """ Восстановление класса """
+        self.id = state["id"]
         self.name = state["name"]
         self.name_npc = state["name_npc"]
         self.assemblage_point = state["assemblage_point"]

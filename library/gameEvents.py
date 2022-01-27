@@ -18,18 +18,20 @@ from libraryNPC.characterMain import NewNPC
 
 
 def master_game_events(global_map, enemy_list, person, go_to_print, step, activity_list, chunk_size, interaction, world,
-                       global_interaction, vertices_graph, verices_dict):
+                       global_interaction, vertices_graph, verices_dict, **kwargs):
     """
         Здесь происходят все события, не связанные с пользовательским вводом
     """
-    interaction_processing(global_map, interaction, enemy_list, step, chunk_size, activity_list, global_interaction)
+    interaction_processing(global_map, interaction, enemy_list, step, chunk_size, activity_list, global_interaction,
+                           **kwargs)
     activity_list_check(activity_list, step)
     master_npc_calculation(global_map, enemy_list, person, go_to_print, step, activity_list, chunk_size, interaction,
-                           world, vertices_graph, verices_dict)
+                           world, vertices_graph, verices_dict, **kwargs)
     global_interaction_processing(global_map, enemy_list, step, chunk_size, activity_list, global_interaction, person)
 
 
-def interaction_processing(global_map, interaction, enemy_list, step, chunk_size, activity_list, global_interaction):
+def interaction_processing(global_map, interaction, enemy_list, step, chunk_size, activity_list, global_interaction,
+                           **kwargs):
     """
         Обрабатывает взаимодействие игрока с миром
     """
@@ -52,6 +54,9 @@ def interaction_processing(global_map, interaction, enemy_list, step, chunk_size
                 for enemy in enemy_list:
                     if hasattr(enemy, 'memory') and enemy is not interact[1][0]:  # FIXME Если это новый тип NPC и цель не на самого себя
                         enemy.follow = interact[1][0]
+                    if isinstance(enemy, NewNPC):
+                        enemy.memory.add_standard_memories(kwargs["player"])
+                        enemy.path_follow_add_order(1, **kwargs)
                     #else:
                     #    enemy.target = []
                     #    enemy.follow = interact[1]
@@ -709,14 +714,13 @@ def return_npc(global_position, local_position, key):
 
 
 def master_npc_calculation(global_map, enemy_list, person, go_to_print, step, activity_list, chunk_size, interaction,
-                           world, vertices_graph, vertices_dict):
+                           world, vertices_graph, vertices_dict, **kwargs):
     """
         Здесь происходят все события, связанные с NPC
 
         self.target = [] #[[global_y, global_x], vertices, [local_y, local_x]]
         self.local_waypoints = [] # [[local_y, local_x], vertices, [global_y, global_x]]
     """
-    ids_list = list()  # FIXME Пока зашлушка
     step_activity_dict = dict()
     for activity in activity_list:
         world_position = world_position_calculate(activity.global_position, activity.local_position,
@@ -733,7 +737,7 @@ def master_npc_calculation(global_map, enemy_list, person, go_to_print, step, ac
                 enemy.npc_master_calculation(step=step, activity_list=activity_list, global_map=global_map,
                                              vertices_graph=vertices_graph, vertices_dict=vertices_dict,
                                              enemy_list=enemy_list, step_activity_dict=step_activity_dict,
-                                             ids_list=ids_list, chunk_size=chunk_size)
+                                             chunk_size=chunk_size, **kwargs)
             # Если это новый тип противника
             elif isinstance(enemy, NPC):
                 enemy.npc_master_calculation(step, activity_list, global_map, vertices_graph, vertices_dict, enemy_list,

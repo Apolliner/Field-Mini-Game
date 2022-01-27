@@ -55,6 +55,10 @@ class MemoryNode:
 
     def get_position(self):
         """ Возвращает позицию из цели """
+        print(F"\n\nself - {self}, self.positions - {self.positions} name - {self.name}\n\n")
+        if self.entity:
+            print(F"entity = {self.entity}")
+            return self.entity.world_position
         if self.target:
             return list(self.entity.world_position)
         if self.positions:
@@ -101,8 +105,7 @@ class Memory(Bases):
     def add_standard_memories(self, player):
         """ Заполняет память стандартными знаниями """
         self._all_add_new_memories(MemoryNode(self._id_generate(), "area", "base_area", self.master))
-        self._all_add_new_memories(MemoryNode(self._id_generate(), "character", "ordered character",
-                                                                                    self.master, entity=player))
+        self._all_add_new_memories(MemoryNode(1, "character", "ordered character", self.master, entity=player))
 
     def add_memories(self, type, name, **kwargs):
         """ Метод для создания новой записи и автоматического её добавления в граф. Возвращает созданный элемент """

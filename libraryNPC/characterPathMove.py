@@ -61,7 +61,7 @@ class PathMove(PathBase):
                 for connect in vertices.connections:
                     if connect.number == self.global_waypoints[0]:
                         if self.target.get_vertices(**kwargs) == self.global_waypoints[0]:
-                            _, approximate_position = self.bases_world_position_recalculation(self.memory.get_position())
+                            _, approximate_position = self.bases_world_position_recalculation(self.target.get_position())
                         else:
                             approximate_position = connect.approximate_position
 

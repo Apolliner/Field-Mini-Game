@@ -388,7 +388,7 @@ def game_loop(global_map:list, person, chunk_size:int, enemy_list:list, world, s
                         entities_layer, finishing_surface, settings_for_intermediate_steps, mouse_position, raw_minimap)
 
     #enemy_list.append(NPC([2, 2], [2, 2], 'new_riffleman', 'new_riffleman', '☻', 'd0', 'Тестовый NPC', 'new_riffleman'))
-    kwargs = {"ids_list": list(), "player": person}
+    kwargs = {"ids_list": [1,], "player": person}
     enemy_list.append(NewNPC([2, 2], [2, 2], 'super_riffleman', 'super_riffleman', '☻', 'd0', ' Новый тестовый NPC',
                              'super_riffleman', **kwargs))
 
@@ -416,7 +416,7 @@ def game_loop(global_map:list, person, chunk_size:int, enemy_list:list, world, s
         #all_pass_step_calculations(person, enemy_list, mode_action, interaction)
         if not person.enemy_pass_step and not person.pointer_step:
             master_game_events(global_map, enemy_list, person, go_to_print, step, activity_list, chunk_size,
-                               interaction, world, global_interaction, vertices_graph, vertices_dict)
+                               interaction, world, global_interaction, vertices_graph, vertices_dict, **kwargs)
         screen, landscape_layer, activity_layer, entities_layer, offset_sprites, finishing_surface, settings_for_intermediate_steps = master_pygame_draw(
                     person, chunk_size, go_to_print, global_map, mode_action, enemy_list, activity_list, screen,
                     minimap_surface, minimap_dict, sprites_dict, offset_sprites, landscape_layer, activity_layer,
