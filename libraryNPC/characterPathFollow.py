@@ -1,5 +1,6 @@
 from libraryNPC.characterPathMove import PathMove
 from libraryNPC.bases import Bases
+from library.decorators import trace
 
 class PathFollow(PathMove, Bases):
     """
@@ -7,12 +8,14 @@ class PathFollow(PathMove, Bases):
         При нахождении близко от цели, локальный поиск пути осуществлять игнорируя зоны доступности
         и с малым количеством циклов, так как его нужно регулярно пересчитывать
     """
+    @trace
     def path_follow_add_order(self, id, **kwargs):
         """ Принимает id записи памяти и создаёт задачу на следование до цели """
         target = self.memory.get_memory_by_id(id, **kwargs)
         self.target = target
         self.action_stack.add_stack_element(name="follow", element=self._path_follow, target=target)
 
+    @trace
     def _path_follow(self, **kwargs):
         """ Вызывается и само всё делает """
         target_position = self.target.get_position()
@@ -26,7 +29,8 @@ class PathFollow(PathMove, Bases):
             else:
                 new_waypoints_calculate = True
             if new_waypoints_calculate:
-                self.global_waypoints = list()
+                #self.action_stack.pop_stack_element()
+                self.bases_del_all_waypoints()
                 self.local_waypoints = self._path_follow_a_star_algorithm(self.world_position, target_position,
                                                                                             cycles=100, **kwargs)
         else: # Если цель далеко, то всё считается по-обычному
@@ -39,7 +43,7 @@ class PathFollow(PathMove, Bases):
         if remoteness > 3: # Если цель не слишком близко, то надо к ней идти
             self._path_base_local_move(**kwargs)
 
-
+    @trace
     def _path_follow_a_star_algorithm(self, start_point, finish_point, cycles=300, **kwargs):
         """
             Рассчитывает поиск пути для следования, алгоритмом A* игнорируя зоны доступности и ограничивая

@@ -2,6 +2,7 @@ import random
 from libraryNPC.stackBase import BaseStack
 from libraryNPC.bases import Bases
 from libraryNPC.classes import PushingList
+from library.decorators import trace
 
 
 class MemoryNode:
@@ -29,6 +30,7 @@ class MemoryNode:
         if positions is not None:
             self.positions.extend(positions)
 
+    @trace
     def _update_position(self, position=None):
         """
             Доступно только элементу памяти о конкретном персонаже. Можно как получать из объекта персонажа, так и
@@ -43,6 +45,7 @@ class MemoryNode:
                 return True
         return None
 
+    @trace
     def _check_target_type(self):
         """ Автоматически определяет степень важности цели """
         types_dict = {
@@ -53,11 +56,10 @@ class MemoryNode:
             return types_dict[self.name]
         return "base"
 
+    @trace
     def get_position(self):
         """ Возвращает позицию из цели """
-        print(F"\n\nself - {self}, self.positions - {self.positions} name - {self.name}\n\n")
         if self.entity:
-            print(F"entity = {self.entity}")
             return self.entity.world_position
         if self.target:
             return list(self.entity.world_position)
@@ -65,6 +67,7 @@ class MemoryNode:
             return self.positions[-1]
         return None
 
+    @trace
     def get_tile(self, global_map, chunk_size):
         """ Возвращает тайл, на позицию которого указывает цель """
         world_position = self.get_position()
@@ -74,6 +77,7 @@ class MemoryNode:
             return global_map[global_position[0]][global_position[1]].chunk[local_position[0]][local_position[1]]
         return None
 
+    @trace
     def get_vertices(self, **kwargs):
         """ Возвращает зону доступности цели """
         position = self.get_position()
@@ -102,17 +106,20 @@ class Memory(Bases):
         self._graph = dict()
         self._types = dict()
 
+    @trace
     def add_standard_memories(self, player):
         """ Заполняет память стандартными знаниями """
         self._all_add_new_memories(MemoryNode(self._id_generate(), "area", "base_area", self.master))
         self._all_add_new_memories(MemoryNode(1, "character", "ordered character", self.master, entity=player))
 
+    @trace
     def add_memories(self, type, name, **kwargs):
         """ Метод для создания новой записи и автоматического её добавления в граф. Возвращает созданный элемент """
         new_memory = MemoryNode(self._id_generate(), type, name, self.master, **kwargs)
         self._all_add_new_memories(new_memory)
         return new_memory
 
+    @trace
     def _all_add_new_memories(self, memories):
         """ Добавление объекта элемента памяти как в граф, так и в словарь по типам """
         self._graph[memories.id] = memories
@@ -120,6 +127,7 @@ class Memory(Bases):
             self._types[memories.type] = list()
         self._types[memories.type].append(memories)
 
+    @trace
     def _id_generate(self):
         """ Генерация случайного id, которого ещё нет в графе """
         while True:
@@ -128,6 +136,7 @@ class Memory(Bases):
                 break
         return gen_id
 
+    @trace
     def generalization_of_experience(self, **kwargs):
         """ Обобщает множество одинаковых закрытых записей в одну """
         for key in self._types:
@@ -150,6 +159,7 @@ class Memory(Bases):
                     self._graph.pop(closed_id, False)
                     self._types[closed_memory.type].pop(closed_id)
 
+    @trace
     def get_memory_by_id(self, id, **kwargs):
         """ Возвращает запись памяти по id """
         return self._graph[id]

@@ -1,4 +1,5 @@
 from libraryNPC.characterPathBase import PathBase
+from library.decorators import trace
 
 class PathMove(PathBase):
     """
@@ -6,6 +7,7 @@ class PathMove(PathBase):
     """
     chunk_size = 25
 
+    @trace
     def path_move(self, **kwargs):
         """
             Просто вызывается и само всё делает.
@@ -29,6 +31,7 @@ class PathMove(PathBase):
             self._path_base_local_move(**kwargs)
         return False
 
+    @trace
     def _path_move_calculate(self, finish_vertices, finish_tile, **kwargs):
         """
             Рассчитывает путь до тайла или до зоны доступности (в зависимости от того, что приходит из задачи)
@@ -37,12 +40,14 @@ class PathMove(PathBase):
             self._path_move_global_waypoints_calculate(self.vertices, finish_vertices, **kwargs)
         self._path_move_local_waypoints_calculate(self.world_position, finish_tile, **kwargs)
 
+    @trace
     def _path_move_global_waypoints_calculate(self, start_vertices, finish_vertices, **kwargs):
         """ Рассчитывает глобальные вейпоинты """
         vertices_dict = kwargs["vertices_dict"]
         self.global_waypoints, _ = self._path_world_vertices_a_star_algorithm(vertices_dict,
                     vertices_dict[self.vertices], self.target.get_vertices(**kwargs))
 
+    @trace
     def _path_move_local_waypoints_calculate(self, start_point, finish_point, **kwargs):
         """
             Рассчитывает локальные вейпоинты
@@ -111,6 +116,7 @@ class PathMove(PathBase):
         self.local_waypoints, success = self._path_world_tiles_a_star_algorithm(global_map, start_point, finish_point,
                                                                            self.global_waypoints[0])
 
+    @trace
     def _path_world_vertices_a_star_algorithm(self, vertices_dict, start_vertices, finish_vertices):
         """
             Рассчитывает поиск пути, алгоритмом A* с использованием исключительно полей доступности.
@@ -222,6 +228,7 @@ class PathMove(PathBase):
             check_node = graph[check_node.direction]  # Предыдущая вершина объявляется проверяемой
         return list(reversed(reversed_waypoints)), success
 
+    @trace
     def _path_world_tiles_a_star_algorithm(self, global_map, start_point, finish_point, global_waypoint):
         """
             Рассчитывает поиск пути, алгоритмом A* на основании глобальных зон доступности и мировых координат тайлов.

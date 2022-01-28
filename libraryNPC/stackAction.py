@@ -1,8 +1,9 @@
 from libraryNPC.stackBase import BaseStack
+from library.decorators import trace
 
 
 class ActionStack(BaseStack):
-
+    @trace
     def add_stack_element(self, **kwargs):
         """
             Положить элемент
@@ -13,6 +14,7 @@ class ActionStack(BaseStack):
         """
         self._stack.append({"name": kwargs["name"], "element": kwargs["element"], "target": kwargs["target"]})
 
+    @trace
     def get_names(self):
         """ Возвращает список имён элементов """
         names = list()
@@ -20,6 +22,7 @@ class ActionStack(BaseStack):
             names.append(element["name"])
         return names
 
+    @trace
     def _get_type_element(self):
         """ Возвращает тип последнего элемента """
         len_stack = self.get_len_stack()
@@ -28,6 +31,7 @@ class ActionStack(BaseStack):
         else:
             return None
 
+    @trace
     def clear_intermediate_action(self):
         """ Удаление промежуточных действий до первого базового """
         while True:
@@ -40,6 +44,7 @@ class ActionStack(BaseStack):
                 else:
                     self.pop_stack_element()
 
+    @trace
     def get_target(self):
         element = self.get_stack_element()
         if element and "target" in element:
