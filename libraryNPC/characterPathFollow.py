@@ -20,7 +20,7 @@ class PathFollow(PathMove, Bases):
         """ Вызывается и само всё делает """
         target_position = self.target.get_position()
         remoteness = self.bases_path_length(self.world_position, target_position)
-        if remoteness > 30: # Если цель близко
+        if remoteness < 30: # Если цель близко
             new_waypoints_calculate = False
             if self.local_waypoints:
                 finish_remoteness = self.bases_path_length(self.local_waypoints[-1], target_position)
@@ -29,7 +29,6 @@ class PathFollow(PathMove, Bases):
             else:
                 new_waypoints_calculate = True
             if new_waypoints_calculate:
-                #self.action_stack.pop_stack_element()
                 self.bases_del_all_waypoints()
                 self.local_waypoints = self._path_follow_a_star_algorithm(self.world_position, target_position,
                                                                                             cycles=100, **kwargs)
@@ -42,6 +41,31 @@ class PathFollow(PathMove, Bases):
 
         if remoteness > 3: # Если цель не слишком близко, то надо к ней идти
             self._path_base_local_move(**kwargs)
+        return False
+
+    @trace
+    def _path_follow_move(self, **kwargs):
+        """
+            Просто вызывается и само всё делает.
+            Возвращает False если цель не достигнута и True если достигнута. FIXME возможно не нужно
+        """
+        if self.target.get_position():
+            if not self.local_waypoints:
+                finish = self.target.get_position()
+                vertices_dict = kwargs["vertices_dict"]
+                if type(finish) is int:  # Расчёт пути до зоны доступности
+                    finish_vertices = finish
+                    vertices = vertices_dict[finish_vertices]
+                    finish = self.bases_world_position_calculate(vertices.position, vertices.approximate_position)
+                else:  # Расчёт пути до конкретной точки
+                    finish_vertices = self.bases_world_tile(kwargs["global_map"], finish).vertices
+
+                if self.world_position == finish:  # Точка достигнута, задача выполнена
+                    return True
+
+                self._path_move_calculate(finish_vertices, finish, **kwargs)
+            self._path_base_local_move(**kwargs)
+        return False
 
     @trace
     def _path_follow_a_star_algorithm(self, start_point, finish_point, cycles=300, **kwargs):

@@ -9,6 +9,8 @@ class PathBase():
         # FIXME пока всё очень просто
         if self.local_waypoints:
             waypoint = self.local_waypoints.pop(0)
+            print(F"waypoint - {waypoint}, self.world_position - {self.world_position}\n"
+                  F"self.local_waypoints - {self.local_waypoints}")
             if len(self.local_waypoints) == 0 and self.global_waypoints:
                 self.global_waypoints.pop(0) # Удаление реализованного вейпоинта
             self.direction, self.animations = self._path_base_direction_calculation(self.world_position, waypoint)
