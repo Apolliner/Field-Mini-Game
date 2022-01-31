@@ -166,7 +166,7 @@ class Interfaсe:
 
 class Location:
     """ Содержит описание локации """
-    __slots__ = ('name', 'temperature', 'chunk', 'icon', 'price_move', 'vertices', 'position')
+    __slots__ = ('name', 'temperature', 'chunk', 'icon', 'price_move', 'vertices', 'position', 'tiles_count')
     def __init__(self, name:str, temperature:float, chunk:list, icon:str, price_move:int, position):
         self.name = name
         self.temperature = temperature
@@ -175,6 +175,8 @@ class Location:
         self.price_move = price_move
         self.vertices = []
         self.position = position
+        self.tiles_count = dict() # словарь какие тайлы есть на этой локации и сколько их
+
     def __getstate__(self) -> dict:
         """ Сохранение класса """
         state = {}
@@ -185,6 +187,7 @@ class Location:
         state["price_move"] = self.price_move
         state["vertices"] = self.vertices
         state["position"] = self.position
+        state["tiles_count"] = self.tiles_count
         return state
 
     def __setstate__(self, state: dict):
@@ -196,6 +199,7 @@ class Location:
         self.price_move = state["price_move"]
         self.vertices = state["vertices"]
         self.position = state["position"]
+        self.tiles_count = state["tiles_count"]
 
 
 class Tile:

@@ -1068,6 +1068,11 @@ def world_vertices_calculation(global_map):
                         matching_dict[tile.vertices] = number_world_vertices
                         tile.vertices = number_world_vertices
                         number_world_vertices += 1
+                    # Подсчёт количества тайлов
+                    if tile.icon in global_tile.tiles_count:
+                        global_tile.tiles_count[tile.icon] += 1
+                    else:
+                        global_tile.tiles_count[tile.icon] = 1
 
 
 @timeit
