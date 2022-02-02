@@ -66,9 +66,11 @@ def interaction_processing(global_map, interaction, enemy_list, step, chunk_size
 
             if interact[0] == 'escape_me_all_enemies':
                 for enemy in enemy_list:
-                    if hasattr(enemy, 'memory'):  # FIXME Если это новый тип NPC
-                        enemy.escape = interact[1][0]
-                        #print("Назначен побег")
+                    #if hasattr(enemy, 'memory'):
+                    #    enemy.escape = interact[1][0]
+                    #    #print("Назначен побег")
+                    if hasattr(enemy, 'memory'):  # FIXME Пока оставлю здесь, что бы не прокидывать от новой кнопки
+                        enemy.action_add_task_create_campfire()
 
 
             if interact[0] == 'view_waypoints':
