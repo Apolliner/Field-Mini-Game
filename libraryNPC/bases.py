@@ -76,8 +76,12 @@ class Bases:
 
         while True:
             action = stack.get_stack_element()
-            answer = action["element"](**kwargs)
             self.target = action["target"]
+            answer = action["element"](**kwargs)
+            from types import GeneratorType
+            if type(answer) == GeneratorType:
+                answer = next(answer, True)
+            print(F"++++answer - {answer}")
             if answer is True:
                 stack.pop_stack_element()
                 break
@@ -85,7 +89,8 @@ class Bases:
                 break
             elif answer is self.inf:
                 continue
-
+            else:
+                break
     @trace
     def bases_del_all_waypoints(self, **kwargs):
         """ Удаляет все вейпоинты """

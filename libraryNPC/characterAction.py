@@ -32,13 +32,14 @@ class CharacterAction(Bases):
         """ Маршрутизатор, добавляющий этапы действия, ориентируясь на action_dict """
         action_name = self.target.name
         actions_dict = self.action_return_action()
+        print(F"action_name - {action_name}, action_dict - {actions_dict}, in - {action_name in actions_dict}")
         if action_name in actions_dict:
             action = actions_dict[action_name]
             type_action = action["name"]
             stages = action["stages"]
             for stage in stages:
                 target = self.memory.add_memories(type_action, stage)
-                self.action_stack.add_stack_element(name=stage, element=stages["stage"], target=target)
+                self.action_stack.add_stack_element(name=stage, element=stages[stage], target=target)
                 yield False
         return True
 
@@ -60,14 +61,14 @@ class CharacterAction(Bases):
                 icons_set = set(location.tiles_count.keys())
                 intersections = firewood_set.intersection(icons_set)
                 if intersections:
-                    locations_list.append([self.global_position[0] + number_line - 1],
-                                          [self.global_position[1] + number_location - 1])
+                    locations_list.append([self.global_position[0] + number_line - 1,
+                                          self.global_position[1] + number_location - 1])
         # Список локаций вокруг персонажа, на которых есть дрова собран.
         if not locations_list:
             return True
         final_tile = None
         for location_position in locations_list:
-            vertices_list = global_map[location_position[0], location_position[1]].vertices
+            vertices_list = global_map[location_position[0]][location_position[1]].vertices
             check_vertices = None
             for vertices in vertices_list:
                 # Проверка на возможность достичь точки
@@ -77,6 +78,7 @@ class CharacterAction(Bases):
                     check_vertices = vertices.number
                     break
             if check_vertices is not None:
+                print(F"check_vertices - {check_vertices}")
                 target = self.memory.add_memories("target", "move", positions=[check_vertices], **kwargs)
                 self.action_stack.add_stack_element(name="local_move", element=self.path_move, target=target)
                 yield False

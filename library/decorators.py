@@ -8,19 +8,22 @@ def timeit(func):
     def inner(*args, **kwargs):
         start = time.time()
         result = func(*args, **kwargs)
-        print(time.time() - start)
+        if func.__name__ != "standard":
+            print(time.time() - start)
         return result
 
     return inner
 
 
-def trace(funk):
+def trace(func):
     """
     Выводит вконсоль названия исполняемых функций
     """
     def inner(*args, **kwargs):
-        #print(funk.__name__)
-        result = funk(*args, **kwargs)
+        if func.__name__ != "standard":
+            print(func.__name__)
+        result = func(*args, **kwargs)
         return result
 
     return inner
+
