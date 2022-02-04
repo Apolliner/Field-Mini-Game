@@ -23,6 +23,7 @@ class MemoryNode:
         self.payload = list()
         self.target = target
         self.entity = entity        # Объект персонажа
+        self.generator = None       # Хранит объект генератора при необходимости
         self.connections = dict()
         if connection is not None:
             self.connections[connection.id] = connection

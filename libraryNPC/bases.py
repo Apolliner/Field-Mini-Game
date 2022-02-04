@@ -8,14 +8,14 @@ class Bases:
 
     inf = float("inf")
 
-    @trace
+    #@trace
     def bases_path_length(self, start_point, finish_point):
         """
             Вычисляет примерное расстояния до финиша, для рассчётов стоимости перемещения
         """
         return math.sqrt((start_point[0] - finish_point[0]) ** 2 + (start_point[1] - finish_point[1]) ** 2)
 
-    @trace
+    #@trace
     def bases_world_position_calculate(self, global_position, local_position):
         """
             Рассчитывает мировые координаты от центра мира
@@ -23,7 +23,7 @@ class Bases:
         return [local_position[0] + (global_position[0] + 1) * self.chunk_size,
                 local_position[1] + (global_position[1] + 1) * self.chunk_size]
 
-    @trace
+    #@trace
     def bases_world_position_recalculation(self, world_position):
         """
             Принимает мировые координаты и размер чанка, возвращает глобальные и локальные координаты.
@@ -32,7 +32,7 @@ class Bases:
         local_position = [world_position[0] % self.chunk_size, world_position[1] % self.chunk_size]
         return global_position, local_position
 
-    @trace
+    #@trace
     def bases_world_tile(self, global_map, world_position):
         """
             Принимает мировые координаты, глобальную карту и размер чанка, возвращает тайл.
@@ -41,7 +41,7 @@ class Bases:
         local_position = [world_position[0] % self.chunk_size, world_position[1] % self.chunk_size]
         return global_map[global_position[0]][global_position[1]].chunk[local_position[0]][local_position[1]]
 
-    @trace
+    #@trace
     def bases_world_location(self, global_map, world_position):
         """
             Принимает мировые координаты, глобальную карту и размер чанка, возвращает локацию.
@@ -49,7 +49,7 @@ class Bases:
         global_position = [world_position[0] // self.chunk_size, world_position[1] // self.chunk_size]
         return global_map[global_position[0]][global_position[1]]
 
-    @trace
+    #@trace
     def bases_hypotenuse(self, cathet_y, cathet_x):
         """ Считает гипотенузу по двум катетам """
         hypotenuse = math.sqrt(cathet_y**2 + cathet_x**2)
@@ -64,6 +64,8 @@ class Bases:
                             /\ Теперь это inf - infinity
         """
         names_count = dict()
+        stack_names = stack.get_names()
+        print(F"stack_names - {stack_names}")
         for name in stack.get_names():
             if name not in names_count:
                 names_count[name] = 0
@@ -78,19 +80,16 @@ class Bases:
             action = stack.get_stack_element()
             self.target = action["target"]
             answer = action["element"](**kwargs)
-            from types import GeneratorType
-            if type(answer) == GeneratorType:
-                answer = next(answer, True)
-            print(F"++++answer - {answer}")
             if answer is True:
                 stack.pop_stack_element()
+                self.bases_del_all_waypoints(**kwargs)
                 break
             elif answer is False:
                 break
             elif answer is self.inf:
                 continue
-            else:
-                break
+            print(f"answer - {answer}")
+            raise TypeError
     @trace
     def bases_del_all_waypoints(self, **kwargs):
         """ Удаляет все вейпоинты """
@@ -105,7 +104,7 @@ class Bases:
                 ids_list.append(new_id)
                 return new_id
 
-    @trace
+    #@trace
     def bases_check_vertices(self, vertices, vertices_dict):
         """
             Когда нужен объект зоны доступности, а бывает приходит её номер, то этот метод проверяет

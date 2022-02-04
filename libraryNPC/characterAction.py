@@ -29,19 +29,23 @@ class CharacterAction(Bases):
 
     @trace
     def _action_stack_router(self, **kwargs):
-        """ Маршрутизатор, добавляющий этапы действия, ориентируясь на action_dict """
-        action_name = self.target.name
-        actions_dict = self.action_return_action()
-        print(F"action_name - {action_name}, action_dict - {actions_dict}, in - {action_name in actions_dict}")
-        if action_name in actions_dict:
-            action = actions_dict[action_name]
-            type_action = action["name"]
-            stages = action["stages"]
-            for stage in stages:
-                target = self.memory.add_memories(type_action, stage)
-                self.action_stack.add_stack_element(name=stage, element=stages[stage], target=target)
-                yield False
-        return True
+        def _generator_action_stack_router():
+            """ Маршрутизатор, добавляющий этапы действия, ориентируясь на action_dict """
+            action_name = self.target.name
+            actions_dict = self.action_return_action()
+            print(F"action_name - {action_name}, action_dict - {actions_dict}, in - {action_name in actions_dict}")
+            if action_name in actions_dict:
+                action = actions_dict[action_name]
+                type_action = action["name"]
+                stages = action["stages"]
+                for stage in stages:
+                    target = self.memory.add_memories(type_action, stage)
+                    self.action_stack.add_stack_element(name=stage, element=stages[stage], target=target)
+                    yield False
+            return True
+        if self.target.generator is None:
+            self.target.generator = _generator_action_stack_router()
+        return next(self.target.generator, True)
 
     @trace
     def _action_func(self, **kwargs):
@@ -50,68 +54,77 @@ class CharacterAction(Bases):
     @trace
     def _action_search_for_a_place(self, **kwargs):
         """ Ищет подходящее место для костра. Оно должно быть сухим и неподалёку должны быть дрова. """
-        locations_list = list()
-        firewood_set = set(dry)
-        global_map = kwargs["global_map"]
-        vertices_dict = kwargs["vertices_dict"]
-        lines = global_map[self.global_position[0] - 1:self.global_position[0] + 1]
-        for number_line, line in enumerate(lines):
-            locations = line[self.global_position[1] - 1:self.global_position[1] + 1]
-            for number_location, location in enumerate(locations):
-                icons_set = set(location.tiles_count.keys())
-                intersections = firewood_set.intersection(icons_set)
-                if intersections:
-                    locations_list.append([self.global_position[0] + number_line - 1,
-                                          self.global_position[1] + number_location - 1])
-        # Список локаций вокруг персонажа, на которых есть дрова собран.
-        if not locations_list:
-            return True
-        final_tile = None
-        for location_position in locations_list:
-            vertices_list = global_map[location_position[0]][location_position[1]].vertices
-            check_vertices = None
-            for vertices in vertices_list:
-                # Проверка на возможность достичь точки
-                _, success = self._path_world_vertices_a_star_algorithm(kwargs["vertices_dict"], self.vertices,
-                                                                        vertices.number)
-                if success:
-                    check_vertices = vertices.number
-                    break
-            if check_vertices is not None:
-                print(F"check_vertices - {check_vertices}")
-                target = self.memory.add_memories("target", "move", positions=[check_vertices], **kwargs)
-                self.action_stack.add_stack_element(name="local_move", element=self.path_move, target=target)
-                yield False
-                circle = self.bases_return_circle()
-                null_position = [self.world_position[0] - circle//2, self.world_position[1] - circle//2]
-                dry_tiles_list = list()
+        def _generator_action_search_for_a_place():
+            locations_list = list()
+            firewood_set = set(dry)
+            global_map = kwargs["global_map"]
+            vertices_dict = kwargs["vertices_dict"]
+            lines = global_map[self.global_position[0] - 1:self.global_position[0] + 1]
+            for number_line, line in enumerate(lines):
+                locations = line[self.global_position[1] - 1:self.global_position[1] + 1]
+                for number_location, location in enumerate(locations):
+                    icons_set = set(location.tiles_count.keys())
+                    intersections = firewood_set.intersection(icons_set)
+                    if intersections:
+                        locations_list.append([self.global_position[0] + number_line - 1,
+                                              self.global_position[1] + number_location - 1])
+            # Список локаций вокруг персонажа, на которых есть дрова собран.
+            if not locations_list:
+                return True
+            final_tile = None
+            for location_position in locations_list:
+                vertices_list = global_map[location_position[0]][location_position[1]].vertices
+                check_vertices = None
+                for vertices in vertices_list:
+                    # Проверка на возможность достичь точки
+                    _, success = self._path_world_vertices_a_star_algorithm(kwargs["vertices_dict"], self.vertices,
+                                                                            vertices.number)
+                    if success:
+                        check_vertices = vertices.number
+                        break
+                if check_vertices is not None:
+                    print(F"check_vertices - {check_vertices}")
+                    target = self.memory.add_memories("target", "move", positions=[check_vertices], **kwargs)
+                    self.action_stack.add_stack_element(name="local_move", element=self.path_move, target=target)
+                    yield False
+                    circle = self.bases_return_circle()
+                    len_circle = len(circle)
+                    null_position = [self.world_position[0] - len_circle//2, self.world_position[1] - len_circle//2]
+                    dry_tiles_list = list()
 
-                for number_line, line in enumerate(circle):
-                    past_dry_tile = False
-                    for number_tile, tile in enumerate(line):
-                        if tile == '.':
-                            check_position = (null_position[0] + number_line, null_position[1] + number_tile)
-                            check_tile = self.bases_world_tile(global_map, check_position)
-                            if check_tile.icon in dry:
-                                dry_tiles_list.append(check_position)
-                                if past_dry_tile:
-                                    # Если есть предыдущий сухой тайл, то поиск окончен
-                                    final_tile = check_position
-                                    target = self.memory.add_memories("target", "move", positions=[final_tile],
-                                                                                                            **kwargs)
-                                    self.action_stack.add_stack_element(name="global_move", element=self.path_move,
-                                                                                                        target=target)
-                                    yield False
-                                    return True
+                    for number_line, line in enumerate(circle):
+                        past_dry_tile = False
+                        for number_tile, tile in enumerate(line):
+                            if tile == '.':
+                                check_position = (null_position[0] + number_line, null_position[1] + number_tile)
+                                check_tile = self.bases_world_tile(global_map, check_position)
+                                if check_tile.icon in dry:
+                                    dry_tiles_list.append(check_position)
+                                    if past_dry_tile:
+                                        # Если есть предыдущий сухой тайл, то поиск окончен
+                                        final_tile = check_position
+                                        target = self.memory.add_memories("target", "move", positions=[final_tile],
+                                                                                                                **kwargs)
+                                        self.action_stack.add_stack_element(name="global_move", element=self.path_move,
+                                                                                                            target=target)
+                                        yield False
+                                        return True
+                                    else:
+                                        past_dry_tile = True
                                 else:
-                                    past_dry_tile = True
-                            else:
-                                past_dry_tile = False
-        if final_tile:
-            target = self.memory.add_memories("target", "move", positions=[final_tile], **kwargs)
-            self.action_stack.add_stack_element(name="global_move", element=self.path_move, target=target)
-            yield False
-        return True
+                                    past_dry_tile = False
+            if final_tile:
+                target = self.memory.add_memories("target", "move", positions=[final_tile], **kwargs)
+                self.action_stack.add_stack_element(name="search_move", element=self.path_move, target=target)
+                #yield False
+            return True
+        if self.target.generator is None:
+            self.target.generator = _generator_action_search_for_a_place()
+        x = self.target.generator
+        print(F"x - {x}")
+        y = next(x, True)
+        print(F"y - {y}")
+        return y
 
     @trace
     def _action_collect_firewood(self, **kwargs):

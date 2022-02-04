@@ -23,7 +23,8 @@ class PathMove(PathBase):
                     finish = self.bases_world_position_calculate(vertices.position, vertices.approximate_position)
                 else:  # Расчёт пути до конкретной точки
                     finish_vertices = self.bases_world_tile(kwargs["global_map"], finish).vertices
-
+                if self.global_waypoints and self.global_waypoints[0] == self.vertices:
+                    self.global_waypoints.pop(0)
                 if self.world_position == finish:  # Точка достигнута, задача выполнена
                     return True
 
