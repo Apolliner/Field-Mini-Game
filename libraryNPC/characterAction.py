@@ -56,7 +56,7 @@ class CharacterAction(Bases):
         """ Ищет подходящее место для костра. Оно должно быть сухим и неподалёку должны быть дрова. """
         def _generator_action_search_for_a_place():
             locations_list = list()
-            firewood_set = set(dry)
+            firewood_set = set(firewood)
             global_map = kwargs["global_map"]
             vertices_dict = kwargs["vertices_dict"]
             lines = global_map[self.global_position[0] - 1:self.global_position[0] + 1]
@@ -116,8 +116,8 @@ class CharacterAction(Bases):
             if final_tile:
                 target = self.memory.add_memories("target", "move", positions=[final_tile], **kwargs)
                 self.action_stack.add_stack_element(name="search_move", element=self.path_move, target=target)
-                #yield False
-            return True
+                return True
+            return float("nan")
         if self.target.generator is None:
             self.target.generator = _generator_action_search_for_a_place()
         x = self.target.generator
@@ -130,16 +130,16 @@ class CharacterAction(Bases):
     def _action_collect_firewood(self, **kwargs):
         """ 3 раза ищет дрова или ветки. Собирает их и приносит в стартовую точку """
         print(F'test action "_action_collect_firewood"')
-        ...
+        return True
 
     @trace
     def _action_arrange_a_fire_pit(self, **kwargs):
         """ 3 раза ходит от дров до места установки костра. Каждый раз проводит действие над костром. """
         print(F'test action "_action_arrange_a_fire_pit"')
-        ...
+        return True
 
     @trace
     def _action_kindle_campfire(self, **kwargs):
         """ Проводит некоторое время производя действие над костром. Время определяется случайно """
         print(F'test action "_action_kindle_campfire"')
-        ...
+        return True

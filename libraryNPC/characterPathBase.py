@@ -39,7 +39,9 @@ class PathBase():
         #print(F"start_vertices - {start_vertices}")
         start = vertices_dict[start_vertices].position
         finish = vertices_dict[finish_vertices].position
-        if [start[0] - 1, start[1]] == finish:
+        if start == finish:
+            return 'center'
+        elif [start[0] - 1, start[1]] == finish:
             return 'up'
         elif [start[0] + 1, start[1]] == finish:
             return 'down'

@@ -7,6 +7,7 @@ class Bases:
     """ Базовые методы, нужные везде """
 
     inf = float("inf")
+    nan = float("nan")
 
     #@trace
     def bases_path_length(self, start_point, finish_point):
@@ -79,17 +80,23 @@ class Bases:
         while True:
             action = stack.get_stack_element()
             self.target = action["target"]
-            answer = action["element"](**kwargs)
-            if answer is True:
-                stack.pop_stack_element()
+            if self.past_target and self.target.id != self.past_target.id:
                 self.bases_del_all_waypoints(**kwargs)
+            answer = action["element"](**kwargs)
+            if answer is True:              # Действие завершено и удаляется из стека
+                stack.pop_stack_element()
                 break
-            elif answer is False:
+            elif answer is False:           # Действие не завершено
                 break
-            elif answer is self.inf:
+            elif answer is self.inf:        # Продолжение следующего действия
                 continue
+            elif answer is self.nan:        # Удаление текущего элемента и предыдущего
+                stack.pop_stack_element()
+                stack.pop_stack_element()
+                break
             print(f"answer - {answer}")
             raise TypeError
+
     @trace
     def bases_del_all_waypoints(self, **kwargs):
         """ Удаляет все вейпоинты """

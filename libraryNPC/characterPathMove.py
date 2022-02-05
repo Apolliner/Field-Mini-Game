@@ -13,7 +13,19 @@ class PathMove(PathBase):
             Просто вызывается и само всё делает.
             Возвращает False если цель не достигнута и True если достигнута.
         """
-        if self.target.get_position():
+        get_position = self.target.get_position()
+        type_get_position = type(get_position)
+        print(F"type_get_position - {type_get_position}")
+        if get_position:
+            if type(get_position) == int:
+                if get_position == self.vertices and not self.local_waypoints:
+                    return True
+            elif type(type_get_position) == tuple:
+                print(f"{tuple(self.world_position)} == {get_position} - {tuple(self.world_position) == get_position}")
+                if tuple(self.world_position) == get_position:
+                    print(F"true 1")
+                    return True
+
             if not self.local_waypoints:
                 finish = self.target.get_position()
                 vertices_dict = kwargs["vertices_dict"]
@@ -23,9 +35,9 @@ class PathMove(PathBase):
                     finish = self.bases_world_position_calculate(vertices.position, vertices.approximate_position)
                 else:  # Расчёт пути до конкретной точки
                     finish_vertices = self.bases_world_tile(kwargs["global_map"], finish).vertices
-                if self.global_waypoints and self.global_waypoints[0] == self.vertices:
-                    self.global_waypoints.pop(0)
-                if self.world_position == finish:  # Точка достигнута, задача выполнена
+                #if self.global_waypoints and self.global_waypoints[0] == self.vertices:
+                #    self.global_waypoints.pop(0)
+                if tuple(self.world_position) == finish:  # Точка достигнута, задача выполнена
                     return True
 
                 self._path_move_calculate(finish_vertices, finish, **kwargs)
@@ -37,9 +49,14 @@ class PathMove(PathBase):
         """
             Рассчитывает путь до тайла или до зоны доступности (в зависимости от того, что приходит из задачи)
         """
-        if not self.global_waypoints and self.vertices != finish_vertices:
-            self._path_move_global_waypoints_calculate(self.vertices, finish_vertices, **kwargs)
-        self._path_move_local_waypoints_calculate(self.world_position, finish_tile, **kwargs)
+        if self.global_waypoints:
+            self._path_move_local_waypoints_calculate(self.world_position, finish_tile, **kwargs)
+        else:
+            if self.vertices != finish_vertices:
+                self._path_move_global_waypoints_calculate(self.vertices, finish_vertices, **kwargs)
+            else:
+                self.local_waypoints, success = self._path_world_tiles_a_star_algorithm(kwargs["global_map"],
+                                                            self.world_position, finish_tile, finish_vertices)
 
     @trace
     def _path_move_global_waypoints_calculate(self, start_vertices, finish_vertices, **kwargs):
@@ -59,7 +76,10 @@ class PathMove(PathBase):
         """
         global_map = kwargs["global_map"]
         vertices_dict = kwargs["vertices_dict"]
-        direction = self._path_base_global_direction_calculation(self.vertices, self.global_waypoints[0], vertices_dict)
+        direction = 'center'
+        if self.global_waypoints:
+            direction = self._path_base_global_direction_calculation(self.vertices, self.global_waypoints[0],
+                                                                                                        vertices_dict)
         finish_point = []
 
         for vertices in self.bases_world_location(global_map, start_point).vertices:
@@ -112,6 +132,8 @@ class PathMove(PathBase):
                             finish_point = [raw_finish_point[0], raw_finish_point[1] - 1]
                         elif direction == 'right':
                             finish_point = [raw_finish_point[0], raw_finish_point[1] + 1]
+                        elif direction == 'center':
+                            finish_point = raw_finish_point
                         break
 
         self.local_waypoints, success = self._path_world_tiles_a_star_algorithm(global_map, start_point, finish_point,
