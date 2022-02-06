@@ -1,11 +1,12 @@
 from libraryNPC.bases import Bases
 from library.tilesDicts import dry, firewood, stones, water
 from library.decorators import trace
+from libraryNPC.characterActionBase import CharacterActionBase
 """
     Логика действий персонажей
 """
 
-class CharacterAction(Bases):
+class CharacterAction(CharacterActionBase):
     @trace
     def action_return_action(self):
         actions_dict = {
@@ -130,7 +131,9 @@ class CharacterAction(Bases):
     def _action_collect_firewood(self, **kwargs):
         """ 3 раза ищет дрова или ветки. Собирает их и приносит в стартовую точку """
         print(F'test action "_action_collect_firewood"')
-        return True
+        target = self.memory.add_memories("target", "move", **kwargs)
+        self.action_stack.add_stack_element(name="animation", element=self.action_base_animate, target=target)
+        return False
 
     @trace
     def _action_arrange_a_fire_pit(self, **kwargs):

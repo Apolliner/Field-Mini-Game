@@ -306,15 +306,20 @@ def new_npc_walk_draw(entity, person, settings_for_intermediate_steps):
         15: [0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3],
         30: [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3],
     }
-    # Если нет движения то за направление принимается старое движение
-    if entity.direction == "center":
-        animation = "pf"
-        direction = entity.old_direction[0]
-    # Если движение есть, то устанавливается новое направление
+
+    if not entity.animation:
+        # Если нет движения, то за направление принимается старое движение
+        if entity.direction == "center":
+            animation = "s"
+            direction = entity.old_direction[0]
+        # Если движение есть, то устанавливается новое направление
+        else:
+            entity.old_direction = entity.direction
+            direction = entity.direction[0]
+            animation = entity.animation
     else:
-        entity.old_direction = entity.direction
-        direction = entity.direction[0]
-        animation = "p"
+        animation = entity.animation
+        direction = "d"
     intermediate_step = intermediate_steps_dict[settings_for_intermediate_steps[0]][person.pass_draw_move - 1]
 
     entity.type = F"{direction}{animation}{intermediate_step}"

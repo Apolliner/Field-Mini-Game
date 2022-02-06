@@ -94,6 +94,7 @@ class Character(Bases):
             Сброс параметров в начале хода
         """
         self.direction = 'center'
+        self.animation = ''
 
 
 
