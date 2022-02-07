@@ -11,9 +11,9 @@ class CharacterActionBase(Bases):
         # FIXME пока для теста просто приседание на 5 шагов. Потом нужно будет сделать полноценный роутер
         def _generator_action_base_animate():
             for _ in range(5):
-                self.animation = 'sq'
+                self.animation = 'la'
                 yield False
-            self.animation = 'sq'
+            self.animation = 'la'
             return True
         if self.target.generator is None:
             self.target.generator = _generator_action_base_animate()

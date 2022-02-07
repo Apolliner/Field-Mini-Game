@@ -401,6 +401,11 @@ def loading_all_sprites():
                             'usq2': add_tile('tile_enemy_riffleman_up_squat_1.png'),
                             'usq3': add_tile('tile_enemy_riffleman_up_squat_1.png'),
 
+                            'dla0': add_tile('tile_enemy_riffleman_down_look_around_0.png'),
+                            'dla1': add_tile('tile_enemy_riffleman_down_look_around_1.png'),
+                            'dla2': add_tile('tile_enemy_riffleman_down_look_around_2.png'),
+                            'dla3': add_tile('tile_enemy_riffleman_down_look_around_3.png'),
+
                             'h': add_tile('tile_enemy_horseman.png'),
 
                          },
