@@ -131,8 +131,13 @@ class CharacterAction(CharacterActionBase):
     def _action_collect_firewood(self, **kwargs):
         """ 3 раза ищет дрова или ветки. Собирает их и приносит в стартовую точку """
         print(F'test action "_action_collect_firewood"')
-        target = self.memory.add_memories("target", "move", **kwargs)
-        self.action_stack.add_stack_element(name="animation", element=self.action_base_animate, target=target)
+        payload = {"animations": [{"name": "look around", "steps": 3},
+                                  {"name": "squat", "steps": 3},
+                                  {"name": "to stand", "steps": 3},
+                                  {"name": "pistol", "steps": 3},
+                                  {"name": "pistol fire", "steps": 3},]}
+        target = self.memory.add_memories("target", "move", payload=payload, **kwargs)
+        self.action_stack.add_stack_element(name="animation", element=self.action_base_animate_router, target=target)
         return False
 
     @trace

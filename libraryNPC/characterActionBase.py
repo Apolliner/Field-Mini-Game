@@ -6,15 +6,36 @@ from library.decorators import trace
 """
 class CharacterActionBase(Bases):
 
-    def action_base_animate(self, **kwargs):
+    def action_base_animate_router(self, **kwargs):
         """ Отыгрывает указанную анимацию указанное количество шагов """
-        # FIXME пока для теста просто приседание на 5 шагов. Потом нужно будет сделать полноценный роутер
-        def _generator_action_base_animate():
-            for _ in range(5):
-                self.animation = 'la'
+        animation_dict = {"look around":   "la",
+                           "squat":         "sq",
+                           "to stand":      "s",
+                           "pistol":        "p",
+                           "pistol fire":   "pf"
+                           }
+        def _generator_action_base_animate(count_step, animations):
+            for i in range(count_step):
+                self.animation = animations
+                if i == count_step - 1:
+                    return True
                 yield False
-            self.animation = 'la'
+
+        if not self.target.payload or "animations" not in self.target.payload or not self.target.payload["animations"]:
             return True
+        print(F'self.target.payload["animations"] - {self.target.payload["animations"]}')
+
         if self.target.generator is None:
-            self.target.generator = _generator_action_base_animate()
-        return next(self.target.generator, True)
+            animation_item = self.target.payload["animations"].pop(0)
+            animation = animation_dict[animation_item["name"]]
+            count_steps = animation_item["steps"]
+            self.target.generator = _generator_action_base_animate(count_steps, animation)
+            answer = next(self.target.generator, True)
+        else:
+            answer = next(self.target.generator, True)
+        if answer == True:
+            self.target.generator = None
+            if self.target.payload["animations"]:
+                answer = False
+        return answer
+

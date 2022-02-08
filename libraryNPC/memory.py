@@ -12,7 +12,8 @@ class MemoryNode:
 
         Задачи так же являются элементами памяти
     """
-    def __init__(self, id, type, name, master, step=0, target=None, entity=None, connection=None, positions=None, **kwargs):
+    def __init__(self, id, type, name, master, step=0, target=None, entity=None, connection=None, positions=None,
+                                                                                            payload=dict(), **kwargs):
         self.id = id
         self.type = type
         self.name = name
@@ -20,7 +21,7 @@ class MemoryNode:
         self.step = step            # Шаг обновляется при каждом изменении элемента памяти
         self.birth = step           # Создание элемента остаётся постоянным
         self.master = master        # Объект персонажа, к которому относится элемент памяти
-        self.payload = list()
+        self.payload = payload
         self.target = target
         self.entity = entity        # Объект персонажа
         self.generator = None       # Хранит объект генератора при необходимости
