@@ -406,6 +406,7 @@ class Action_in_map:
             'waypoint':         ['w', 'вейпоинт', 50, False],
             'explosion':        ['e', 'взрыв', 1, True],
             'dust':             ['d', 'пыль', 10, True],
+            'firewood':         ['fw', 'дрова', 150, True],
         }
         if self.name in action_dict:
             return action_dict[self.name][number]

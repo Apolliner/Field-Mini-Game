@@ -2,6 +2,10 @@ from libraryNPC.bases import Bases
 from library.tilesDicts import dry, firewood, stones, water
 from library.decorators import trace
 from libraryNPC.characterActionBase import CharacterActionBase
+import random
+import copy
+from library.classes import Action_in_map
+
 """
     Логика действий персонажей
 """
@@ -87,7 +91,7 @@ class CharacterAction(CharacterActionBase):
                     print(F"check_vertices - {check_vertices}")
                     target = self.memory.add_memories("target", "move", positions=[check_vertices], **kwargs)
                     self.action_stack.add_stack_element(name="local_move", element=self.path_move, target=target)
-                    yield False
+                    yield self.inf
                     circle = self.bases_return_circle()
                     len_circle = len(circle)
                     null_position = [self.world_position[0] - len_circle//2, self.world_position[1] - len_circle//2]
@@ -108,7 +112,7 @@ class CharacterAction(CharacterActionBase):
                                                                                                                 **kwargs)
                                         self.action_stack.add_stack_element(name="global_move", element=self.path_move,
                                                                                                             target=target)
-                                        yield False
+                                        yield self.inf
                                         return True
                                     else:
                                         past_dry_tile = True
@@ -118,7 +122,7 @@ class CharacterAction(CharacterActionBase):
                 target = self.memory.add_memories("target", "move", positions=[final_tile], **kwargs)
                 self.action_stack.add_stack_element(name="search_move", element=self.path_move, target=target)
                 return True
-            return float("nan")
+            return self.nan
         if self.target.generator is None:
             self.target.generator = _generator_action_search_for_a_place()
         x = self.target.generator
@@ -130,15 +134,74 @@ class CharacterAction(CharacterActionBase):
     @trace
     def _action_collect_firewood(self, **kwargs):
         """ 3 раза ищет дрова или ветки. Собирает их и приносит в стартовую точку """
-        print(F'test action "_action_collect_firewood"')
-        payload = {"animations": [{"name": "look around", "steps": 3},
-                                  {"name": "squat", "steps": 3},
-                                  {"name": "to stand", "steps": 3},
-                                  {"name": "pistol", "steps": 3},
-                                  {"name": "pistol fire", "steps": 3},]}
-        target = self.memory.add_memories("target", "move", payload=payload, **kwargs)
-        self.action_stack.add_stack_element(name="animation", element=self.action_base_animate_router, target=target)
-        return False
+        def _generator_action_collect_firewood():
+            start_positions = copy.deepcopy(self.world_position)
+            firewoods_tiles, firewoods_length = self.bases_search_tile_in_circle(start_positions, firewood, **kwargs)
+            if not firewoods_tiles:
+                return self.nan
+            collected_firewood_positions = list()
+
+            payload = {"animations": [{"name": "look around", "steps": 3}]}
+            target = self.memory.add_memories("target", "move", payload=payload, **kwargs)
+            self.action_stack.add_stack_element(name="animation", element=self.action_base_animate_router, target=target)
+            yield self.inf
+            kwargs['activity_list'].append(Action_in_map('firewood', kwargs['step'], self.global_position,
+                                                                        self.local_position, self.chunk_size, '', self))
+            for i in range(3):
+                firewood_tile = random.choice(firewoods_tiles)
+                target = self.memory.add_memories("target", "action_move", positions=[firewood_tile], **kwargs)
+                self.action_stack.add_stack_element(name="action_move", element=self.path_move, target=target)
+                yield self.inf
+                payload = {"animations": [{"name": "squat", "steps": 5}]}
+                target = self.memory.add_memories("target", "move", payload=payload, **kwargs)
+                self.action_stack.add_stack_element(name="animation", element=self.action_base_animate_router, target=target)
+                yield self.inf
+                target = self.memory.add_memories("target", "action_move", positions=[start_positions], **kwargs)
+                self.action_stack.add_stack_element(name="action_move", element=self.path_move, target=target)
+                yield self.inf
+                payload = {"animations": [{"name": "squat", "steps": 2}]}
+                target = self.memory.add_memories("target", "move", payload=payload, **kwargs)
+                self.action_stack.add_stack_element(name="animation", element=self.action_base_animate_router,
+                                                    target=target)
+                yield self.inf
+                success = self.action_base_activity_update(self.world_position, new_type=str(i + 1), lifetime=150, **kwargs)
+                if not success:
+                    kwargs['activity_list'].append(Action_in_map('firewood', kwargs['step'], self.global_position,
+                                                                 self.local_position, self.chunk_size, '', self))
+                    success = self.action_base_activity_update(self.world_position, new_type=str(i + 1), lifetime=150,
+                                                               **kwargs)
+
+
+            # FIXME Последующее должно быть в другом месте
+            campfire_position = [start_positions[0], start_positions[1] + 1]
+            target = self.memory.add_memories("target", "action_move", positions=[campfire_position], **kwargs)
+            self.action_stack.add_stack_element(name="action_move", element=self.path_move, target=target)
+            yield self.inf
+            payload = {"animations": [{"name": "squat", "steps": 10}]}
+            target = self.memory.add_memories("target", "move", payload=payload, **kwargs)
+            self.action_stack.add_stack_element(name="animation", element=self.action_base_animate_router,
+                                                target=target)
+            yield self.inf
+            success = self.action_base_activity_update(start_positions, new_type=str(2), lifetime=150, **kwargs)
+            kwargs['activity_list'].append(Action_in_map('bonfire', kwargs['step'], self.global_position,
+                                                         self.local_position, self.chunk_size, '', self))
+            return True
+        if self.target.generator is None:
+            self.target.generator = _generator_action_collect_firewood()
+        x = self.target.generator
+        print(F"x - {x}")
+        y = next(x, True)
+        print(F"y - {y}")
+        return y
+        #print(F'test action "_action_collect_firewood"')
+        #payload = {"animations": [{"name": "look around", "steps": 3},
+        #                          {"name": "squat", "steps": 3},
+        #                          {"name": "to stand", "steps": 3},
+        #                          {"name": "pistol", "steps": 3},
+        #                          {"name": "pistol fire", "steps": 3},]}
+        #target = self.memory.add_memories("target", "move", payload=payload, **kwargs)
+        #self.action_stack.add_stack_element(name="animation", element=self.action_base_animate_router, target=target)
+        #return False
 
     @trace
     def _action_arrange_a_fire_pit(self, **kwargs):

@@ -8,6 +8,7 @@ class Bases:
 
     inf = float("inf")
     nan = float("nan")
+    chunk_size = 25
 
     #@trace
     def bases_path_length(self, start_point, finish_point):
@@ -135,4 +136,29 @@ class Bases:
                 '00.........00',
                 '000.......000',
                 '00000...00000']
+
+    def bases_search_tile_in_circle(self, center_position, icons, **kwargs):
+        """
+            Ищет указанный тайл или группу тайлов в круге.
+            Возвращает два списка. Один с координатами, другой с удалённостью.
+        """
+        global_map = kwargs['global_map']
+        circle = self.bases_return_circle()
+        len_circle = len(circle)
+        if type(icons) == str:
+            icons = tuple(icons)
+        search_tiles_list = list()
+        length_tiles_list = list()
+        null_position = [center_position[0] - len_circle // 2, center_position[1] - len_circle // 2]
+        for number_line, line in enumerate(circle):
+            past_dry_tile = False
+            for number_tile, tile in enumerate(line):
+                if tile == '.':
+                    check_position = (null_position[0] + number_line, null_position[1] + number_tile)
+                    check_tile = self.bases_world_tile(global_map, check_position)
+                    if check_tile.icon in icons:
+                        len_check_position = self.bases_path_length(center_position, check_position)
+                        search_tiles_list.append(check_position)
+                        length_tiles_list.append(len_check_position)
+        return search_tiles_list, length_tiles_list
 

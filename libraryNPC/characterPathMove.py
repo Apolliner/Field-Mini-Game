@@ -20,9 +20,9 @@ class PathMove(PathBase):
             if type(get_position) == int:
                 if get_position == self.vertices and not self.local_waypoints:
                     return True
-            elif type(type_get_position) == tuple:
+            elif type_get_position == tuple or type_get_position == list:
                 print(f"{tuple(self.world_position)} == {get_position} - {tuple(self.world_position) == get_position}")
-                if tuple(self.world_position) == get_position:
+                if self.world_position == list(get_position):
                     print(F"true 1")
                     return True
 

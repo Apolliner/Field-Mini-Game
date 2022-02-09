@@ -6,6 +6,27 @@ from library.decorators import trace
 """
 class CharacterActionBase(Bases):
 
+    def action_base_activity_update(self, activity_positions, new_icon=None, new_type=None, new_description=None,
+                                                                                            lifetime=None, **kwargs):
+        """ Обновляет находящуюся в указанных координатах активность """
+        global_position, local_position = self.bases_world_position_recalculation(activity_positions)
+
+        activity_list = kwargs["activity_list"]
+        for activity in activity_list:
+            if activity.global_position == global_position and activity.local_position == local_position:
+                if new_icon:
+                    activity.icon = new_icon
+                if new_type:
+                    activity.type = new_type
+                if new_description:
+                    activity.description = new_description
+                if lifetime:
+                    activity.lifetime = lifetime
+                return True
+
+        return False
+
+
     def action_base_animate_router(self, **kwargs):
         """ Отыгрывает указанную анимацию указанное количество шагов """
         animation_dict = {"look around":   "la",

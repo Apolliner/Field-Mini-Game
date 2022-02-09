@@ -430,6 +430,12 @@ def loading_all_sprites():
                     'Rs': {'0': add_tile('tile_rattlesnake.png')},
                     'Bi': {'0': add_tile('tile_bird.png')},
                     'B': {'0': add_tile('beacon.png')},
+                    'fw': {
+                        '0': add_tile('empty.png'),
+                        '1': add_tile('tile_firewoods_0.png'),
+                        '2': add_tile('tile_firewoods_1.png'),
+                        '3': add_tile('tile_firewoods_2.png'),
+                        },
                     }
     return sprites_dict
 class Fast_minimap_tile(pygame.sprite.Sprite):
