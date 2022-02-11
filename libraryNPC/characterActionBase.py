@@ -30,19 +30,21 @@ class CharacterActionBase(Bases):
     def action_base_animate_router(self, **kwargs):
         """ Отыгрывает указанную анимацию указанное количество шагов """
         animation_dict = {"look around":   "la",
-                           "squat":         "sq",
-                           "to stand":      "s",
-                           "pistol":        "p",
-                           "pistol fire":   "pf"
-                           }
+                          "squat":         "sq",
+                          "to stand":      "s",
+                          "pistol":        "p",
+                          "pistol fire":   "pf",
+                          "stand create":  "sc",
+                          "squat create":  "sqc",
+                          }
         def _generator_action_base_animate(count_step, animations):
             for i in range(count_step):
                 self.animation = animations
-                if i == count_step - 1:
-                    return True
                 yield False
+            return True
 
-        if not self.target.payload or "animations" not in self.target.payload or not self.target.payload["animations"]:
+        if not self.target.generator and (not self.target.payload or "animations" not in self.target.payload or
+                                          not self.target.payload["animations"]):
             return True
         print(F'self.target.payload["animations"] - {self.target.payload["animations"]}')
 
