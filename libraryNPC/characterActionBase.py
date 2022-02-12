@@ -5,7 +5,7 @@ from library.decorators import trace
     Необходимые для всех типов активности действия
 """
 class CharacterActionBase(Bases):
-
+    @trace
     def action_base_activity_update(self, activity_positions, new_icon=None, new_type=None, new_description=None,
                                                                                             lifetime=None, **kwargs):
         """ Обновляет находящуюся в указанных координатах активность """
@@ -26,7 +26,7 @@ class CharacterActionBase(Bases):
 
         return False
 
-
+    @trace
     def action_base_animate_router(self, **kwargs):
         """ Отыгрывает указанную анимацию указанное количество шагов """
         animation_dict = {"look around":   "la",
@@ -45,7 +45,7 @@ class CharacterActionBase(Bases):
 
         if not self.target.generator and (not self.target.payload or "animations" not in self.target.payload or
                                           not self.target.payload["animations"]):
-            return True
+            return self.inf_true
         print(F'self.target.payload["animations"] - {self.target.payload["animations"]}')
 
         if self.target.generator is None:
@@ -60,5 +60,7 @@ class CharacterActionBase(Bases):
             self.target.generator = None
             if self.target.payload["animations"]:
                 answer = False
+            else:
+                return self.inf_true
         return answer
 

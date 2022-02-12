@@ -427,7 +427,6 @@ def loading_all_sprites():
                             'dsc1': add_tile('tile_enemy_riffleman_right_stand_create_0.png'),
                             'dsc2': add_tile('tile_enemy_riffleman_right_stand_create_1.png'),
                             'dsc3': add_tile('tile_enemy_riffleman_right_stand_create_1.png'),
-
                             # Действие сидя
                             'lsqc0': add_tile('tile_enemy_riffleman_left_squat_create_0.png'),
                             'lsqc1': add_tile('tile_enemy_riffleman_left_squat_create_1.png'),
@@ -455,7 +454,12 @@ def loading_all_sprites():
                     '%': {'0': add_tile('tile_horse_traces.png')},
                     '@': {'0': add_tile('tile_animal_traces.png')},
                     '/': {'0': add_tile('tile_camp.png')},
-                    '+': {'0': add_tile('tile_bonfire.png')},
+                    '+': {
+                            '0': add_tile('tile_bonfire_0.png'),
+                            '1': add_tile('tile_bonfire_1.png'),
+                            '2': add_tile('tile_bonfire_2.png'),
+                            '3': add_tile('tile_bonfire_3.png'),
+                        },
                     '№': {'0': add_tile('tile_rest_stop.png')},
                     '#': {'0': add_tile('tile_gnawed_bones.png')},
                     '$': {'0': add_tile('tile_animal_rest_stop.png')},
