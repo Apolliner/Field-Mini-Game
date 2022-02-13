@@ -287,7 +287,7 @@ def main_loop():
     pygame.init()
 
     dispay_size = [1300, 730] #было [1200, 750]
-    screen = pygame.display.set_mode(dispay_size)#, FULLSCREEN | DOUBLEBUF)
+    screen = pygame.display.set_mode(dispay_size, pygame.RESIZABLE)#, FULLSCREEN | DOUBLEBUF)
     pygame.display.set_caption("My Game")
 
     #Загрузка и создание поверхностей всех спрайтов
