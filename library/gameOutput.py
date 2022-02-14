@@ -358,7 +358,8 @@ class Draw_rect(pygame.sprite.Sprite):
 
 def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action, enemy_list, activity_list, screen,
                        minimap_surface, minimap_dict, sprites_dict, offset_sprites, landscape_layer, activity_layer,
-                       entities_layer, finishing_surface, settings_for_intermediate_steps, mouse_position, raw_minimap):
+                       entities_layer, finishing_surface, settings_for_intermediate_steps, mouse_position, raw_minimap,
+                       clock):
     """
         Работает с классом Interfaсe, содержащимся в go_to_print
 
@@ -379,6 +380,14 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
         1) Изменение смещения и количества промежуточных шагов в зависимости от времени, потраченного на основной кадр
 
     """
+
+    font = pygame.font.SysFont("Arial", 18)
+
+    def update_fps():
+        fps = str(int(clock.get_fps()))
+        fps_text = font.render(fps, 1, pygame.Color("coral"))
+        return fps_text
+
 
     time_1 = time.time()  # проверка времени выполнения
 
@@ -706,7 +715,8 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
     textRectObj = textSurfaceObj.get_rect()
     textRectObj.center = (30 * 34, 17 * 31)
     screen.blit(textSurfaceObj, textRectObj)
-
+    
+    screen.blit(update_fps(), (10, 0))
     pygame.display.flip()
 
     return screen, landscape_layer, activity_layer, entities_layer, offset_sprites, finishing_surface, settings_for_intermediate_steps

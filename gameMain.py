@@ -385,7 +385,7 @@ def game_loop(global_map:list, person, chunk_size:int, enemy_list:list, world, s
     screen, landscape_layer, activity_layer, entities_layer, offset_sprites, finishing_surface, settings_for_intermediate_steps = master_pygame_draw(person, chunk_size,
                         go_to_print, global_map, mode_action, enemy_list, activity_list, screen, minimap_surface,
                         minimap_dict, sprites_dict, offset_sprites, landscape_layer, activity_layer,
-                        entities_layer, finishing_surface, settings_for_intermediate_steps, mouse_position, raw_minimap)
+                        entities_layer, finishing_surface, settings_for_intermediate_steps, mouse_position, raw_minimap, clock)
 
     #enemy_list.append(NPC([2, 2], [2, 2], 'new_riffleman', 'new_riffleman', '☻', 'd0', 'Тестовый NPC', 'new_riffleman'))
     kwargs = {"ids_list": [1,], "player": person}
@@ -420,7 +420,7 @@ def game_loop(global_map:list, person, chunk_size:int, enemy_list:list, world, s
         screen, landscape_layer, activity_layer, entities_layer, offset_sprites, finishing_surface, settings_for_intermediate_steps = master_pygame_draw(
                     person, chunk_size, go_to_print, global_map, mode_action, enemy_list, activity_list, screen,
                     minimap_surface, minimap_dict, sprites_dict, offset_sprites, landscape_layer, activity_layer,
-                    entities_layer, finishing_surface, settings_for_intermediate_steps, mouse_position, raw_minimap)
+                    entities_layer, finishing_surface, settings_for_intermediate_steps, mouse_position, raw_minimap, clock)
         if not person.enemy_pass_step and not person.pointer_step:
             print(F"\nstep - {step}\n")
 
