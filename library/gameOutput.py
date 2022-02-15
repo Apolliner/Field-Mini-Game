@@ -715,7 +715,7 @@ def master_pygame_draw(person, chunk_size, go_to_print, global_map, mode_action,
     textRectObj = textSurfaceObj.get_rect()
     textRectObj.center = (30 * 34, 17 * 31)
     screen.blit(textSurfaceObj, textRectObj)
-    
+
     screen.blit(update_fps(), (10, 0))
     pygame.display.flip()
 
