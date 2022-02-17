@@ -35,9 +35,21 @@ fields = ["..............................",
           "......x.......................",
 
           ]
+fields = ["..........",
+          ".x.....x..",
+          "..x...x...",
+          "...x.x.x..",
+          "....x...x.",
+          "..........",
+          ".x.....x..",
+          "..x...x...",
+          "...x.x.x..",
+          "....x...x.",
+
+          ]
 WIDTH = 600
 HEIGHT = 600
-FPS = 60
+FPS = 30
 # Задаем цвета
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
@@ -58,45 +70,24 @@ bonfire = pygame.image.load(os.path.join(os.path.dirname(__file__), './resources
 enemy = pygame.image.load(os.path.join(os.path.dirname(__file__), './resources', 'tile_enemy_riffleman_down_squat_1.png')).convert_alpha()
 
 
-class ColorTile(pygame.sprite.Sprite):
-    """ Содержит спрайты зон доступности """
-
-    def __init__(self, x, y, size_tile, color, alpha=255):
-
-        self.color = color
-        self.alpha = alpha
-        pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.Surface((size_tile, size_tile))
-        self.image.fill(self.color)
-        self.image.set_alpha(self.alpha)
-        self.rect = self.image.get_rect()
-        self.rect.left = x
-        self.rect.top = y
-        self.speed = 0
-
-    def draw(self, surface):
-        surface.blit(self.image, self.rect)
-
-
 class Tile(pygame.sprite.Sprite):
     """ Содержит спрайты зон доступности """
 
     def __init__(self, zero_x, zero_y, number_x, number_y, size_tile, image_tile, alpha=255):
+
         self.old_size_tile = size_tile
         self.number_x = number_x
         self.number_y = number_y
-        #self.color = color
-        #self.alpha = alpha
         pygame.sprite.Sprite.__init__(self)
         self.img = image_tile
         self.image = pygame.transform.scale(self.img, (size_tile, size_tile))
         self.rect = self.image.get_rect()
-        #self.image = pygame.Surface((size_tile, size_tile))
-        #self.image.fill(self.color)
-        #self.image.set_alpha(self.alpha)
-        #self.rect = self.image.get_rect()
-        self.rect.left = zero_x + number_x*size_tile
-        self.rect.top = zero_y + number_y*size_tile
+        self.position_x = zero_x + number_x*size_tile
+        self.position_y = zero_y + number_y*size_tile
+        self.start_position_x = number_x*size_tile
+        self.start_position_y = number_y*size_tile
+        self.rect.left = self.position_x
+        self.rect.top = self.position_y
         self.speed = 0
 
     def draw(self, surface):
@@ -109,24 +100,12 @@ class Tile(pygame.sprite.Sprite):
             if self.number_y == 0:
                 self.kill()
             self.number_y -= 1
-        #self.image = pygame.Surface((size_tile, size_tile))
-        #self.image.fill(self.color)
-        #self.image.set_alpha(self.alpha)
 
-        if multi_matrix is not None:
-            position = np.matrix(((self.number_x, self.number_y, 1)))
-            result_position = position * multi_matrix
+        position = np.matrix(((self.start_position_x, self.start_position_y, 1)))
+        result_position = position * multi_matrix
 
-            position_x = zero_x + result_position[(0, 2)] * self.old_size_tile
-            position_y = zero_y + result_position[(0, 1)] * self.old_size_tile
-            #position_x = zero_x + self.number_x * size_tile
-            #position_y = zero_y + self.number_y * size_tile
-            #print(F"\nresult_position - {result_position}\n({position_x, (position_y)})\n")
-        else:
-            #position_x = zero_x + self.number_x * size_tile
-            #position_y = zero_y + self.number_y * size_tile
-            position_x = self.rect.left
-            position_y = self.rect.top
+        position_x = result_position[(0, 0)]
+        position_y = result_position[(0, 1)]
 
         if self.old_size_tile != size_tile:
             self.image = pygame.transform.scale(self.img, (size_tile, size_tile))
@@ -167,6 +146,7 @@ def update_fps():
 
 x = 100
 y = 200
+start_size_tile = size_tile
 size_tile = 30
 
 x_plus = 0
@@ -175,21 +155,37 @@ y_plus = 0
 running = True
 MOUSEBUTTONDOWN = False
 step = 0
-color_alpha_tile = ColorTile(200, 300, 50, RED, 100)
+
+def get_move_matrix(t_x, t_y):
+    matrix = np.matrix(((1.0,      0,      0),
+                        (0,      1.0,      0),
+                        (t_x,    t_y,    1.0)))
+    return matrix
 
 def get_transfer_matrix(t_x, t_y):
     #matrix = ((1, 0, t_x),
     #          (0, 1, t_y),
     #          (0, 0, 1))
-    matrix = np.matrix(((t_x, t_y, 1),
-                        (0, 1, 0),
-                        (1, 0, 0)))
+    #matrix = np.matrix(((t_x, t_y, 1),
+    #                    (0, 1, 0),
+    #                    (1, 0, 0)))
+    matrix = np.matrix(((1.0,      0,      0),
+                        (0,      1.0,      0),
+                        (t_x,    t_y,    1.0)))
     return matrix
 
 def get_scale_matrix(s_x, s_y):
-    matrix = np.matrix(((0, 0, 1),
-                        (0, s_y, 0),
-                        (s_x, 0, 1)))
+    #matrix = np.matrix(((0, 0, 1),
+    #                    (0, s_y, 0),
+    #                    (s_x, 0, 1)))
+
+    #matrix = np.matrix(((0, 0, s_x),
+    #                    (0, s_y, 0),
+    #                    (s_x, 0, 0)))
+
+    matrix = np.matrix(((s_x, 0,   0),
+                        (0,   s_y, 0),
+                        (0,   0,   1.0)))
     return matrix
 
 def get_rotate_matrix(angle):
@@ -211,11 +207,14 @@ def matrix_multiplication(*args):
     return result
 
 multi_matrix = None
-
+scale = 1
+pos = (0, 0)
 while running:
+    scales = False
+    amendment_pos_x = 0
+    amendment_pos_y = 0
     multi_matrix = None
-    pos = None
-    scale = None
+    #scale = 1
     step += 1
     # Держим цикл на правильной скорости
     clock.tick(FPS)
@@ -227,13 +226,19 @@ while running:
         if event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 4:
                 pos = event.pos
-                scale = 1.2
-                size_tile = round(size_tile * scale, 0)
+                old_size_tile = size_tile
+                _scale = 1.2
+                size_tile = round(size_tile * _scale, 0)
+                scale = size_tile / start_size_tile
+                scales = True
             elif event.button == 5:
                 if size_tile > 5:
                     pos = event.pos
-                    scale = 0.9
-                    size_tile = round(size_tile * scale, 0)
+                    old_size_tile = size_tile
+                    _scale = 0.9
+                    size_tile = round(size_tile * _scale, 0)
+                    scale = size_tile / start_size_tile
+                    scales = True
             elif event.button == 1:
                 MOUSEBUTTONDOWN = True
         if event.type == pygame.MOUSEBUTTONUP:
@@ -244,6 +249,8 @@ while running:
                 motion_x, motion_y = event.rel
                 x_plus += motion_x
                 y_plus += motion_y
+                amendment_pos_x += motion_x
+                amendment_pos_y += motion_y
     # Рендеринг
     screen.fill(BLUE)
     len_x, len_y = size = screen.get_width(), screen.get_height()
@@ -252,24 +259,44 @@ while running:
     len_fields = len(fields)
     zero_x = center_x - len_fields*size_tile // 2 + x_plus
     zero_y = center_y - len_fields*size_tile // 2 + y_plus
-
-    if pos is not None:
-        transfer_x = pos[0] - center_x
-        transfer_y = pos[1] - center_y
-        start_transfer_matrix = get_transfer_matrix(transfer_x, transfer_y)
-        scale_matrix = get_scale_matrix(scale, scale)
-        finish_transfer_matrix = get_transfer_matrix(0 - transfer_x, 0 - transfer_y)
-        multi_matrix = scale_matrix#matrix_multiplication(start_transfer_matrix, scale_matrix, finish_transfer_matrix)
+    empty_matrix = np.matrix(((0, 0, 1),
+                              (0, 1, 0),
+                              (1, 0, 0)))
 
 
-    if step%10 == 9999999999:
-        len_fields = len(fields)
-        for i in range(len_fields):
-            group.add(Tile(zero_x, zero_y, i, len_fields - 1, size_tile, random.choice([stones, grass])))
-        group.update(zero_x, zero_y, size_tile, multi_matrix, up=True,)
+        #start_transfer_matrix = get_transfer_matrix(transfer_x, transfer_y)
 
-    else:
-        group.update(zero_x, zero_y, size_tile, multi_matrix)
+        #finish_transfer_matrix = get_transfer_matrix(0 - transfer_x, 0 - transfer_y)
+        #multi_matrix = matrix_multiplication(zero_transfer_matrix, start_transfer_matrix, scale_matrix, finish_transfer_matrix)
+
+    scale_matrix = get_scale_matrix(scale, scale)
+    zero_transfer_matrix = get_move_matrix(x_plus, y_plus)
+    #if pos is not None:
+    transfer_x = x_plus - pos[0]# + amendment_pos_x
+    transfer_y = y_plus - pos[1]# + amendment_pos_y
+    start_transfer_matrix = get_transfer_matrix(transfer_x, transfer_y)
+    finish_transfer_matrix = get_transfer_matrix(0 - transfer_x, 0 - transfer_y)
+    multi_matrix = matrix_multiplication(start_transfer_matrix, scale_matrix, finish_transfer_matrix)#, zero_transfer_matrix)
+
+    #if scales:
+    #    plus_position = np.matrix(((x_plus, y_plus, 1))) * multi_matrix
+    #    x_plus = plus_position[(0, 0)]
+    #    y_plus = plus_position[(0, 1)]
+
+    #multi_matrix = matrix_multiplication(multi_matrix, zero_transfer_matrix)
+
+
+    #else:
+    #    multi_matrix = matrix_multiplication(scale_matrix)#, zero_transfer_matrix)
+    #print(multi_matrix)
+    #if step%10 == 9999999999:
+    #    len_fields = len(fields)
+    #    for i in range(len_fields):
+    #        group.add(Tile(zero_x, zero_y, i, len_fields - 1, size_tile, random.choice([stones, grass])))
+    #    group.update(zero_x, zero_y, size_tile, multi_matrix, up=True,)
+
+    #else:
+    group.update(zero_x, zero_y, size_tile, multi_matrix)
 
     group.draw(screen)
     #color_alpha_tile.draw(screen)
