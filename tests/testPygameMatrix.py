@@ -70,6 +70,25 @@ bonfire = pygame.image.load(os.path.join(os.path.dirname(__file__), './resources
 enemy = pygame.image.load(os.path.join(os.path.dirname(__file__), './resources', 'tile_enemy_riffleman_down_squat_1.png')).convert_alpha()
 
 
+class ColorTile(pygame.sprite.Sprite):
+    """ Содержит спрайты зон доступности """
+
+    def __init__(self, x, y, size_tile, color, alpha=255):
+
+        self.color = color
+        self.alpha = alpha
+        pygame.sprite.Sprite.__init__(self)
+        self.image = pygame.Surface((size_tile, size_tile))
+        self.image.fill(self.color)
+        self.image.set_alpha(self.alpha)
+        self.rect = self.image.get_rect()
+        self.rect.left = x
+        self.rect.top = y
+        self.speed = 0
+
+    def draw(self, surface):
+        surface.blit(self.image, self.rect)
+
 class Tile(pygame.sprite.Sprite):
     """ Содержит спрайты зон доступности """
 
@@ -102,6 +121,7 @@ class Tile(pygame.sprite.Sprite):
             self.number_y -= 1
 
         position = np.matrix(((self.start_position_x, self.start_position_y, 1)))
+        #position = np.matrix(((self.rect.left, self.rect.top, 1)))
         result_position = position * multi_matrix
 
         position_x = result_position[(0, 0)]
@@ -156,33 +176,13 @@ running = True
 MOUSEBUTTONDOWN = False
 step = 0
 
-def get_move_matrix(t_x, t_y):
-    matrix = np.matrix(((1.0,      0,      0),
-                        (0,      1.0,      0),
-                        (t_x,    t_y,    1.0)))
-    return matrix
-
 def get_transfer_matrix(t_x, t_y):
-    #matrix = ((1, 0, t_x),
-    #          (0, 1, t_y),
-    #          (0, 0, 1))
-    #matrix = np.matrix(((t_x, t_y, 1),
-    #                    (0, 1, 0),
-    #                    (1, 0, 0)))
     matrix = np.matrix(((1.0,      0,      0),
                         (0,      1.0,      0),
                         (t_x,    t_y,    1.0)))
     return matrix
 
 def get_scale_matrix(s_x, s_y):
-    #matrix = np.matrix(((0, 0, 1),
-    #                    (0, s_y, 0),
-    #                    (s_x, 0, 1)))
-
-    #matrix = np.matrix(((0, 0, s_x),
-    #                    (0, s_y, 0),
-    #                    (s_x, 0, 0)))
-
     matrix = np.matrix(((s_x, 0,   0),
                         (0,   s_y, 0),
                         (0,   0,   1.0)))
@@ -209,6 +209,10 @@ def matrix_multiplication(*args):
 multi_matrix = None
 scale = 1
 pos = (0, 0)
+old_pos = pos
+color_tile = ColorTile(0, 0, 5, RED)
+color_tile2 = ColorTile(0, 0, 5, GREEN)
+null_position = np.matrix(((0, 0, 1)))
 while running:
     scales = False
     amendment_pos_x = 0
@@ -270,12 +274,18 @@ while running:
         #multi_matrix = matrix_multiplication(zero_transfer_matrix, start_transfer_matrix, scale_matrix, finish_transfer_matrix)
 
     scale_matrix = get_scale_matrix(scale, scale)
-    zero_transfer_matrix = get_move_matrix(x_plus, y_plus)
+    zero_transfer_matrix = get_transfer_matrix(x_plus, y_plus)
     #if pos is not None:
-    transfer_x = x_plus - pos[0]# + amendment_pos_x
-    transfer_y = y_plus - pos[1]# + amendment_pos_y
+
+    reversed_null_transfer = get_transfer_matrix(0 - null_position[(0, 0)], 0 - null_position[(0, 1)])
+    transfer_x = -pos[0]# - old_pos[0]
+    transfer_y = -pos[1]# - old_pos[1]
     start_transfer_matrix = get_transfer_matrix(transfer_x, transfer_y)
     finish_transfer_matrix = get_transfer_matrix(0 - transfer_x, 0 - transfer_y)
+
+    old_pos_transfer = get_transfer_matrix(-old_pos[0], -old_pos[1])
+    old_pos_transfer_reversed = get_transfer_matrix(old_pos[0], old_pos[1])
+
     multi_matrix = matrix_multiplication(start_transfer_matrix, scale_matrix, finish_transfer_matrix)#, zero_transfer_matrix)
 
     #if scales:
@@ -283,7 +293,11 @@ while running:
     #    x_plus = plus_position[(0, 0)]
     #    y_plus = plus_position[(0, 1)]
 
-    #multi_matrix = matrix_multiplication(multi_matrix, zero_transfer_matrix)
+    null_position = np.matrix(((0, 0, 1))) * multi_matrix
+    color_tile.rect.left = null_position[(0, 0)]
+    color_tile.rect.top = null_position[(0, 1)]
+    #null_transfer = get_transfer_matrix(null_position[(0, 0)], null_position[(0, 1)])
+    #multi_matrix = matrix_multiplication(multi_matrix, null_transfer)
 
 
     #else:
@@ -301,7 +315,12 @@ while running:
     group.draw(screen)
     #color_alpha_tile.draw(screen)
     screen.blit(update_fps(), (10, 0))
+    color_tile2.rect.left = old_pos[0]
+    color_tile2.rect.top = old_pos[1]
+    color_tile2.draw(screen)
+    color_tile.draw(screen)
     # после отрисовки всего, переворачиваем экран
     pygame.display.flip()
+    old_pos = pos
 
 pygame.quit()
