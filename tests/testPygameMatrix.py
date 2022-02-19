@@ -206,18 +206,21 @@ def matrix_multiplication(*args):
             result *= matrix
     return result
 
-multi_matrix = None
 scale = 1
 pos = (0, 0)
 old_pos = pos
 color_tile = ColorTile(0, 0, 5, RED)
 color_tile2 = ColorTile(0, 0, 5, GREEN)
 null_position = np.matrix(((0, 0, 1)))
+empty_matrix = np.matrix(((1, 0, 0),
+                          (0, 1, 0),
+                          (0, 0, 1)))
+multi_matrix = empty_matrix
+null_position = np.matrix(((0, 0, 1)))
 while running:
     scales = False
     amendment_pos_x = 0
     amendment_pos_y = 0
-    multi_matrix = None
     #scale = 1
     step += 1
     # Держим цикл на правильной скорости
@@ -233,7 +236,7 @@ while running:
                 old_size_tile = size_tile
                 _scale = 1.2
                 size_tile = round(size_tile * _scale, 0)
-                scale = size_tile / start_size_tile
+                scale = size_tile / old_size_tile#start_size_tile
                 scales = True
             elif event.button == 5:
                 if size_tile > 5:
@@ -241,7 +244,7 @@ while running:
                     old_size_tile = size_tile
                     _scale = 0.9
                     size_tile = round(size_tile * _scale, 0)
-                    scale = size_tile / start_size_tile
+                    scale = size_tile / old_size_tile#start_size_tile
                     scales = True
             elif event.button == 1:
                 MOUSEBUTTONDOWN = True
@@ -263,31 +266,26 @@ while running:
     len_fields = len(fields)
     zero_x = center_x - len_fields*size_tile // 2 + x_plus
     zero_y = center_y - len_fields*size_tile // 2 + y_plus
-    empty_matrix = np.matrix(((0, 0, 1),
-                              (0, 1, 0),
-                              (1, 0, 0)))
-
-
         #start_transfer_matrix = get_transfer_matrix(transfer_x, transfer_y)
 
         #finish_transfer_matrix = get_transfer_matrix(0 - transfer_x, 0 - transfer_y)
         #multi_matrix = matrix_multiplication(zero_transfer_matrix, start_transfer_matrix, scale_matrix, finish_transfer_matrix)
+    if scales:
+        scale_matrix = get_scale_matrix(scale, scale)
+        zero_transfer_matrix = get_transfer_matrix(x_plus, y_plus)
+        #if pos is not None:
 
-    scale_matrix = get_scale_matrix(scale, scale)
-    zero_transfer_matrix = get_transfer_matrix(x_plus, y_plus)
-    #if pos is not None:
+        reversed_null_transfer = get_transfer_matrix(0 - null_position[(0, 0)], 0 - null_position[(0, 1)])
+        transfer_x = null_position[(0, 0)] - pos[0]
+        transfer_y = null_position[(0, 1)] - pos[1]
+        start_transfer_matrix = get_transfer_matrix(transfer_x, transfer_y)
+        finish_transfer_matrix = get_transfer_matrix(0 - transfer_x, 0 - transfer_y)
 
-    reversed_null_transfer = get_transfer_matrix(0 - null_position[(0, 0)], 0 - null_position[(0, 1)])
-    transfer_x = -pos[0]# - old_pos[0]
-    transfer_y = -pos[1]# - old_pos[1]
-    start_transfer_matrix = get_transfer_matrix(transfer_x, transfer_y)
-    finish_transfer_matrix = get_transfer_matrix(0 - transfer_x, 0 - transfer_y)
+        old_pos_transfer = get_transfer_matrix(-old_pos[0], -old_pos[1])
+        old_pos_transfer_reversed = get_transfer_matrix(old_pos[0], old_pos[1])
 
-    old_pos_transfer = get_transfer_matrix(-old_pos[0], -old_pos[1])
-    old_pos_transfer_reversed = get_transfer_matrix(old_pos[0], old_pos[1])
-
-    multi_matrix = matrix_multiplication(start_transfer_matrix, scale_matrix, finish_transfer_matrix)#, zero_transfer_matrix)
-
+        new_multi_matrix = matrix_multiplication(start_transfer_matrix, scale_matrix, finish_transfer_matrix)#, zero_transfer_matrix)
+        multi_matrix = matrix_multiplication(multi_matrix * new_multi_matrix)
     #if scales:
     #    plus_position = np.matrix(((x_plus, y_plus, 1))) * multi_matrix
     #    x_plus = plus_position[(0, 0)]
