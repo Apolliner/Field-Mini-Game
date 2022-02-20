@@ -276,8 +276,8 @@ while running:
         #if pos is not None:
 
         reversed_null_transfer = get_transfer_matrix(0 - null_position[(0, 0)], 0 - null_position[(0, 1)])
-        transfer_x = null_position[(0, 0)] - pos[0]
-        transfer_y = null_position[(0, 1)] - pos[1]
+        transfer_x = -pos[0]#null_position[(0, 0)] - pos[0]
+        transfer_y = -pos[1]#null_position[(0, 1)] - pos[1]
         start_transfer_matrix = get_transfer_matrix(transfer_x, transfer_y)
         finish_transfer_matrix = get_transfer_matrix(0 - transfer_x, 0 - transfer_y)
 
