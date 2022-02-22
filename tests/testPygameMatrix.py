@@ -47,6 +47,8 @@ fields = ["..........",
           "....x...x.",
 
           ]
+#fields = ["."
+#          ]
 WIDTH = 600
 HEIGHT = 600
 FPS = 60
@@ -64,8 +66,8 @@ pygame.display.set_caption("My Game")
 clock = pygame.time.Clock()
 
 
-grass = pygame.image.load(os.path.join(os.path.dirname(__file__), './resources', 'tile_grass_0.png')).convert()
-stones = pygame.image.load(os.path.join(os.path.dirname(__file__), './resources', 'tile_stone_0.png')).convert()
+grass = pygame.image.load(os.path.join(os.path.dirname(__file__), './resources', 'tile_grass_0.png')).convert_alpha()
+stones = pygame.image.load(os.path.join(os.path.dirname(__file__), './resources', 'tile_stone_0.png')).convert_alpha()
 bonfire = pygame.image.load(os.path.join(os.path.dirname(__file__), './resources', 'tile_bonfire_2.png')).convert_alpha()
 enemy = pygame.image.load(os.path.join(os.path.dirname(__file__), './resources', 'tile_enemy_riffleman_down_squat_1.png')).convert_alpha()
 
@@ -106,8 +108,7 @@ class Tile(pygame.sprite.Sprite):
         self.position_y = zero_y + number_y*size_tile
         self.start_position_x = number_x*size_tile
         self.start_position_y = number_y*size_tile
-        self.rect.left = self.position_x
-        self.rect.top = self.position_y
+        self.rect.center = (self.position_x, self.position_y)
         self.speed = 0
         self.old_degrees = degrees
 
@@ -127,13 +128,14 @@ class Tile(pygame.sprite.Sprite):
 
         position_x = result_position[(0, 0)]
         position_y = result_position[(0, 1)]
-        #if self.old_degrees != degrees:
-        #    self.image = pygame.transform.rotate(self.image, degrees)
+        if self.old_degrees != degrees:
+            self.image = pygame.transform.scale(self.img, (size_tile, size_tile))
+            self.image = pygame.transform.rotate(self.image, degrees * 57.295)
         if self.old_size_tile != size_tile:
             self.image = pygame.transform.scale(self.img, (size_tile, size_tile))
+            self.image = pygame.transform.rotate(self.image, degrees * 57.295)
             self.rect = self.image.get_rect()
-        self.rect.left = position_x
-        self.rect.top = position_y
+        self.rect.center = (position_x, position_y)
         self.old_size_tile = size_tile
         self.old_degrees = degrees
 
@@ -191,9 +193,6 @@ def get_scale_matrix(s_x, s_y):
     return matrix
 
 def get_rotate_matrix(angle):
-    #matrix = np.matrix(((0,           0,          1.),
-    #                    (-sin(angle), cos(angle), 0),
-    #                    (cos(angle),  sin(angle), 0)))
     matrix = np.matrix(((cos(angle),  -sin(angle), 0),
                         (sin(angle),  cos(angle),  0),
                         (0,           0,           1.)))
@@ -291,9 +290,6 @@ while running:
             scale_matrix = get_rotate_matrix(degrees)
         else:
             scale_matrix = get_scale_matrix(scale, scale)
-
-
-
         zero_transfer_matrix = get_transfer_matrix(x_plus, y_plus)
         plus_transfer_start = get_transfer_matrix(-x_plus_old, -y_plus_old)
         plus_transfer_finish = get_transfer_matrix(x_plus, y_plus)
@@ -306,20 +302,22 @@ while running:
         old_pos_transfer = get_transfer_matrix(-old_pos[0], -old_pos[1])
         old_pos_transfer_reversed = get_transfer_matrix(old_pos[0], old_pos[1])
 
-        new_multi_matrix = matrix_multiplication(plus_transfer_start, start_transfer_matrix, scale_matrix, finish_transfer_matrix, plus_transfer_finish)#, zero_transfer_matrix)
+        new_multi_matrix = matrix_multiplication(plus_transfer_start, start_transfer_matrix, scale_matrix,
+                                                                        finish_transfer_matrix, plus_transfer_finish)
         multi_matrix = matrix_multiplication(multi_matrix * new_multi_matrix)
 
     null_position = np.matrix(((0, 0, 1))) * multi_matrix
     color_tile.rect.left = null_position[(0, 0)]
     color_tile.rect.top = null_position[(0, 1)]
 
-    if step%10 == 0:
+    if step%1000000 == 0:
         len_fields = len(fields)
         for i in range(len_fields):
-            group.add(Tile(zero_x, zero_y, i, len_fields, start_size_tile, random.choice([stones, grass]), degrees_all))
-        group.update(zero_x, zero_y, size_tile, multi_matrix, degrees_all, up=True)
+            group.add(Tile(zero_x, zero_y, i, len_fields, start_size_tile, random.choice([stones, grass]),
+                                                                                                degrees_all + degrees))
+        group.update(zero_x, zero_y, size_tile, multi_matrix, degrees_all + degrees, up=True)
     else:
-        group.update(zero_x, zero_y, size_tile, multi_matrix, degrees_all)
+        group.update(zero_x, zero_y, size_tile, multi_matrix, degrees_all + degrees)
 
     group.draw(screen)
     screen.blit(update_fps(), (10, 0))
