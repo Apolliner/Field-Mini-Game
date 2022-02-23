@@ -1,8 +1,9 @@
 import os
+import copy
 import pygame
 import random
 import numpy as np
-from math import sin, cos
+from math import sin, cos, pi
 fields = ["..............................",
           ".x.....x......................",
           "..x...x.......................",
@@ -64,7 +65,7 @@ pygame.mixer.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE | pygame.DOUBLEBUF)
 pygame.display.set_caption("My Game")
 clock = pygame.time.Clock()
-
+DEGREES_IN_RAD = 57.2955
 
 grass = pygame.image.load(os.path.join(os.path.dirname(__file__), './resources', 'tile_grass_0.png')).convert_alpha()
 stones = pygame.image.load(os.path.join(os.path.dirname(__file__), './resources', 'tile_stone_0.png')).convert_alpha()
@@ -73,7 +74,7 @@ enemy = pygame.image.load(os.path.join(os.path.dirname(__file__), './resources',
 
 
 class ColorTile(pygame.sprite.Sprite):
-    """ Содержит спрайты зон доступности """
+    """ Цветные квадраты """
 
     def __init__(self, x, y, size_tile, color, alpha=255):
 
@@ -84,62 +85,45 @@ class ColorTile(pygame.sprite.Sprite):
         self.image.fill(self.color)
         self.image.set_alpha(self.alpha)
         self.rect = self.image.get_rect()
-        self.rect.left = x
-        self.rect.top = y
+        self.rect.center = [x, y]
         self.speed = 0
 
     def draw(self, surface):
         surface.blit(self.image, self.rect)
 
 class Tile(pygame.sprite.Sprite):
-    """ Содержит спрайты зон доступности """
+    """ Спрайты """
 
     def __init__(self, zero_x, zero_y, number_x, number_y, size_tile, image_tile, degrees, alpha=255):
 
+        pygame.sprite.Sprite.__init__(self)
         self.start_size_tile = size_tile
         self.old_size_tile = size_tile
         self.number_x = number_x
         self.number_y = number_y
-        pygame.sprite.Sprite.__init__(self)
         self.img = image_tile
         self.image = pygame.transform.scale(self.img, (size_tile, size_tile))
         self.rect = self.image.get_rect()
-        self.position_x = zero_x + number_x*size_tile
-        self.position_y = zero_y + number_y*size_tile
-        self.start_position_x = number_x*size_tile
-        self.start_position_y = number_y*size_tile
-        self.rect.center = (self.position_x, self.position_y)
+        position = [zero_x + number_x*size_tile, zero_y + number_y*size_tile]
+        self.rect.center = position
         self.speed = 0
         self.old_degrees = degrees
 
-    def draw(self, surface):
-        pass
-        #if self.rect.top > 150 and self.rect.left > 150:
-        #    surface.blit(self.image, self.rect)
-
-    def update(self, zero_x, zero_y, size_tile, multi_matrix, degrees, up=False):
+    def update(self, size_tile, multi_matrix, degrees, up=False):
         if up:
             if self.number_y == 0:
                 self.kill()
             self.number_y -= 1
-
-        position = np.matrix(((self.number_x * self.start_size_tile, self.number_y * self.start_size_tile, 1)))
-        result_position = position * multi_matrix
-
-        position_x = result_position[(0, 0)]
-        position_y = result_position[(0, 1)]
-        if self.old_degrees != degrees:
+        position_matrix = np.matrix(((self.number_x * self.start_size_tile, self.number_y * self.start_size_tile, 1)))
+        result_position = position_matrix * multi_matrix
+        position = [result_position[(0, 0)], result_position[(0, 1)]]
+        if self.old_degrees != degrees or self.old_size_tile != size_tile:
             self.image = pygame.transform.scale(self.img, (size_tile, size_tile))
-            self.image = pygame.transform.rotate(self.image, degrees * 57.295)
-        if self.old_size_tile != size_tile:
-            self.image = pygame.transform.scale(self.img, (size_tile, size_tile))
-            self.image = pygame.transform.rotate(self.image, degrees * 57.295)
+            self.image = pygame.transform.rotate(self.image, degrees * DEGREES_IN_RAD)
             self.rect = self.image.get_rect()
-        self.rect.center = (position_x, position_y)
+        self.rect.center = position
         self.old_size_tile = size_tile
         self.old_degrees = degrees
-
-
 
 len_x, len_y = size = screen.get_width(), screen.get_height()
 center_x = len_x/2
@@ -171,10 +155,8 @@ def update_fps():
 x = 100
 y = 200
 
-x_plus = 0
-y_plus = 0
-x_plus_old = 0
-y_plus_old = 0
+zero_plus = [0, 0]
+zero_plus_old = zero_plus
 # Цикл игры
 running = True
 MOUSEBUTTONDOWN = False
@@ -269,8 +251,8 @@ while running:
         if event.type == pygame.MOUSEMOTION:
             if MOUSEBUTTONDOWN:
                 motion_x, motion_y = event.rel
-                x_plus += motion_x
-                y_plus += motion_y
+                zero_plus[0] += motion_x
+                zero_plus[1] += motion_y
                 amendment_pos_x += motion_x
                 amendment_pos_y += motion_y
                 update = True
@@ -283,46 +265,37 @@ while running:
     center_x = len_x / 2
     center_y = len_y / 2
     len_fields = len(fields)
-    zero_x = center_x - len_fields*size_tile // 2 + x_plus
-    zero_y = center_y - len_fields*size_tile // 2 + y_plus
+    zero_x = center_x - len_fields*size_tile // 2 + zero_plus[0]
+    zero_y = center_y - len_fields*size_tile // 2 + zero_plus[1]
     if update:
         if rotate:
-            scale_matrix = get_rotate_matrix(degrees)
+            operate_matrix = get_rotate_matrix(degrees)
         else:
-            scale_matrix = get_scale_matrix(scale, scale)
-        zero_transfer_matrix = get_transfer_matrix(x_plus, y_plus)
-        plus_transfer_start = get_transfer_matrix(-x_plus_old, -y_plus_old)
-        plus_transfer_finish = get_transfer_matrix(x_plus, y_plus)
-        reversed_null_transfer = get_transfer_matrix(-null_position[(0, 0)], -null_position[(0, 1)])
-        transfer_x = x_plus - pos[0]
-        transfer_y = y_plus - pos[1]
-        start_transfer_matrix = get_transfer_matrix(transfer_x, transfer_y)
-        finish_transfer_matrix = get_transfer_matrix(0 - transfer_x, 0 - transfer_y)
-
-        old_pos_transfer = get_transfer_matrix(-old_pos[0], -old_pos[1])
-        old_pos_transfer_reversed = get_transfer_matrix(old_pos[0], old_pos[1])
-
-        new_multi_matrix = matrix_multiplication(plus_transfer_start, start_transfer_matrix, scale_matrix,
+            operate_matrix = get_scale_matrix(scale, scale)
+        plus_transfer_start = get_transfer_matrix(-zero_plus_old[0], -zero_plus_old[1])
+        plus_transfer_finish = get_transfer_matrix(zero_plus[0], zero_plus[1])
+        transfer = [zero_plus[0] - pos[0], zero_plus[1] - pos[1]]
+        start_transfer_matrix = get_transfer_matrix(transfer[0], transfer[1])
+        finish_transfer_matrix = get_transfer_matrix(-transfer[0], -transfer[1])
+        new_multi_matrix = matrix_multiplication(plus_transfer_start, start_transfer_matrix, operate_matrix,
                                                                         finish_transfer_matrix, plus_transfer_finish)
         multi_matrix = matrix_multiplication(multi_matrix * new_multi_matrix)
 
     null_position = np.matrix(((0, 0, 1))) * multi_matrix
-    color_tile.rect.left = null_position[(0, 0)]
-    color_tile.rect.top = null_position[(0, 1)]
+    color_tile.rect.center = [null_position[(0, 0)], null_position[(0, 1)]]
 
     if step%1000000 == 0:
         len_fields = len(fields)
         for i in range(len_fields):
             group.add(Tile(zero_x, zero_y, i, len_fields, start_size_tile, random.choice([stones, grass]),
                                                                                                 degrees_all + degrees))
-        group.update(zero_x, zero_y, size_tile, multi_matrix, degrees_all + degrees, up=True)
+        group.update(size_tile, multi_matrix, degrees_all + degrees, up=True)
     else:
-        group.update(zero_x, zero_y, size_tile, multi_matrix, degrees_all + degrees)
+        group.update(size_tile, multi_matrix, degrees_all + degrees)
 
     group.draw(screen)
     screen.blit(update_fps(), (10, 0))
-    color_tile2.rect.left = old_pos[0]
-    color_tile2.rect.top = old_pos[1]
+    color_tile2.rect.center = old_pos
     color_tile2.draw(screen)
     if rotate:
         color_tile3.draw(screen)
@@ -330,7 +303,7 @@ while running:
     # после отрисовки всего, переворачиваем экран
     pygame.display.flip()
     old_pos = pos
-    x_plus_old = x_plus
-    y_plus_old = y_plus
+    zero_plus_old = copy.deepcopy(zero_plus)
+
     degrees_all += degrees
 pygame.quit()
