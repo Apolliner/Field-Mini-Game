@@ -103,6 +103,7 @@ class Tile(pygame.sprite.Sprite):
         self.number_y = number_y
         self.img = image_tile
         self.image = pygame.transform.scale(self.img, (size_tile, size_tile))
+        self.image = pygame.transform.scale(self.image, (size_tile, size_tile))
         self.rect = self.image.get_rect()
         position = [zero_x + number_x*size_tile, zero_y + number_y*size_tile]
         self.rect.center = position
@@ -284,7 +285,7 @@ while running:
     null_position = np.matrix(((0, 0, 1))) * multi_matrix
     color_tile.rect.center = [null_position[(0, 0)], null_position[(0, 1)]]
 
-    if step%1000000 == 0:
+    if step%10== 0:
         len_fields = len(fields)
         for i in range(len_fields):
             group.add(Tile(zero_x, zero_y, i, len_fields, start_size_tile, random.choice([stones, grass]),
