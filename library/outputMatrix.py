@@ -42,7 +42,6 @@ class ImageTile(pygame.sprite.Sprite):
         self.number_x = number_x
         self.number_y = number_y
         self.img = image_tile
-        self.image = pygame.transform.scale(self.img, (size_tile, size_tile))
         self.image = pygame.transform.scale(self.image, (size_tile, size_tile))
         self.rect = self.image.get_rect()
         position = [zero_x + number_x*size_tile, zero_y + number_y*size_tile]
@@ -56,7 +55,6 @@ class ImageTile(pygame.sprite.Sprite):
         position = [result_position[(0, 0)], result_position[(0, 1)]]
         if self.old_degrees != degrees or self.old_size_tile != size_tile:
             self.image = pygame.transform.scale(self.img, (size_tile, size_tile))
-            self.image = pygame.transform.rotate(self.image, degrees * DEGREES_IN_RAD)
             self.rect = self.image.get_rect()
         self.rect.center = position
         self.old_size_tile = size_tile

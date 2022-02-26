@@ -67,8 +67,8 @@ pygame.display.set_caption("My Game")
 clock = pygame.time.Clock()
 DEGREES_IN_RAD = 57.2955
 
-grass = pygame.image.load(os.path.join(os.path.dirname(__file__), './resources', 'tile_grass_0.png')).convert_alpha()
-stones = pygame.image.load(os.path.join(os.path.dirname(__file__), './resources', 'tile_stone_0.png')).convert_alpha()
+grass = pygame.image.load(os.path.join(os.path.dirname(__file__), './resources', 'tile_grass_0.png')).convert()
+stones = pygame.image.load(os.path.join(os.path.dirname(__file__), './resources', 'tile_stone_0.png')).convert()
 bonfire = pygame.image.load(os.path.join(os.path.dirname(__file__), './resources', 'tile_bonfire_2.png')).convert_alpha()
 enemy = pygame.image.load(os.path.join(os.path.dirname(__file__), './resources', 'tile_enemy_riffleman_down_squat_1.png')).convert_alpha()
 
@@ -103,7 +103,6 @@ class Tile(pygame.sprite.Sprite):
         self.number_y = number_y
         self.img = image_tile
         self.image = pygame.transform.scale(self.img, (size_tile, size_tile))
-        self.image = pygame.transform.scale(self.image, (size_tile, size_tile))
         self.rect = self.image.get_rect()
         position = [zero_x + number_x*size_tile, zero_y + number_y*size_tile]
         self.rect.center = position
@@ -118,9 +117,8 @@ class Tile(pygame.sprite.Sprite):
         position_matrix = np.matrix(((self.number_x * self.start_size_tile, self.number_y * self.start_size_tile, 1)))
         result_position = position_matrix * multi_matrix
         position = [result_position[(0, 0)], result_position[(0, 1)]]
-        if self.old_degrees != degrees or self.old_size_tile != size_tile:
+        if self.old_size_tile != size_tile:
             self.image = pygame.transform.scale(self.img, (size_tile, size_tile))
-            self.image = pygame.transform.rotate(self.image, degrees * DEGREES_IN_RAD)
             self.rect = self.image.get_rect()
         self.rect.center = position
         self.old_size_tile = size_tile
@@ -189,7 +187,7 @@ def matrix_multiplication(*args):
         else:
             result *= matrix
     return result
-
+working_surface = pygame.Surface((900, 900))
 scale = 1
 pos = (0, 0)
 old_pos = pos
@@ -220,30 +218,20 @@ while running:
             running = False
         if event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 4:
-                if rotate:
-                    pos = event.pos
-                    degrees += 0.05
-                    update = True
-                else:
+                pos = event.pos
+                old_size_tile = size_tile
+                _scale = 1.2
+                size_tile = round(size_tile * _scale, 0)
+                scale = size_tile / old_size_tile
+                update = True
+            elif event.button == 5:
+                if size_tile > 5:
                     pos = event.pos
                     old_size_tile = size_tile
-                    _scale = 1.2
+                    _scale = 0.9
                     size_tile = round(size_tile * _scale, 0)
                     scale = size_tile / old_size_tile
                     update = True
-            elif event.button == 5:
-                if rotate:
-                    pos = event.pos
-                    degrees -= 0.05
-                    update = True
-                else:
-                    if size_tile > 5:
-                        pos = event.pos
-                        old_size_tile = size_tile
-                        _scale = 0.9
-                        size_tile = round(size_tile * _scale, 0)
-                        scale = size_tile / old_size_tile
-                        update = True
             elif event.button == 1:
                 MOUSEBUTTONDOWN = True
         if event.type == pygame.MOUSEBUTTONUP:
@@ -269,10 +257,7 @@ while running:
     zero_x = center_x - len_fields*size_tile // 2 + zero_plus[0]
     zero_y = center_y - len_fields*size_tile // 2 + zero_plus[1]
     if update:
-        if rotate:
-            operate_matrix = get_rotate_matrix(degrees)
-        else:
-            operate_matrix = get_scale_matrix(scale, scale)
+        operate_matrix = get_scale_matrix(scale, scale)
         plus_transfer_start = get_transfer_matrix(-zero_plus_old[0], -zero_plus_old[1])
         plus_transfer_finish = get_transfer_matrix(zero_plus[0], zero_plus[1])
         transfer = [zero_plus[0] - pos[0], zero_plus[1] - pos[1]]
@@ -285,23 +270,22 @@ while running:
     null_position = np.matrix(((0, 0, 1))) * multi_matrix
     color_tile.rect.center = [null_position[(0, 0)], null_position[(0, 1)]]
 
-    if step%10== 0:
+    if step%100000000 == 0:
         len_fields = len(fields)
         for i in range(len_fields):
             group.add(Tile(zero_x, zero_y, i, len_fields, start_size_tile, random.choice([stones, grass]),
                                                                                                 degrees_all + degrees))
         group.update(size_tile, multi_matrix, degrees_all + degrees, up=True)
-    else:
+    elif update:
         group.update(size_tile, multi_matrix, degrees_all + degrees)
-
-    group.draw(screen)
+    working_surface.fill(GREEN)
+    group.draw(working_surface)
     screen.blit(update_fps(), (10, 0))
     color_tile2.rect.center = old_pos
-    color_tile2.draw(screen)
-    if rotate:
-        color_tile3.draw(screen)
-    color_tile.draw(screen)
+    color_tile2.draw(working_surface)
+    color_tile.draw(working_surface)
     # после отрисовки всего, переворачиваем экран
+    screen.blit(working_surface, (50, 50))
     pygame.display.flip()
     old_pos = pos
     zero_plus_old = copy.deepcopy(zero_plus)
