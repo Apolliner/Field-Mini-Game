@@ -192,7 +192,7 @@ scale = 1
 pos = (0, 0)
 old_pos = pos
 color_tile = ColorTile(0, 0, 5, RED)
-color_tile2 = ColorTile(0, 0, 5, GREEN)
+color_tile2 = ColorTile(0, 0, 5, RED)
 color_tile3 = ColorTile(50, 50, 50, (100, 255, 100))
 null_position = np.matrix(((0, 0, 1)))
 empty_matrix = np.matrix(((1, 0, 0),
@@ -200,6 +200,7 @@ empty_matrix = np.matrix(((1, 0, 0),
                           (0, 0, 1)))
 multi_matrix = empty_matrix
 null_position = np.matrix(((0, 0, 1)))
+working_surface_position = (50, 50)
 rotate = False
 degrees_all = 0
 while running:
@@ -260,7 +261,9 @@ while running:
         operate_matrix = get_scale_matrix(scale, scale)
         plus_transfer_start = get_transfer_matrix(-zero_plus_old[0], -zero_plus_old[1])
         plus_transfer_finish = get_transfer_matrix(zero_plus[0], zero_plus[1])
-        transfer = [zero_plus[0] - pos[0], zero_plus[1] - pos[1]]
+        transfer = [zero_plus[0] - pos[0] + working_surface_position[0], zero_plus[1] - pos[1] + \
+                                                                                            working_surface_position[1]]
+        #transfer = [zero_plus[0] - pos[0], zero_plus[1] - pos[1]]
         start_transfer_matrix = get_transfer_matrix(transfer[0], transfer[1])
         finish_transfer_matrix = get_transfer_matrix(-transfer[0], -transfer[1])
         new_multi_matrix = matrix_multiplication(plus_transfer_start, start_transfer_matrix, operate_matrix,
@@ -281,11 +284,11 @@ while running:
     working_surface.fill(GREEN)
     group.draw(working_surface)
     screen.blit(update_fps(), (10, 0))
-    color_tile2.rect.center = old_pos
+    color_tile2.rect.center = [old_pos[0] - working_surface_position[0], old_pos[1] - working_surface_position[1]]
     color_tile2.draw(working_surface)
     color_tile.draw(working_surface)
     # после отрисовки всего, переворачиваем экран
-    screen.blit(working_surface, (50, 50))
+    screen.blit(working_surface, working_surface_position)
     pygame.display.flip()
     old_pos = pos
     zero_plus_old = copy.deepcopy(zero_plus)
