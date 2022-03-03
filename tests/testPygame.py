@@ -187,12 +187,20 @@ class PersonTile(pygame.sprite.Sprite):
     def draw(self, surface):
         surface.blit(self.image, self.rect)
 
-    def update(self, zero_x, zero_y, size_tile, direction, time):
+    def update(self, zero_x, zero_y, size_tile, direction, time, move):
         new_phase = False
-        if time - self.time > FPS//4/100:
+        update_animation = False
+        if not move:
+            if self.phase != 0:
+                self.phase = 0
+                update_animation = True
+
+        elif time - self.time > FPS//4/100:
             self.phase += 1
             if self.phase > 3:
                 self.phase = 0
+            update_animation = True
+        if update_animation:
             self.img = self.animation[F"{direction}{self.phase}"]
             self.image = pygame.transform.scale(self.img, (size_tile, size_tile))
             self.rect = self.image.get_rect()
@@ -250,6 +258,7 @@ working_surface = pygame.Surface((800, 800))
 working_surface_position = (50, 50)
 direction = 'd'
 while running:
+    move = False
     time_ = time.time()
     pygame.key.set_repeat(1, 2)
     step += 1
@@ -281,15 +290,19 @@ while running:
             if event.key == pygame.K_LEFT:
                 direction = 'l'
                 person_x -= 0.01
+                move = True
             if event.key == pygame.K_RIGHT:
                 direction = 'r'
                 person_x += 0.01
+                move = True
             if event.key == pygame.K_UP:
                 direction = 'u'
                 person_y -= 0.01
+                move = True
             if event.key == pygame.K_DOWN:
                 direction = 'd'
                 person_y += 0.01
+                move = True
         if event.type == pygame.MULTIGESTURE:
             size_tile += event.pinched * 100
     # Рендеринг
@@ -310,7 +323,7 @@ while running:
     working_surface.fill(GREEN)
     group.draw(working_surface)
 
-    person_tile.update(zero_x + person_x * size_tile, zero_y + person_y * size_tile, size_tile, direction, time_)
+    person_tile.update(zero_x + person_x * size_tile, zero_y + person_y * size_tile, size_tile, direction, time_, move)
     person_tile.draw(working_surface)
     screen.blit(working_surface, working_surface_position)
     #color_alpha_tile.draw(screen)
