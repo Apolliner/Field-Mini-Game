@@ -319,11 +319,11 @@ while running:
             group.add(Tile(zero_x, zero_y, i, len_fields - 1, size_tile, random.choice([stones, grass])))
         group.update(zero_x, zero_y, size_tile, up=True)
     else:
-        group.update(zero_x, zero_y, size_tile)
+        group.update(zero_x - person_x * size_tile, zero_y - person_y * size_tile, size_tile)
     working_surface.fill(GREEN)
     group.draw(working_surface)
 
-    person_tile.update(zero_x + person_x * size_tile, zero_y + person_y * size_tile, size_tile, direction, time_, move)
+    person_tile.update(zero_x + 0 * size_tile, zero_y + 0 * size_tile, size_tile, direction, time_, move)
     person_tile.draw(working_surface)
     screen.blit(working_surface, working_surface_position)
     #color_alpha_tile.draw(screen)
