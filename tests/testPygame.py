@@ -5,6 +5,7 @@ import pygame
 import random
 import numpy as np
 from math import sin, cos, pi
+from library.mapGenerator import master_map_generate
 fields = ["............................................................",
           ".x.....x....................................................",
           "..x...x.....................................................",
@@ -241,6 +242,18 @@ def update_fps():
     fps = str(int(clock.get_fps()))
     fps_text = font.render(fps, 1, pygame.Color("coral"))
     return fps_text
+
+
+global_region_grid = 3
+region_grid = 3
+chunks_grid = 3
+mini_region_grid = 5
+tile_field_grid = 5
+
+#global_map, raw_minimap, vertices_graph, vertices_dict = master_map_generate(global_region_grid,
+#                                                region_grid, chunks_grid, mini_region_grid, tile_field_grid, screen)
+
+
 print(dir(pygame))
 x = 100
 y = 200
@@ -257,6 +270,15 @@ color_alpha_tile = ColorTile(200, 300, 50, RED, 100)
 working_surface = pygame.Surface((800, 800))
 working_surface_position = (50, 50)
 direction = 'd'
+
+class KeyboardDown:
+    left = False
+    right = False
+    up = False
+    down = False
+
+kb = KeyboardDown()
+
 while running:
     move = False
     time_ = time.time()
@@ -288,23 +310,41 @@ while running:
                 y_plus += motion_y
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_LEFT:
-                direction = 'l'
-                person_x -= 0.01
-                move = True
+                kb.left = True
             if event.key == pygame.K_RIGHT:
-                direction = 'r'
-                person_x += 0.01
-                move = True
+                kb.right = True
             if event.key == pygame.K_UP:
-                direction = 'u'
-                person_y -= 0.01
-                move = True
+                kb.up = True
             if event.key == pygame.K_DOWN:
-                direction = 'd'
-                person_y += 0.01
-                move = True
+                kb.down = True
+        if event.type == pygame.KEYUP:
+            if event.key == pygame.K_LEFT:
+                kb.left = False
+            if event.key == pygame.K_RIGHT:
+                kb.right = False
+            if event.key == pygame.K_UP:
+                kb.up = False
+            if event.key == pygame.K_DOWN:
+                kb.down = False
         if event.type == pygame.MULTIGESTURE:
             size_tile += event.pinched * 100
+    if kb.down:
+        direction = 'd'
+        person_y += 0.04
+        move = True
+    if kb.left:
+        direction = 'l'
+        person_x -= 0.04
+        move = True
+    if kb.right:
+        direction = 'r'
+        person_x += 0.04
+        move = True
+    if kb.up:
+        direction = 'u'
+        person_y -= 0.04
+        move = True
+
     # Рендеринг
     screen.fill(BLUE)
     len_x, len_y = size = screen.get_width(), screen.get_height()
