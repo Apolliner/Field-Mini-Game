@@ -3,6 +3,7 @@ import time
 import copy
 import pygame
 import random
+import pickle
 import numpy as np
 from math import sin, cos, pi
 from library.mapGenerator import master_map_generate
@@ -112,6 +113,17 @@ stones = pygame.image.load(os.path.join(os.path.dirname(__file__), './resources'
 bonfire = pygame.image.load(os.path.join(os.path.dirname(__file__), './resources', 'tile_bonfire_2.png')).convert_alpha()
 enemy = pygame.image.load(os.path.join(os.path.dirname(__file__), './resources', 'tile_enemy_riffleman_down_0.png')).convert_alpha()
 
+
+def load_map():
+    """
+        Загрузка игровой карты через pickle
+    """
+    with open("save/saved_map.pkl", "rb") as fp:
+        all_load = pickle.load(fp)
+
+    return all_load[0], all_load[1], all_load[2], all_load[3]
+
+#global_map, raw_minimap, vertices_graph, vertices_dict = load_map()
 
 class ColorTile(pygame.sprite.Sprite):
     """ Содержит спрайты зон доступности """
@@ -327,23 +339,41 @@ while running:
             if event.key == pygame.K_DOWN:
                 kb.down = False
         if event.type == pygame.MULTIGESTURE:
-            size_tile += event.pinched * 100
+            size_tile += round(event.pinched * 100)
+
+    move = True
     if kb.down:
-        direction = 'd'
-        person_y += 0.04
-        move = True
-    if kb.left:
+        if kb.left:
+            direction = 'l'
+            person_y += 0.03
+            person_x -= 0.03
+        elif kb.right:
+            direction = 'r'
+            person_y += 0.03
+            person_x += 0.03
+        else:
+            direction = 'd'
+            person_y += 0.04
+    elif kb.up:
+        if kb.left:
+            direction = 'l'
+            person_x -= 0.03
+            person_y -= 0.03
+        elif kb.right:
+            direction = 'r'
+            person_x += 0.03
+            person_y -= 0.03
+        else:
+            direction = 'u'
+            person_y -= 0.04
+    elif kb.left:
         direction = 'l'
         person_x -= 0.04
-        move = True
-    if kb.right:
+    elif kb.right:
         direction = 'r'
         person_x += 0.04
-        move = True
-    if kb.up:
-        direction = 'u'
-        person_y -= 0.04
-        move = True
+    else:
+        move = False
 
     # Рендеринг
     screen.fill(BLUE)
