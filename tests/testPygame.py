@@ -7,7 +7,34 @@ import pickle
 import numpy as np
 from math import sin, cos, pi
 from library.mapGenerator import master_map_generate
-fields = ["............................................................",
+fields = [
+            "................x........",
+            "...........x....x........",
+            "........x....x...x.......",
+            "..........x....x...xxxx..",
+            ".............x...x.......",
+            "................x...x....",
+            "......x...xxxxxxx........",
+            ".........x...............",
+            "............x............",
+            "..........x....x.........",
+            "............xx...........",
+            "...............x.........",
+            "......x.........x........",
+            ".........x......x........",
+            "............xxx..........",
+            ".........x...............",
+            "...........x.............",
+            ".....x.......x...........",
+            ".......x...x...x.........",
+            ".........x.......x.......",
+            "....x......x.............",
+            "..x.......x..x...........",
+            "...x.......x.............",
+            ".....xx..xx..............",
+            ".......xx................",
+          ]
+fields1 = ["............................................................",
           ".x.....x....................................................",
           "..x...x.....................................................",
           "...x.x.x....................................................",
@@ -246,7 +273,7 @@ for number_line, line in enumerate(fields):
         else:
             group.add(Tile(zero_x, zero_y, number_tile, number_line, size_tile, grass))
 
-person_tile = PersonTile(zero_x, zero_y, len(fields)//2, len(fields[0])//2, size_tile, animation)
+person_tile = PersonTile(zero_x, zero_y, 0, 0, size_tile, animation)
 #person_tile = Tile(zero_x, zero_y, 1, 1, size_tile, enemy)
 font = pygame.font.SysFont("Arial", 18)
 
@@ -255,12 +282,19 @@ def update_fps():
     fps_text = font.render(fps, 1, pygame.Color("coral"))
     return fps_text
 
+def print_text(text):
+    fps_text = font.render(text, 1, pygame.Color("coral"))
+    return fps_text
+
 
 global_region_grid = 3
 region_grid = 3
 chunks_grid = 3
 mini_region_grid = 5
 tile_field_grid = 5
+
+global_position = [5, 5]
+local_position = [5, 5]
 
 #global_map, raw_minimap, vertices_graph, vertices_dict = master_map_generate(global_region_grid,
 #                                                region_grid, chunks_grid, mini_region_grid, tile_field_grid, screen)
@@ -398,6 +432,8 @@ while running:
     screen.blit(working_surface, working_surface_position)
     #color_alpha_tile.draw(screen)
     screen.blit(update_fps(), (10, 0))
+    screen.blit(print_text(F"person_x: {person_x}"), (10, 15))
+    screen.blit(print_text(F"person_y: {person_y}"), (10, 30))
     # после отрисовки всего, переворачиваем экран
     pygame.display.flip()
 
