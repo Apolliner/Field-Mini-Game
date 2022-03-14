@@ -79,6 +79,7 @@ stones = pygame.image.load(os.path.join(os.path.dirname(__file__), './resources'
 bonfire = pygame.image.load(os.path.join(os.path.dirname(__file__), './resources', 'tile_bonfire_2.png')).convert_alpha()
 enemy = pygame.image.load(os.path.join(os.path.dirname(__file__), './resources', 'tile_enemy_riffleman_down_0.png')).convert_alpha()
 
+len_fields = len(fields)
 
 def load_map():
     """
@@ -166,7 +167,15 @@ class PersonTile(pygame.sprite.Sprite):
     def draw(self, surface):
         surface.blit(self.image, self.rect)
 
-    def update(self, zero_x, zero_y, size_tile, direction, time, move):
+    def update(self, zero_x, zero_y, size_tile, direction, time, move, start_end):
+        if start_end:
+            x_start = round(start_end[0]) - len_fields//2
+            y_start = round(start_end[1]) - len_fields//2
+            x_end = round(start_end[0]) + len_fields//2
+            y_end = round(start_end[1]) + len_fields//2
+            if self.number_x < x_start or self.number_x > x_end or self.number_y < y_start or self.number_y > y_end:
+                self.kill()
+
         new_phase = False
         update_animation = False
         if not move:
@@ -264,6 +273,13 @@ class KeyboardDown:
 
 kb = KeyboardDown()
 
+class StartEnd:
+    x_end = len_fields - 1
+    y_end = len_fields - 1
+    x_start = 0
+    y_start = 0
+
+start_end = StartEnd()
 while running:
     move = False
     time_ = time.time()
@@ -346,13 +362,13 @@ while running:
         else:
             move = False
     elif kb.left:
-        if fields[round(person_y)][round(person_x - 0.3)] != 'x':
+        if fields[round(person_y)%len_fields][round(person_x - 0.3)%len_fields] != 'x':
             direction = 'l'
             person_x -= 0.04
         else:
             move = False
     elif kb.right:
-        if fields[round(person_y)][round(person_x + 0.3)] != 'x':
+        if fields[round(person_y)%len_fields][round(person_x + 0.3)%len_fields] != 'x':
             direction = 'r'
             person_x += 0.04
         else:
@@ -360,6 +376,30 @@ while running:
     else:
         move = False
 
+
+    local_position_x = round(person_x)%len_fields
+    local_position_y = round(person_y)%len_fields
+
+    #print(F"\nperson_x + len_fields//2 = {person_x + len_fields//2}, x_end = {x_end}\n"
+    #      F"person_x + len_fields//2 > x_end = {person_x + len_fields//2 > x_end}\n")
+    if person_x + len_fields//2 > start_end.x_end:
+        start_end.x_end += 1
+        for i in range(len_fields):
+            group.add(Tile(zero_x, zero_y, start_end.x_end, i, size_tile, random.choice([stones, grass])))
+    if person_y + len_fields//2 > start_end.y_end:
+        start_end.y_end += 1
+        for i in range(len_fields):
+            group.add(Tile(zero_x, zero_y, i, start_end.y_end, size_tile, random.choice([stones, grass])))
+
+    if person_x - len_fields//2 < start_end.x_start:
+        start_end.x_start -= 1
+        for i in range(len_fields):
+            group.add(Tile(zero_x, zero_y, start_end.x_start, i, size_tile, random.choice([stones, grass])))
+
+    if person_y - len_fields//2 < start_end.y_start:
+        start_end.y_start -= 1
+        for i in range(len_fields):
+            group.add(Tile(zero_x, zero_y, i, start_end.y_start, size_tile, random.choice([stones, grass])))
     # Рендеринг
     screen.fill(BLUE)
     len_x, len_y = size = screen.get_width(), screen.get_height()
@@ -368,17 +408,13 @@ while running:
     len_fields = len(fields)
     zero_x = center_x - len_fields*size_tile // 2 + x_plus
     zero_y = center_y - len_fields*size_tile // 2 + y_plus
-    if step%1000000 == 0:
-        len_fields = len(fields)
-        for i in range(len_fields):
-            group.add(Tile(zero_x, zero_y, i, len_fields - 1, size_tile, random.choice([stones, grass])))
-        group.update(zero_x, zero_y, size_tile, up=True)
-    else:
-        group.update(zero_x - person_x * size_tile, zero_y - person_y * size_tile, size_tile)
+
+    group.update(zero_x - person_x * size_tile, zero_y - person_y * size_tile, size_tile)
     working_surface.fill(GREEN)
     group.draw(working_surface)
 
-    person_tile.update(zero_x + 0 * size_tile, zero_y + 0 * size_tile, size_tile, direction, time_, move)
+    person_tile.update(zero_x + 0 * size_tile, zero_y + 0 * size_tile, size_tile, direction, time_, move,
+                                                                                                [person_x, person_y])
     person_tile.draw(working_surface)
     screen.blit(working_surface, working_surface_position)
     #color_alpha_tile.draw(screen)
