@@ -130,11 +130,14 @@ class Tile(pygame.sprite.Sprite):
     def draw(self, surface):
         surface.blit(self.image, self.rect)
 
-    def update(self, zero_x, zero_y, size_tile, up=False):
-        if up:
-            if self.number_y == 0:
+    def update(self, zero_x, zero_y, size_tile, start_end, up=False):
+        if start_end:
+            x_start = round(start_end[0]) - len_fields // 2
+            y_start = round(start_end[1]) - len_fields // 2
+            x_end = round(start_end[0]) + len_fields // 2
+            y_end = round(start_end[1]) + len_fields // 2
+            if self.number_x < x_start or self.number_x > x_end or self.number_y < y_start or self.number_y > y_end:
                 self.kill()
-            self.number_y -= 1
         position_x = zero_x + self.number_x * size_tile
         position_y = zero_y + self.number_y * size_tile
         if self.old_size_tile != size_tile:
@@ -167,14 +170,7 @@ class PersonTile(pygame.sprite.Sprite):
     def draw(self, surface):
         surface.blit(self.image, self.rect)
 
-    def update(self, zero_x, zero_y, size_tile, direction, time, move, start_end):
-        if start_end:
-            x_start = round(start_end[0]) - len_fields//2
-            y_start = round(start_end[1]) - len_fields//2
-            x_end = round(start_end[0]) + len_fields//2
-            y_end = round(start_end[1]) + len_fields//2
-            if self.number_x < x_start or self.number_x > x_end or self.number_y < y_start or self.number_y > y_end:
-                self.kill()
+    def update(self, zero_x, zero_y, size_tile, direction, time, move):
 
         new_phase = False
         update_animation = False
@@ -409,18 +405,19 @@ while running:
     zero_x = center_x - len_fields*size_tile // 2 + x_plus
     zero_y = center_y - len_fields*size_tile // 2 + y_plus
 
-    group.update(zero_x - person_x * size_tile, zero_y - person_y * size_tile, size_tile)
+    group.update(zero_x - person_x * size_tile, zero_y - person_y * size_tile, size_tile, [person_x, person_y])
+
     working_surface.fill(GREEN)
     group.draw(working_surface)
 
-    person_tile.update(zero_x + 0 * size_tile, zero_y + 0 * size_tile, size_tile, direction, time_, move,
-                                                                                                [person_x, person_y])
+    person_tile.update(zero_x + 0 * size_tile, zero_y + 0 * size_tile, size_tile, direction, time_, move)
     person_tile.draw(working_surface)
     screen.blit(working_surface, working_surface_position)
     #color_alpha_tile.draw(screen)
     screen.blit(update_fps(), (10, 0))
     screen.blit(print_text(F"person_x: {person_x}"), (10, 15))
     screen.blit(print_text(F"person_y: {person_y}"), (10, 30))
+    screen.blit(print_text(F"len group:{len(group)}"), (100, 0))
     #screen.blit(print_text(F"tile: {fields[round(person_y)][round[person_x]]}"), (10, 30))
     # после отрисовки всего, переворачиваем экран
     pygame.display.flip()
