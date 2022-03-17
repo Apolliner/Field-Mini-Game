@@ -7,34 +7,36 @@ import pickle
 import numpy as np
 from math import sin, cos, pi
 from library.mapGenerator import master_map_generate
+from library.resources import loading_all_sprites
+
 
 fields = [
-    "................x........",
-    "...........x....x........",
-    "........x....x...x.......",
-    "..........x....x...xxxx..",
-    ".............x...x.......",
-    "................x...x....",
-    "......x...xxxxxxx........",
-    ".........x...............",
-    "............x............",
-    "..........x....x.........",
-    "............xx...........",
-    "...............x.........",
-    "......x.........x........",
-    ".........x......x........",
-    "............xxx..........",
-    ".........x...............",
-    "...........x.............",
-    ".....x.......x...........",
-    ".......x...x...x.........",
-    ".........x.......x.......",
-    "....x......x.............",
-    "..x.......x..x...........",
-    "...x.......x.............",
-    ".....xx..xx..............",
-    ".......xx................",
-]
+            "................x........",
+            "...........x....x........",
+            "........x....x...x.......",
+            "..........x....x...xxxx..",
+            ".............x...x.......",
+            "................x...x....",
+            "......x...xxxxxxx........",
+            ".........x...............",
+            "............x............",
+            "..........x....x.........",
+            "............xx...........",
+            "...............x.........",
+            "......x.........x........",
+            ".........x......x........",
+            "............xxx..........",
+            ".........x...............",
+            "...........x.............",
+            ".....x.......x...........",
+            ".......x...x...x.........",
+            ".........x.......x.......",
+            "....x......x.............",
+            "..x.......x..x...........",
+            "...x.......x.............",
+            ".....xx..xx..............",
+            ".......xx................",
+          ]
 
 WIDTH = 600
 HEIGHT = 600
@@ -52,10 +54,8 @@ screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE | pygame.DOUB
 pygame.display.set_caption("My Game")
 clock = pygame.time.Clock()
 
-
 def load_tile(filename):
-    return pygame.image.load(os.path.join(os.path.dirname(__file__), './resources', filename)).convert_alpha()
-
+    return pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', filename)).convert_alpha()
 
 animation = {
     '0': load_tile('tile_enemy_riffleman_down_0.png'),
@@ -77,12 +77,10 @@ animation = {
     'u3': load_tile('tile_enemy_riffleman_up_3.png'),
 }
 
-grass = pygame.image.load(os.path.join(os.path.dirname(__file__), './resources', 'tile_grass_0.png')).convert()
-stones = pygame.image.load(os.path.join(os.path.dirname(__file__), './resources', 'tile_stone_0.png')).convert()
-bonfire = pygame.image.load(
-    os.path.join(os.path.dirname(__file__), './resources', 'tile_bonfire_2.png')).convert_alpha()
-enemy = pygame.image.load(
-    os.path.join(os.path.dirname(__file__), './resources', 'tile_enemy_riffleman_down_0.png')).convert_alpha()
+grass = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_grass_0.png')).convert()
+stones = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_stone_0.png')).convert()
+bonfire = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_bonfire_2.png')).convert_alpha()
+enemy = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', 'tile_enemy_riffleman_down_0.png')).convert_alpha()
 
 len_fields = len(fields)
 
@@ -96,13 +94,40 @@ def load_map():
 
     return all_load[0], all_load[1], all_load[2], all_load[3]
 
+# Загрузка тайлов
+resources_dict = loading_all_sprites()
 
-# global_map, raw_minimap, vertices_graph, vertices_dict = load_map()
+# Загрузка карты
+global_map, raw_minimap, vertices_graph, vertices_dict = load_map()
+
+chunk_tile = 25
+
+
+def get_tile_icon_and_type(x, y):
+    """ Возвращает текстуры icon и type тайла с указанных мировых координат """
+    global_position_x = x // chunk_tile
+    global_position_y = y // chunk_tile
+    local_position_x = x % chunk_tile
+    local_position_y = y % chunk_tile
+    tile = global_map[global_position_y][global_position_x].chunk[local_position_y][local_position_x]
+    return tile.icon, tile.type
+
+
+def get_tile_icon(x, y):
+    """ Возвращает текстуры icon и type тайла с указанных мировых координат """
+    global_position_x = x // chunk_tile
+    global_position_y = y // chunk_tile
+    local_position_x = x % chunk_tile
+    local_position_y = y % chunk_tile
+    tile = global_map[global_position_y][global_position_x].chunk[local_position_y][local_position_x]
+    return tile.icon
+
 
 class ColorTile(pygame.sprite.Sprite):
     """ Содержит спрайты зон доступности """
 
     def __init__(self, x, y, size_tile, color, alpha=255):
+
         self.color = color
         self.alpha = alpha
         pygame.sprite.Sprite.__init__(self)
@@ -129,8 +154,8 @@ class Tile(pygame.sprite.Sprite):
         self.img = image_tile
         self.image = pygame.transform.scale(self.img, (size_tile, size_tile))
         self.rect = self.image.get_rect()
-        self.rect.left = zero_x + number_x * size_tile
-        self.rect.top = zero_y + number_y * size_tile
+        self.rect.left = zero_x + number_x*size_tile
+        self.rect.top = zero_y + number_y*size_tile
         self.speed = 0
 
     def draw(self, surface):
@@ -168,8 +193,8 @@ class PersonTile(pygame.sprite.Sprite):
         self.img = animation[f"{self.direction}{self.phase}"]
         self.image = pygame.transform.scale(self.img, (size_tile, size_tile))
         self.rect = self.image.get_rect()
-        self.rect.left = zero_x + number_x * size_tile
-        self.rect.top = zero_y + number_y * size_tile
+        self.rect.left = zero_x + number_x*size_tile
+        self.rect.top = zero_y + number_y*size_tile
         self.speed = 0
         self.time = 0
 
@@ -185,7 +210,7 @@ class PersonTile(pygame.sprite.Sprite):
                 self.phase = 0
                 update_animation = True
 
-        elif time - self.time > FPS // 4 / 100:
+        elif time - self.time > FPS//4/100:
             self.phase += 1
             if self.phase > 3:
                 self.phase = 0
@@ -207,11 +232,11 @@ class PersonTile(pygame.sprite.Sprite):
 
 
 len_x, len_y = size = screen.get_width(), screen.get_height()
-center_x = len_x / 2
-center_y = len_y / 2
+center_x = len_x/2
+center_y = len_y/2
 len_fields = len(fields)
-zero_x = center_x - len_fields // 2
-zero_y = center_y - len_fields // 2
+zero_x = center_x - len_fields//2
+zero_y = center_y - len_fields//2
 size_tile = 30
 
 group = pygame.sprite.Group()
@@ -224,15 +249,13 @@ for number_line, line in enumerate(fields):
             group.add(Tile(zero_x, zero_y, number_tile, number_line, size_tile, grass))
 
 person_tile = PersonTile(zero_x, zero_y, 0, 0, size_tile, animation)
-# person_tile = Tile(zero_x, zero_y, 1, 1, size_tile, enemy)
+#person_tile = Tile(zero_x, zero_y, 1, 1, size_tile, enemy)
 font = pygame.font.SysFont("Arial", 18)
-
 
 def update_fps():
     fps = str(int(clock.get_fps()))
     fps_text = font.render(fps, 1, pygame.Color("coral"))
     return fps_text
-
 
 def print_text(text):
     fps_text = font.render(text, 1, pygame.Color("coral"))
@@ -248,7 +271,7 @@ tile_field_grid = 5
 global_position = [5, 5]
 local_position = [5, 5]
 
-# global_map, raw_minimap, vertices_graph, vertices_dict = master_map_generate(global_region_grid,
+#global_map, raw_minimap, vertices_graph, vertices_dict = master_map_generate(global_region_grid,
 #                                                region_grid, chunks_grid, mini_region_grid, tile_field_grid, screen)
 
 
@@ -256,8 +279,8 @@ print(dir(pygame))
 x = 100
 y = 200
 size_tile = 30
-person_x = 0
-person_y = 0
+person_x = 100#len(fields)//2
+person_y = 100#len(fields)//2
 x_plus = 0
 y_plus = 0
 # Цикл игры
@@ -268,24 +291,20 @@ color_alpha_tile = ColorTile(200, 300, 50, RED, 100)
 working_surface = pygame.Surface((800, 800))
 working_surface_position = (50, 50)
 direction = 'd'
-
-
+len_fields = len(fields)
 class KeyboardDown:
     left = False
     right = False
     up = False
     down = False
 
-
 kb = KeyboardDown()
 
-
 class StartEnd:
-    x_end = round(person_x + len_fields // 2)
-    y_end = round(person_y + len_fields // 2)
-    x_start = round(person_x - len_fields // 2)
-    y_start = round(person_y - len_fields // 2)
-
+    x_end = round(person_x + len_fields//2)
+    y_end = round(person_y + len_fields//2)
+    x_start = round(person_x - len_fields//2)
+    y_start = round(person_y - len_fields//2)
 
 start_end = StartEnd()
 while running:
@@ -297,7 +316,7 @@ while running:
     clock.tick(FPS)
     # Ввод процесса (события)
     for event in pygame.event.get():
-        # print(event)
+        #print(event)
         # check for closing window
         if event.type == pygame.QUIT:
             running = False
@@ -340,7 +359,7 @@ while running:
 
     move = True
     if kb.down:
-        if fields[round(person_y + 0.3)][round(person_x)] != 'x':
+        if get_tile_icon(round(person_x), round(person_y + 0.3)) not in ('▲', '~'):
             if kb.left:
                 direction = 'l'
                 person_y += 0.03
@@ -355,7 +374,7 @@ while running:
         else:
             move = False
     elif kb.up:
-        if fields[round(person_y - 0.3)][round(person_x)] != 'x':
+        if get_tile_icon(round(person_x), round(person_y - 0.3)) not in ('▲', '~'):
             if kb.left:
                 direction = 'l'
                 person_x -= 0.03
@@ -370,13 +389,13 @@ while running:
         else:
             move = False
     elif kb.left:
-        if fields[round(person_y) % len_fields][round(person_x - 0.3) % len_fields] != 'x':
+        if get_tile_icon(round(person_x - 0.3), round(person_y)) not in ('▲', '~'):
             direction = 'l'
             person_x -= 0.04
         else:
             move = False
     elif kb.right:
-        if fields[round(person_y) % len_fields][round(person_x + 0.3) % len_fields] != 'x':
+        if get_tile_icon(round(person_x + 0.3), round(person_y)) not in ('▲', '~'):
             direction = 'r'
             person_x += 0.04
         else:
@@ -384,39 +403,52 @@ while running:
     else:
         move = False
 
-    local_position_x = round(person_x) % len_fields
-    local_position_y = round(person_y) % len_fields
 
-    # print(F"\nperson_x + len_fields//2 = {person_x + len_fields//2}, x_end = {x_end}\n"
+    local_position_x = round(person_x)%len_fields
+    local_position_y = round(person_y)%len_fields
+
+    #print(F"\nperson_x + len_fields//2 = {person_x + len_fields//2}, x_end = {x_end}\n"
     #      F"person_x + len_fields//2 > x_end = {person_x + len_fields//2 > x_end}\n")
-    new_x_start = round(person_x - len_fields // 2)
-    new_y_start = round(person_y - len_fields // 2)
-    new_x_end = round(person_x + len_fields // 2)
-    new_y_end = round(person_y + len_fields // 2)
-    # print(F"new_x_end - {new_y_end}, start_end.x_end - {start_end.y_end}")
+    new_x_start = round(person_x - len_fields//2)
+    new_y_start = round(person_y - len_fields//2)
+    new_x_end = round(person_x + len_fields//2)
+    new_y_end = round(person_y + len_fields//2)
+    #print(F"new_x_end - {new_y_end}, start_end.x_end - {start_end.y_end}")
 
     if new_x_end > start_end.x_end:
         start_end.x_end = new_x_end
         for i in range(len_fields):
-            group.add(Tile(zero_x, zero_y, start_end.x_end, i, size_tile, random.choice([stones, grass])))
+            x = start_end.x_end
+            y = i - len_fields//2 + round(person_y)
+            icon, type = get_tile_icon_and_type(x, y)
+            group.add(Tile(zero_x, zero_y, x, y, size_tile, resources_dict[icon][type]))
     start_end.x_end = new_x_end
 
     if new_y_end > start_end.y_end:
         start_end.y_end = new_y_end
         for i in range(len_fields):
-            group.add(Tile(zero_x, zero_y, i, start_end.y_end, size_tile, random.choice([stones, grass])))
+            x = i - len_fields//2 + round(person_x)
+            y = start_end.y_end
+            icon, type = get_tile_icon_and_type(x, y)
+            group.add(Tile(zero_x, zero_y, x, y, size_tile, resources_dict[icon][type]))
     start_end.y_end = new_y_end
 
     if new_x_start < start_end.x_start:
         start_end.x_start = new_x_start
         for i in range(len_fields):
-            group.add(Tile(zero_x, zero_y, start_end.x_start, i, size_tile, random.choice([stones, grass])))
+            x = start_end.x_start
+            y = i - len_fields // 2 + round(person_y)
+            icon, type = get_tile_icon_and_type(x, y)
+            group.add(Tile(zero_x, zero_y, x, y, size_tile, resources_dict[icon][type]))
     start_end.x_start = new_x_start
 
     if new_y_start < start_end.y_start:
         start_end.y_start = new_y_start
         for i in range(len_fields):
-            group.add(Tile(zero_x, zero_y, i, start_end.y_start, size_tile, random.choice([stones, grass])))
+            x = i - len_fields // 2 + round(person_x)
+            y = start_end.y_start
+            icon, type = get_tile_icon_and_type(x, y)
+            group.add(Tile(zero_x, zero_y, x, y, size_tile, resources_dict[icon][type]))
     start_end.y_start = new_y_start
 
     # Рендеринг
@@ -424,9 +456,9 @@ while running:
     len_x, len_y = size = screen.get_width(), screen.get_height()
     center_x = len_x / 2
     center_y = len_y / 2
-    len_fields = len(fields)
-    zero_x = center_x - len_fields * size_tile // 2 + x_plus
-    zero_y = center_y - len_fields * size_tile // 2 + y_plus
+
+    zero_x = center_x - len_fields*size_tile // 2 + x_plus
+    zero_y = center_y - len_fields*size_tile // 2 + y_plus
 
     group.update(zero_x - person_x * size_tile, zero_y - person_y * size_tile, size_tile, [person_x, person_y])
 
@@ -436,12 +468,12 @@ while running:
     person_tile.update(zero_x + 0 * size_tile, zero_y + 0 * size_tile, size_tile, direction, time_, move)
     person_tile.draw(working_surface)
     screen.blit(working_surface, working_surface_position)
-    # color_alpha_tile.draw(screen)
+    #color_alpha_tile.draw(screen)
     screen.blit(update_fps(), (10, 0))
     screen.blit(print_text(F"person_x: {person_x}"), (10, 15))
     screen.blit(print_text(F"person_y: {person_y}"), (10, 30))
     screen.blit(print_text(F"len group:{len(group)}"), (100, 0))
-    # screen.blit(print_text(F"tile: {fields[round(person_y)][round[person_x]]}"), (10, 30))
+    #screen.blit(print_text(F"tile: {fields[round(person_y)][round[person_x]]}"), (10, 30))
     # после отрисовки всего, переворачиваем экран
     pygame.display.flip()
 
