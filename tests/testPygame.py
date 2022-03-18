@@ -9,6 +9,8 @@ from math import sin, cos, pi
 from library.mapGenerator import master_map_generate
 from library.resources import loading_all_sprites
 
+person_x = 100
+person_y = 100
 
 fields = [
             "................x........",
@@ -243,10 +245,10 @@ group = pygame.sprite.Group()
 
 for number_line, line in enumerate(fields):
     for number_tile, tile in enumerate(line):
-        if tile == "x":
-            group.add(Tile(zero_x, zero_y, number_tile, number_line, size_tile, stones))
-        else:
-            group.add(Tile(zero_x, zero_y, number_tile, number_line, size_tile, grass))
+        x = person_x - len_fields//2 + number_tile
+        y = person_y - len_fields//2 + number_line
+        icon, type = get_tile_icon_and_type(x, y)
+        group.add(Tile(zero_x, zero_y, x, y, size_tile, resources_dict[icon][type]))
 
 person_tile = PersonTile(zero_x, zero_y, 0, 0, size_tile, animation)
 #person_tile = Tile(zero_x, zero_y, 1, 1, size_tile, enemy)
@@ -279,8 +281,7 @@ print(dir(pygame))
 x = 100
 y = 200
 size_tile = 30
-person_x = 100#len(fields)//2
-person_y = 100#len(fields)//2
+
 x_plus = 0
 y_plus = 0
 # Цикл игры
