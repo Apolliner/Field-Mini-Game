@@ -94,6 +94,35 @@ enemy = pygame.image.load(
 len_fields = len(fields)
 
 
+def load_tile(filename):
+    return pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', filename)).convert_alpha()
+
+
+transparent_up_tiles = {
+    "P": {"0": load_tile('tile_live_tree_transparent.png')},
+    "F": {
+        "0": load_tile('tile_dry_tree_0_transparent.png'),
+        "1": load_tile('tile_dry_tree_1_transparent.png'),
+        "2": load_tile('tile_dry_tree_2_transparent.png'),
+        "3": load_tile('tile_dry_tree_3_transparent.png'),
+        "4": load_tile('tile_dry_tree_4_transparent.png'),
+        "6": load_tile('tile_dry_tree_6_transparent.png'),
+        "7": load_tile('tile_dry_tree_7_transparent.png'),
+    },
+    "i": {
+        "0": load_tile('tile_cactus_0_transparent.png'),
+        "1": load_tile('tile_cactus_1_transparent.png'),
+        "2": load_tile('tile_cactus_2_transparent.png'),
+        "3": load_tile('tile_cactus_3_transparent.png'),
+    },
+    "u": {
+        "0": load_tile('tile_tall_grass_0_transparent.png'),
+        "1": load_tile('tile_tall_grass_1_transparent.png'),
+    },
+    "ü": {"0": load_tile('tile_prickly_grass_transparent.png')},
+}
+
+
 def load_map():
     """
         Загрузка игровой карты через pickle
@@ -496,17 +525,18 @@ while running:
     icon_9, type_9 = get_tile_icon_and_type(round(person_x) + 1, round(person_y) + 1)
 
     up_icons = [
-        [icon_1, icon_2, icon_3],
-        [icon_4, icon_5, icon_6],
-        [icon_7, icon_8, icon_9]]
+        [(icon_1, type_1), (icon_2, type_2), (icon_3, type_3)],
+        [(icon_4, type_4), (icon_5, type_5), (icon_6, type_6)],
+        [(icon_7, type_7), (icon_8, type_8), (icon_9, type_9)]]
 
     for number_line, line in enumerate(up_icons):
         for number_tile, tile in enumerate(line):
             if number_line == 1 and person_y > person_world_y:
                 continue
-            if tile == "P" and number_line != 0:
+            icon, type = tile
+            if number_line != 0 and icon in transparent_up_tiles and type in transparent_up_tiles[icon]:
                 up_group.add(Tile(zero_x, zero_y, number_tile - 1 + person_world_x, number_line - 1 + person_world_y,
-                                  size_tile, tree_transparent))
+                                  size_tile, transparent_up_tiles[icon][type]))
 
     # if person_tile_icon == 'P':
     #    up_group.add(Tile(zero_x, zero_y, round(person_x), round(person_y), size_tile, tree_transparent))
