@@ -12,33 +12,7 @@ from library.resources import loading_all_sprites
 person_x = 100
 person_y = 100
 
-fields = [
-    "................x........",
-    "...........x....x........",
-    "........x....x...x.......",
-    "..........x....x...xxxx..",
-    ".............x...x.......",
-    "................x...x....",
-    "......x...xxxxxxx........",
-    ".........x...............",
-    "............x............",
-    "..........x....x.........",
-    "............xx...........",
-    "...............x.........",
-    "......x.........x........",
-    ".........x......x........",
-    "............xxx..........",
-    ".........x...............",
-    "...........x.............",
-    ".....x.......x...........",
-    ".......x...x...x.........",
-    ".........x.......x.......",
-    "....x......x.............",
-    "..x.......x..x...........",
-    "...x.......x.............",
-    ".....xx..xx..............",
-    ".......xx................",
-]
+fields = "........................."
 
 WIDTH = 600
 HEIGHT = 600
@@ -60,27 +34,46 @@ clock = pygame.time.Clock()
 def load_tile(filename):
     return pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources', filename)).convert_alpha()
 
-
-animation = {
-    '0': load_tile('tile_enemy_riffleman_down_0.png'),
-    'l0': load_tile('tile_enemy_riffleman_left_0.png'),
-    'l1': load_tile('tile_enemy_riffleman_left_1.png'),
-    'l2': load_tile('tile_enemy_riffleman_left_2.png'),
-    'l3': load_tile('tile_enemy_riffleman_left_3.png'),
-    'r0': load_tile('tile_enemy_riffleman_right_0.png'),
-    'r1': load_tile('tile_enemy_riffleman_right_1.png'),
-    'r2': load_tile('tile_enemy_riffleman_right_2.png'),
-    'r3': load_tile('tile_enemy_riffleman_right_3.png'),
-    'd0': load_tile('tile_enemy_riffleman_down_0.png'),
-    'd1': load_tile('tile_enemy_riffleman_down_1.png'),
-    'd2': load_tile('tile_enemy_riffleman_down_2.png'),
-    'd3': load_tile('tile_enemy_riffleman_down_3.png'),
-    'u0': load_tile('tile_enemy_riffleman_up_0.png'),
-    'u1': load_tile('tile_enemy_riffleman_up_1.png'),
-    'u2': load_tile('tile_enemy_riffleman_up_2.png'),
-    'u3': load_tile('tile_enemy_riffleman_up_3.png'),
+animations = {
+    "standard": {
+        '0': load_tile('tile_enemy_riffleman_down_0.png'),
+        'l0': load_tile('tile_enemy_riffleman_left_0.png'),
+        'l1': load_tile('tile_enemy_riffleman_left_1.png'),
+        'l2': load_tile('tile_enemy_riffleman_left_2.png'),
+        'l3': load_tile('tile_enemy_riffleman_left_3.png'),
+        'r0': load_tile('tile_enemy_riffleman_right_0.png'),
+        'r1': load_tile('tile_enemy_riffleman_right_1.png'),
+        'r2': load_tile('tile_enemy_riffleman_right_2.png'),
+        'r3': load_tile('tile_enemy_riffleman_right_3.png'),
+        'd0': load_tile('tile_enemy_riffleman_down_0.png'),
+        'd1': load_tile('tile_enemy_riffleman_down_1.png'),
+        'd2': load_tile('tile_enemy_riffleman_down_2.png'),
+        'd3': load_tile('tile_enemy_riffleman_down_3.png'),
+        'u0': load_tile('tile_enemy_riffleman_up_0.png'),
+        'u1': load_tile('tile_enemy_riffleman_up_1.png'),
+        'u2': load_tile('tile_enemy_riffleman_up_2.png'),
+        'u3': load_tile('tile_enemy_riffleman_up_3.png'),
+    },
+    "ford": {
+        '0': load_tile('ford_animation\\tile_enemy_riffleman_down_0_ford.png'),
+        'l0': load_tile('ford_animation\\tile_enemy_riffleman_left_0_ford.png'),
+        'l1': load_tile('ford_animation\\tile_enemy_riffleman_left_1_ford.png'),
+        'l2': load_tile('ford_animation\\tile_enemy_riffleman_left_2_ford.png'),
+        'l3': load_tile('ford_animation\\tile_enemy_riffleman_left_3_ford.png'),
+        'r0': load_tile('ford_animation\\tile_enemy_riffleman_right_0_ford.png'),
+        'r1': load_tile('ford_animation\\tile_enemy_riffleman_right_1_ford.png'),
+        'r2': load_tile('ford_animation\\tile_enemy_riffleman_right_2_ford.png'),
+        'r3': load_tile('ford_animation\\tile_enemy_riffleman_right_3_ford.png'),
+        'd0': load_tile('ford_animation\\tile_enemy_riffleman_down_0_ford.png'),
+        'd1': load_tile('ford_animation\\tile_enemy_riffleman_down_1_ford.png'),
+        'd2': load_tile('ford_animation\\tile_enemy_riffleman_down_2_ford.png'),
+        'd3': load_tile('ford_animation\\tile_enemy_riffleman_down_3_ford.png'),
+        'u0': load_tile('ford_animation\\tile_enemy_riffleman_up_0_ford.png'),
+        'u1': load_tile('ford_animation\\tile_enemy_riffleman_up_1_ford.png'),
+        'u2': load_tile('ford_animation\\tile_enemy_riffleman_up_2_ford.png'),
+        'u3': load_tile('ford_animation\\tile_enemy_riffleman_up_3_ford.png'),
+    }
 }
-
 tree_transparent = pygame.image.load(
     os.path.join(os.path.dirname(__file__), 'resources', 'tile_live_tree_transparent.png')).convert_alpha()
 tree_transparent_test = pygame.image.load(
@@ -257,7 +250,7 @@ class PersonTile(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self)
         self.direction = "d"
         self.phase = 0
-        self.img = animation[f"{self.direction}{self.phase}"]
+        self.img = animation["standard"][f"{self.direction}{self.phase}"]
         self.image = pygame.transform.scale(self.img, (size_tile, size_tile))
         self.rect = self.image.get_rect()
         self.rect.left = zero_x + number_x * size_tile
@@ -268,7 +261,7 @@ class PersonTile(pygame.sprite.Sprite):
     def draw(self, surface):
         surface.blit(self.image, self.rect)
 
-    def update(self, zero_x, zero_y, size_tile, direction, time, move):
+    def update(self, zero_x, zero_y, size_tile, direction, time, move, tile_icon):
 
         new_phase = False
         update_animation = False
@@ -283,7 +276,9 @@ class PersonTile(pygame.sprite.Sprite):
                 self.phase = 0
             update_animation = True
         if update_animation:
-            self.img = self.animation[F"{direction}{self.phase}"]
+            self.img = self.animation["standard"][F"{direction}{self.phase}"]
+            if tile_icon == "f":
+                self.img = self.animation["ford"][F"{direction}{self.phase}"]
             self.image = pygame.transform.scale(self.img, (size_tile, size_tile))
             self.rect = self.image.get_rect()
             new_phase = True
@@ -316,7 +311,7 @@ for number_line, line in enumerate(fields):
         icon, type = get_tile_icon_and_type(x, y)
         group.add(Tile(zero_x, zero_y, x, y, size_tile, resources_dict[icon][type]))
 
-person_tile = PersonTile(zero_x, zero_y, 0, 0, size_tile, animation)
+person_tile = PersonTile(zero_x, zero_y, 0, 0, size_tile, animations)
 # person_tile = Tile(zero_x, zero_y, 1, 1, size_tile, enemy)
 font = pygame.font.SysFont("Arial", 18)
 
@@ -584,7 +579,7 @@ while running:
     working_surface.fill(GREEN)
     group.draw(working_surface)
 
-    person_tile.update(zero_x + 0 * size_tile, zero_y + 0 * size_tile, size_tile, direction, time_, move)
+    person_tile.update(zero_x + 0 * size_tile, zero_y + 0 * size_tile, size_tile, direction, time_, move, icon_5)
     person_tile.draw(working_surface)
 
     up_group.update(zero_x - person_x * size_tile, zero_y - person_y * size_tile, size_tile, [person_x, person_y])
