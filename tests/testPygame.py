@@ -12,7 +12,7 @@ from library.resources import loading_all_sprites
 person_x = 100
 person_y = 100
 
-fields = "........................."
+fields = [["." * 25] * 25]
 
 WIDTH = 600
 HEIGHT = 600
@@ -84,7 +84,7 @@ bonfire = pygame.image.load(os.path.join(os.path.dirname(__file__), 'resources',
 enemy = pygame.image.load(
     os.path.join(os.path.dirname(__file__), 'resources', 'tile_enemy_riffleman_down_0.png')).convert_alpha()
 
-len_fields = len(fields)
+len_fields = 51
 
 
 def load_tile(filename):
@@ -277,7 +277,7 @@ class PersonTile(pygame.sprite.Sprite):
             update_animation = True
         if update_animation:
             self.img = self.animation["standard"][F"{direction}{self.phase}"]
-            if tile_icon == "f":
+            if tile_icon in ("f", "~"):
                 self.img = self.animation["ford"][F"{direction}{self.phase}"]
             self.image = pygame.transform.scale(self.img, (size_tile, size_tile))
             self.rect = self.image.get_rect()
@@ -296,7 +296,6 @@ class PersonTile(pygame.sprite.Sprite):
 len_x, len_y = size = screen.get_width(), screen.get_height()
 center_x = len_x / 2
 center_y = len_y / 2
-len_fields = len(fields)
 zero_x = center_x - len_fields // 2
 zero_y = center_y - len_fields // 2
 size_tile = 30
@@ -304,8 +303,8 @@ size_tile = 30
 group = pygame.sprite.Group()
 up_group = pygame.sprite.Group()
 
-for number_line, line in enumerate(fields):
-    for number_tile, tile in enumerate(line):
+for number_line in range(len_fields):
+    for number_tile in range(len_fields):
         x = person_x - len_fields // 2 + number_tile
         y = person_y - len_fields // 2 + number_line
         icon, type = get_tile_icon_and_type(x, y)
@@ -355,7 +354,6 @@ color_alpha_tile = ColorTile(200, 300, 50, RED, 100)
 working_surface = pygame.Surface((800, 800))
 working_surface_position = (50, 50)
 direction = 'd'
-len_fields = len(fields)
 
 
 class KeyboardDown:
