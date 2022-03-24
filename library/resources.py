@@ -19,7 +19,7 @@ def loading_all_sprites():
     """
     def add_tile(filename):
         """ Короткая запись добавления ресурса """
-        return Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), '../resources', filename)))
+        return Fast_image_tile(pygame.image.load(os.path.join(os.path.dirname(__file__), '../resources', filename)).convert_alpha())
     sprites_dict =   {
                     'j': {
                             '0': add_tile('tile_dune_0.jpg'),
