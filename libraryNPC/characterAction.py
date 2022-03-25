@@ -225,20 +225,15 @@ class CharacterAction(CharacterActionBase):
             return True
         if self.target.generator is None:
             self.target.generator = _generator_action_collect_firewood()
+        return self._action_use_generator()
+
+
+    def _action_use_generator(self):
         x = self.target.generator
         print(F"x - {x}")
         y = next(x, True)
         print(F"y - {y}")
         return y
-        #print(F'test action "_action_collect_firewood"')
-        #payload = {"animations": [{"name": "look around", "steps": 3},
-        #                          {"name": "squat", "steps": 3},
-        #                          {"name": "to stand", "steps": 3},
-        #                          {"name": "pistol", "steps": 3},
-        #                          {"name": "pistol fire", "steps": 3},]}
-        #target = self.memory.add_memories("target", "move", payload=payload, **kwargs)
-        #self.action_stack.add_stack_element(name="animation", element=self.action_base_animate_router, target=target)
-        #return False
 
     @trace
     def _action_arrange_a_fire_pit(self, **kwargs):
