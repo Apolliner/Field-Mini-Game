@@ -171,58 +171,8 @@ class CharacterAction(CharacterActionBase):
                     success = self.action_base_activity_update(self.world_position, new_type=str(i + 1), lifetime=150,
                                                                **kwargs)
 
-
-            # FIXME Последующее должно быть в другом месте
-            campfire_position = [start_positions[0], start_positions[1] + 1]
-            target = self.memory.add_memories("target", "action_move", positions=[campfire_position], **kwargs)
-            self.action_stack.add_stack_element(name="action_move", element=self.path_move, target=target)
-            yield self.inf
-            payload = {"animations": [{"name": "squat create", "steps": 5}]}
-            target = self.memory.add_memories("target", "animation", payload=payload, **kwargs)
-            self.action_stack.add_stack_element(name="animation", element=self.action_base_animate_router,
-                                                target=target)
-            yield self.inf
-            success = self.action_base_activity_update(start_positions, new_type=str(2), lifetime=150, **kwargs)
-            kwargs['activity_list'].append(Action_in_map('bonfire', kwargs['step'], self.global_position,
-                                                         self.local_position, self.chunk_size, '', self))
-            yield self.inf
-            new_position = [self.world_position[0] - 1, self.world_position[1]]
-            target = self.memory.add_memories("target", "action_move", positions=[new_position], **kwargs)
-            self.action_stack.add_stack_element(name="action_move", element=self.path_move, target=target)
-
-            yield self.inf
-            payload = {"animations": [{"name": "squat create", "steps": 5}]}
-            target = self.memory.add_memories("target", "animation", payload=payload, **kwargs)
-            self.action_stack.add_stack_element(name="animation", element=self.action_base_animate_router,
-                                                target=target)
-            yield self.inf
-            success = self.action_base_activity_update(start_positions, new_type=str(1), lifetime=150, **kwargs)
-            success = self.action_base_activity_update(campfire_position, new_type=str(1), lifetime=150, **kwargs)
-            payload = {"animations": [{"name": "squat create", "steps": 5}]}
-            target = self.memory.add_memories("target", "animation", payload=payload, **kwargs)
-            self.action_stack.add_stack_element(name="animation", element=self.action_base_animate_router,
-                                                target=target)
-            yield self.inf
-            success = self.action_base_activity_update(start_positions, new_type=str(0), lifetime=150, **kwargs)
-            success = self.action_base_activity_update(campfire_position, new_type=str(2), lifetime=150, **kwargs)
-            payload = {"animations": [{"name": "squat", "steps": 20}]}
-            target = self.memory.add_memories("target", "animation", payload=payload, **kwargs)
-            self.action_stack.add_stack_element(name="animation", element=self.action_base_animate_router,
-                                                target=target)
-            yield self.inf
-            success = self.action_base_activity_update(campfire_position, new_type=str(1), lifetime=150, **kwargs)
-            payload = {"animations": [{"name": "squat", "steps": 10}]}
-            target = self.memory.add_memories("target", "animation", payload=payload, **kwargs)
-            self.action_stack.add_stack_element(name="animation", element=self.action_base_animate_router,
-                                                target=target)
-            yield self.inf
-            payload = {"animations": [{"name": "squat create", "steps": 5}]}
-            target = self.memory.add_memories("target", "animation", payload=payload, **kwargs)
-            self.action_stack.add_stack_element(name="animation", element=self.action_base_animate_router,
-                                                target=target)
-            yield self.inf
-            success = self.action_base_activity_update(campfire_position, new_type=str(3), lifetime=150, **kwargs)
-            return True
+                yield self.inf
+            
         if self.target.generator is None:
             self.target.generator = _generator_action_collect_firewood()
         return self._action_use_generator()
@@ -238,11 +188,58 @@ class CharacterAction(CharacterActionBase):
     @trace
     def _action_arrange_a_fire_pit(self, **kwargs):
         """ 3 раза ходит от дров до места установки костра. Каждый раз проводит действие над костром. """
-        print(F'test action "_action_arrange_a_fire_pit"')
+        campfire_position = [start_positions[0], start_positions[1] + 1]
+        target = self.memory.add_memories("target", "action_move", positions=[campfire_position], **kwargs)
+        self.action_stack.add_stack_element(name="action_move", element=self.path_move, target=target)
+        yield self.inf
+        payload = {"animations": [{"name": "squat create", "steps": 5}]}
+        target = self.memory.add_memories("target", "animation", payload=payload, **kwargs)
+        self.action_stack.add_stack_element(name="animation", element=self.action_base_animate_router,
+                                            target=target)
+        yield self.inf
+        success = self.action_base_activity_update(start_positions, new_type=str(2), lifetime=150, **kwargs)
+        kwargs['activity_list'].append(Action_in_map('bonfire', kwargs['step'], self.global_position,
+                                                     self.local_position, self.chunk_size, '', self))
+        yield self.inf
+        new_position = [self.world_position[0] - 1, self.world_position[1]]
+        target = self.memory.add_memories("target", "action_move", positions=[new_position], **kwargs)
+        self.action_stack.add_stack_element(name="action_move", element=self.path_move, target=target)
+
+        yield self.inf
+        payload = {"animations": [{"name": "squat create", "steps": 5}]}
+        target = self.memory.add_memories("target", "animation", payload=payload, **kwargs)
+        self.action_stack.add_stack_element(name="animation", element=self.action_base_animate_router,
+                                            target=target)
+        yield self.inf
+        success = self.action_base_activity_update(start_positions, new_type=str(1), lifetime=150, **kwargs)
+        success = self.action_base_activity_update(campfire_position, new_type=str(1), lifetime=150, **kwargs)
+        payload = {"animations": [{"name": "squat create", "steps": 5}]}
+        target = self.memory.add_memories("target", "animation", payload=payload, **kwargs)
+        self.action_stack.add_stack_element(name="animation", element=self.action_base_animate_router,
+                                            target=target)
+        yield self.inf
         return True
 
     @trace
     def _action_kindle_campfire(self, **kwargs):
         """ Проводит некоторое время производя действие над костром. Время определяется случайно """
-        print(F'test action "_action_kindle_campfire"')
+        success = self.action_base_activity_update(start_positions, new_type=str(0), lifetime=150, **kwargs)
+        success = self.action_base_activity_update(campfire_position, new_type=str(2), lifetime=150, **kwargs)
+        payload = {"animations": [{"name": "squat", "steps": 20}]}
+        target = self.memory.add_memories("target", "animation", payload=payload, **kwargs)
+        self.action_stack.add_stack_element(name="animation", element=self.action_base_animate_router,
+                                            target=target)
+        yield self.inf
+        success = self.action_base_activity_update(campfire_position, new_type=str(1), lifetime=150, **kwargs)
+        payload = {"animations": [{"name": "squat", "steps": 10}]}
+        target = self.memory.add_memories("target", "animation", payload=payload, **kwargs)
+        self.action_stack.add_stack_element(name="animation", element=self.action_base_animate_router,
+                                            target=target)
+        yield self.inf
+        payload = {"animations": [{"name": "squat create", "steps": 5}]}
+        target = self.memory.add_memories("target", "animation", payload=payload, **kwargs)
+        self.action_stack.add_stack_element(name="animation", element=self.action_base_animate_router,
+                                            target=target)
+        yield self.inf
+        success = self.action_base_activity_update(campfire_position, new_type=str(3), lifetime=150, **kwargs)
         return True
