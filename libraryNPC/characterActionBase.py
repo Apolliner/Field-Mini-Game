@@ -64,3 +64,15 @@ class CharacterActionBase(Bases):
                 return self.inf_true
         return answer
 
+    def action_base_go_position(self, go_position, **kwargs):
+        """ Передвижение в указанную позицию """
+        target = self.memory.add_memories("target", "action_move", positions=[go_position], **kwargs)
+        self.action_stack.add_stack_element(name="action_move", element=self.path_move, target=target)
+
+    def action_base_set_animation(self, name_animation, steps_animation, **kwargs):
+        """ Устанавливает указанную анимацию """
+        payload = {"animations": [{"name": name_animation, "steps": steps_animation}]}
+        target = self.memory.add_memories("target", "animation", payload=payload, **kwargs)
+        self.action_stack.add_stack_element(name="animation", element=self.action_base_animate_router,
+                                            target=target)
+
