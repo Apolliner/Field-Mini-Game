@@ -27,3 +27,12 @@ def trace(func):
 
     return inner
 
+def action_base_generator(func):
+    """
+    Декоратор генератора активности
+    """
+    def inner(self, *args, **kwargs):
+        if self.target.generator is None:
+            self.target.generator = func(self, *args, **kwargs)
+        return next(self.target.generator, True)
+    return inner

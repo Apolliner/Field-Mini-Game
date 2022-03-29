@@ -75,4 +75,21 @@ class CharacterActionBase(Bases):
         target = self.memory.add_memories("target", "animation", payload=payload, **kwargs)
         self.action_stack.add_stack_element(name="animation", element=self.action_base_animate_router,
                                             target=target)
+    @staticmethod
+    def action_base_generator(func):
+        """
+        Декоратор генератора активности
+        """
+        def inner(self, *args, **kwargs):
+            if self.target.generator is None:
+                self.target.generator = func(self, *args, **kwargs)
+            return self._action_base_use_generator(self)
+        return inner
+
+    def _action_base_use_generator(self):
+        x = self.target.generator
+        print(F"x - {x}")
+        y = next(x, True)
+        print(F"y - {y}")
+        return y
 
