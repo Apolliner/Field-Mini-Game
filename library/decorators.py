@@ -22,8 +22,7 @@ def trace(func):
     def inner(*args, **kwargs):
         if func.__name__ != "standard":
             print(func.__name__)
-        result = func(*args, **kwargs)
-        return result
+        return func(*args, **kwargs)
 
     return inner
 
@@ -34,5 +33,8 @@ def action_base_generator(func):
     def inner(self, *args, **kwargs):
         if self.target.generator is None:
             self.target.generator = func(self, *args, **kwargs)
-        return next(self.target.generator, True)
+        answer = next(self.target.generator, True)
+        if answer is True: # Если возвращается True, то MemoryNode становится доступна для обобщения.
+            self.target.status = "closed"
+        return answer
     return inner

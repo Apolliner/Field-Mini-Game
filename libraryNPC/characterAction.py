@@ -44,7 +44,7 @@ class CharacterAction(CharacterActionBase):
                 for stage in stages:
                     target = self.memory.add_memories(type_action, stage)
                     self.action_stack.add_stack_element(name=stage, element=stages[stage], target=target)
-                    yield False
+                    yield self.inf
             return True
         if self.target.generator is None:
             self.target.generator = _generator_action_stack_router()
@@ -87,8 +87,7 @@ class CharacterAction(CharacterActionBase):
                     break
             if check_vertices is not None:
                 print(F"check_vertices - {check_vertices}")
-                target = self.memory.add_memories("target", "move", positions=[check_vertices], **kwargs)
-                self.action_stack.add_stack_element(name="local_move", element=self.path_move, target=target)
+                self.action_base_go_position(check_vertices)
                 yield self.inf
                 circle = self.bases_return_circle()
                 len_circle = len(circle)

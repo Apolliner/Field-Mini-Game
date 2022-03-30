@@ -38,7 +38,7 @@ class PathMove(PathBase):
                 #if self.global_waypoints and self.global_waypoints[0] == self.vertices:
                 #    self.global_waypoints.pop(0)
                 if tuple(self.world_position) == finish:  # Точка достигнута, задача выполнена
-                    return True
+                    return self.inf
 
                 self._path_move_calculate(finish_vertices, finish, **kwargs)
             self._path_base_local_move(**kwargs)
