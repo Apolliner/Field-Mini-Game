@@ -51,3 +51,14 @@ class ActionStack(BaseStack):
             return element["target"]
         return None
 
+    @trace
+    def pop_stack_element(self, close_target=False):
+        """ Удалить и вернуть элемент. Закрыть элемент памяти при необходимости """
+        len_stack = self.get_len_stack()
+        if len_stack > 0:
+            if close_target and "target" in self._stack[-1]:
+                self._stack[-1]["target"].status = "closed"
+            return self._stack.pop(-1)
+        else:
+            return None
+

@@ -102,6 +102,7 @@ class Memory(Bases):
 
         Нужно как то передавать информацию о том, что выполняется та же задача, что и на прошлом шаге.
         FIXME Можно так же, как и раньше, только target это элемент памяти
+        TODO Уже так и сделано
     """
     def __init__(self, master):
         self.master = master        # Объект персонажа, чья память обрабатывается
@@ -120,6 +121,11 @@ class Memory(Bases):
         new_memory = MemoryNode(self._id_generate(), type, name, self.master, **kwargs)
         self._all_add_new_memories(new_memory)
         return new_memory
+
+    @trace
+    def print_all_names_and_statuses(self):
+        for item in self._graph:
+            print(F"type = {type}, name = {item.name}, status = {item.status}")
 
     @trace
     def _all_add_new_memories(self, memories):

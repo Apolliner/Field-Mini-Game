@@ -24,7 +24,7 @@ class BaseStack:
             return None
 
     @trace
-    def pop_stack_element(self):
+    def pop_stack_element(self, **kwargs):
         """ Удалить и вернуть элемент """
         len_stack = self.get_len_stack()
         if len_stack > 0:

@@ -87,18 +87,18 @@ class Bases:
             answer = action["element"](**kwargs)
             print(F"answer = {answer}")
             if answer is True:              # Действие завершено и удаляется из стека
-                stack.pop_stack_element()
+                stack.pop_stack_element(close_target=True)
                 break
             elif answer is False:           # Действие не завершено
                 break
             elif answer is self.inf:        # Продолжение следующего действия
                 continue
             elif answer is self.inf_true:   # Удаление выполненного элемента с продолжением следующего действия
-                stack.pop_stack_element()
+                stack.pop_stack_element(close_target=True)
                 continue
             elif answer is self.nan:        # Удаление текущего элемента и предыдущего
-                stack.pop_stack_element()
-                stack.pop_stack_element()
+                stack.pop_stack_element(close_target=True)
+                stack.pop_stack_element(close_target=True)
                 break
             print(f"answer - {answer}")
             raise TypeError
