@@ -19,7 +19,13 @@ class CharacterAction(CharacterActionBase):
                 "stages": {
                     "search for a place": self._action_search_for_a_place,
                     "collect firewood": self._action_collect_firewood,
-                }
+                },
+            "test action": {
+                "name": "test acion",
+                "stages": {
+                    "test stage": self._test_action,
+                },
+            },
             }
         }
         return actions_dict
@@ -192,3 +198,19 @@ class CharacterAction(CharacterActionBase):
         _ = self.action_base_activity_update(campfire_position, new_type=str(3), lifetime=150, **kwargs)
         return True
 
+    @trace
+    @action_base_generator
+    def _test_action(self, **kwargs):
+        """ Активность для помщения  места, где неоходимая активность ещё не реализвана """
+        self.action_base_set_animation("look around", 3)
+        yield self.inf
+
+        self.action_base_set_animation("squat", 2)
+        yield self.inf
+
+        self.action_base_set_animation("squat create", 5)
+        yield self.inf
+
+        self.action_base_set_animation("squat", 2)
+        yield self.inf
+        

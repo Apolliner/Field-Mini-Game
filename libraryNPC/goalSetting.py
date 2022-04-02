@@ -13,6 +13,10 @@ class GoalSettingNPC:
     """
     def goal_setting_check_enemies(self) -> List:
         """ Проверка округи на наличие противников"""
+        self.alarm = False
+        self.stealth = False
+        self.alertness = False
+        self.determination = 100
         return []
 
     def goal_setting_get_danger_memory(self) -> List:
@@ -21,7 +25,14 @@ class GoalSettingNPC:
 
     def goal_setting_check_need(self) -> List:
         """ Проверка потребности в лечении, еде, воде, отдыхе или уходе за оружием """
-        return []
+
+        needs_tuple = ("health", "hanger", "thirst", "fatigue")
+        need_list = list()
+        for need in needs_tuple:
+            if getattr(self, need) < 25:
+                need_list.append(need)
+        
+        return need_list
 
     def goal_setting_master(self):
         """ Место для основной логики проверки текущего состояния. Здесь проверяется состояние и назначаются задачи """
@@ -33,4 +44,6 @@ class GoalSettingNPC:
             pass
         needs = self.goal_setting_check_need()
         if needs is not None:
+            self.inventory = list()
+            self.equipment
             pass
