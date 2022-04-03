@@ -44,6 +44,8 @@ class GoalSettingNPC:
             pass
         needs = self.goal_setting_check_need()
         if needs is not None:
-            self.inventory = list()
-            self.equipment
-            pass
+            for need in needs:
+                target = self.memory.add_memories("test action", need)
+                self.action_stack.add_stack_element(name="test action", element=self._action_stack_router, target=target)
+                return True
+        return False
