@@ -188,10 +188,12 @@ class CharacterAction(CharacterActionBase):
         self.action_base_set_animation("squat", 20)
         yield self.inf
 
+        self.fatigue = 80.0
         _ = self.action_base_activity_update(campfire_position, new_type=str(1), lifetime=150, **kwargs)
         self.action_base_set_animation("squat", 10)
         yield self.inf
 
+        self.fatigue = 100.0
         self.action_base_set_animation("squat create", 5)
         yield self.inf
 

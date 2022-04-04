@@ -27,10 +27,10 @@ class NewNPC(Character, CharacterMove, TemporaryOld, PathFollow, CharacterAction
         super().__init__(global_position, local_position, name, name_npc, icon, type, description, type_npc, **kwargs)
 
         # ЖИЗНЕННЫЕ ПОКАЗАТЕЛИ:
-        self.health = 100                               # Здоровье                                  int
-        self.hunger = 100                               # Голод                                     int
-        self.thirst = 100                               # Жажда                                     int
-        self.fatigue = 100                              # Усталость                                 int
+        self.health = 100.0                             # Здоровье                                  int
+        self.hunger = 100.0                             # Голод                                     int
+        self.thirst = 100.0                             # Жажда                                     int
+        self.fatigue = 100.0                            # Усталость                                 int
 
         # ЭКИПИРОВКА:
         self.inventory = list()                         # Инвентарь                                 list

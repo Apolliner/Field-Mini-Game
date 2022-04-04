@@ -13,10 +13,6 @@ class GoalSettingNPC:
     """
     def goal_setting_check_enemies(self) -> List:
         """ Проверка округи на наличие противников"""
-        self.alarm = False
-        self.stealth = False
-        self.alertness = False
-        self.determination = 100
         return []
 
     def goal_setting_get_danger_memory(self) -> List:
@@ -42,10 +38,17 @@ class GoalSettingNPC:
         danger_memories = self.goal_setting_get_danger_memory()
         if danger_memories is not None:
             pass
-        needs = self.goal_setting_check_need()
-        if needs is not None:
-            for need in needs:
-                target = self.memory.add_memories("test action", need)
-                self.action_stack.add_stack_element(name="test action", element=self._action_stack_router, target=target)
-                return True
+        if not (self.alarm and self.stealth and self.alertness):
+            needs = self.goal_setting_check_need()
+            if needs is not None:
+                for need in needs:
+                    if need == "fatigue":
+                        target = self.memory.add_memories("action", "campfire")
+                        self.action_stack.add_stack_element(name="action", element=self._action_stack_router,
+                                                            target=target)
+                    else:
+                        target = self.memory.add_memories("test action", need)
+                        self.action_stack.add_stack_element(name="test action", element=self._action_stack_router,
+                                                            target=target)
+                    return True
         return False
