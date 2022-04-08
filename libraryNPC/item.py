@@ -12,3 +12,10 @@ class Item(Bases):
     def use(self):
         """ Использовать предмет """
         self.kill()
+
+
+class ItemEquipment(Item):
+    """ Предмет, который можно надеть """
+    def __init__(self, *args, add_slots=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.add_slots = add_slots
