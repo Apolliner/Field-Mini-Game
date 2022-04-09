@@ -12,6 +12,7 @@ class CharacterEquipment(Bases):
         self._equipment_left_hand: ItemEquipment = left_hand
         self._equipment_legs: ItemEquipment = legs
         self._equipment_feet: ItemEquipment = feet
+        self._slots = []
 
     def equipment_get_slots(self) -> dict:
         """ Возвращает словарь со списками доступных и занятых полей исходя из имеющегося снаряжения """
@@ -24,4 +25,7 @@ class CharacterEquipment(Bases):
 
     def equipment_take_off(self, slot: str):
         """ Снять элемент из указанного слота """
-        ...
+        if hasattr(self, F"_equipment{slot}"):
+            item = getattr(self, F"_equipment{slot}")
+            for item_slot in item.add_slots:
+                self._slots.pop(item_slot)
