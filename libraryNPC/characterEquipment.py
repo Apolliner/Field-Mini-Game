@@ -2,7 +2,7 @@ from libraryNPC.bases import Bases
 from libraryNPC.item import Item, ItemEquipment
 
 
-class CharacterEquipment(Bases):
+class CharacterEquipment():
     """ Экипировка персонажа """
     def __init__(self, head=None, face=None, body=None, right_hand=None, left_hand=None, legs=None, feet=None):
         self._equipment_head: ItemEquipment = head
