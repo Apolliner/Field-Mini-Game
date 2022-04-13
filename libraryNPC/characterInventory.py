@@ -8,3 +8,4 @@ class CharacterInventory(Bases):
     def inventory_get_item(self, type, count=1):
         if type in self._inventory and self._inventory[type]:
             items = self._inventory[type]
+    

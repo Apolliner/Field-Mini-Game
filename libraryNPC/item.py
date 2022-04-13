@@ -1,7 +1,7 @@
 from libraryNPC.bases import Bases
 
 
-class Item():
+class Item:
     """ Предмет """
     def __init__(self, name, type, weight, **kwargs):
         self.id = bases_gen_random_id(kwargs["ids_list"])
@@ -26,6 +26,19 @@ class ItemEquipment(Item):
         """ Использовать предмет """
         pass
 
+class ItemStack(Item):
+    """ Предмет, содержащий множество предметов """
+    def __init__(self, *args, count=1, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.count = count
+
+    def use(self, **kwargs):
+        """ Использовать предмет """
+        if self.count <= 1:
+            self.kill()
+        else:
+            self.count -= 1
+
 
 class ItemWeapon(ItemEquipment):
     """ Предмет оружия """
@@ -34,4 +47,4 @@ class ItemWeapon(ItemEquipment):
         self.cartridge_type = cartridge_type
         self.cartridges_loaded = cartridges_loaded
         self.cartridges_in_the_magazine = cartridges_in_the_magazine
-        
+
